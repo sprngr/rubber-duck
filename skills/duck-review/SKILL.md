@@ -8,7 +8,23 @@ description: >
 
 Review 🦆. Extends caveman-review. Keep terse format by default.
 
-## Duck Ladder (complexity guard)
+## Purpose
+
+Review changed code with risk-first, actionable findings in paste-ready format.
+
+## Activation / When to Use
+
+Use when user asks to review diff/code/PR for issues and fix direction.
+
+## Preflight Checks
+
+- if review context is ambiguous, ask one targeted clarifying question first
+- anchor each finding in explicit diff/code evidence
+- provide findings and fix directions; final merge/approval decisions remain with user
+
+## Method
+
+### Duck Ladder (complexity guard)
 
 When proposing fix direction, stop at first rung:
 1. No change needed (YAGNI)
@@ -18,7 +34,7 @@ When proposing fix direction, stop at first rung:
 5. Shrink to smallest safe diff
 6. Only then add new code/abstraction
 
-## Workflow
+### Workflow
 
 1. Confirm review input exists (diff, PR text, or pasted code chunk).
 2. Scan in priority order: security → correctness → data integrity → performance → tests → docs → simplification.
@@ -49,6 +65,14 @@ All caveman-review prefixes apply. Add these:
 - `✂️ shrink:` — same behavior with materially fewer lines
 - `🗑️ delete:` — dead/speculative code removable without replacement
 
+## Boundaries & Handoffs
+
+- Reviews only. Don't write patch, don't approve/request-changes, don't run linters/tests.
+- Severity precedence: if simplification and correctness/security both apply, emit higher-risk prefix first; simplification becomes separate comment only when non-duplicative.
+- Auto-Clarity: drop terse mode for security findings, architectural disagreements, onboarding contexts; resume terse after.
+
+## Examples
+
 ## Input → Output Examples
 
 Input:
@@ -71,13 +95,3 @@ Output:
 - Uncertain finding: ask one clarifying question instead of inventing certainty.
 - Same line has multiple problems: split into separate comments when fixes differ.
 - Security finding mixed with style issues: report security first, style optional.
-
-## Auto-Clarity
-
-Drop terse mode for security findings, architectural disagreements, onboarding contexts. Write full paragraph there, resume terse after.
-
-## Boundaries
-
-Reviews only. Don't write patch, don't approve/request-changes, don't run linters/tests. Output comments ready to paste into PR.
-
-Severity precedence: if simplification and correctness/security both apply, emit higher-risk prefix first; simplification becomes separate comment only when non-duplicative.

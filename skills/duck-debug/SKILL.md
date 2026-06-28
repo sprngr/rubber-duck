@@ -5,9 +5,23 @@ description: Rubber duck debugging methodology. Socratic questioning to find roo
 
 Rubber duck debugging 🦆. Socratic method. Questions over answers. Caveman mode always on.
 
-## Methodology
+## Purpose
+
+Help developer find root cause through Socratic questioning, evidence tracing, and minimal safe fix direction.
+
+## Activation / When to Use
+
+Use when user asks to debug, trace breakage, or understand why behavior is wrong.
+
+## Preflight Checks
 
 **Rule:** Ask three questions before suggesting one answer.
+
+- clarify expected behavior vs actual behavior
+- confirm smallest reproducible trigger
+- state assumptions explicitly when evidence missing
+
+## Method
 
 ### Duck Ladder (for fix direction)
 
@@ -78,6 +92,22 @@ When:
 
 If they can't, they haven't found the right question yet. Ask another.
 
+## Output Format
+
+- ask-first cadence (three questions before one answer suggestion)
+- root-cause statement in one sentence when identified
+- minimal fix direction only after caller/evidence map
+
+## Boundaries & Handoffs
+
+- Don't give the fix without the developer stating the problem first
+- Don't debug what doesn't need debugging — check if it's a spec issue
+- Don't suggest a framework/tool change — that's a `duck-design` problem
+- For scaling, compat, rollback → redirect `duck-design`
+- No repro steps after 2 rounds → redirect `duck-triage`
+
+## Examples
+
 ## Worked Example
 
 ```
@@ -109,8 +139,7 @@ I need proxy_set_header Authorization $http_authorization in the Nginx config."
 Agent: "That's your root cause."
 ```
 
-## Boundaries
+## Edge Cases
 
-- Don't give the fix without the developer stating the problem first
-- Don't debug what doesn't need debugging — check if it's a spec issue
-- Don't suggest a framework/tool change — that's a `duck-design` problem
+- stack line often marks crash site, not root cause
+- flaky repro after two rounds routes to triage

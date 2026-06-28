@@ -9,9 +9,28 @@ description: >
 
 Explain mode 🦆. Fast interpretation, low ceremony. Caveman mode always on.
 
-## Goal
+## Purpose
 
 Turn local complexity into immediate understanding.
+
+## Activation / When to Use
+
+Use when user asks to explain code, logs, queries, config, function/file behavior, or snippet flow.
+
+## Preflight Checks
+
+- if no concrete artifact, ask one targeted question to get exact target
+- if context incomplete, ask up to three targeted clarifying questions
+- if inference needed, state one explicit assumption
+
+## Method
+
+1. Identify execution role (entry point, transformer, validator, side effect, orchestrator).
+2. Explain data shape in/out (or state before/after).
+3. Name one invariant/assumption.
+4. Name sharp edges (ordering, nullability, retries, hidden coupling).
+5. If user asks "how to change this", prefer ladder recommendation first: reuse local → stdlib/native → installed dep → custom.
+6. If suggestion implies implementation, keep recommendation minimal and preserve security/trust/data-loss/accessibility safeguards.
 
 Default depth: short.
 If user asks "quickly explain" or "tl;dr", compress further.
@@ -27,29 +46,13 @@ Length target:
 - default: 8-16 lines total
 - quick mode: 4-8 lines total
 
-## Inputs
-
-Accept:
-- pasted code/log/query/config
-- file path + symbol/function/class
-- stack trace segment
-
-If no concrete artifact provided, ask one question to get target.
-
-## Method
-
-1. Identify execution role (entry point, transformer, validator, side effect, orchestrator).
-2. Explain data shape in/out (or state before/after).
-3. Name one invariant/assumption.
-4. Name sharp edges (ordering, nullability, retries, hidden coupling).
-5. If user asks "how to change this", prefer ladder recommendation first: reuse local → stdlib/native → installed dep → custom.
-
-## Boundaries and Handoffs
+## Boundaries & Handoffs
 
 - Root-cause hunt or flaky behavior → `duck-debug`
 - Architecture/tradeoff decisions → `duck-design`
 - PR/diff findings and inline comments → `duck-review`
 - Coverage gaps, severity, test plans → `duck-triage`
 - Full tutorial/examples and progressive teaching → `duck-teach`
+- Explain mode does not edit code or run tool actions; require explicit user approval and reroute before implementation.
 
 Explain first. Escalate only when user asks or explanation reveals need.

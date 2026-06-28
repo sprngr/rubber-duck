@@ -9,7 +9,21 @@ description: >
 
 Duck debt ledger 🦆. Collect deferred simplifications. Caveman mode always on.
 
-## Marker Convention
+## Purpose
+
+Collect deferred simplification markers into a read-only ledger.
+
+## Activation / When to Use
+
+Use when user asks for deferred simplification inventory (`duck debt`, `/duck-debt`, etc.).
+
+## Preflight Checks
+
+- if repository/module scope ambiguous, ask one clarifying question before scanning
+
+## Method
+
+### Marker Convention
 
 Use marker in code comments:
 
@@ -19,7 +33,7 @@ Examples:
 - `duck-debt: O(n²) scan, upgrade when list >10k`
 - `duck-debt: global lock, upgrade when throughput contention observed`
 
-## Scan
+### Scan
 
 Search repo for comment markers:
 - `duck-debt:`
@@ -44,8 +58,15 @@ No markers:
 
 `No duck-debt markers. Clean ledger.`
 
-## Boundaries
+## Boundaries & Handoffs
 
 - Read/report only. No edits.
 - No debt-priority roadmap unless user asks.
 - If asked to apply cleanup directly, route to `duck-review` (findings) then `duck-builder` (bounded patch).
+- Do not recommend debt cleanup paths that weaken security, trust-boundary validation, data-loss prevention, or accessibility safeguards.
+- If user asks for cleanup planning, prefer smallest safe follow-up path first.
+
+## Edge Cases
+
+- missing trigger text: emit `no-trigger` tag
+- no markers found: output clean-ledger line only
