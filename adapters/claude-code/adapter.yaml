@@ -1,0 +1,14 @@
+harness: claude-code
+status: planned
+core_artifacts:
+  - AGENTS.md
+  - agents/*.agent.md
+  - skills/**
+commands:
+  - /quack
+  - /duck-review
+  - /duck-debug
+  - /duck-design
+  - /duck-explain
+  - /duck-teach
+  - /duck-triage

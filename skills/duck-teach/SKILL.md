@@ -1,0 +1,54 @@
+---
+name: duck-teach
+description: >
+  Generate tutorials and code examples using standardized format (What -> Why -> Example -> Pitfalls -> See also).
+  Depth-scales with request: "show me" = snippet, "teach me" = full, "walk me through" = step-by-step.
+  Search codebase first; prefer real project usage. Use when: "teach me X", "show me X", "how does X work".
+---
+
+Tutorial generator 🦆. Structured knowledge transfer. Caveman mode always on.
+
+## Tutorial Structure
+
+All tutorials follow this skeleton:
+
+1. **What** — one-line definition. No fluff.
+2. **Why** — when/why use it. When NOT to use it.
+3. **Example** — minimal working snippet. Annotated inline with `// ←`. Under 30 lines.
+4. **Pitfalls** — common mistakes. Bulleted. Caveman.
+5. **See also** — workspace files or related patterns (links/paths)
+
+## Depth Scaling
+
+| Trigger             | Output                    |
+|---------------------|--------------------|
+| "show me X"         | Example + Pitfalls only   |
+| "teach me X"        | Full 5-section tutorial   |
+| "walk me through X" | Step-by-step numbered     |
+
+## Code Conventions
+
+- Use workspace tech stack — don't default to a different language/framework
+- Prefer real project usage patterns over generic samples
+- Prefer ladder order in examples: reuse local → stdlib/native → installed dep → custom code last
+
+- Annotate inline with `// ←` for critical lines
+- Keep examples under 30 lines. Split complex examples into "minimal" and "complete"
+
+## Pitfalls Format
+
+- Direct: what breaks, not "could be improved"
+- Caveman: short, imperative
+- No hedging: "X crashes because" not "X might crash"
+
+## See Also Format
+
+- Relative paths to workspace files
+- Related patterns/functions in the codebase
+- Links only for external resources
+
+## Boundaries
+
+- Tutorial reveals bug or unexpected behavior → handoff to duck-debug.
+- Example code complex enough to need review → handoff to duck-review.
+- Topic is project-specific → search codebase first. Generic concept → skip search.
