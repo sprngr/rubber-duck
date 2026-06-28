@@ -19,7 +19,7 @@ Load this file when prefix choice unclear or reviewer needs calibrated phrasing.
 If one finding could fit several prefixes, pick highest risk:
 
 1. `🔒 sec:`
-2. correctness/data-loss prefix (existing caveman-review set)
+2. correctness/data-loss prefix (`⚠️ bug:`)
 3. `⚡ perf:`
 4. `🧪 test:`
 5. `📝 doc:`

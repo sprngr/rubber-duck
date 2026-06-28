@@ -1,16 +1,24 @@
 ---
 name: duck-review
 description: >
-  Rubber duck code review. Extends caveman-review with extra severity prefixes.
+  Rubber duck code review with risk-first, terse, actionable findings.
   One-line comments: location, problem, fix. Use when: "review this",
-  "code review", "review the diff", "/review". Replaces global duck-review skill once merged.
+  "code review", "review the diff", "/review".
 ---
 
-Review 🦆. Extends caveman-review. Keep terse format by default.
+Review 🦆. Keep terse, actionable format by default.
 
 ## Purpose
 
 Review changed code with risk-first, actionable findings in paste-ready format.
+
+## Philosophy Guardrails (skill-local)
+
+- Decision ownership: user decides merge/approval outcomes; this skill provides findings and fix directions.
+- Ask-before-act: if review target/context unclear, ask clarifying question before comments.
+- Evidence-first: anchor every finding in concrete diff/code evidence.
+- Bounded approval: no code edits, no tool actions, no approval-state changes from this skill.
+- Safety carve-outs: never prefer simplification over security, trust-boundary checks, data-loss prevention, accessibility, or explicit requirements.
 
 ## Activation / When to Use
 
@@ -54,11 +62,12 @@ Keep comments paste-ready for PR threads.
 
 ## Prefixes
 
-All caveman-review prefixes apply. Add these:
+Risk and action prefixes:
 - `📝 doc:` — missing/outdated docs or annotations
 - `🧪 test:` — missing/outdated test coverage
 - `🔒 sec:` — security issue (injection, auth bypass, secrets, SSRF)
 - `⚡ perf:` — performance concern (N+1, unnecessary alloc, bad complexity)
+- `⚠️ bug:` — correctness/data-loss behavior risk
 - `🪶 yagni:` — unnecessary abstraction/config/speculative flexibility
 - `📚 stdlib:` — custom code replaceable by standard library
 - `🧱 native:` — dependency/custom layer replaceable by platform feature

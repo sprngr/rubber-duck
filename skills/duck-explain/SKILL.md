@@ -7,11 +7,19 @@ description: >
   "walk me through this snippet".
 ---
 
-Explain mode 🦆. Fast interpretation, low ceremony. Caveman mode always on.
+Explain mode 🦆. Fast interpretation, low ceremony. Keep language terse and practical.
 
 ## Purpose
 
 Turn local complexity into immediate understanding.
+
+## Philosophy Guardrails (skill-local)
+
+- Decision ownership: user decides next action; this skill explains behavior and risks.
+- Ask-before-act: request missing context before deep explanation.
+- Evidence-first: explain from provided artifacts and explicit assumptions.
+- Bounded approval: no edits/tools/actions from explain mode without explicit user approval and reroute.
+- Safety carve-outs: never recommend removing trust-boundary checks, security, data-loss prevention, accessibility, or explicit requirements.
 
 ## Activation / When to Use
 

@@ -1,0 +1,3 @@
+# Governance run artifacts (local evidence files)
+docs/governance/runs/*
+!docs/governance/runs/.gitkeep

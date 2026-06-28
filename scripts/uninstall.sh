@@ -3,13 +3,17 @@ set -euo pipefail
 
 usage() {
   cat <<'EOF'
-Uninstall Rubber Duck artifacts from opencode config.
+Uninstall Rubber Duck artifacts from selected harness config path.
 
 Usage:
   bash scripts/uninstall.sh [options]
 
 Options:
-  --prefix <path>   Base config directory (default: ${XDG_CONFIG_HOME:-$HOME/.config}/opencode)
+  --prefix <path>   Base config directory (default: host-dependent)
+  --opencode        Target OpenCode path (${XDG_CONFIG_HOME:-$HOME/.config}/opencode) (default)
+  --claude-code     Target Claude Code path (${XDG_CONFIG_HOME:-$HOME/.config}/claude-code)
+  --copilot         Target GitHub Copilot path (${XDG_CONFIG_HOME:-$HOME/.config}/copilot)
+  --pi              Target Pi path (${XDG_CONFIG_HOME:-$HOME/.config}/pi)
   --skills-only     Remove only skills/
   --agents-only     Remove only agents/*.agent.md
   --policy-only     Remove only AGENTS.md
@@ -19,6 +23,7 @@ Options:
 EOF
 }
 
+HOST="opencode"
 PREFIX="${XDG_CONFIG_HOME:-$HOME/.config}/opencode"
 TARGET_ROOT=""
 DRY_RUN=false
@@ -47,6 +52,26 @@ while [[ $# -gt 0 ]]; do
       fi
       PREFIX="$2"
       shift 2
+      ;;
+    --opencode)
+      HOST="opencode"
+      PREFIX="${XDG_CONFIG_HOME:-$HOME/.config}/opencode"
+      shift
+      ;;
+    --claude-code)
+      HOST="claude-code"
+      PREFIX="${XDG_CONFIG_HOME:-$HOME/.config}/claude-code"
+      shift
+      ;;
+    --copilot)
+      HOST="github-copilot"
+      PREFIX="${XDG_CONFIG_HOME:-$HOME/.config}/copilot"
+      shift
+      ;;
+    --pi)
+      HOST="pi"
+      PREFIX="${XDG_CONFIG_HOME:-$HOME/.config}/pi"
+      shift
       ;;
     --skills-only)
       set_mode
@@ -150,6 +175,12 @@ fi
 if [[ "$REMOVE_SKILLS" == true ]]; then
   remove_path "$TARGET_ROOT/skills"
 fi
+
+case "$HOST" in
+  "claude-code") remove_path "$TARGET_ROOT/adapters/claude-code" ;;
+  "github-copilot") remove_path "$TARGET_ROOT/adapters/github-copilot" ;;
+  "pi") remove_path "$TARGET_ROOT/adapters/pi" ;;
+esac
 
 cleanup_empty_dir "$TARGET_ROOT"
 

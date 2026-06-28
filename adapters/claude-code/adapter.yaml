@@ -1,9 +1,12 @@
 harness: claude-code
-status: planned
+status: scaffolded
 core_artifacts:
   - AGENTS.md
   - agents/*.agent.md
   - skills/**
+plugin_artifacts:
+  - adapters/claude-code/claude-plugin.yaml
+  - adapters/claude-code/commands.yaml
 commands:
   - /quack
   - /duck-review

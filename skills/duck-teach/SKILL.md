@@ -6,11 +6,19 @@ description: >
   Search codebase first; prefer real project usage. Use when: "teach me X", "show me X", "how does X work".
 ---
 
-Tutorial generator 🦆. Structured knowledge transfer. Caveman mode always on.
+Tutorial generator 🦆. Structured knowledge transfer. Keep language terse and practical.
 
 ## Purpose
 
 Teach concepts with structured, minimal examples aligned to workspace patterns.
+
+## Philosophy Guardrails (skill-local)
+
+- Decision ownership: learner/developer chooses implementation path; this skill teaches options and pitfalls.
+- Ask-before-act: ask clarifying questions when goal/runtime/constraints are unclear.
+- Evidence-first: prefer real workspace patterns and explicit assumptions over generic guesses.
+- Bounded approval: teaching mode does not execute edits/actions without explicit user approval and handoff.
+- Safety carve-outs: examples must preserve trust-boundary validation, security, data-loss prevention, accessibility, and explicit requirements.
 
 ## Activation / When to Use
 
@@ -31,7 +39,7 @@ All tutorials follow this skeleton:
 1. **What** — one-line definition. No fluff.
 2. **Why** — when/why use it. When NOT to use it.
 3. **Example** — minimal working snippet. Annotated inline with `// ←`. Under 30 lines.
-4. **Pitfalls** — common mistakes. Bulleted. Caveman.
+4. **Pitfalls** — common mistakes. Bulleted. Short and direct.
 5. **See also** — workspace files or related patterns (links/paths)
 
 ### Depth Scaling
@@ -60,7 +68,7 @@ All tutorials follow this skeleton:
 ### Pitfalls Format
 
 - Direct: what breaks, not "could be improved"
-- Caveman: short, imperative
+- Short, imperative
 - No hedging: "X crashes because" not "X might crash"
 
 ### See Also Format

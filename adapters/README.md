@@ -9,9 +9,12 @@ Each harness folder includes:
 
 Harnesses in scope:
 
+- `opencode`
 - `claude-code`
-- `copilot-cli`
-- `codex`
-- `cursor`
-- `windsurf`
-- `gemini-antigravity`
+- `github-copilot`
+- `pi`
+
+Support tiers:
+
+- `verified` — locally validated by maintainer
+- `scaffolded` — static scaffolds and docs present; runtime validation expected from user/community

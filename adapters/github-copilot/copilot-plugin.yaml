@@ -1,0 +1,11 @@
+name: rubber-duck
+display_name: Rubber Duck
+version: 0.1.0
+description: Socratic router + duckling agents + skills for GitHub Copilot workflows.
+repository: https://github.com/sprngr/rubber-duck
+harness: github-copilot
+
+commands_file: commands.yaml
+
+install:
+  target_root: ${XDG_CONFIG_HOME:-$HOME/.config}/copilot/rubber-duck

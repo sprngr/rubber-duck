@@ -1,5 +1,5 @@
-harness: cursor
-status: planned
+harness: opencode
+status: verified
 core_artifacts:
   - AGENTS.md
   - agents/*.agent.md

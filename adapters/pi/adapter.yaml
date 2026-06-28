@@ -1,9 +1,12 @@
-harness: copilot-cli
-status: planned
+harness: pi
+status: scaffolded
 core_artifacts:
   - AGENTS.md
   - agents/*.agent.md
   - skills/**
+plugin_artifacts:
+  - adapters/pi/pi-plugin.yaml
+  - adapters/pi/commands.yaml
 commands:
   - /quack
   - /duck-review

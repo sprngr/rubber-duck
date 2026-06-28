@@ -21,12 +21,15 @@ REQUIRED_ARTIFACTS=(
 )
 
 HARNESSES=(
+  "opencode"
   "claude-code"
-  "copilot-cli"
-  "codex"
-  "cursor"
-  "windsurf"
-  "gemini-antigravity"
+  "github-copilot"
+  "pi"
+)
+
+VALID_STATUSES=(
+  "verified"
+  "scaffolded"
 )
 
 fail() {
@@ -59,6 +62,23 @@ for harness in "${HARNESSES[@]}"; do
   [[ -f "$README_FILE" ]] || fail "missing $README_FILE"
 
   require_line "harness: $harness" "$ADAPTER_FILE"
+
+  status_ok=false
+  found_status=""
+  for s in "${VALID_STATUSES[@]}"; do
+    if grep -Fq "status: $s" "$ADAPTER_FILE"; then
+      status_ok=true
+      found_status="$s"
+      break
+    fi
+  done
+  [[ "$status_ok" == true ]] || fail "invalid status in $ADAPTER_FILE (expected verified|scaffolded)"
+
+  if [[ "$found_status" == "verified" ]]; then
+    if grep -Fq "plugin_artifacts:" "$ADAPTER_FILE"; then
+      fail "verified adapter $harness should not declare plugin_artifacts"
+    fi
+  fi
 
   for artifact in "${REQUIRED_ARTIFACTS[@]}"; do
     require_line "$artifact" "$ADAPTER_FILE"

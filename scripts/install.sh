@@ -3,13 +3,17 @@ set -euo pipefail
 
 usage() {
   cat <<'EOF'
-Install Rubber Duck artifacts into opencode config.
+Install Rubber Duck artifacts into selected harness config path.
 
 Usage:
   bash scripts/install.sh [options]
 
 Options:
-  --prefix <path>   Base config directory (default: ${XDG_CONFIG_HOME:-$HOME/.config}/opencode)
+  --prefix <path>   Base config directory (default: host-dependent)
+  --opencode        Target OpenCode path (${XDG_CONFIG_HOME:-$HOME/.config}/opencode) (default)
+  --claude-code     Target Claude Code path (${XDG_CONFIG_HOME:-$HOME/.config}/claude-code)
+  --copilot         Target GitHub Copilot path (${XDG_CONFIG_HOME:-$HOME/.config}/copilot)
+  --pi              Target Pi path (${XDG_CONFIG_HOME:-$HOME/.config}/pi)
   --skills-only     Install only skills/
   --agents-only     Install only agents/*.agent.md (router + subagents)
   --policy-only     Install only AGENTS.md
@@ -22,6 +26,7 @@ EOF
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
+HOST="opencode"
 PREFIX="${XDG_CONFIG_HOME:-$HOME/.config}/opencode"
 TARGET_ROOT=""
 DRY_RUN=false
@@ -50,6 +55,26 @@ while [[ $# -gt 0 ]]; do
       fi
       PREFIX="$2"
       shift 2
+      ;;
+    --opencode)
+      HOST="opencode"
+      PREFIX="${XDG_CONFIG_HOME:-$HOME/.config}/opencode"
+      shift
+      ;;
+    --claude-code)
+      HOST="claude-code"
+      PREFIX="${XDG_CONFIG_HOME:-$HOME/.config}/claude-code"
+      shift
+      ;;
+    --copilot)
+      HOST="github-copilot"
+      PREFIX="${XDG_CONFIG_HOME:-$HOME/.config}/copilot"
+      shift
+      ;;
+    --pi)
+      HOST="pi"
+      PREFIX="${XDG_CONFIG_HOME:-$HOME/.config}/pi"
+      shift
       ;;
     --skills-only)
       set_mode
@@ -162,6 +187,24 @@ fi
 if [[ "$INSTALL_SKILLS" == true ]]; then
   copy_dir "$REPO_ROOT/skills" "$TARGET_ROOT/skills"
 fi
+
+case "$HOST" in
+  "claude-code")
+    run mkdir -p "$TARGET_ROOT/adapters/claude-code"
+    copy_file "$REPO_ROOT/adapters/claude-code/claude-plugin.yaml" "$TARGET_ROOT/adapters/claude-code/claude-plugin.yaml"
+    copy_file "$REPO_ROOT/adapters/claude-code/commands.yaml" "$TARGET_ROOT/adapters/claude-code/commands.yaml"
+    ;;
+  "github-copilot")
+    run mkdir -p "$TARGET_ROOT/adapters/github-copilot"
+    copy_file "$REPO_ROOT/adapters/github-copilot/copilot-plugin.yaml" "$TARGET_ROOT/adapters/github-copilot/copilot-plugin.yaml"
+    copy_file "$REPO_ROOT/adapters/github-copilot/commands.yaml" "$TARGET_ROOT/adapters/github-copilot/commands.yaml"
+    ;;
+  "pi")
+    run mkdir -p "$TARGET_ROOT/adapters/pi"
+    copy_file "$REPO_ROOT/adapters/pi/pi-plugin.yaml" "$TARGET_ROOT/adapters/pi/pi-plugin.yaml"
+    copy_file "$REPO_ROOT/adapters/pi/commands.yaml" "$TARGET_ROOT/adapters/pi/commands.yaml"
+    ;;
+esac
 
 echo "Done."
 echo "Install root: $TARGET_ROOT"

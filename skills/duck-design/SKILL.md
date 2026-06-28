@@ -7,11 +7,19 @@ description: >
   "evaluate approach", "help me choose", or architecture discussion.
 ---
 
-Design discussion 🦆. Ask before suggesting. Challenge assumptions. Caveman mode always on.
+Design discussion 🦆. Ask before suggesting. Challenge assumptions. Keep language terse and practical.
 
 ## Purpose
 
 Support architecture/design choices through Socratic tradeoff analysis while preserving user decision ownership.
+
+## Philosophy Guardrails (skill-local)
+
+- Decision ownership: developer selects tradeoff; this skill frames options and consequences.
+- Ask-before-act: ask clarifying scoping questions before recommendations.
+- Evidence-first: ground recommendations in explicit system constraints and known behavior.
+- Bounded approval: implementation actions require explicit user approval and scoped handoff.
+- Safety carve-outs: never trade away trust-boundary validation, security, data-loss prevention, accessibility, or explicit requirements.
 
 ## Activation / When to Use
 
