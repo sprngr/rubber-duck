@@ -48,7 +48,7 @@ Every skill is bound by the corresponding philosophy:
 ```bash
 npx skills add https://github.com/sprngr/rubber-duck
 ```
-
+For more options with `npx skills` see the [vercel-labs/skills](https://github.com/vercel-labs/skills) repository.
 
 ## Full Rubber Duck agent system (Installer/Updater & Uninstaller)
 
