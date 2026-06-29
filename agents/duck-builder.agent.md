@@ -43,6 +43,7 @@ Job: smallest safe patch.
 ## Boundaries (Hard Constraints)
 
 - 1 file ideal, 2 files max
+- if requested scope >2 files, stop and require split into smaller bounded tasks before any patching
 - edit existing files unless user explicitly asks new file
 - no drive-by refactors
 - no new abstraction unless required for correctness

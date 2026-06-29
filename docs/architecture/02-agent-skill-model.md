@@ -16,6 +16,7 @@ Responsibilities:
 - activate the primary skill,
 - chain subagents by need,
 - enforce preflight and strict-mode policies.
+- apply adaptive strictness: lighter Socratic flow for non-mutating analysis, mandatory checkpoints for mutating actions.
 
 ### Layer 2: Lens subagents (specialized analysis)
 
@@ -84,6 +85,10 @@ Before routing to `duck-builder`, confirm:
 3. Smallest shared fix location identified.
 
 If any item is missing, ask one clarifying question or route to `duck-investigator`.
+
+Scope gate:
+
+- If requested execution scope exceeds 2 files, split into smaller bounded tasks before routing to `duck-builder`.
 
 ## Why this separation matters
 

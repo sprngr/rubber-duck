@@ -55,9 +55,9 @@ Ask one scoping question before analyzing:
 - "What's the scope?" (single module / system-wide)
 
 If prompt underspecified (example: "Design this."):
-- Ask exact template question: "What constraint drives this choice?"
+- Prefer starting with: "What constraint drives this choice?"
 - Stop there. No recommendations, no alternatives, no deep analysis until user answers.
-- Non-negotiable: output exactly one line question and stop.
+- Keep first response minimal (question-first). Avoid deep analysis until user answers.
 
 ### 2. Chunk Broad Plans
 Use this step only when user presents multi-component rollout or whole-system migration plan.
@@ -70,10 +70,10 @@ If active:
 - Identify independently-implementable slices
 - Pick one slice to evaluate first
 - Ask: "Start with [slice]? Or different priority?"
-- First response shape only: 1 scoping question + 3-5 slices + priority question
+- First response shape (preferred): 1 scoping question + 3-5 slices + priority question
 - Include explicit tradeoff line: "Main tradeoff: scope reduction now vs slower full-program change."
 - Defer deep per-slice analysis until user picks slice
-- Hard stop: first turn for broad plan must end after chunking response; no full-system deep dive
+- Keep first turn chunked; avoid full-system deep dive before slice selection
 
 Do not attempt whole-system design review in one pass.
 
@@ -101,8 +101,8 @@ Use this pattern:
 6. State non-negotiable dimension for decision (1 sentence)
 7. Ask: "Which tradeoff do you accept?"
 
-Step 7 exact sentence required in output: "Which tradeoff do you accept?"
-- Brevity cap for first response: max 10 lines, one alternative only, one tradeoff sentence.
+Step 7 should include equivalent explicit tradeoff-choice question.
+- Brevity target for first response: around 6-12 lines, one alternative, one tradeoff sentence.
 
 Never prescribe. Always frame as tradeoff choice.
 

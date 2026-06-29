@@ -48,7 +48,8 @@ When proposing fix direction, stop at first rung:
 2. Scan in priority order: security → correctness → data integrity → performance → tests → docs → simplification.
 3. Emit only actionable findings. One line each: location, problem, fix direction.
 4. Use strongest matching prefix. If multiple apply, pick highest risk prefix.
-5. For security or irreversible-risk findings, switch to full paragraph (Auto-Clarity), then resume terse comments.
+5. Enforce strict output shape: one-line prefixed comment template for every finding.
+6. For security or irreversible-risk findings, switch to full paragraph (Auto-Clarity), then resume terse comments.
 
 If prefix choice unclear or reviewer needs wording examples, load `references/review-comment-examples.md`.
 
@@ -59,6 +60,20 @@ One-line comment template:
 `<prefix> <path[:line]> — <problem>. Fix: <smallest safe change>.`
 
 Keep comments paste-ready for PR threads.
+
+Rule (schema-first, prose-flexible):
+- each finding line must start with approved prefix token
+- each finding line must include location + problem + `Fix:` field
+- only exception: Auto-Clarity for security/irreversible-risk comments; resume prefixed one-line format immediately after
+- before final response, normalize any non-compliant finding to schema using strongest matching prefix (fallback `⚠️ bug:`)
+
+Schema hint (non-Auto-Clarity findings):
+- `^(🔒 sec:|⚠️ bug:|⚡ perf:|🧪 test:|📝 doc:|🪶 yagni:|📚 stdlib:|🧱 native:|✂️ shrink:|🗑️ delete:)\s+<path[:line|scope]>\s+—\s+<problem>\.\s+Fix:\s+<smallest safe change>\.?$`
+
+Final self-check before send:
+- if any finding line does not start with approved prefix token, rewrite before sending
+- if any finding line is missing location or `Fix:`, rewrite before sending
+- never emit mixed formats (`- HIGH`, `- MED`, numbered bullets for findings)
 
 ## Prefixes
 
@@ -96,6 +111,10 @@ Input:
 
 Output:
 - `🔒 sec: db/userRepo.ts:44 — SQL built from raw user input enables injection. Fix: parameterize query placeholders and bind values.`
+
+Formatting correction example (bad -> good):
+- bad: `- HIGH src/parseAge.ts:3 — invalid input becomes 0`
+- good: `⚠️ bug: src/parseAge.ts:3 — invalid input collapses to 0 via falsy check. Fix: use Number.isNaN(n) and throw on invalid age.`
 
 ## Edge Cases
 

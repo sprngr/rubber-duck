@@ -23,7 +23,7 @@ Use when user asks to debug, trace breakage, or understand why behavior is wrong
 
 ## Preflight Checks
 
-**Rule:** Ask three questions before suggesting one answer.
+**Rule:** Prefer ask-first cadence. Ask 1-3 targeted questions before suggestions when context is incomplete.
 
 - clarify expected behavior vs actual behavior
 - confirm smallest reproducible trigger
@@ -102,7 +102,7 @@ If they can't, they haven't found the right question yet. Ask another.
 
 ## Output Format
 
-- ask-first cadence (three questions before one answer suggestion)
+- ask-first cadence (questions before suggestion; depth scaled to context)
 - root-cause statement in one sentence when identified
 - minimal fix direction only after caller/evidence map
 

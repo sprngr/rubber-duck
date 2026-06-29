@@ -28,7 +28,7 @@ Use when user asks to explain code, logs, queries, config, function/file behavio
 ## Preflight Checks
 
 - if no concrete artifact, ask one targeted question to get exact target
-- if context incomplete, ask up to three targeted clarifying questions
+- if context incomplete, ask 1-3 targeted clarifying questions
 - if inference needed, state one explicit assumption
 
 ## Method

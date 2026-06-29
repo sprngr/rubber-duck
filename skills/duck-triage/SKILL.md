@@ -28,7 +28,7 @@ Use for test coverage planning, bug severity triage, and pre-PR test recommendat
 ## Preflight Checks
 
 If repro/spec context is missing:
-- ask up to three targeted clarifying questions first
+- ask 1-3 targeted clarifying questions first
 - state assumptions explicitly before severity/test recommendations
 
 ## Method

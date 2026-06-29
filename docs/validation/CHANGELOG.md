@@ -33,12 +33,12 @@ Track validation outcomes across commits/releases.
 
 ---
 
-## 2026-06-28 — bootstrap
+## 2026-06-29 — overfit-cleanup-pass
 
 - Commit: uncommitted-working-tree
-- Runner: local
+- Runner: sprngr
 - Suite version: docs/validation/README.md
-- Verdict: PASS (example)
+- Verdict: PASS
 
 ### Quick subset
 - Passed: V02, V03, V04, V11, V12, V13, V14
@@ -48,5 +48,8 @@ Track validation outcomes across commits/releases.
 - Failed: none
 
 ### Notes
-- Baseline entry format established.
-- Replace this bootstrap row with first real validation run.
+- Overfit cleanup pass applied across router/ducklings/skills with adaptive strictness for non-mutating analysis.
+- Preserved hard safety/approval guardrails for mutating actions.
+- V14 boundary reinforced: explicit split required for scope >2 files.
+- Review output contract hardened to schema-first format (prefix + location + problem + `Fix:`), with normalization and final self-check.
+- V03 formatting regression resolved after adding schema hint + negative→positive formatting examples.

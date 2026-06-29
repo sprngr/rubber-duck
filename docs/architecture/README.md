@@ -6,7 +6,7 @@ This section defines the system-level architecture and operating contracts for R
 
 1. [01-philosophy.md](./01-philosophy.md) — product philosophy and decision ownership model.
 2. [02-agent-skill-model.md](./02-agent-skill-model.md) — router, agent, and skill architecture.
-3. [03-strict-socratic-mode.md](./03-strict-socratic-mode.md) — strict mode interaction protocol.
+3. [03-strict-socratic-mode.md](./03-strict-socratic-mode.md) — strict mode protocol (mandatory for mutating actions; optional for strictly guided sessions).
 
 ## Validation
 

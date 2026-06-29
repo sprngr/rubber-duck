@@ -61,6 +61,9 @@ Workflow:
 5) merge signals from `duck-adversary` / `duck-simple` / `duck-dry` / `duck-triage` without duplicate comments
 6) preserve and reference upstream evidence IDs/fields when present (e.g., `[E2]`, `Impact`, `Rollback`, `Diverges when`, `Extract start`)
 7) if required context missing, emit one `❓ question:` line
+8) enforce schema-first review format on all non-Auto-Clarity findings: approved prefix token + location + problem + `Fix:`
+9) before final output, normalize any non-compliant finding line to schema using strongest matching prefix (fallback `⚠️ bug:`)
+10) final self-check: no mixed formats (`- HIGH`, `- MED`, numbered findings). Rewrite to schema before send
 
 ## Output Contract
 
@@ -77,4 +80,5 @@ Rules:
 - no praise/filler
 - formatting nits only if semantic impact or user explicitly requests thorough
 - one issue, one strongest-prefix comment (dedupe)
+- no non-schema findings unless Auto-Clarity security/irreversible-risk exception applies
 - simplification tags (`🪶 yagni:` `📚 stdlib:` `🧱 native:` `✂️ shrink:` `🗑️ delete:`) never override higher-risk finding on same issue

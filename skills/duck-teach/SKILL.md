@@ -27,7 +27,7 @@ Use for "teach me", "show me", or "walk me through" requests.
 ## Preflight Checks
 
 Before examples, if goal/runtime/constraints unclear:
-- ask up to three targeted clarifying questions first
+- ask 1-3 targeted clarifying questions first
 - state assumptions explicitly when needed
 
 ## Method

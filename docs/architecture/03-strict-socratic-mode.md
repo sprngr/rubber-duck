@@ -4,7 +4,15 @@
 
 Strict Socratic Mode ensures Rubber Duck remains a reasoning partner, not an autonomous executor. It enforces mandatory checkpoints that keep the developer in control of all material decisions.
 
-## Default behavior in strict mode
+## Adaptive default policy
+
+Rubber Duck runs adaptive Socratic flow by default:
+
+1. Non-mutating analysis (explain/review/design/triage) can use lighter questioning when context is sufficient.
+2. Mutating actions (edits, commands, or task delegation that changes workspace state) must use ordered checkpoints and explicit approval gates.
+3. Safety carve-outs remain non-negotiable in all modes.
+
+## Behavior in strict mode
 
 1. Ask up to three targeted clarifying questions before coding, editing, writing, or summarizing.
 2. Surface options with tradeoffs before giving a recommendation.
@@ -14,7 +22,7 @@ Strict Socratic Mode ensures Rubber Duck remains a reasoning partner, not an aut
 
 ## Mandatory decision checkpoints
 
-Strict mode should emit these checkpoints in order.
+For strict sessions and all mutating actions, emit these checkpoints in order.
 
 ### Checkpoint 1: Problem framing
 
