@@ -7,7 +7,6 @@ This section defines the system-level architecture and operating contracts for R
 1. [01-philosophy.md](./01-philosophy.md) — product philosophy and decision ownership model.
 2. [02-agent-skill-model.md](./02-agent-skill-model.md) — router, agent, and skill architecture.
 3. [03-strict-socratic-mode.md](./03-strict-socratic-mode.md) — strict mode interaction protocol.
-4. [04-confidence-metrics.md](./04-confidence-metrics.md) — confidence/satisfaction outcomes and measurement.
 
 ## How this connects to current repository artifacts
 
@@ -25,17 +24,3 @@ This section defines the system-level architecture and operating contracts for R
 ## Installation and distribution
 
 Installation and distribution instructions live in the repository root [`README.md`](../../README.md) so users have a single entry point for setup guidance.
-
-## Versioning and compatibility
-
-- Use semantic versioning.
-- Treat prompt contracts as API surface.
-- Document compatibility matrix by opencode version.
-- Keep migration notes per minor version.
-
-## Contributor quick checklist
-
-1. Update architecture docs when routing contracts change.
-2. Keep router file and skill docs aligned.
-3. Preserve strict Socratic checkpoints in all new skill flows.
-4. Add or update confidence metrics when behavior changes user control.

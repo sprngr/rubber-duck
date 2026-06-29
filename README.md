@@ -1,10 +1,16 @@
 # Rubber Duck 🦆
 
-Socratic assistant operating system for developers who want **better decisions**, not blind automation.
+Socratic assistant operating system for developers who want **better quality decisions**, not blind automation.
 
 Rubber Duck helps you debug, review, design, and triage with structured questioning, evidence-first routing, and explicit safety guardrails.
 
-## Why this approach
+## Why
+
+Initially Rubber Duck started as my attempt to build a better debugger. I used the first versions to do pre-reviews before submitting code.
+As time went on I found myself letting the model do more and more work until I found myself in meetings where we realized decisions were being made
+that we weren't actually aware were included in our own work. We sacrificed understanding in favor of speed of output.
+
+This is my attempt to flip the current practice and lean even harder into "human in the loop".
 
 Most assistant setups optimize for speed-to-output. Rubber Duck optimizes for:
 
@@ -13,46 +19,60 @@ Most assistant setups optimize for speed-to-output. Rubber Duck optimizes for:
 - safe, bounded change,
 - reduced rework from shallow fixes.
 
-Core idea: keep human in control, keep reasoning explicit.
+Core idea: keep human in control, keep reasoning explicit. We're reducing rework by increasing understanding and decisions before they are executed.
 
-## Who this is for
+### Who this is for
 
-Priority audiences:
+- If you are a developer who want an assistant that sharpens thinking without taking over by keeping you in the driver seat.
 
-1. **Solo developers** who want an assistant that sharpens thinking without taking over.
-2. **Team leads** who need consistent review/debug behavior across contributors.
-3. **Tinkerers** who want reusable agent/skill scaffolding with governance checks.
-
-## Who this is not for
+### Who this is not for
 
 - If you want fully autonomous, no-checkpoint, end-to-end automated runs with minimal human involvement, this project is likely not a fit.
 
-## Quick install
+### Does it actually work better?
 
-Interactive (recommended):
+- Depends on your definition of better, but I feel like I actually know what is going on.
 
-```bash
-bash scripts/install-harness.sh
-```
+## Philosophy Guardrails
 
-Direct harness install:
+Every skill is bound by the corresponding philosophy:
 
-```bash
-bash scripts/install.sh --opencode
-bash scripts/install.sh --claude-code
-bash scripts/install.sh --copilot
-bash scripts/install.sh --pi
-```
+- Decision ownership: developer selects tradeoff; this skill frames options and consequences.
+- Ask-before-act: ask clarifying scoping questions before recommendations.
+- Evidence-first: ground recommendations in explicit system constraints and known behavior.
+- Bounded approval: implementation actions require explicit user approval and scoped handoff.
+- Safety carve-outs: never trade away trust-boundary validation, security, data-loss prevention, accessibility, or explicit requirements.
 
-Skills-only install:
+## Quick skill-only install
 
 ```bash
 npx skills add https://github.com/sprngr/rubber-duck
 ```
 
-## 5-minute first session
+## Full Rubberr-Duck agent system
+
+Checkout a copy of this repo to your local environment.
+
+Install included agents (path depends on your harness):
+
+```bash
+cp /path/to/cantrips/agents/*.agent.md /path/to/harness/agents/
+```
+
+Install AGENTS.md (path depends on your harness):
+```bash
+cp /path/to/cantrips/AGENTS.md /path/to/harness/AGENTS.md
+```
+
+Or append it to your current AGENTS.md
+
+## Verify after install
 
 Use this to quickly validate behavior and fit in your own workflow.
+
+### Step 0: Enable Rubber Duck Agent
+
+Depending on your harness, can be a dropdown menu or @🦆
 
 ### Step 1: heartbeat check
 
@@ -70,7 +90,6 @@ Expected:
 Prompt:
 
 ```text
-/duck-review
 Review this snippet for correctness and simplification:
 
 function parseAge(input) {
@@ -88,7 +107,6 @@ Expected:
 Prompt:
 
 ```text
-/duck-debug
 My endpoint returns 500 when userId is missing. Help me debug this.
 ```
 
@@ -96,31 +114,6 @@ Expected:
 - clarifying questions first,
 - evidence-first reasoning,
 - explicit handoff/approval before implementation.
-
-### OpenCode note
-
-In OpenCode, same flow works with `quack` and duck commands/prompts after install.
-
-If these three steps feel useful, continue with your real issue and keep the same question-first pattern.
-
-## Harness support
-
-| Harness | Tier | Meaning |
-|---|---|---|
-| OpenCode | Verified | Maintainer-tested locally |
-| Claude Code | Scaffolded | Static checks + docs validated |
-| GitHub Copilot | Scaffolded | Static checks + docs validated |
-| Pi | Scaffolded | Static checks + docs validated |
-
-For preference-based setup and verify/uninstall shortcuts:
-
-- [docs/install/quickstart-by-preference.md](./docs/install/quickstart-by-preference.md)
-
-## Verify after install
-
-1. Start fresh session in your harness.
-2. Run `quack`.
-3. Run one workflow command (for example `/duck-review`) on a small sample.
 
 ## Deep dive docs
 
@@ -131,28 +124,45 @@ For preference-based setup and verify/uninstall shortcuts:
 - [Agent + skill model](./docs/architecture/02-agent-skill-model.md)
 - [Strict Socratic mode](./docs/architecture/03-strict-socratic-mode.md)
 
-### Governance and policy adherence
-
-- [Governance index](./docs/governance/README.md)
-- [Rubric](./docs/governance/rubric.md)
-- [Behavior tests](./docs/governance/behavior-tests.md)
-- [Final governance summary](./docs/governance/final-summary-2026-06-28.md)
-
 ### Prompt contracts
 
 - Router + subagents: [`agents/`](./agents)
 - Skills: [`skills/`](./skills)
 
-## Contributing (minimum checks)
-
-```bash
-make full-check
-```
-
-If you change `agents/*` or `skills/*`, include governance run evidence (local `docs/governance/runs/` plus PR summary per template).
-
 ## Attribution
 
-Rubber Duck draws inspiration from related assistant-operating-system work such as Ponytail and Caveman, then adapts those ideas to a Socratic, human-in-the-loop model.
+Rubber Duck is inspired by its [namesake](https://rubberduckdebugging.com/) and the philosophy of talking to the duck to determine your problem and arrive at your own solution; except this one can actually talk back and ask really good questions.
 
-Token note: minimizing token usage through oversimplified output is not the goal. Minimizing token usage through clear understanding and precise communication is the goal.
+Rubber Duck adopted terse language and the review structure inspired by [Caveman](https://github.com/JuliusBrussee/caveman), though token reduction slowly stopped being the primary goal as it took on a life of its own.
+
+Part of Rubber Duck operating model adapt ideas from [Ponytail](https://github.com/DietrichGebert/ponytail) by Dietrich Gebert.
+
+### Concept mapping (Ponytail → Rubber Duck adaptation)
+
+- **Lazy ladder / first-rung decision policy**  
+  Ponytail: YAGNI → reuse → stdlib → native → installed dep → minimal code.  
+  Rubber Duck: shared “Duck Ladder” added across `duck-debug`, `duck-review`, `duck-triage`, `duck-design`, `duck-teach`, `duck-explain`.
+
+- **Root cause over symptom patching**  
+  Ponytail: fix shared path once, not caller-by-caller.  
+  Rubber Duck: `duck-debug` root-cause locality + caller-map-before-patch guidance.
+
+- **Overengineering review taxonomy**  
+  Ponytail: `delete/stdlib/native/yagni/shrink` review lens.  
+  Rubber Duck: simplification prefixes (`🪶 yagni`, `📚 stdlib`, `🧱 native`, `✂️ shrink`, `🗑️ delete`) in `duck-review` and `duck-simple`.
+
+- **Risk-first precedence during review**  
+  Ponytail: simplification never at expense of safety/correctness.  
+  Rubber Duck: reviewer merge order and prefix precedence enforce security/correctness first.
+
+- **Minimum-check discipline**  
+  Ponytail: non-trivial logic leaves one runnable check.  
+  Rubber Duck: `duck-triage` minimum runnable check rule.
+
+- **Deferred simplification ledger**  
+  Ponytail: `ponytail:` debt markers and debt harvesting.  
+  Rubber Duck: `duck-debt:` marker convention + `duck-debt` skill for read-only debt ledger.
+
+- **Safety carve-outs**  
+  Ponytail: never simplify away trust-boundary validation, security, data-loss prevention, accessibility.  
+  Rubber Duck: mirrored in repo [AGENTS policy](AGENTS.md) minimal-change discipline and skill policy text.
