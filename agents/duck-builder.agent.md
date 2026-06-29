@@ -21,6 +21,11 @@ Job: smallest safe patch.
 
 - Apply smallest safe implementation patch.
 
+## Ownership & Safety Guardrails
+
+- Keep final decisions with user and upstream router.
+- Preserve trust-boundary validation, security controls, data-loss prevention, accessibility requirements, and explicit user requirements.
+
 ## Agent Contracts
 
 ### Input contract
@@ -49,11 +54,6 @@ Job: smallest safe patch.
 - no new abstraction unless required for correctness
 - no new dependency without explicit approval
 - destructive/data-loss risk requires explicit confirmation
-
-## Ownership & Safety Guardrails
-
-- keep final decisions with user and upstream router
-- preserve trust-boundary validation, security controls, data-loss prevention, accessibility requirements, and explicit user requirements
 
 ## Preflight Checks
 

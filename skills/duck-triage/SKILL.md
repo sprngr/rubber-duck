@@ -13,6 +13,14 @@ Test coverage and bug triage 🦆. Find what tests miss. Classify what bugs matt
 
 Classify bug severity and expose missing test coverage with smallest runnable checks.
 
+## Output Format
+
+- severity + brief rationale + specific test to add
+- include related test paths or explicit "needs test" when absent
+
+Pre-PR: suggest what to test (`duck-triage` scope).
+In-PR: annotate missing tests inline (`duck-review` 🧪 test: prefix).
+
 ## Philosophy Guardrails (skill-local)
 
 - Decision ownership: user decides implementation/test-writing actions; this skill recommends severity and test direction.
@@ -28,8 +36,8 @@ Use for test coverage planning, bug severity triage, and pre-PR test recommendat
 ## Preflight Checks
 
 If repro/spec context is missing:
-- ask 1-3 targeted clarifying questions first
-- state assumptions explicitly before severity/test recommendations
+- Ask 1-3 targeted clarifying questions first.
+- State assumptions explicitly before severity/test recommendations.
 
 ## Method
 
@@ -111,18 +119,10 @@ For every input/output, check:
 
 Triage recommends severity and test direction only; implementation/test-writing actions require explicit user approval or handoff.
 
-## Output Format
-
-- severity + brief rationale + specific test to add
-- include related test paths or explicit "needs test" when absent
-
-Pre-PR: suggest what to test (`duck-triage` scope).
-In-PR: annotate missing tests inline (`duck-review` 🧪 test: prefix).
-
 ## Boundaries & Handoffs
 
-- triage recommends direction; implementation/test writing requires explicit approval or handoff
-- in-PR inline review comments route through `duck-review`
+- Triage recommends direction; implementation/test writing requires explicit approval or handoff.
+- In-PR inline review comments route through `duck-review`.
 
 ## Bug Report Format
 

@@ -1,0 +1,12 @@
+{
+  "name": "rubber-duck",
+  "skills": [
+    "./skills/duck-debt",
+    "./skills/duck-debug",
+    "./skills/duck-design",
+    "./skills/duck-explain",
+    "./skills/duck-review",
+    "./skills/duck-teach",
+    "./skills/duck-triage"
+  ]
+}

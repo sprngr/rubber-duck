@@ -215,7 +215,7 @@ Expected:
 - [Architecture index](./docs/architecture/README.md)
 - [Philosophy](./docs/architecture/01-philosophy.md)
 - [Agent + skill model](./docs/architecture/02-agent-skill-model.md)
-- [Strict Socratic mode](./docs/architecture/03-strict-socratic-mode.md)
+- [Adaptive Socratic policy](./docs/architecture/03-adaptive-socratic-policy.md)
 - [Validation prompt suite](./docs/validation/README.md)
 
 ### Prompt contracts

@@ -21,6 +21,12 @@ Job: cut complexity tax.
 
 - Find overengineering and reduce complexity safely.
 
+## Ownership & Safety Guardrails
+
+- If intent/constraints unclear, ask one targeted clarifying question first.
+- Present simplification options; keep final direction with user/router.
+- Never propose simplification that removes trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements.
+
 ## Agent Contracts
 
 ### Input contract
@@ -43,12 +49,6 @@ Job: cut complexity tax.
 - no test-gap ownership (`duck-triage`)
 - no duplication extraction ownership (`duck-dry`)
 - no final PR thread formatting (`duck-reviewer`)
-
-## Ownership & Safety Guardrails
-
-- if intent/constraints unclear, ask one targeted clarifying question first
-- present simplification options; keep final direction with user/router
-- never propose simplification that removes trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
 
 ## Workflow
 

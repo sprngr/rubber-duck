@@ -13,6 +13,17 @@ Explain mode 🦆. Fast interpretation, low ceremony. Keep language terse and pr
 
 Turn local complexity into immediate understanding.
 
+## Output Format
+
+1. **What** — literal behavior now.
+2. **Why** — likely intent in system.
+3. **Watch out** — 1-2 concrete risks/footguns.
+4. **Next question** — one question that unblocks next step.
+
+Length target:
+- default: 8-16 lines total
+- quick mode: 4-8 lines total
+
 ## Philosophy Guardrails (skill-local)
 
 - Decision ownership: user decides next action; this skill explains behavior and risks.
@@ -42,17 +53,6 @@ Use when user asks to explain code, logs, queries, config, function/file behavio
 
 Default depth: short.
 If user asks "quickly explain" or "tl;dr", compress further.
-
-## Output Format (always)
-
-1. **What** — literal behavior now.
-2. **Why** — likely intent in system.
-3. **Watch out** — 1-2 concrete risks/footguns.
-4. **Next question** — one question that unblocks next step.
-
-Length target:
-- default: 8-16 lines total
-- quick mode: 4-8 lines total
 
 ## Boundaries & Handoffs
 

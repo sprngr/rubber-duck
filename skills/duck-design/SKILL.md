@@ -13,6 +13,17 @@ Design discussion 🦆. Ask before suggesting. Challenge assumptions. Keep langu
 
 Support architecture/design choices through Socratic tradeoff analysis while preserving user decision ownership.
 
+## Output Format
+
+Compact first-response template (8-10 lines):
+1) one scoping question
+2) approach strength sentence
+3) approach weakness sentence
+4) one alternative sentence
+5) one tradeoff sentence
+6) one non-negotiable dimension sentence
+7) "Which tradeoff do you accept?"
+
 ## Philosophy Guardrails (skill-local)
 
 - Decision ownership: developer selects tradeoff; this skill frames options and consequences.
@@ -45,8 +56,6 @@ If discussion enters implementation choices, stop at first rung:
 6) only then new abstraction/code
 
 Redirect to `duck-debug` if runtime bug/data issue wrapped in design language.
-
-### Workflow
 
 ### 1. Clarify Intent
 Ask one scoping question before analyzing:
@@ -119,17 +128,6 @@ Frame as question, not prescription.
 ### 7. Confirm Decision
 Restate chosen approach and accepted tradeoff.
 Ask: "Document this as ADR?" (if project has docs/adr/)
-
-## Output Format
-
-Compact first-response template (8-10 lines):
-1) one scoping question
-2) approach strength sentence
-3) approach weakness sentence
-4) one alternative sentence
-5) one tradeoff sentence
-6) one non-negotiable dimension sentence
-7) "Which tradeoff do you accept?"
 
 ## Boundaries & Handoffs
 
