@@ -49,13 +49,13 @@ Every skill is bound by the corresponding philosophy:
 npx skills add https://github.com/sprngr/rubber-duck
 ```
 
-## Full Rubber Duck agent system (repeatable)
+## Full Rubber Duck agent system (Installer/Updater & Uninstaller)
 
 Checkout repo locally, then use installer script.
 
 ### Generic harness target (default)
 
-Install to custom agent dir + AGENTS file, still using `npx skills add` for skills:
+Install to custom agent dir + AGENTS file, using `npx skills add` for skills:
 
 ```bash
 ./scripts/rubber-duck.sh install \
@@ -102,9 +102,9 @@ Uninstall managed artifacts:
 ```
 
 Notes:
-- script copies agent files (no symlinks)
+- script copies agent files to directory
 - AGENTS policy is appended/removed via managed block markers
-- use `--skip-skills` if you only want agents + AGENTS policy changes
+- use `--skip-skills` if you only need agents + AGENTS policy changes
 - use `--dry-run` to print planned actions + AGENTS.md diff preview without writing
 - install/uninstall always creates AGENTS backup in same dir: `AGENTS.md.bak.<YYYYmmdd-HHMMSS>`
 
