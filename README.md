@@ -7,8 +7,8 @@ Rubber Duck helps you debug, review, design, and triage with structured question
 ## Why
 
 Initially Rubber Duck started as my attempt to build a better debugger. I used the first versions to do pre-reviews before submitting code.
-As time went on I found myself letting the model do more and more work until I found myself in meetings where we realized decisions were being made
-that we weren't actually aware were included in our own work. We sacrificed understanding in favor of speed of output.
+As time went on I found myself letting the model do more and more work. I would attend meetings where my team and myself realized decisions were being made
+that we weren't actually aware were included in our own work being put up for review. We sacrificed understanding in favor of speed of output.
 
 This is my attempt to flip the current practice and lean even harder into "human in the loop".
 
