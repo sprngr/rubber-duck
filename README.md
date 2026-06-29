@@ -58,7 +58,7 @@ CLI reference: [scripts/README.md](./scripts/README.md)
 
 #### macOS / Linux (bash)
 
-Generic target install:
+Generic target install (requires your local config paths):
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh | bash -s -- install --agents-dir /path/to/harness/agents --agents-md /path/to/harness/AGENTS.md
@@ -72,7 +72,7 @@ curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rub
 
 #### Windows (PowerShell)
 
-Generic target install:
+Generic target install (requires your local config paths):
 
 ```powershell
 $p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.ps1 -OutFile $p; & $p install -AgentsDir C:\path\to\harness\agents -AgentsMd C:\path\to\harness\AGENTS.md
