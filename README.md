@@ -52,6 +52,10 @@ npx skills add https://github.com/sprngr/rubber-duck
 
 ## Full Rubber Duck agent system (Installer/Updater & Uninstaller)
 
+Installer has default behavior making assumptions about system, targeting global skills install and universal agent skills directory.
+
+If you require a different path for your setup, use the `--skip-skills` argument and run `npx skills add` separately.
+
 CLI reference: [scripts/README.md](./scripts/README.md)
 
 ### One-line installer
