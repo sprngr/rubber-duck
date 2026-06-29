@@ -11,12 +11,8 @@ SOURCE_MODE="auto" # auto|local|web
 RAW_BASE="https://raw.githubusercontent.com/sprngr/rubber-duck/main"
 DRY_RUN=0
 
-SCRIPT_PATH="${BASH_SOURCE[0]-}"
-if [[ -z "${SCRIPT_PATH}" || "${SCRIPT_PATH}" == "-" ]]; then
-  SCRIPT_PATH="${0:-}"
-fi
-
-if [[ -z "${SCRIPT_PATH}" || "${SCRIPT_PATH}" == "-" ]]; then
+SCRIPT_PATH="${0:-}"
+if [[ -z "${SCRIPT_PATH}" || "${SCRIPT_PATH}" == "-" || "${SCRIPT_PATH}" == "bash" || "${SCRIPT_PATH}" == "sh" ]]; then
   SCRIPT_DIR="$(pwd)"
 else
   SCRIPT_DIR="$(cd -- "$(dirname -- "${SCRIPT_PATH}")" && pwd)"
