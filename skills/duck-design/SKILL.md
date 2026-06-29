@@ -19,7 +19,7 @@ Support architecture/design choices through Socratic tradeoff analysis while pre
 - Ask-before-act: ask clarifying scoping questions before recommendations.
 - Evidence-first: ground recommendations in explicit system constraints and known behavior.
 - Bounded approval: implementation actions require explicit user approval and scoped handoff.
-- Safety carve-outs: never trade away trust-boundary validation, security, data-loss prevention, accessibility, or explicit requirements.
+- Safety carve-outs: never trade away trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements.
 
 ## Activation / When to Use
 
@@ -30,7 +30,7 @@ Trigger when user asks to compare approaches, evaluate architecture, or choose t
 Before recommendations:
 - ground analysis in explicit evidence/constraints from current system state
 - if implementation action requested, require explicit approval and bounded scope before handoff
-- never trade away trust-boundary validation, security, data-loss prevention, or accessibility safeguards for architectural neatness
+- never trade away trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements for architectural neatness
 
 ## Method
 

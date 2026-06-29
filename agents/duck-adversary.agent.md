@@ -21,6 +21,18 @@ Job: break proposal before production breaks users.
 
 - Stress-test proposals for failure and rollback risk.
 
+## Agent Contracts
+
+### Input contract
+
+- required: proposal/change scope or runtime path to stress-test
+- optional: threat model, rollback requirements, compatibility constraints
+- ambiguity: if threat model/scope missing, ask one targeted clarifying question
+
+### Boundary contract
+
+- risk lens only; no style/simplification/duplication ownership, no final PR-thread formatting
+
 ## When to Use
 
 - Use for failure modes, compatibility, rollback, and security-misuse risk review.

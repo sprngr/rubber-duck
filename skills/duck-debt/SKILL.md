@@ -19,7 +19,7 @@ Collect deferred simplification markers into a read-only ledger.
 - Ask-before-act: ask one clarifying question if scan scope is ambiguous.
 - Evidence-first: report only markers actually found in repository scan output.
 - Bounded approval: read/report only; no edits or execution of cleanup actions.
-- Safety carve-outs: never recommend debt cleanup that weakens trust-boundary validation, security, data-loss prevention, accessibility, or explicit requirements.
+- Safety carve-outs: never recommend debt cleanup that weakens trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements.
 
 ## Activation / When to Use
 
@@ -71,7 +71,7 @@ No markers:
 - Read/report only. No edits.
 - No debt-priority roadmap unless user asks.
 - If asked to apply cleanup directly, route to `duck-review` (findings) then `duck-builder` (bounded patch).
-- Do not recommend debt cleanup paths that weaken security, trust-boundary validation, data-loss prevention, or accessibility safeguards.
+- Do not recommend debt cleanup paths that weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements.
 - If user asks for cleanup planning, prefer smallest safe follow-up path first.
 
 ## Edge Cases

@@ -18,7 +18,7 @@ Teach concepts with structured, minimal examples aligned to workspace patterns.
 - Ask-before-act: ask clarifying questions when goal/runtime/constraints are unclear.
 - Evidence-first: prefer real workspace patterns and explicit assumptions over generic guesses.
 - Bounded approval: teaching mode does not execute edits/actions without explicit user approval and handoff.
-- Safety carve-outs: examples must preserve trust-boundary validation, security, data-loss prevention, accessibility, and explicit requirements.
+- Safety carve-outs: examples must preserve trust-boundary validation, security controls, data-loss prevention, accessibility requirements, and explicit user requirements.
 
 ## Activation / When to Use
 
@@ -55,7 +55,7 @@ All tutorials follow this skeleton:
 - Use workspace tech stack — don't default to a different language/framework
 - Prefer real project usage patterns over generic samples
 - Prefer ladder order in examples: reuse local → stdlib/native → installed dep → custom code last
-- Preserve trust-boundary validation, security, data-loss prevention, and accessibility in example code
+- Preserve trust-boundary validation, security controls, data-loss prevention, accessibility requirements, and explicit user requirements in example code
 
 - Annotate inline with `// ←` for critical lines
 - Keep examples under 30 lines. Split complex examples into "minimal" and "complete"

@@ -49,22 +49,64 @@ Every skill is bound by the corresponding philosophy:
 npx skills add https://github.com/sprngr/rubber-duck
 ```
 
-## Full Rubberr-Duck agent system
+## Full Rubber Duck agent system (repeatable)
 
-Checkout a copy of this repo to your local environment.
+Checkout repo locally, then use installer script.
 
-Install included agents (path depends on your harness):
+### Generic harness target (default)
+
+Install to custom agent dir + AGENTS file, still using `npx skills add` for skills:
 
 ```bash
-cp /path/to/cantrips/agents/*.agent.md /path/to/harness/agents/
+./scripts/rubber-duck.sh install \
+  --agents-dir /path/to/harness/agents \
+  --agents-md /path/to/harness/AGENTS.md
 ```
 
-Install AGENTS.md (path depends on your harness):
+Uninstall from generic target:
+
 ```bash
-cp /path/to/cantrips/AGENTS.md /path/to/harness/AGENTS.md
+./scripts/rubber-duck.sh uninstall \
+  --agents-dir /path/to/harness/agents \
+  --agents-md /path/to/harness/AGENTS.md
 ```
 
-Or append it to your current AGENTS.md
+Show status:
+
+```bash
+./scripts/rubber-duck.sh status \
+  --agents-dir /path/to/harness/agents \
+  --agents-md /path/to/harness/AGENTS.md
+```
+
+Run environment checks:
+
+```bash
+./scripts/rubber-duck.sh doctor \
+  --agents-dir /path/to/harness/agents \
+  --agents-md /path/to/harness/AGENTS.md
+```
+
+### Opencode target (preconfigured shortcut)
+
+Install agents + managed AGENTS policy block + skills package:
+
+```bash
+./scripts/rubber-duck.sh install --opencode
+```
+
+Uninstall managed artifacts:
+
+```bash
+./scripts/rubber-duck.sh uninstall --opencode
+```
+
+Notes:
+- script copies agent files (no symlinks)
+- AGENTS policy is appended/removed via managed block markers
+- use `--skip-skills` if you only want agents + AGENTS policy changes
+- use `--dry-run` to print planned actions + AGENTS.md diff preview without writing
+- install/uninstall always creates AGENTS backup in same dir: `AGENTS.md.bak.<YYYYmmdd-HHMMSS>`
 
 ## Verify after install
 
@@ -123,6 +165,7 @@ Expected:
 - [Philosophy](./docs/architecture/01-philosophy.md)
 - [Agent + skill model](./docs/architecture/02-agent-skill-model.md)
 - [Strict Socratic mode](./docs/architecture/03-strict-socratic-mode.md)
+- [Validation prompt suite](./docs/validation/README.md)
 
 ### Prompt contracts
 

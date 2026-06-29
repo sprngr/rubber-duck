@@ -8,6 +8,10 @@ This section defines the system-level architecture and operating contracts for R
 2. [02-agent-skill-model.md](./02-agent-skill-model.md) — router, agent, and skill architecture.
 3. [03-strict-socratic-mode.md](./03-strict-socratic-mode.md) — strict mode interaction protocol.
 
+## Validation
+
+- [Validation prompt suite](../validation/README.md) — checklist prompts and expected signals for behavior regression checks.
+
 ## How this connects to current repository artifacts
 
 - Router definition: [`agents/rubber-duck.agent.md`](../../agents/rubber-duck.agent.md)

@@ -19,7 +19,7 @@ Turn local complexity into immediate understanding.
 - Ask-before-act: request missing context before deep explanation.
 - Evidence-first: explain from provided artifacts and explicit assumptions.
 - Bounded approval: no edits/tools/actions from explain mode without explicit user approval and reroute.
-- Safety carve-outs: never recommend removing trust-boundary checks, security, data-loss prevention, accessibility, or explicit requirements.
+- Safety carve-outs: never recommend removing trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements.
 
 ## Activation / When to Use
 

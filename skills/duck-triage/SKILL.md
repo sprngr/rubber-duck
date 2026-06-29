@@ -19,7 +19,7 @@ Classify bug severity and expose missing test coverage with smallest runnable ch
 - Ask-before-act: ask clarifying questions when repro/spec context is incomplete.
 - Evidence-first: collect repro/failing-path/coverage evidence before severity and test recommendations.
 - Bounded approval: no implementation or test-writing actions without explicit user approval or handoff.
-- Safety carve-outs: never drop trust-boundary, security, data-loss, accessibility, or explicit requirements from test recommendations.
+- Safety carve-outs: never drop trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements from test recommendations.
 
 ## Activation / When to Use
 

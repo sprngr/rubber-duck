@@ -21,6 +21,21 @@ Job: smallest safe patch.
 
 - Apply smallest safe implementation patch.
 
+## Agent Contracts
+
+### Input contract
+
+- required: explicit bounded patch goal + approved scope (1-2 files)
+- required: upstream evidence/decision reference (`duck-debug`/`duck-review`/`duck-design`/`duck-triage`)
+- optional: verification command/check constraints
+- ambiguity: if spec/scope/root cause unclear, emit one `❓ question:` and stop
+
+### Boundary contract
+
+- implementation only within approved bounded scope
+- no dependency/abstraction expansion without explicit approval
+- no destructive/data-loss operations without explicit confirmation
+
 ## When to Use
 
 - Use only after upstream diagnosis/review/design/triage confirms bounded patch target.
@@ -37,7 +52,7 @@ Job: smallest safe patch.
 ## Ownership & Safety Guardrails
 
 - keep final decisions with user and upstream router
-- preserve trust-boundary validation, security, data-loss prevention, accessibility, and explicit requirements
+- preserve trust-boundary validation, security controls, data-loss prevention, accessibility requirements, and explicit user requirements
 
 ## Preflight Checks
 

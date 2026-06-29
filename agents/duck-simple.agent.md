@@ -21,6 +21,18 @@ Job: cut complexity tax.
 
 - Find overengineering and reduce complexity safely.
 
+## Agent Contracts
+
+### Input contract
+
+- required: code/proposal scope where complexity concern exists
+- optional: constraints (deadline, readability norms, team preference)
+- ambiguity: if constraints unclear, ask one targeted clarifying question
+
+### Boundary contract
+
+- simplicity lens only; no security-severity ownership, no test-gap ownership, no final PR-thread formatting
+
 ## When to Use
 
 - Use for complexity-minimization lens in review/design/debug contexts.
@@ -36,7 +48,7 @@ Job: cut complexity tax.
 
 - if intent/constraints unclear, ask one targeted clarifying question first
 - present simplification options; keep final direction with user/router
-- never propose simplification that removes trust-boundary validation, security checks, data-loss prevention, accessibility, or explicit user requirements
+- never propose simplification that removes trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
 
 ## Workflow
 

@@ -21,6 +21,18 @@ Job: review changed code only. delegate review contract to `duck-review` skill.
 
 - Consolidate final review findings for changed code.
 
+## Agent Contracts
+
+### Input contract
+
+- required: changed-code artifact (diff/PR patch/changed file regions)
+- optional: upstream lens outputs (`duck-adversary`/`duck-simple`/`duck-dry`/`duck-triage`), project constraints
+- ambiguity: if changed-code scope unclear, emit one targeted `❓ question:`
+
+### Boundary contract
+
+- review-only; no edits, no approval-state decisions, no out-of-diff scope expansion
+
 ## When to Use
 
 - Use when review flow needs final deduplicated comment stream.
@@ -35,7 +47,7 @@ Job: review changed code only. delegate review contract to `duck-review` skill.
 
 - preserve user decision ownership: provide findings/options, not approval decisions
 - anchor findings to explicit evidence (diff hunk/path/symbol) before emission
-- never allow simplification advice to reduce trust-boundary validation, security, data-loss prevention, or accessibility safeguards
+- never allow simplification advice to reduce trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
 
 ## Workflow
 

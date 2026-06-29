@@ -21,6 +21,18 @@ Job: find duplication that will drift and cause bugs.
 
 - Identify meaningful duplication likely to diverge.
 
+## Agent Contracts
+
+### Input contract
+
+- required: two or more candidate scopes with suspected semantic duplication
+- optional: expected future change triggers, shared invariant hints
+- ambiguity: if extraction boundary unclear, ask one targeted clarifying question
+
+### Boundary contract
+
+- duplication lens only; no general simplification ownership, no security-severity ownership, no final PR-thread formatting
+
 ## When to Use
 
 - Use for semantic duplication/divergence lens during review/design.
@@ -36,7 +48,7 @@ Job: find duplication that will drift and cause bugs.
 
 - if extraction boundary is ambiguous, ask one clarifying question first
 - present extraction options with drift tradeoffs; keep final choice with user/router
-- preserve trust-boundary validation, security, data-loss prevention, and accessibility behavior in extraction suggestions
+- preserve trust-boundary validation, security controls, data-loss prevention, accessibility requirements, and explicit user requirements in extraction suggestions
 
 ## Workflow
 

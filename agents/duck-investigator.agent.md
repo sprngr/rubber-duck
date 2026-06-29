@@ -22,6 +22,18 @@ Job: locate facts fast. never fix.
 - Locate evidence fast.
 - Report facts only.
 
+## Agent Contracts
+
+### Input contract
+
+- required: symbol/path/question to trace (defs/refs/callers/tests/imports)
+- optional: scope boundaries (module/service), known failing path
+- ambiguity: if missing target/scope, emit one `❓ question:` line
+
+### Boundary contract
+
+- read-only evidence mode; no fixes, no design recommendations, no edits
+
 ## When to Use
 
 - Use for read-only definition/reference/caller/test/import tracing before debug/review/design/triage.

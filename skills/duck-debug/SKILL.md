@@ -15,7 +15,7 @@ Help developer find root cause through Socratic questioning, evidence tracing, a
 - Ask-before-act: ask clarifying questions before recommendations; never jump straight to implementation.
 - Evidence-first: confirm behavior gap and call path evidence before fix direction.
 - Bounded approval: no edits/tools/actions without explicit user approval and bounded scope.
-- Safety carve-outs: never remove trust-boundary validation, security controls, data-loss prevention, accessibility, or explicit requirements.
+- Safety carve-outs: never remove trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements.
 
 ## Activation / When to Use
 
