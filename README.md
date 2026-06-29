@@ -49,7 +49,42 @@ Every skill is bound by the corresponding philosophy:
 npx skills add https://github.com/sprngr/rubber-duck
 ```
 
+
 ## Full Rubber Duck agent system (Installer/Updater & Uninstaller)
+
+CLI reference: [scripts/README.md](./scripts/README.md)
+
+### One-line installer
+
+#### macOS / Linux (bash)
+
+Generic target install:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh | bash -s -- install --agents-dir /path/to/harness/agents --agents-md /path/to/harness/AGENTS.md
+```
+
+Install (opencode preconfigured):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh | bash -s -- install --opencode
+```
+
+#### Windows (PowerShell)
+
+Generic target install:
+
+```powershell
+$p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.ps1 -OutFile $p; & $p install -AgentsDir C:\path\to\harness\agents -AgentsMd C:\path\to\harness\AGENTS.md
+```
+
+Install (opencode preconfigured):
+
+```powershell
+$p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.ps1 -OutFile $p; & $p install -OpenCode
+```
+
+## Local installer
 
 Checkout repo locally, then use installer script.
 
