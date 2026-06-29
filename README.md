@@ -70,6 +70,12 @@ Install (opencode preconfigured):
 curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh | bash -s -- install --opencode
 ```
 
+Project-scoped skills instead of global:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh | bash -s -- install --opencode --project-skills
+```
+
 #### Windows (PowerShell)
 
 Generic target install (requires your local config paths):
@@ -82,6 +88,12 @@ Install (opencode preconfigured):
 
 ```powershell
 $p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.ps1 -OutFile $p; & $p install -OpenCode
+```
+
+Project-scoped skills instead of global:
+
+```powershell
+$p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.ps1 -OutFile $p; & $p install -OpenCode -ProjectSkills
 ```
 
 ## Local installer

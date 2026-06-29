@@ -6,6 +6,7 @@ param(
   [string]$AgentsDir,
   [string]$AgentsMd,
   [switch]$SkipSkills,
+  [switch]$ProjectSkills,
   [string]$SkillsSource = "https://github.com/sprngr/rubber-duck",
   [ValidateSet("auto","local","web")]
   [string]$Source = "auto",
@@ -163,7 +164,11 @@ function Skills-Install {
     Warn "npx not found; skipping skills install"
     return
   }
-  npx skills add $SkillsSource
+  if ($ProjectSkills) {
+    npx skills add $SkillsSource -y
+  } else {
+    npx skills add $SkillsSource -y -g
+  }
 }
 
 function Skills-Uninstall {
@@ -173,7 +178,11 @@ function Skills-Uninstall {
     return
   }
   try {
-    npx skills remove $SkillsSource
+    if ($ProjectSkills) {
+      npx skills remove $SkillsSource
+    } else {
+      npx skills remove $SkillsSource -g
+    }
   } catch {
     Warn "skills remove failed; remove package manually if needed"
   }
@@ -186,7 +195,11 @@ function Skills-Status {
     return
   }
   try {
-    $list = npx skills list | Out-String
+    if ($ProjectSkills) {
+      $list = npx skills list | Out-String
+    } else {
+      $list = npx skills list -g | Out-String
+    }
     if ($list -match [regex]::Escape($SkillsSource)) {
       Log "skills: installed ($SkillsSource)"
     } else {

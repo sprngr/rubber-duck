@@ -6,6 +6,7 @@ TARGET="generic"
 AGENTS_DIR=""
 AGENTS_MD=""
 SKIP_SKILLS=0
+PROJECT_SKILLS=0
 SKILLS_SOURCE="https://github.com/sprngr/rubber-duck"
 SOURCE_MODE="auto" # auto|local|web
 RAW_BASE="https://raw.githubusercontent.com/sprngr/rubber-duck/main"
@@ -48,6 +49,7 @@ Options:
   --agents-dir <path>               Generic target agents dir
   --agents-md <path>                Generic target AGENTS.md path
   --skip-skills                     Skip npx skills add/remove/list
+  --project-skills                  Install skills to project scope (default is global via -g)
   --skills-source <url-or-path>     Skills package source
   --source <auto|local|web>         Artifact source (default: auto)
   --raw-base <url>                  Raw GitHub base for web source
@@ -93,6 +95,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --skip-skills)
       SKIP_SKILLS=1
+      shift
+      ;;
+    --project-skills)
+      PROJECT_SKILLS=1
       shift
       ;;
     --skills-source)
@@ -304,28 +310,46 @@ uninstall_agents() {
 skills_install() {
   (( SKIP_SKILLS == 1 )) && return 0
   if (( DRY_RUN == 1 )); then
-    log "[dry-run] npx skills add ${SKILLS_SOURCE}"
+    if (( PROJECT_SKILLS == 1 )); then
+      log "[dry-run] npx skills add ${SKILLS_SOURCE} -y"
+    else
+      log "[dry-run] npx skills add ${SKILLS_SOURCE} -y -g"
+    fi
     return
   fi
   if ! command -v npx >/dev/null 2>&1; then
     warn "npx not found; skipping skills install"
     return
   fi
-  npx skills add "${SKILLS_SOURCE}"
+  if (( PROJECT_SKILLS == 1 )); then
+    npx skills add "${SKILLS_SOURCE}" -y
+  else
+    npx skills add "${SKILLS_SOURCE}" -y -g
+  fi
 }
 
 skills_uninstall() {
   (( SKIP_SKILLS == 1 )) && return 0
   if (( DRY_RUN == 1 )); then
-    log "[dry-run] npx skills remove ${SKILLS_SOURCE}"
+    if (( PROJECT_SKILLS == 1 )); then
+      log "[dry-run] npx skills remove ${SKILLS_SOURCE}"
+    else
+      log "[dry-run] npx skills remove ${SKILLS_SOURCE} -g"
+    fi 
     return
   fi
   if ! command -v npx >/dev/null 2>&1; then
     warn "npx not found; skipping skills uninstall"
     return
   fi
-  if ! npx skills remove "${SKILLS_SOURCE}"; then
-    warn "skills remove failed; remove package manually if needed"
+  if (( PROJECT_SKILLS == 1 )); then
+    if ! npx skills remove "${SKILLS_SOURCE}"; then
+      warn "skills remove failed; remove package manually if needed"
+    fi
+  else
+    if ! npx -g skills remove "${SKILLS_SOURCE}"; then
+      warn "skills remove failed; remove package manually if needed"
+    fi
   fi
 }
 
@@ -335,7 +359,13 @@ skills_status() {
     log "skills: npx missing"
     return
   fi
-  if npx skills list >/tmp/rubber-duck-skills-list.txt 2>/tmp/rubber-duck-skills-list.err; then
+  if (( PROJECT_SKILLS == 1 )); then
+    SKILLS_LIST_CMD=(npx skills list)
+  else
+    SKILLS_LIST_CMD=(npx skills list -g)
+  fi
+
+  if "${SKILLS_LIST_CMD[@]}" >/tmp/rubber-duck-skills-list.txt 2>/tmp/rubber-duck-skills-list.err; then
     if grep -Fq "${SKILLS_SOURCE}" /tmp/rubber-duck-skills-list.txt; then
       log "skills: installed (${SKILLS_SOURCE})"
     else

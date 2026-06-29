@@ -24,6 +24,7 @@ CLI reference for install/update/uninstall tooling.
 | `--agents-dir <path>` | value | Generic target agent directory |
 | `--agents-md <path>` | value | Generic target AGENTS.md file path |
 | `--skip-skills` | switch | Skip `npx skills add/remove/list` |
+| `--project-skills` | switch | Install skills in project scope (default uses global `npx -g`) |
 | `--skills-source <url-or-path>` | value | Override skills package source |
 | `--source <auto\|local\|web>` | value | Artifact source selection (`auto` default) |
 | `--raw-base <url>` | value | Raw GitHub base URL for web source |
@@ -39,6 +40,7 @@ CLI reference for install/update/uninstall tooling.
 | `-AgentsDir <path>` | value | Generic target agent directory |
 | `-AgentsMd <path>` | value | Generic target AGENTS.md file path |
 | `-SkipSkills` | switch | Skip `npx skills add/remove/list` |
+| `-ProjectSkills` | switch | Install skills in project scope (default uses global `npx -g`) |
 | `-SkillsSource <url-or-path>` | value | Override skills package source |
 | `-Source auto\|local\|web` | value | Artifact source selection (`auto` default) |
 | `-RawBase <url>` | value | Raw GitHub base URL for web source |
@@ -51,3 +53,7 @@ CLI reference for install/update/uninstall tooling.
 - Installer supports web invocation:
   - Bash: `curl .../scripts/rubber-duck.sh | bash -s -- <command>`
   - PowerShell: download script then execute.
+- Skills install default: global (`npx skills add <source> -y -g`).
+- Use project scope only when explicitly requested:
+  - Bash: `--project-skills`
+  - PowerShell: `-ProjectSkills`
