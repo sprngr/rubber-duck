@@ -11,8 +11,18 @@ SOURCE_MODE="auto" # auto|local|web
 RAW_BASE="https://raw.githubusercontent.com/sprngr/rubber-duck/main"
 DRY_RUN=0
 
-SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
+SCRIPT_PATH="${BASH_SOURCE[0]-}"
+if [[ -z "${SCRIPT_PATH}" || "${SCRIPT_PATH}" == "-" ]]; then
+  SCRIPT_PATH="${0:-}"
+fi
+
+if [[ -z "${SCRIPT_PATH}" || "${SCRIPT_PATH}" == "-" ]]; then
+  SCRIPT_DIR="$(pwd)"
+else
+  SCRIPT_DIR="$(cd -- "$(dirname -- "${SCRIPT_PATH}")" && pwd)"
+fi
+
+REPO_ROOT="$(cd -- "${SCRIPT_DIR}/.." 2>/dev/null && pwd || pwd)"
 LOCAL_AGENTS_DIR="${REPO_ROOT}/agents"
 LOCAL_POLICY_FILE="${REPO_ROOT}/AGENTS.md"
 
@@ -138,6 +148,10 @@ resolve_target() {
   esac
 }
 
+running_piped() {
+  [[ "${0:-}" == "bash" || "${0:-}" == "sh" || "${0:-}" == "-" ]]
+}
+
 has_local_sources() {
   [[ -f "${LOCAL_POLICY_FILE}" ]] || return 1
   for f in "${AGENT_FILES[@]}"; do
@@ -149,7 +163,9 @@ has_local_sources() {
 choose_source() {
   case "${SOURCE_MODE}" in
     auto)
-      if has_local_sources; then
+      if running_piped; then
+        EFFECTIVE_SOURCE="web"
+      elif has_local_sources; then
         EFFECTIVE_SOURCE="local"
       else
         EFFECTIVE_SOURCE="web"
@@ -175,6 +191,10 @@ prepare_sources() {
   trap 'rm -rf "${TMP_DIR}"' EXIT
 
   if [[ "${EFFECTIVE_SOURCE}" == "local" ]]; then
+    if ! has_local_sources; then
+      err "local source selected but repo artifacts not found. Use --source web or run from repo checkout."
+      exit 1
+    fi
     cp -f "${LOCAL_POLICY_FILE}" "${TMP_DIR}/AGENTS.md"
     for f in "${AGENT_FILES[@]}"; do
       cp -f "${LOCAL_AGENTS_DIR}/${f}" "${TMP_DIR}/${f}"
