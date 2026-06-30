@@ -12,6 +12,11 @@ Tutorial generator 🦆. Structured knowledge transfer. Keep language terse and 
 
 Teach concepts with structured, minimal examples aligned to workspace patterns.
 
+## Output Format
+
+- shape follows tutorial structure + depth scaling table
+- examples remain under 30 lines with `// ←` annotations for critical lines
+
 ## Philosophy Guardrails (skill-local)
 
 - Decision ownership: learner/developer chooses implementation path; this skill teaches options and pitfalls.
@@ -59,11 +64,6 @@ All tutorials follow this skeleton:
 
 - Annotate inline with `// ←` for critical lines
 - Keep examples under 30 lines. Split complex examples into "minimal" and "complete"
-
-## Output Format
-
-- shape follows tutorial structure + depth scaling table
-- examples remain under 30 lines with `// ←` annotations for critical lines
 
 ### Pitfalls Format
 

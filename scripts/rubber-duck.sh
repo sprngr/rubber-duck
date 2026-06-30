@@ -1,437 +1,117 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
+ACTION="install"
+TARGET="generic"
+AGENTS_DIR=""
+AGENTS_MD=""
+SKIP_SKILLS=0
+PROJECT_SKILLS=0
+SKILLS_SOURCE="https://github.com/sprngr/rubber-duck"
+SOURCE_MODE="auto" # auto|local|web
+RAW_BASE="https://raw.githubusercontent.com/sprngr/rubber-duck/main"
+DRY_RUN=0
 
-SOURCE_AGENTS_DIR="${REPO_ROOT}/agents"
-SOURCE_POLICY_FILE="${REPO_ROOT}/AGENTS.md"
+SCRIPT_PATH="${0:-}"
+if [[ -z "${SCRIPT_PATH}" || "${SCRIPT_PATH}" == "-" || "${SCRIPT_PATH}" == "bash" || "${SCRIPT_PATH}" == "sh" ]]; then
+  SCRIPT_DIR="$(pwd)"
+else
+  SCRIPT_DIR="$(cd -- "$(dirname -- "${SCRIPT_PATH}")" && pwd)"
+fi
+
+REPO_ROOT="$(cd -- "${SCRIPT_DIR}/.." 2>/dev/null && pwd || pwd)"
+LOCAL_AGENTS_DIR="${REPO_ROOT}/agents"
+LOCAL_POLICY_FILE="${REPO_ROOT}/AGENTS.md"
 
 MANAGED_START="<!-- RUBBER_DUCK_MANAGED_BLOCK START -->"
 MANAGED_END="<!-- RUBBER_DUCK_MANAGED_BLOCK END -->"
 
-TARGET="generic"
-AGENTS_DIR=""
-AGENTS_MD=""
-SKILLS_SOURCE="https://github.com/sprngr/rubber-duck"
-SKIP_SKILLS=0
-DRY_RUN=0
-
 OPENCODE_AGENTS_DIR="${HOME}/.config/opencode/agents"
 OPENCODE_AGENTS_MD="${HOME}/.config/opencode/AGENTS.md"
+
+AGENT_FILES=(
+  "rubber-duck.agent.md"
+  "duck-simple.agent.md"
+  "duck-reviewer.agent.md"
+  "duck-investigator.agent.md"
+  "duck-dry.agent.md"
+  "duck-builder.agent.md"
+  "duck-adversary.agent.md"
+)
 
 usage() {
   cat <<'EOF'
 Usage:
-  scripts/rubber-duck.sh <install|uninstall|status|doctor> [options]
+  scripts/rubber-duck.sh [install|uninstall|status|doctor] [options]
 
 Options:
-  --target <generic|opencode>           Target harness (default: generic)
-  --agents-dir <path>                   Required for generic target
-  --agents-md <path>                    Required for generic target
-  --opencode                            Shortcut for --target opencode
-  --skills-source <url-or-path>         Skills package source (default repo URL)
-  --skip-skills                         Skip npx skills add/remove checks
-  --dry-run                             Print planned actions and diff preview only
-  -h, --help                            Show help
+  --opencode                        Use preconfigured opencode paths
+  --agents-dir <path>               Generic target agents dir
+  --agents-md <path>                Generic target AGENTS.md path
+  --skip-skills                     Skip npx skills add/remove/list
+  --project-skills                  Install skills to project scope (default is global via -g)
+  --skills-source <url-or-path>     Skills package source
+  --source <auto|local|web>         Artifact source (default: auto)
+  --raw-base <url>                  Raw GitHub base for web source
+  --dry-run                         Print planned actions only
+  -h, --help                        Show help
 
 Examples:
-  scripts/rubber-duck.sh install \
-    --agents-dir ~/.myharness/agents \
-    --agents-md ~/.myharness/AGENTS.md
-  scripts/rubber-duck.sh status
   scripts/rubber-duck.sh install --opencode
-  scripts/rubber-duck.sh uninstall \
-    --agents-dir ~/.myharness/agents \
-    --agents-md ~/.myharness/AGENTS.md
+  scripts/rubber-duck.sh install --agents-dir ~/.h/agents --agents-md ~/.h/AGENTS.md
+  curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh | bash -s -- install --opencode
 EOF
 }
 
 log() { printf '%s\n' "$*"; }
 warn() { printf 'WARN: %s\n' "$*"; }
 err() { printf 'ERROR: %s\n' "$*" >&2; }
-
 timestamp() { date +%Y%m%d-%H%M%S; }
 
-require_file() {
-  local file="$1"
-  if [[ ! -f "${file}" ]]; then
-    err "missing required file: ${file}"
-    exit 1
-  fi
-}
-
-resolve_target() {
-  case "${TARGET}" in
-    generic)
-      if [[ -z "${AGENTS_DIR}" || -z "${AGENTS_MD}" ]]; then
-        err "generic target requires --agents-dir and --agents-md"
-        exit 1
-      fi
-      DEST_AGENTS_DIR="${AGENTS_DIR}"
-      DEST_AGENTS_MD="${AGENTS_MD}"
-      ;;
-    opencode)
-      DEST_AGENTS_DIR="${OPENCODE_AGENTS_DIR}"
-      DEST_AGENTS_MD="${OPENCODE_AGENTS_MD}"
-      ;;
-    *)
-      err "invalid --target: ${TARGET}"
-      exit 1
+if [[ $# -gt 0 ]]; then
+  case "$1" in
+    install|uninstall|status|doctor)
+      ACTION="$1"
+      shift
       ;;
   esac
-}
-
-collect_source_agents() {
-  mapfile -t SOURCE_AGENT_FILES < <(compgen -G "${SOURCE_AGENTS_DIR}/*.agent.md" || true)
-  if [[ "${#SOURCE_AGENT_FILES[@]}" -eq 0 ]]; then
-    err "no source agent files found in ${SOURCE_AGENTS_DIR}"
-    exit 1
-  fi
-}
-
-strip_managed_block() {
-  local target_file="$1"
-  [[ -f "${target_file}" ]] || return 0
-  local tmp
-  tmp="$(mktemp)"
-  strip_managed_block_to_file "${target_file}" "${tmp}"
-  mv "${tmp}" "${target_file}"
-}
-
-strip_managed_block_to_file() {
-  local source_file="$1"
-  local out_file="$2"
-  if [[ ! -f "${source_file}" ]]; then
-    : > "${out_file}"
-    return 0
-  fi
-  awk -v start="${MANAGED_START}" -v end="${MANAGED_END}" '
-    $0 == start {in_block=1; next}
-    $0 == end {in_block=0; next}
-    !in_block {print}
-  ' "${source_file}" > "${out_file}"
-}
-
-render_with_managed_block() {
-  local source_file="$1"
-  local out_file="$2"
-  local stripped
-  stripped="$(mktemp)"
-  strip_managed_block_to_file "${source_file}" "${stripped}"
-  {
-    cat "${stripped}"
-    printf '\n%s\n' "${MANAGED_START}"
-    cat "${SOURCE_POLICY_FILE}"
-    printf '%s\n' "${MANAGED_END}"
-  } > "${out_file}"
-  rm -f "${stripped}"
-}
-
-render_without_managed_block() {
-  local source_file="$1"
-  local out_file="$2"
-  strip_managed_block_to_file "${source_file}" "${out_file}"
-}
-
-show_agents_md_diff_preview() {
-  local action="$1"
-  local target_file="$2"
-  local old_file new_file diff_out
-  old_file="$(mktemp)"
-  new_file="$(mktemp)"
-
-  if [[ -f "${target_file}" ]]; then
-    cp -f "${target_file}" "${old_file}"
-  else
-    : > "${old_file}"
-  fi
-
-  case "${action}" in
-    install) render_with_managed_block "${target_file}" "${new_file}" ;;
-    uninstall) render_without_managed_block "${target_file}" "${new_file}" ;;
-    *)
-      err "invalid diff preview action: ${action}"
-      rm -f "${old_file}" "${new_file}"
-      exit 1
-      ;;
-  esac
-
-  log "[dry-run] AGENTS.md diff preview (${target_file}):"
-  diff_out="$(diff -u "${old_file}" "${new_file}" || true)"
-  if [[ -n "${diff_out}" ]]; then
-    printf '%s\n' "${diff_out}"
-  else
-    log "(no AGENTS.md content changes)"
-  fi
-
-  rm -f "${old_file}" "${new_file}"
-}
-
-backup_agents_md_before_modify() {
-  local target_file="$1"
-  local backup_file
-  backup_file="${target_file}.bak.$(timestamp)"
-
-  if (( DRY_RUN == 1 )); then
-    log "[dry-run] backup ${target_file} -> ${backup_file}"
-    return 0
-  fi
-
-  mkdir -p "$(dirname -- "${target_file}")"
-  if [[ -f "${target_file}" ]]; then
-    cp -f "${target_file}" "${backup_file}"
-  else
-    : > "${backup_file}"
-  fi
-  log "Backup created: ${backup_file}"
-}
-
-upsert_managed_block() {
-  local target_file="$1"
-  if (( DRY_RUN == 1 )); then
-    show_agents_md_diff_preview install "${target_file}"
-    return 0
-  fi
-  mkdir -p "$(dirname -- "${target_file}")"
-  touch "${target_file}"
-  strip_managed_block "${target_file}"
-
-  {
-    printf '\n%s\n' "${MANAGED_START}"
-    cat "${SOURCE_POLICY_FILE}"
-    printf '%s\n' "${MANAGED_END}"
-  } >> "${target_file}"
-}
-
-remove_managed_block_only() {
-  local target_file="$1"
-  if (( DRY_RUN == 1 )); then
-    show_agents_md_diff_preview uninstall "${target_file}"
-    return 0
-  fi
-  if [[ ! -f "${target_file}" ]]; then
-    return 0
-  fi
-  strip_managed_block "${target_file}"
-}
-
-install_agents() {
-  if (( DRY_RUN == 1 )); then
-    log "[dry-run] ensure dir ${DEST_AGENTS_DIR}"
-    for src in "${SOURCE_AGENT_FILES[@]}"; do
-      log "[dry-run] cp ${src} -> ${DEST_AGENTS_DIR}/$(basename -- "${src}")"
-    done
-    log "[dry-run] install ${#SOURCE_AGENT_FILES[@]} agents -> ${DEST_AGENTS_DIR}"
-    return 0
-  fi
-
-  mkdir -p "${DEST_AGENTS_DIR}"
-  for src in "${SOURCE_AGENT_FILES[@]}"; do
-    cp -f "${src}" "${DEST_AGENTS_DIR}/$(basename -- "${src}")"
-  done
-  log "Installed ${#SOURCE_AGENT_FILES[@]} agents -> ${DEST_AGENTS_DIR}"
-}
-
-uninstall_agents() {
-  if (( DRY_RUN == 1 )); then
-    for src in "${SOURCE_AGENT_FILES[@]}"; do
-      log "[dry-run] rm ${DEST_AGENTS_DIR}/$(basename -- "${src}")"
-    done
-    log "[dry-run] uninstall agents from ${DEST_AGENTS_DIR}"
-    return 0
-  fi
-
-  local removed=0
-  for src in "${SOURCE_AGENT_FILES[@]}"; do
-    local dest
-    dest="${DEST_AGENTS_DIR}/$(basename -- "${src}")"
-    if [[ -f "${dest}" ]]; then
-      rm -f "${dest}"
-      removed=$((removed + 1))
-    fi
-  done
-  log "Removed ${removed} agents from ${DEST_AGENTS_DIR}"
-}
-
-skills_install() {
-  (( SKIP_SKILLS == 1 )) && return 0
-  if (( DRY_RUN == 1 )); then
-    log "[dry-run] npx skills add ${SKILLS_SOURCE}"
-    return 0
-  fi
-  if ! command -v npx >/dev/null 2>&1; then
-    warn "npx not found; skipping skills install"
-    return 0
-  fi
-  npx skills add "${SKILLS_SOURCE}"
-}
-
-skills_uninstall() {
-  (( SKIP_SKILLS == 1 )) && return 0
-  if (( DRY_RUN == 1 )); then
-    log "[dry-run] npx skills remove ${SKILLS_SOURCE}"
-    return 0
-  fi
-  if ! command -v npx >/dev/null 2>&1; then
-    warn "npx not found; skipping skills uninstall"
-    return 0
-  fi
-  if ! npx skills remove "${SKILLS_SOURCE}"; then
-    warn "skills remove command failed. If unsupported, remove package manually from skills manager."
-  fi
-}
-
-skills_status() {
-  if (( SKIP_SKILLS == 1 )); then
-    log "skills: skipped (--skip-skills)"
-    return 0
-  fi
-  if ! command -v npx >/dev/null 2>&1; then
-    log "skills: npx missing"
-    return 0
-  fi
-
-  if npx skills list >/tmp/rubber-duck-skills-list.txt 2>/tmp/rubber-duck-skills-list.err; then
-    if grep -Fq "${SKILLS_SOURCE}" /tmp/rubber-duck-skills-list.txt; then
-      log "skills: installed (${SKILLS_SOURCE})"
-    else
-      log "skills: not detected (${SKILLS_SOURCE})"
-    fi
-  else
-    log "skills: unable to query (npx skills list failed)"
-  fi
-}
-
-has_managed_block() {
-  local target_file="$1"
-  [[ -f "${target_file}" ]] || return 1
-  grep -Fq "${MANAGED_START}" "${target_file}" && grep -Fq "${MANAGED_END}" "${target_file}"
-}
-
-status() {
-  local predicted_action="${1:-}"
-  log "target: ${TARGET}"
-  log "agents_dir: ${DEST_AGENTS_DIR}"
-  log "agents_md: ${DEST_AGENTS_MD}"
-
-  if (( DRY_RUN == 1 )) && [[ -n "${predicted_action}" ]]; then
-    case "${predicted_action}" in
-      install)
-        log "agents (predicted): ${#SOURCE_AGENT_FILES[@]}/${#SOURCE_AGENT_FILES[@]} present"
-        log "AGENTS policy block (predicted): present"
-        if (( SKIP_SKILLS == 1 )); then
-          log "skills (predicted): skipped (--skip-skills)"
-        else
-          log "skills (predicted): would run npx skills add ${SKILLS_SOURCE}"
-        fi
-        return 0
-        ;;
-      uninstall)
-        log "agents (predicted): 0/${#SOURCE_AGENT_FILES[@]} present"
-        log "AGENTS policy block (predicted): missing"
-        if (( SKIP_SKILLS == 1 )); then
-          log "skills (predicted): skipped (--skip-skills)"
-        else
-          log "skills (predicted): would run npx skills remove ${SKILLS_SOURCE}"
-        fi
-        return 0
-        ;;
-    esac
-  fi
-
-  local installed=0
-  for src in "${SOURCE_AGENT_FILES[@]}"; do
-    local dest
-    dest="${DEST_AGENTS_DIR}/$(basename -- "${src}")"
-    [[ -f "${dest}" ]] && installed=$((installed + 1))
-  done
-  log "agents: ${installed}/${#SOURCE_AGENT_FILES[@]} present"
-
-  if has_managed_block "${DEST_AGENTS_MD}"; then
-    log "AGENTS policy block: present"
-  else
-    log "AGENTS policy block: missing"
-  fi
-
-  skills_status
-}
-
-doctor() {
-  local fail=0
-
-  require_file "${SOURCE_POLICY_FILE}"
-  if [[ ! -d "${SOURCE_AGENTS_DIR}" ]]; then
-    err "source agents dir missing: ${SOURCE_AGENTS_DIR}"
-    fail=1
-  fi
-
-  if ! command -v cp >/dev/null 2>&1; then
-    err "cp command missing"
-    fail=1
-  fi
-
-  if ! command -v awk >/dev/null 2>&1; then
-    err "awk command missing"
-    fail=1
-  fi
-
-  if (( DRY_RUN == 1 )); then
-    if [[ ! -d "${DEST_AGENTS_DIR}" ]]; then
-      warn "doctor: agents dir missing, would create: ${DEST_AGENTS_DIR}"
-    fi
-    if [[ ! -d "$(dirname -- "${DEST_AGENTS_MD}")" ]]; then
-      warn "doctor: AGENTS.md parent missing, would create: $(dirname -- "${DEST_AGENTS_MD}")"
-    fi
-  else
-    mkdir -p "${DEST_AGENTS_DIR}" || { err "cannot create/write agents dir: ${DEST_AGENTS_DIR}"; fail=1; }
-    mkdir -p "$(dirname -- "${DEST_AGENTS_MD}")" || { err "cannot create/write AGENTS.md parent dir"; fail=1; }
-  fi
-
-  if (( SKIP_SKILLS == 0 )) && ! command -v npx >/dev/null 2>&1; then
-    warn "npx missing; skills install/remove unavailable"
-  fi
-
-  if (( fail == 0 )); then
-    log "doctor: ok"
-  else
-    err "doctor: failed"
-    exit 1
-  fi
-}
-
-COMMAND="${1:-}"
-if [[ -z "${COMMAND}" ]]; then
-  usage
-  exit 1
 fi
-shift || true
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --target)
-      TARGET="${2:-}"
-      shift 2
+    --opencode)
+      TARGET="opencode"
+      shift
       ;;
     --agents-dir)
+      TARGET="generic"
       AGENTS_DIR="${2:-}"
       shift 2
       ;;
     --agents-md)
+      TARGET="generic"
       AGENTS_MD="${2:-}"
       shift 2
       ;;
-    --opencode)
-      TARGET="opencode"
+    --skip-skills)
+      SKIP_SKILLS=1
+      shift
+      ;;
+    --project-skills)
+      PROJECT_SKILLS=1
       shift
       ;;
     --skills-source)
       SKILLS_SOURCE="${2:-}"
       shift 2
       ;;
-    --skip-skills)
-      SKIP_SKILLS=1
-      shift
+    --source)
+      SOURCE_MODE="${2:-}"
+      shift 2
+      ;;
+    --raw-base)
+      RAW_BASE="${2:-}"
+      shift 2
       ;;
     --dry-run)
       DRY_RUN=1
@@ -449,24 +129,312 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-resolve_target
-collect_source_agents
+resolve_target() {
+  case "${TARGET}" in
+    opencode)
+      DEST_AGENTS_DIR="${OPENCODE_AGENTS_DIR}"
+      DEST_AGENTS_MD="${OPENCODE_AGENTS_MD}"
+      ;;
+    generic)
+      if [[ -z "${AGENTS_DIR}" || -z "${AGENTS_MD}" ]]; then
+        err "generic target requires --agents-dir and --agents-md (or use --opencode)"
+        exit 1
+      fi
+      DEST_AGENTS_DIR="${AGENTS_DIR}"
+      DEST_AGENTS_MD="${AGENTS_MD}"
+      ;;
+    *)
+      err "invalid target: ${TARGET}"
+      exit 1
+      ;;
+  esac
+}
 
-case "${COMMAND}" in
+running_piped() {
+  [[ "${0:-}" == "bash" || "${0:-}" == "sh" || "${0:-}" == "-" ]]
+}
+
+has_local_sources() {
+  [[ -f "${LOCAL_POLICY_FILE}" ]] || return 1
+  for f in "${AGENT_FILES[@]}"; do
+    [[ -f "${LOCAL_AGENTS_DIR}/${f}" ]] || return 1
+  done
+  return 0
+}
+
+choose_source() {
+  case "${SOURCE_MODE}" in
+    auto)
+      if running_piped; then
+        EFFECTIVE_SOURCE="web"
+      elif has_local_sources; then
+        EFFECTIVE_SOURCE="local"
+      else
+        EFFECTIVE_SOURCE="web"
+      fi
+      ;;
+    local|web)
+      EFFECTIVE_SOURCE="${SOURCE_MODE}"
+      ;;
+    *)
+      err "invalid --source value: ${SOURCE_MODE}"
+      exit 1
+      ;;
+  esac
+}
+
+require_cmd() {
+  local cmd="$1"
+  command -v "${cmd}" >/dev/null 2>&1 || { err "required command missing: ${cmd}"; exit 1; }
+}
+
+prepare_sources() {
+  TMP_DIR="$(mktemp -d)"
+  trap 'rm -rf "${TMP_DIR}"' EXIT
+
+  if [[ "${EFFECTIVE_SOURCE}" == "local" ]]; then
+    if ! has_local_sources; then
+      err "local source selected but repo artifacts not found. Use --source web or run from repo checkout."
+      exit 1
+    fi
+    cp -f "${LOCAL_POLICY_FILE}" "${TMP_DIR}/AGENTS.md"
+    for f in "${AGENT_FILES[@]}"; do
+      cp -f "${LOCAL_AGENTS_DIR}/${f}" "${TMP_DIR}/${f}"
+    done
+    log "source: local (${REPO_ROOT})"
+    return
+  fi
+
+  require_cmd curl
+  curl -fsSL "${RAW_BASE}/AGENTS.md" -o "${TMP_DIR}/AGENTS.md"
+  for f in "${AGENT_FILES[@]}"; do
+    curl -fsSL "${RAW_BASE}/agents/${f}" -o "${TMP_DIR}/${f}"
+  done
+  log "source: web (${RAW_BASE})"
+}
+
+strip_managed_block_to_file() {
+  local src="$1"
+  local out="$2"
+  if [[ ! -f "${src}" ]]; then
+    : > "${out}"
+    return 0
+  fi
+  awk -v start="${MANAGED_START}" -v end="${MANAGED_END}" '
+    $0 == start {in_block=1; next}
+    $0 == end {in_block=0; next}
+    !in_block {print}
+  ' "${src}" > "${out}"
+}
+
+strip_managed_block() {
+  local target="$1"
+  local tmp
+  tmp="$(mktemp)"
+  strip_managed_block_to_file "${target}" "${tmp}"
+  mv "${tmp}" "${target}"
+}
+
+backup_agents_md() {
+  local backup
+  backup="${DEST_AGENTS_MD}.bak.$(timestamp)"
+  if (( DRY_RUN == 1 )); then
+    log "[dry-run] backup ${DEST_AGENTS_MD} -> ${backup}"
+    return
+  fi
+  mkdir -p "$(dirname -- "${DEST_AGENTS_MD}")"
+  if [[ -f "${DEST_AGENTS_MD}" ]]; then
+    cp -f "${DEST_AGENTS_MD}" "${backup}"
+  else
+    : > "${backup}"
+  fi
+  log "Backup created: ${backup}"
+}
+
+upsert_managed_block() {
+  if (( DRY_RUN == 1 )); then
+    log "[dry-run] upsert managed block in ${DEST_AGENTS_MD}"
+    return
+  fi
+  mkdir -p "$(dirname -- "${DEST_AGENTS_MD}")"
+  touch "${DEST_AGENTS_MD}"
+  strip_managed_block "${DEST_AGENTS_MD}"
+  {
+    printf '\n%s\n' "${MANAGED_START}"
+    cat "${TMP_DIR}/AGENTS.md"
+    printf '%s\n' "${MANAGED_END}"
+  } >> "${DEST_AGENTS_MD}"
+}
+
+remove_managed_block() {
+  if (( DRY_RUN == 1 )); then
+    log "[dry-run] remove managed block from ${DEST_AGENTS_MD}"
+    return
+  fi
+  [[ -f "${DEST_AGENTS_MD}" ]] || return 0
+  strip_managed_block "${DEST_AGENTS_MD}"
+}
+
+install_agents() {
+  if (( DRY_RUN == 1 )); then
+    log "[dry-run] ensure dir ${DEST_AGENTS_DIR}"
+    for f in "${AGENT_FILES[@]}"; do
+      log "[dry-run] cp ${TMP_DIR}/${f} -> ${DEST_AGENTS_DIR}/${f}"
+    done
+    return
+  fi
+  mkdir -p "${DEST_AGENTS_DIR}"
+  for f in "${AGENT_FILES[@]}"; do
+    cp -f "${TMP_DIR}/${f}" "${DEST_AGENTS_DIR}/${f}"
+  done
+  log "Installed ${#AGENT_FILES[@]} agents -> ${DEST_AGENTS_DIR}"
+}
+
+uninstall_agents() {
+  if (( DRY_RUN == 1 )); then
+    for f in "${AGENT_FILES[@]}"; do
+      log "[dry-run] rm ${DEST_AGENTS_DIR}/${f}"
+    done
+    return
+  fi
+  local removed=0
+  for f in "${AGENT_FILES[@]}"; do
+    if [[ -f "${DEST_AGENTS_DIR}/${f}" ]]; then
+      rm -f "${DEST_AGENTS_DIR}/${f}"
+      removed=$((removed + 1))
+    fi
+  done
+  log "Removed ${removed} agents from ${DEST_AGENTS_DIR}"
+}
+
+skills_install() {
+  (( SKIP_SKILLS == 1 )) && return 0
+  if (( DRY_RUN == 1 )); then
+    if (( PROJECT_SKILLS == 1 )); then
+      log "[dry-run] npx skills add ${SKILLS_SOURCE} -y"
+    else
+      log "[dry-run] npx skills add ${SKILLS_SOURCE} -y -g"
+    fi
+    return
+  fi
+  if ! command -v npx >/dev/null 2>&1; then
+    warn "npx not found; skipping skills install"
+    return
+  fi
+  if (( PROJECT_SKILLS == 1 )); then
+    npx skills add "${SKILLS_SOURCE}" -y
+  else
+    npx skills add "${SKILLS_SOURCE}" -y -g
+  fi
+}
+
+skills_uninstall() {
+  (( SKIP_SKILLS == 1 )) && return 0
+  if (( DRY_RUN == 1 )); then
+    if (( PROJECT_SKILLS == 1 )); then
+      log "[dry-run] npx skills remove ${SKILLS_SOURCE}"
+    else
+      log "[dry-run] npx skills remove ${SKILLS_SOURCE} -g"
+    fi 
+    return
+  fi
+  if ! command -v npx >/dev/null 2>&1; then
+    warn "npx not found; skipping skills uninstall"
+    return
+  fi
+  if (( PROJECT_SKILLS == 1 )); then
+    if ! npx skills remove "${SKILLS_SOURCE}"; then
+      warn "skills remove failed; remove package manually if needed"
+    fi
+  else
+    if ! npx -g skills remove "${SKILLS_SOURCE}"; then
+      warn "skills remove failed; remove package manually if needed"
+    fi
+  fi
+}
+
+skills_status() {
+  (( SKIP_SKILLS == 1 )) && { log "skills: skipped (--skip-skills)"; return 0; }
+  if ! command -v npx >/dev/null 2>&1; then
+    log "skills: npx missing"
+    return
+  fi
+  if (( PROJECT_SKILLS == 1 )); then
+    SKILLS_LIST_CMD=(npx skills list)
+  else
+    SKILLS_LIST_CMD=(npx skills list -g)
+  fi
+
+  if "${SKILLS_LIST_CMD[@]}" >/tmp/rubber-duck-skills-list.txt 2>/tmp/rubber-duck-skills-list.err; then
+    if grep -Fq "${SKILLS_SOURCE}" /tmp/rubber-duck-skills-list.txt; then
+      log "skills: installed (${SKILLS_SOURCE})"
+    else
+      log "skills: not detected (${SKILLS_SOURCE})"
+    fi
+  else
+    log "skills: unable to query (npx skills list failed)"
+  fi
+}
+
+has_managed_block() {
+  [[ -f "${DEST_AGENTS_MD}" ]] || return 1
+  grep -Fq "${MANAGED_START}" "${DEST_AGENTS_MD}" && grep -Fq "${MANAGED_END}" "${DEST_AGENTS_MD}"
+}
+
+status() {
+  log "target: ${TARGET}"
+  log "agents_dir: ${DEST_AGENTS_DIR}"
+  log "agents_md: ${DEST_AGENTS_MD}"
+  local installed=0
+  for f in "${AGENT_FILES[@]}"; do
+    [[ -f "${DEST_AGENTS_DIR}/${f}" ]] && installed=$((installed + 1))
+  done
+  log "agents: ${installed}/${#AGENT_FILES[@]} present"
+  if has_managed_block; then
+    log "AGENTS policy block: present"
+  else
+    log "AGENTS policy block: missing"
+  fi
+  skills_status
+}
+
+doctor() {
+  resolve_target
+  choose_source
+  require_cmd awk
+  require_cmd cp
+  if [[ "${EFFECTIVE_SOURCE}" == "web" ]]; then require_cmd curl; fi
+  if (( DRY_RUN == 1 )); then
+    [[ -d "${DEST_AGENTS_DIR}" ]] || warn "doctor: agents dir missing, would create: ${DEST_AGENTS_DIR}"
+    [[ -d "$(dirname -- "${DEST_AGENTS_MD}")" ]] || warn "doctor: AGENTS parent missing, would create: $(dirname -- "${DEST_AGENTS_MD}")"
+  else
+    mkdir -p "${DEST_AGENTS_DIR}"
+    mkdir -p "$(dirname -- "${DEST_AGENTS_MD}")"
+  fi
+  log "doctor: ok"
+}
+
+resolve_target
+choose_source
+
+case "${ACTION}" in
   install)
     doctor
+    prepare_sources
     install_agents
-    backup_agents_md_before_modify "${DEST_AGENTS_MD}"
-    upsert_managed_block "${DEST_AGENTS_MD}"
+    backup_agents_md
+    upsert_managed_block
     skills_install
-    status install
+    status
     ;;
   uninstall)
+    doctor
+    prepare_sources
     uninstall_agents
-    backup_agents_md_before_modify "${DEST_AGENTS_MD}"
-    remove_managed_block_only "${DEST_AGENTS_MD}"
+    backup_agents_md
+    remove_managed_block
     skills_uninstall
-    status uninstall
+    status
     ;;
   status)
     status
@@ -475,7 +443,7 @@ case "${COMMAND}" in
     doctor
     ;;
   *)
-    err "unknown command: ${COMMAND}"
+    err "unknown action: ${ACTION}"
     usage
     exit 1
     ;;

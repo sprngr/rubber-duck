@@ -7,8 +7,8 @@ Rubber Duck helps you debug, review, design, and triage with structured question
 ## Why
 
 Initially Rubber Duck started as my attempt to build a better debugger. I used the first versions to do pre-reviews before submitting code.
-As time went on I found myself letting the model do more and more work until I found myself in meetings where we realized decisions were being made
-that we weren't actually aware were included in our own work. We sacrificed understanding in favor of speed of output.
+As time went on I found myself letting the model do more and more work. I would attend meetings where my team and myself realized decisions were being made
+that we weren't actually aware were included in our own work being put up for review. We sacrificed understanding in favor of speed of output.
 
 This is my attempt to flip the current practice and lean even harder into "human in the loop".
 
@@ -48,8 +48,59 @@ Every skill is bound by the corresponding philosophy:
 ```bash
 npx skills add https://github.com/sprngr/rubber-duck
 ```
+For more options with `npx skills` see the [vercel-labs/skills](https://github.com/vercel-labs/skills) repository.
 
 ## Full Rubber Duck agent system (Installer/Updater & Uninstaller)
+
+Installer has default behavior making assumptions about system, targeting global skills install and universal agent skills directory.
+
+If you require a different path for your setup, use the `--skip-skills` argument and run `npx skills add` separately.
+
+CLI reference: [scripts/README.md](./scripts/README.md)
+
+### One-line installer
+
+#### macOS / Linux (bash)
+
+Generic target install (requires your local config paths):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh | bash -s -- install --agents-dir /path/to/harness/agents --agents-md /path/to/harness/AGENTS.md
+```
+
+Install (opencode preconfigured):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh | bash -s -- install --opencode
+```
+
+Project-scoped skills instead of global:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh | bash -s -- install --opencode --project-skills
+```
+
+#### Windows (PowerShell)
+
+Generic target install (requires your local config paths):
+
+```powershell
+$p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.ps1 -OutFile $p; & $p install -AgentsDir C:\path\to\harness\agents -AgentsMd C:\path\to\harness\AGENTS.md
+```
+
+Install (opencode preconfigured):
+
+```powershell
+$p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.ps1 -OutFile $p; & $p install -OpenCode
+```
+
+Project-scoped skills instead of global:
+
+```powershell
+$p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.ps1 -OutFile $p; & $p install -OpenCode -ProjectSkills
+```
+
+## Local installer
 
 Checkout repo locally, then use installer script.
 
@@ -164,7 +215,7 @@ Expected:
 - [Architecture index](./docs/architecture/README.md)
 - [Philosophy](./docs/architecture/01-philosophy.md)
 - [Agent + skill model](./docs/architecture/02-agent-skill-model.md)
-- [Strict Socratic mode](./docs/architecture/03-strict-socratic-mode.md)
+- [Adaptive Socratic policy](./docs/architecture/03-adaptive-socratic-policy.md)
 - [Validation prompt suite](./docs/validation/README.md)
 
 ### Prompt contracts

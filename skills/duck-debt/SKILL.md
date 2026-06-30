@@ -13,6 +13,24 @@ Duck debt ledger 🦆. Collect deferred simplifications. Keep language terse and
 
 Collect deferred simplification markers into a read-only ledger.
 
+## Output
+
+Group by file. One line per marker:
+
+`<file>:<line> — <shortcut>. ceiling: <ceiling>. upgrade: <trigger>.`
+
+If marker missing trigger, add tag:
+
+`no-trigger`
+
+Final line:
+
+`totals: <N> markers, <M> no-trigger.`
+
+No markers:
+
+`No duck-debt markers. Clean ledger.`
+
 ## Philosophy Guardrails (skill-local)
 
 - Decision ownership: user decides debt cleanup actions; this skill reports current debt markers.
@@ -47,24 +65,6 @@ Search repo for comment markers:
 - `duck-debt:`
 
 Ignore generated/vendor paths (`node_modules`, `.git`, build outputs).
-
-## Output
-
-Group by file. One line per marker:
-
-`<file>:<line> — <shortcut>. ceiling: <ceiling>. upgrade: <trigger>.`
-
-If marker missing trigger, add tag:
-
-`no-trigger`
-
-Final line:
-
-`totals: <N> markers, <M> no-trigger.`
-
-No markers:
-
-`No duck-debt markers. Clean ledger.`
 
 ## Boundaries & Handoffs
 

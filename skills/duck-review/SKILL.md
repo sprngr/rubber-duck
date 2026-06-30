@@ -12,6 +12,28 @@ Review 🦆. Keep terse, actionable format by default.
 
 Review changed code with risk-first, actionable findings in paste-ready format.
 
+## Output Format
+
+One-line comment template:
+
+`<prefix> <path[:line]> — <problem>. Fix: <smallest safe change>.`
+
+Keep comments paste-ready for PR threads.
+
+Rule (schema-first, prose-flexible):
+- each finding line must start with approved prefix token
+- each finding line must include location + problem + `Fix:` field
+- only exception: Auto-Clarity for security/irreversible-risk comments; resume prefixed one-line format immediately after
+- before final response, normalize any non-compliant finding to schema using strongest matching prefix (fallback `⚠️ bug:`)
+
+Schema hint (non-Auto-Clarity findings):
+- `^(🔒 sec:|⚠️ bug:|⚡ perf:|🧪 test:|📝 doc:|🪶 yagni:|📚 stdlib:|🧱 native:|✂️ shrink:|🗑️ delete:)\s+<path[:line|scope]>\s+—\s+<problem>\.\s+Fix:\s+<smallest safe change>\.?$`
+
+Final self-check before send:
+- If any finding line does not start with approved prefix token, rewrite before sending.
+- If any finding line is missing location or `Fix:`, rewrite before sending.
+- Never emit mixed formats (`- HIGH`, `- MED`, numbered bullets for findings).
+
 ## Philosophy Guardrails (skill-local)
 
 - Decision ownership: user decides merge/approval outcomes; this skill provides findings and fix directions.
@@ -26,9 +48,9 @@ Use when user asks to review diff/code/PR for issues and fix direction.
 
 ## Preflight Checks
 
-- if review context is ambiguous, ask one targeted clarifying question first
-- anchor each finding in explicit diff/code evidence
-- provide findings and fix directions; final merge/approval decisions remain with user
+- If review context is ambiguous, ask one targeted clarifying question first.
+- Anchor each finding in explicit diff/code evidence.
+- Provide findings and fix directions; final merge/approval decisions remain with user.
 
 ## Method
 
@@ -52,28 +74,6 @@ When proposing fix direction, stop at first rung:
 6. For security or irreversible-risk findings, switch to full paragraph (Auto-Clarity), then resume terse comments.
 
 If prefix choice unclear or reviewer needs wording examples, load `references/review-comment-examples.md`.
-
-## Output Format
-
-One-line comment template:
-
-`<prefix> <path[:line]> — <problem>. Fix: <smallest safe change>.`
-
-Keep comments paste-ready for PR threads.
-
-Rule (schema-first, prose-flexible):
-- each finding line must start with approved prefix token
-- each finding line must include location + problem + `Fix:` field
-- only exception: Auto-Clarity for security/irreversible-risk comments; resume prefixed one-line format immediately after
-- before final response, normalize any non-compliant finding to schema using strongest matching prefix (fallback `⚠️ bug:`)
-
-Schema hint (non-Auto-Clarity findings):
-- `^(🔒 sec:|⚠️ bug:|⚡ perf:|🧪 test:|📝 doc:|🪶 yagni:|📚 stdlib:|🧱 native:|✂️ shrink:|🗑️ delete:)\s+<path[:line|scope]>\s+—\s+<problem>\.\s+Fix:\s+<smallest safe change>\.?$`
-
-Final self-check before send:
-- if any finding line does not start with approved prefix token, rewrite before sending
-- if any finding line is missing location or `Fix:`, rewrite before sending
-- never emit mixed formats (`- HIGH`, `- MED`, numbered bullets for findings)
 
 ## Prefixes
 

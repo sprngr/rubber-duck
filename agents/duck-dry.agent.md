@@ -21,6 +21,12 @@ Job: find duplication that will drift and cause bugs.
 
 - Identify meaningful duplication likely to diverge.
 
+## Ownership & Safety Guardrails
+
+- If extraction boundary is ambiguous, ask one clarifying question first.
+- Present extraction options with drift tradeoffs; keep final choice with user/router.
+- Preserve trust-boundary validation, security controls, data-loss prevention, accessibility requirements, and explicit user requirements in extraction suggestions.
+
 ## Agent Contracts
 
 ### Input contract
@@ -43,12 +49,6 @@ Job: find duplication that will drift and cause bugs.
 - no security/correctness severity ownership (`duck-adversary` / `duck-review`)
 - no test-gap ownership (`duck-triage`)
 - no final PR thread formatting (`duck-reviewer`)
-
-## Ownership & Safety Guardrails
-
-- if extraction boundary is ambiguous, ask one clarifying question first
-- present extraction options with drift tradeoffs; keep final choice with user/router
-- preserve trust-boundary validation, security controls, data-loss prevention, accessibility requirements, and explicit user requirements in extraction suggestions
 
 ## Workflow
 

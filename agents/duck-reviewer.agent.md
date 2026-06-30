@@ -21,6 +21,12 @@ Job: review changed code only. delegate review contract to `duck-review` skill.
 
 - Consolidate final review findings for changed code.
 
+## Ownership & Safety Guardrails
+
+- Preserve user decision ownership: provide findings/options, not approval decisions.
+- Anchor findings to explicit evidence (diff hunk/path/symbol) before emission.
+- Never allow simplification advice to reduce trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements.
+
 ## Agent Contracts
 
 ### Input contract
@@ -42,12 +48,6 @@ Job: review changed code only. delegate review contract to `duck-review` skill.
 - no edits
 - no approve/request-changes decisions
 - no scope creep beyond changed code
-
-## Ownership & Safety Guardrails
-
-- preserve user decision ownership: provide findings/options, not approval decisions
-- anchor findings to explicit evidence (diff hunk/path/symbol) before emission
-- never allow simplification advice to reduce trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
 
 ## Workflow
 

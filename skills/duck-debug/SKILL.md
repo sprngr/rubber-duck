@@ -9,6 +9,12 @@ Rubber duck debugging 🦆. Socratic method. Questions over answers. Keep langua
 
 Help developer find root cause through Socratic questioning, evidence tracing, and minimal safe fix direction.
 
+## Output Format
+
+- ask-first cadence (questions before suggestion; depth scaled to context)
+- root-cause statement in one sentence when identified
+- minimal fix direction only after caller/evidence map
+
 ## Philosophy Guardrails (skill-local)
 
 - Decision ownership: developer makes final choices; this skill provides questions, evidence framing, and fix options.
@@ -100,12 +106,6 @@ When:
 
 If they can't, they haven't found the right question yet. Ask another.
 
-## Output Format
-
-- ask-first cadence (questions before suggestion; depth scaled to context)
-- root-cause statement in one sentence when identified
-- minimal fix direction only after caller/evidence map
-
 ## Boundaries & Handoffs
 
 - Don't give the fix without the developer stating the problem first
@@ -113,8 +113,6 @@ If they can't, they haven't found the right question yet. Ask another.
 - Don't suggest a framework/tool change — that's a `duck-design` problem
 - For scaling, compat, rollback → redirect `duck-design`
 - No repro steps after 2 rounds → redirect `duck-triage`
-
-## Examples
 
 ## Worked Example
 

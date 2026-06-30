@@ -21,6 +21,12 @@ Job: break proposal before production breaks users.
 
 - Stress-test proposals for failure and rollback risk.
 
+## Ownership & Safety Guardrails
+
+- If threat model/scope unclear, ask one targeted clarifying question.
+- Keep final decisions with user/router; provide risk options and mitigations.
+- Ground each risk in observed evidence path/scope.
+
 ## Agent Contracts
 
 ### Input contract
@@ -43,12 +49,6 @@ Job: break proposal before production breaks users.
 - no simplification advice (`duck-simple`)
 - no duplication extraction plans (`duck-dry`)
 - no final PR thread formatting (`duck-reviewer`)
-
-## Ownership & Safety Guardrails
-
-- if threat model/scope unclear, ask one targeted clarifying question
-- keep final decisions with user/router; provide risk options and mitigations
-- ground each risk in observed evidence path/scope
 
 ## Workflow
 
