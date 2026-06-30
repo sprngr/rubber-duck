@@ -1,0 +1,17 @@
+# register expected behavior (baseline)
+
+Required-field boundary checks:
+
+- missing email -> 400 { error: "missing required fields" }
+- missing password -> 400 { error: "missing required fields" }
+
+Age checks:
+
+- age "12" -> 400 { error: "must be 13+" }
+- age "13" -> proceed to create user
+- invalid age "abc" -> parseAge throws (must not silently accept)
+
+Risk checks for regression patch:
+
+- removing required-field checks is trust-boundary regression unless equivalent guard shown in same boundary
+- age coercion to 0 can incorrectly route invalid requests through underage branch instead of explicit invalid-input error

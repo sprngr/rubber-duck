@@ -1,0 +1,18 @@
+# parseAge expected behavior (baseline)
+
+Given baseline parser (`Number.parseInt` + `isNaN` throw):
+
+- input: "20"      -> 20
+- input: "0"       -> 0
+- input: "12abc"   -> 12   (legacy parseInt behavior)
+- input: "1.9"     -> 1
+- input: ""        -> throws "invalid age"
+- input: "   "     -> throws "invalid age"
+- input: "abc"     -> throws "invalid age"
+- input: "NaN"     -> throws "invalid age"
+
+Risk checks for regression patch:
+
+- invalid inputs must not silently coerce to 0
+- `!n` check must not conflate valid 0 and invalid NaN
+- parse semantics drift (`Number` vs `parseInt`) must be called out

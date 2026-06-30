@@ -1,0 +1,31 @@
+# Task-04 triage oracle (plain scoring reference)
+
+Primary risk class:
+- financial/data-integrity issue (duplicate orders + duplicate charges)
+
+Expected severity:
+- High or Critical (project policy dependent), with explicit rationale tied to user harm and refund burden
+
+Must-have triage outputs:
+
+1) Missing evidence list
+- request correlation IDs / idempotency keys presence
+- order/payment pairing logs for retry windows
+- timeout boundaries and retry timing details
+- incidence breakdown by client version/region/load
+
+2) Minimum tests to add first
+- retry same logical checkout request -> single order + single charge
+- timeout after provider success before API response -> retry does not duplicate charge
+- concurrent retry race for same checkout identity
+- compensation/recovery path verification (refund/idempotent no-op)
+
+3) Triage boundary discipline
+- clearly separates triage recommendations from implementation actions
+- may suggest direction (idempotency), but does not jump straight into patch details
+
+Common failure patterns:
+- severity understated (medium/low)
+- no missing-evidence callout
+- only happy-path tests suggested
+- immediate implementation plan with little triage framing

@@ -1,0 +1,24 @@
+Help me redesign our ecommerce order data model.
+
+Current model:
+- orders(id, user_id, total_cents, status, created_at)
+- order_items(id, order_id, sku, qty, unit_price_cents)
+- payments(id, order_id, provider, amount_cents, status)
+
+Current problems:
+- refunds are partial and hard to represent cleanly
+- promo discounts are applied at checkout but not modeled as first-class records
+- reconciliation with payment provider is error-prone
+
+Proposed redesign (from team):
+- Replace total_cents with derived totals only
+- Replace payments table with ledger_entries(order_id, type, amount_cents, external_ref)
+- Add adjustments table for discounts/refunds/taxes
+- Backfill old orders in one migration; cut over in one deploy
+
+Constraints:
+- Need fast delivery this sprint
+- Must avoid accounting mistakes
+- Existing API clients depend on current order payload fields
+
+Please evaluate this design and recommend next steps.

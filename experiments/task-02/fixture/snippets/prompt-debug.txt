@@ -1,0 +1,45 @@
+My Node/TS API has a data integrity bug: updating one user's default address sometimes changes another user's default address.
+Help me debug this.
+
+Relevant code:
+
+// src/api/address/updateDefaultAddress.ts
+export async function updateDefaultAddress(req: Request, res: Response) {
+  const userId = req.auth.userId;
+  const { addressId } = req.body;
+
+  await db.tx(async (trx) => {
+    await trx("addresses")
+      .where({ is_default: true })
+      .update({ is_default: false });
+
+    await trx("addresses")
+      .where({ id: addressId })
+      .update({ is_default: true, updated_at: new Date() });
+  });
+
+  return res.status(204).send();
+}
+
+// src/repo/addressRepo.ts
+export async function getDefaultAddress(userId: string) {
+  return db("addresses")
+    .where({ user_id: userId, is_default: true })
+    .first();
+}
+
+// src/db/schema.sql
+// addresses(id uuid pk, user_id uuid not null, is_default boolean not null default false)
+// index on (user_id)
+
+Observed behavior:
+- User A sets default address successfully.
+- User B sets default address after that.
+- User A now has no default address, or User B's default flips unexpectedly under load.
+
+Recent log snippets:
+[info] PATCH /me/addresses/default user=uA address=a1 status=204
+[info] PATCH /me/addresses/default user=uB address=b7 status=204
+[warn] invariant check failed: expected exactly 1 default address for user=uA, found=0
+
+Please find likely root cause and smallest safe fix direction.

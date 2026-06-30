@@ -34,6 +34,7 @@ experiments/
   task-packet-template.md
   task-01/
     packet.md
+    fixture/
     A_no_duck/
       transcript.md
       final_diff.patch
@@ -45,7 +46,43 @@ experiments/
       test_output.txt
       notes.md
     scorecard.md
+  task-02/
+    packet.md
+    fixture/
+    A_no_duck/
+    B_duck/
+    scorecard.md
+  task-03/
+    packet.md
+    fixture/
+    A_no_duck/
+    B_duck/
+    scorecard.md
+  task-04/
+    packet.md
+    fixture/
+    A_no_duck/
+    B_duck/
+    scorecard.md
 ```
+
+## Fixture workflow (all tasks)
+
+Each task includes a `fixture/` folder with plain files you can copy into a run workspace before starting A/B sessions.
+
+Recommended pattern:
+
+1. Create fresh run workspace.
+2. Copy `experiments/task-XX/fixture/*` into workspace.
+3. Run condition A (`A_no_duck`) using `packet.md` prompt.
+4. Reset workspace to same fixture state.
+5. Run condition B (`B_duck`) using same prompt.
+6. Save transcripts/artifacts under task condition folders.
+
+Notes:
+- `fixture/snippets/` files are copy/paste-ready prompts.
+- `fixture/tests/*.txt` are plain oracle checks for scoring.
+- Some tasks include `fixture/diffs/*.patch` to apply intentional regressions.
 
 ## Run steps (per task)
 

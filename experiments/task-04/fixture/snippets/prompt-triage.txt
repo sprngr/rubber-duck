@@ -1,0 +1,19 @@
+Triage this bug and tell me severity + what tests to add before we patch.
+
+Issue report:
+- Endpoint: POST /checkout
+- Symptom: duplicate orders occasionally created when client retries after timeout
+- Frequency: ~1.2% of checkout attempts during traffic spikes
+- Impact reports: some users charged twice; support team manually refunds
+
+Current behavior notes:
+- request contains `cartId`, `userId`, `paymentToken`
+- server creates order row, then charges payment provider
+- on timeout between provider response and API response, client retries same request
+- no idempotency key persisted server-side
+
+Known tests:
+- happy path checkout success
+- payment provider failure returns 502
+
+What is severity, what evidence is missing, and what minimum tests should be added first?
