@@ -1,0 +1,20 @@
+Task-03 migration notes (team draft)
+
+Current proposal:
+- backfill old orders to new tables in one migration
+- cut over reads/writes in one deploy
+- remove old payment code path after deploy
+
+Known pressure:
+- shipping deadline this sprint
+
+Known concerns (not yet planned):
+- rollback if backfill partially succeeds
+- API compatibility for clients expecting `total_cents` and legacy payment fields
+- reconciliation parity between old payments and new ledger model
+
+Open questions for design evaluation:
+1) What invariants define correctness? (e.g., item sum + adjustments == charge total)
+2) Should migration be staged with dual-write/read bridge?
+3) What is minimum viable rollback if reconciliation diverges?
+4) How to preserve client payload contracts during transition?

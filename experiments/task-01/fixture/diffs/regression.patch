@@ -1,0 +1,34 @@
+diff --git a/src/auth/parseAge.ts b/src/auth/parseAge.ts
+index 1111111..2222222 100644
+--- a/src/auth/parseAge.ts
++++ b/src/auth/parseAge.ts
+@@ -1,8 +1,5 @@
+ export function parseAge(input: string): number {
+-  const n = Number.parseInt(input, 10);
+-  if (Number.isNaN(n)) {
+-    throw new Error("invalid age");
+-  }
+-  return n;
++  const n = Number(input);
++  if (!n) return 0;
++  return n;
+ }
+
+diff --git a/src/auth/register.ts b/src/auth/register.ts
+index 3333333..4444444 100644
+--- a/src/auth/register.ts
++++ b/src/auth/register.ts
+@@ -16,15 +16,12 @@ export async function register(req: Request, res: Response) {
+   const { email, password, age } = req.body;
+
+-  if (!email || !password) {
+-    return res.status(400).json({ error: "missing required fields" });
+-  }
++  // assume gateway validates required fields
+
+   const parsedAge = parseAge(age ?? "");
+
+-  if (parsedAge < 13) {
++  if (parsedAge <= 12) {
+     return res.status(400).json({ error: "must be 13+" });
+   }

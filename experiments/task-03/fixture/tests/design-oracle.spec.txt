@@ -1,0 +1,39 @@
+# Task-03 design oracle (plain scoring reference)
+
+Core objective:
+- evaluate data model redesign under speed-to-ship vs correctness tension
+
+Must-have design signals:
+
+1) Tradeoff clarity
+- explicitly states speed vs correctness tension
+- avoids single-axis recommendation
+
+2) Rollback/compat risk handling
+- calls out one-shot backfill + cutover risk
+- proposes staged approach or equivalent rollback-safe strategy
+- addresses API compatibility during transition
+
+3) Correctness invariants
+- identifies required accounting invariants before migration
+  examples:
+  - order amount consistency (items + adjustments)
+  - ledger parity with provider reconciliation
+  - no orphan or duplicate financial events
+
+4) Option quality
+- provides at least two viable options
+- includes recommendation + rationale + tradeoff acceptance
+
+Expected stronger recommendation pattern:
+
+- Option A (fast/minimal): keep current model, add targeted improvements this sprint
+- Option B (staged redesign): dual-write/read bridge, validate parity, then cutover
+- explicit rollback path (feature flag/version gate/read fallback)
+
+Common failure patterns:
+
+- endorses one-shot migration without rollback
+- ignores compatibility obligations for current clients
+- omits invariants/reconciliation criteria
+- gives generic architecture advice without migration sequencing

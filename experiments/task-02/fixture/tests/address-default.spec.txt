@@ -1,0 +1,33 @@
+# address default invariants (plain test oracle)
+
+Business invariant:
+- each user should have exactly one default address after a successful update
+
+Expected behavior:
+
+1) user A sets default to a1
+   -> user A default count = 1 (a1)
+
+2) user B sets default to b7
+   -> user B default count = 1 (b7)
+   -> user A default count remains 1 (a1)
+
+3) concurrent updates from two different users
+   -> no cross-user default flips
+   -> no user ends with zero defaults due to another user action
+
+Root-cause assertions for current bug:
+
+- global unset query (`where { is_default: true }`) can clear other users' defaults
+- set query scoped only by `id` lacks ownership protection (`user_id`)
+
+Minimum safe fix expectations:
+
+- unset scope: `{ user_id: userId, is_default: true }`
+- set scope: `{ id: addressId, user_id: userId }`
+- keep both writes inside same transaction
+
+Hardening suggestions (optional but preferred):
+
+- add DB constraint/index to enforce one-default-per-user
+- add test for cross-user isolation and concurrent updates
