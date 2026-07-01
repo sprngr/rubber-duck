@@ -63,6 +63,7 @@ The router is not special: it is an agent with a `body.md` and a `meta.json` lik
 
 - The builder (`scripts/build-harness-artifacts.sh`) reads each agent's `meta.json` + `body.md` and calls a per-harness renderer (`render_claude_fm`, `render_opencode_fm`, …).
 - Rendered artifacts are committed under `dist/<harness>/`. `--check` mode asserts the committed output matches a fresh render, so drift is a CI failure.
+- Installer mode selection (global vs project) is a harness concern layered on top of those artifacts. Example: OpenCode uses `--opencode` (`~/.config/opencode/*`) and `--opencode-project` (`.opencode/agents` + project-root `AGENTS.md`); Claude uses `--claude` (`~/.claude/*`) and `--claude-project` (project `CLAUDE.md` + sibling `AGENTS.md`).
 
 ### Dependency boundary
 
@@ -72,6 +73,6 @@ The builder is a **build-time / CI tool**, not part of the install path. End use
 
 1. Add a `harnesses.<new>` section to each agent's `meta.json`.
 2. Add a `render_<new>_fm` renderer and a `dist/<new>/` output path in the builder.
-3. Add the harness's install target to `scripts/rubber-duck.sh` / `rubber-duck.ps1`.
+3. Add the harness's install mode(s) (for example: global/project variants) to `scripts/rubber-duck.sh` / `rubber-duck.ps1`.
 
 No change to agent bodies or to other harnesses' sections.

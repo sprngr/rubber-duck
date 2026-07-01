@@ -21,6 +21,7 @@ CLI reference for install/update/uninstall tooling.
 | Flag | Type | Description |
 |---|---|---|
 | `--opencode` | switch | Use preconfigured opencode paths |
+| `--opencode-project` | switch | Use project opencode paths (`.opencode/agents` + project-root `AGENTS.md`) |
 | `--claude` | switch | Use global Claude paths (`~/.claude/agents` + `~/.claude/CLAUDE.md` + sibling `~/.claude/AGENTS.md`) |
 | `--claude-project` | switch | Use project Claude paths (`.claude/agents` + `CLAUDE.md` + sibling `AGENTS.md`) |
 | `--agents-dir <path>` | value | Generic target agent directory |
@@ -40,6 +41,7 @@ CLI reference for install/update/uninstall tooling.
 |---|---|---|
 | `-Action install\|uninstall\|status\|doctor` | value | Operation to execute |
 | `-OpenCode` | switch | Use preconfigured opencode paths |
+| `-OpenCodeProject` | switch | Use project opencode paths (`.opencode/agents` + project-root `AGENTS.md`) |
 | `-Claude` | switch | Use global Claude paths (`~/.claude/agents` + `~/.claude/CLAUDE.md` + sibling `~/.claude/AGENTS.md`) |
 | `-ClaudeProject` | switch | Use project Claude paths (`.claude/agents` + `CLAUDE.md` + sibling `AGENTS.md`) |
 | `-AgentsDir <path>` | value | Generic target agent directory |
@@ -60,10 +62,16 @@ CLI reference for install/update/uninstall tooling.
 - Do not combine global and project Claude modes in one command:
   - Bash: `--claude` and `--claude-project` are mutually exclusive
   - PowerShell: `-Claude` and `-ClaudeProject` are mutually exclusive
+- Do not combine global and project OpenCode modes in one command:
+  - Bash: `--opencode` and `--opencode-project` are mutually exclusive
+  - PowerShell: `-OpenCode` and `-OpenCodeProject` are mutually exclusive
 - OpenCode/generic targets:
   - install full duck set (router + ducklings)
   - use managed block markers in AGENTS.md
   - backup before mutation: `AGENTS.md.bak.<YYYYmmdd-HHMMSS>`
+- OpenCode target:
+  - global mode: uses `~/.config/opencode/agents` + `~/.config/opencode/AGENTS.md`
+  - project mode (`--opencode-project` / `-OpenCodeProject`): uses `.opencode/agents` + project-root `AGENTS.md`
 - Claude target:
   - installs full duck set (router + ducklings)
   - global mode: writes/removes managed `~/.claude/CLAUDE.md` and sibling `~/.claude/AGENTS.md`

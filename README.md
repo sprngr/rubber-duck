@@ -63,7 +63,8 @@ CLI reference: [scripts/README.md](./scripts/README.md)
 | Target | Bash (macOS/Linux) | PowerShell (Windows) |
 |---|---|---|
 | Generic (custom harness paths) | `curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh \| bash -s -- install --agents-dir /path/to/harness/agents --agents-md /path/to/harness/AGENTS.md` | `$p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.ps1 -OutFile $p; & $p install -AgentsDir C:\path\to\harness\agents -AgentsMd C:\path\to\harness\AGENTS.md` |
-| OpenCode (preconfigured) | `curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh \| bash -s -- install --opencode` | `$p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.ps1 -OutFile $p; & $p install -OpenCode` |
+| OpenCode (global defaults) | `curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh \| bash -s -- install --opencode` | `$p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.ps1 -OutFile $p; & $p install -OpenCode` |
+| OpenCode (project paths) | `curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh \| bash -s -- install --opencode-project` | `$p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.ps1 -OutFile $p; & $p install -OpenCodeProject` |
 | Claude Code (global defaults) | `curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh \| bash -s -- install --claude` | `$p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.ps1 -OutFile $p; & $p install -Claude` |
 | Claude Code (project paths) | `curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh \| bash -s -- install --claude-project` | `$p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.ps1 -OutFile $p; & $p install -ClaudeProject` |
 
@@ -100,12 +101,14 @@ Checkout repo locally, then use installer script.
 Target flags:
 
 - Generic: `--agents-dir /path/to/harness/agents --agents-md /path/to/harness/AGENTS.md`
-- OpenCode: `--opencode`
+- OpenCode (global): `--opencode`
+- OpenCode (project): `--opencode-project`
 - Claude (global): `--claude` (optional: `--claude-md ~/.claude/CLAUDE.md`)
 - Claude (project): `--claude-project` (optional: `--claude-md ./docs/CLAUDE.md`)
 
 Mode constraints:
 
+- `--opencode` and `--opencode-project` are mutually exclusive.
 - `--claude-md` requires `--claude` or `--claude-project`.
 - `--claude` and `--claude-project` are mutually exclusive.
 
@@ -122,6 +125,7 @@ Notes:
 | Target | Agents installed to | Policy behavior on install | Policy behavior on uninstall | Backups |
 |---|---|---|---|---|
 | `--opencode` | `~/.config/opencode/agents` | Upsert managed block in `~/.config/opencode/AGENTS.md` | Remove managed block from `~/.config/opencode/AGENTS.md` | `AGENTS.md.bak.<ts>` |
+| `--opencode-project` | `./.opencode/agents` | Upsert managed block in project `AGENTS.md` | Remove managed block from project `AGENTS.md` | `AGENTS.md.bak.<ts>` |
 | generic (`--agents-dir` + `--agents-md`) | your `--agents-dir` | Upsert managed block in your `--agents-md` | Remove managed block from your `--agents-md` | `<agents-md>.bak.<ts>` |
 | `--claude` | `~/.claude/agents` (or custom via `--claude-md`) | Upsert managed block in `~/.claude/CLAUDE.md` and sibling `~/.claude/AGENTS.md` | Remove managed block from each; user content preserved | `CLAUDE.md.bak.<ts>` and `AGENTS.md.bak.<ts>` |
 | `--claude-project` | `./.claude/agents` (or custom via `--claude-md`) | Upsert managed block in project `CLAUDE.md` and sibling `AGENTS.md` | Remove managed block from each; user content preserved | `CLAUDE.md.bak.<ts>` and `AGENTS.md.bak.<ts>` |
