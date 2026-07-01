@@ -75,11 +75,3 @@ The builder is a **build-time / CI tool**, not part of the install path. End use
 3. Add the harness's install target to `scripts/rubber-duck.sh` / `rubber-duck.ps1`.
 
 No change to agent bodies or to other harnesses' sections.
-
-## Migration
-
-Behavior-preserving, staged; `--check` stays green (dist byte-identical) until an intentional format change:
-
-1. Lock the schema and renderers; migrate one agent end-to-end while the builder supports both the old table and the new config; verify `dist/` unchanged.
-2. Migrate remaining subagents and the router onto config; delete `CLAUDE_SUBAGENT_SPECS` and `agents/src/rubber-duck.body.md`.
-3. Remove the transitional old path; the builder is now a pure renderer. The first newly-added harness is the real extensibility test.
