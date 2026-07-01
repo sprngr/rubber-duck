@@ -7,6 +7,7 @@ AGENTS_DIR=""
 AGENTS_MD=""
 CLAUDE_MD=""
 CLAUDE_MODE_SET=0
+OPENCODE_MODE_SET=0
 SKIP_SKILLS=0
 PROJECT_SKILLS=0
 SKILLS_SOURCE="https://github.com/sprngr/rubber-duck"
@@ -36,6 +37,8 @@ MANAGED_END="<!-- RUBBER_DUCK_MANAGED_BLOCK END -->"
 
 OPENCODE_AGENTS_DIR="${HOME}/.config/opencode/agents"
 OPENCODE_AGENTS_MD="${HOME}/.config/opencode/AGENTS.md"
+OPENCODE_PROJECT_AGENTS_DIR=".opencode/agents"
+OPENCODE_PROJECT_AGENTS_MD="AGENTS.md"
 CLAUDE_AGENTS_DIR="${HOME}/.claude/agents"
 CLAUDE_POLICY_MD="${HOME}/.claude/CLAUDE.md"
 CLAUDE_PROJECT_AGENTS_DIR=".claude/agents"
@@ -59,6 +62,7 @@ Usage:
 
 Options:
   --opencode                        Use preconfigured opencode paths
+  --opencode-project                Use project opencode paths (.opencode/agents + AGENTS.md)
   --claude                          Use global Claude paths (~/.claude/agents + ~/.claude/CLAUDE.md)
   --claude-project                  Use project Claude paths (.claude/agents + CLAUDE.md)
   --agents-dir <path>               Generic target agents dir
@@ -74,6 +78,7 @@ Options:
 
 Examples:
   scripts/rubber-duck.sh install --opencode
+  scripts/rubber-duck.sh install --opencode-project
   scripts/rubber-duck.sh install --claude
   scripts/rubber-duck.sh install --claude-project
   scripts/rubber-duck.sh install --agents-dir ~/.h/agents --agents-md ~/.h/AGENTS.md
@@ -98,7 +103,21 @@ fi
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --opencode)
+      if (( OPENCODE_MODE_SET == 1 )) && [[ "${TARGET}" != "opencode" ]]; then
+        err "cannot combine --opencode and --opencode-project"
+        exit 1
+      fi
       TARGET="opencode"
+      OPENCODE_MODE_SET=1
+      shift
+      ;;
+    --opencode-project)
+      if (( OPENCODE_MODE_SET == 1 )) && [[ "${TARGET}" != "opencode-project" ]]; then
+        err "cannot combine --opencode and --opencode-project"
+        exit 1
+      fi
+      TARGET="opencode-project"
+      OPENCODE_MODE_SET=1
       shift
       ;;
     --claude)
@@ -189,6 +208,19 @@ resolve_target() {
       REMOTE_POLICY_PATH="AGENTS.md"
       REMOTE_AGENTS_PATH="dist/opencode/agents"
       ;;
+    opencode-project)
+      DEST_AGENTS_DIR="${OPENCODE_PROJECT_AGENTS_DIR}"
+      DEST_POLICY_MD="${OPENCODE_PROJECT_AGENTS_MD}"
+      POLICY_MODE="managed_block"
+      LOCAL_POLICY_FILE="${REPO_ROOT}/AGENTS.md"
+      if [[ -d "${REPO_ROOT}/dist/opencode/agents" ]]; then
+        LOCAL_AGENTS_DIR="${REPO_ROOT}/dist/opencode/agents"
+      else
+        LOCAL_AGENTS_DIR="${REPO_ROOT}/agents"
+      fi
+      REMOTE_POLICY_PATH="AGENTS.md"
+      REMOTE_AGENTS_PATH="dist/opencode/agents"
+      ;;
     claude)
       DEST_AGENTS_DIR="${CLAUDE_AGENTS_DIR}"
       DEST_POLICY_MD="${CLAUDE_MD:-${CLAUDE_POLICY_MD}}"
@@ -215,7 +247,7 @@ resolve_target() {
       ;;
     generic)
       if [[ -z "${AGENTS_DIR}" || -z "${AGENTS_MD}" ]]; then
-        err "generic target requires --agents-dir and --agents-md (or use --opencode)"
+        err "generic target requires --agents-dir and --agents-md (or use --opencode or --opencode-project)"
         exit 1
       fi
       DEST_AGENTS_DIR="${AGENTS_DIR}"

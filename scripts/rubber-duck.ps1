@@ -2,6 +2,7 @@ param(
   [ValidateSet("install","uninstall","status","doctor")]
   [string]$Action = "install",
   [switch]$OpenCode,
+  [switch]$OpenCodeProject,
   [switch]$Claude,
   [switch]$ClaudeProject,
   [string]$AgentsDir,
@@ -25,6 +26,10 @@ $SkillsCli = "skills@^1.5.14"
 
 if ($Claude -and $ClaudeProject) {
   throw "Cannot combine -Claude and -ClaudeProject. Choose one."
+}
+
+if ($OpenCode -and $OpenCodeProject) {
+  throw "Cannot combine -OpenCode and -OpenCodeProject. Choose one."
 }
 
 if (-not $Claude -and -not $ClaudeProject -and -not [string]::IsNullOrWhiteSpace($ClaudeMd)) {
@@ -88,6 +93,22 @@ function Resolve-Target {
     return
   }
 
+  if ($OpenCodeProject) {
+    $script:Target = "opencode-project"
+    $script:DestAgentsDir = ".opencode/agents"
+    $script:DestPolicyMd = "AGENTS.md"
+    $script:PolicyMode = "managed_block"
+    $script:LocalPolicyFile = Join-Path $RepoRoot "AGENTS.md"
+    if (Test-Path (Join-Path $RepoRoot "dist/opencode/agents")) {
+      $script:LocalAgentsDir = Join-Path $RepoRoot "dist/opencode/agents"
+    } else {
+      $script:LocalAgentsDir = Join-Path $RepoRoot "agents"
+    }
+    $script:RemotePolicyPath = "AGENTS.md"
+    $script:RemoteAgentsPath = "dist/opencode/agents"
+    return
+  }
+
   if ($Claude) {
     $script:Target = "claude"
     $script:DestAgentsDir = Join-Path $HOME ".claude/agents"
@@ -119,7 +140,7 @@ function Resolve-Target {
   }
 
   if ([string]::IsNullOrWhiteSpace($AgentsDir) -or [string]::IsNullOrWhiteSpace($AgentsMd)) {
-    throw "Generic target requires -AgentsDir and -AgentsMd (or use -OpenCode)."
+    throw "Generic target requires -AgentsDir and -AgentsMd (or use -OpenCode or -OpenCodeProject)."
   }
 
   $script:Target = "generic"
