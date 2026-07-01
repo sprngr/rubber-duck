@@ -4,6 +4,7 @@ param(
   [string]$Action = "install",
   [switch]$OpenCode,
   [switch]$Claude,
+  [switch]$ClaudeProject,
   [string]$AgentsDir,
   [string]$AgentsMd,
   [string]$ClaudeMd,
@@ -16,6 +17,14 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+
+if ($Claude -and $ClaudeProject) {
+  throw "Cannot combine -Claude and -ClaudeProject. Choose one."
+}
+
+if (-not $Claude -and -not $ClaudeProject -and -not [string]::IsNullOrWhiteSpace($ClaudeMd)) {
+  throw "-ClaudeMd requires -Claude or -ClaudeProject."
+}
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $RepoRoot = Split-Path -Parent $ScriptDir
@@ -76,6 +85,22 @@ function Resolve-Target {
 
   if ($Claude) {
     $script:Target = "claude"
+    $script:DestAgentsDir = Join-Path $HOME ".claude/agents"
+    $script:DestPolicyMd = if ([string]::IsNullOrWhiteSpace($ClaudeMd)) { (Join-Path $HOME ".claude/CLAUDE.md") } else { $ClaudeMd }
+    $script:DestClaudeAgentsMd = Join-Path (Split-Path -Parent $script:DestPolicyMd) "AGENTS.md"
+    $script:PolicyMode = "file"
+    $script:AgentFiles = $ClaudeAgentFiles
+    $script:LocalPolicyFile = Join-Path $RepoRoot "dist/claude/CLAUDE.md"
+    $script:LocalAgentsPolicyFile = Join-Path $RepoRoot "dist/opencode/AGENTS.md"
+    $script:LocalAgentsDir = Join-Path $RepoRoot "dist/claude/agents"
+    $script:RemotePolicyPath = "dist/claude/CLAUDE.md"
+    $script:RemoteAgentsPolicyPath = "dist/opencode/AGENTS.md"
+    $script:RemoteAgentsPath = "dist/claude/agents"
+    return
+  }
+
+  if ($ClaudeProject) {
+    $script:Target = "claude-project"
     $script:DestAgentsDir = ".claude/agents"
     $script:DestPolicyMd = if ([string]::IsNullOrWhiteSpace($ClaudeMd)) { "CLAUDE.md" } else { $ClaudeMd }
     $script:DestClaudeAgentsMd = Join-Path (Split-Path -Parent $script:DestPolicyMd) "AGENTS.md"

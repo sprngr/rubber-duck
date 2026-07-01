@@ -64,7 +64,8 @@ CLI reference: [scripts/README.md](./scripts/README.md)
 |---|---|---|
 | Generic (custom harness paths) | `curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh \| bash -s -- install --agents-dir /path/to/harness/agents --agents-md /path/to/harness/AGENTS.md` | `$p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.ps1 -OutFile $p; & $p install -AgentsDir C:\path\to\harness\agents -AgentsMd C:\path\to\harness\AGENTS.md` |
 | OpenCode (preconfigured) | `curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh \| bash -s -- install --opencode` | `$p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.ps1 -OutFile $p; & $p install -OpenCode` |
-| Claude Code (project defaults) | `curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh \| bash -s -- install --claude` | `$p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.ps1 -OutFile $p; & $p install -Claude` |
+| Claude Code (global defaults) | `curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh \| bash -s -- install --claude` | `$p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.ps1 -OutFile $p; & $p install -Claude` |
+| Claude Code (project paths) | `curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh \| bash -s -- install --claude-project` | `$p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.ps1 -OutFile $p; & $p install -ClaudeProject` |
 
 Project-scoped skills instead of global:
 
@@ -100,7 +101,13 @@ Target flags:
 
 - Generic: `--agents-dir /path/to/harness/agents --agents-md /path/to/harness/AGENTS.md`
 - OpenCode: `--opencode`
-- Claude: `--claude` (optional: `--claude-md ./docs/CLAUDE.md`)
+- Claude (global): `--claude` (optional: `--claude-md ~/.claude/CLAUDE.md`)
+- Claude (project): `--claude-project` (optional: `--claude-md ./docs/CLAUDE.md`)
+
+Mode constraints:
+
+- `--claude-md` requires `--claude` or `--claude-project`.
+- `--claude` and `--claude-project` are mutually exclusive.
 
 Notes:
 - script copies agent files to directory
@@ -116,7 +123,8 @@ Notes:
 |---|---|---|---|---|
 | `--opencode` | `~/.config/opencode/agents` | Upsert managed block in `~/.config/opencode/AGENTS.md` | Remove managed block from `~/.config/opencode/AGENTS.md` | `AGENTS.md.bak.<ts>` |
 | generic (`--agents-dir` + `--agents-md`) | your `--agents-dir` | Upsert managed block in your `--agents-md` | Remove managed block from your `--agents-md` | `<agents-md>.bak.<ts>` |
-| `--claude` | `./.claude/agents` (or custom CWD-relative path) | Write managed `CLAUDE.md` and sibling `AGENTS.md` | Remove each only if file matches installed artifact; otherwise keep + warn | `CLAUDE.md.bak.<ts>` and `AGENTS.md.bak.<ts>` |
+| `--claude` | `~/.claude/agents` (or custom via `--claude-md`) | Write managed `~/.claude/CLAUDE.md` and sibling `~/.claude/AGENTS.md` | Remove each only if file matches installed artifact; otherwise keep + warn | `CLAUDE.md.bak.<ts>` and `AGENTS.md.bak.<ts>` |
+| `--claude-project` | `./.claude/agents` (or custom via `--claude-md`) | Write managed project `CLAUDE.md` and sibling `AGENTS.md` | Remove each only if file matches installed artifact; otherwise keep + warn | `CLAUDE.md.bak.<ts>` and `AGENTS.md.bak.<ts>` |
 
 Claude target installs the full duck set (router + ducklings), not router-only.
 
@@ -126,7 +134,7 @@ Use this to quickly validate behavior and fit in your own workflow.
 
 ### Step 0: Enable Rubber Duck Agent
 
-Depending on your harness, can be a dropdown menu or @🦆
+Depending on your harness, you can invoke the agent via dropdown menu or by name - @🦆 (Opencode) or @agent-rubber-duck (Claude)
 
 ### Step 1: heartbeat check
 

@@ -6,6 +6,7 @@ TARGET="generic"
 AGENTS_DIR=""
 AGENTS_MD=""
 CLAUDE_MD=""
+CLAUDE_MODE_SET=0
 SKIP_SKILLS=0
 PROJECT_SKILLS=0
 SKILLS_SOURCE="https://github.com/sprngr/rubber-duck"
@@ -34,8 +35,10 @@ MANAGED_END="<!-- RUBBER_DUCK_MANAGED_BLOCK END -->"
 
 OPENCODE_AGENTS_DIR="${HOME}/.config/opencode/agents"
 OPENCODE_AGENTS_MD="${HOME}/.config/opencode/AGENTS.md"
-CLAUDE_AGENTS_DIR=".claude/agents"
-CLAUDE_POLICY_MD="CLAUDE.md"
+CLAUDE_AGENTS_DIR="${HOME}/.claude/agents"
+CLAUDE_POLICY_MD="${HOME}/.claude/CLAUDE.md"
+CLAUDE_PROJECT_AGENTS_DIR=".claude/agents"
+CLAUDE_PROJECT_POLICY_MD="CLAUDE.md"
 
 OPENCODE_AGENT_FILES=(
   "rubber-duck.agent.md"
@@ -66,10 +69,11 @@ Usage:
 
 Options:
   --opencode                        Use preconfigured opencode paths
-  --claude                          Use project-default Claude paths (.claude/agents + CLAUDE.md)
+  --claude                          Use global Claude paths (~/.claude/agents + ~/.claude/CLAUDE.md)
+  --claude-project                  Use project Claude paths (.claude/agents + CLAUDE.md)
   --agents-dir <path>               Generic target agents dir
   --agents-md <path>                Generic target AGENTS.md path
-  --claude-md <path>                Claude target memory file path (default: ./CLAUDE.md)
+  --claude-md <path>                Claude target memory file path override
   --skip-skills                     Skip npx skills add/remove/list
   --project-skills                  Install skills to project scope (default is global via -g)
   --skills-source <url-or-path>     Skills package source
@@ -81,6 +85,7 @@ Options:
 Examples:
   scripts/rubber-duck.sh install --opencode
   scripts/rubber-duck.sh install --claude
+  scripts/rubber-duck.sh install --claude-project
   scripts/rubber-duck.sh install --agents-dir ~/.h/agents --agents-md ~/.h/AGENTS.md
   curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh | bash -s -- install --opencode
 EOF
@@ -107,7 +112,21 @@ while [[ $# -gt 0 ]]; do
       shift
       ;;
     --claude)
+      if (( CLAUDE_MODE_SET == 1 )) && [[ "${TARGET}" != "claude" ]]; then
+        err "cannot combine --claude and --claude-project"
+        exit 1
+      fi
       TARGET="claude"
+      CLAUDE_MODE_SET=1
+      shift
+      ;;
+    --claude-project)
+      if (( CLAUDE_MODE_SET == 1 )) && [[ "${TARGET}" != "claude-project" ]]; then
+        err "cannot combine --claude and --claude-project"
+        exit 1
+      fi
+      TARGET="claude-project"
+      CLAUDE_MODE_SET=1
       shift
       ;;
     --agents-dir)
@@ -121,7 +140,6 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     --claude-md)
-      TARGET="claude"
       CLAUDE_MD="${2:-}"
       shift 2
       ;;
@@ -161,6 +179,11 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+if [[ -n "${CLAUDE_MD}" && "${TARGET}" != "claude" && "${TARGET}" != "claude-project" ]]; then
+  err "--claude-md requires --claude or --claude-project"
+  exit 1
+fi
+
 resolve_target() {
   case "${TARGET}" in
     opencode)
@@ -181,6 +204,19 @@ resolve_target() {
     claude)
       DEST_AGENTS_DIR="${CLAUDE_AGENTS_DIR}"
       DEST_POLICY_MD="${CLAUDE_MD:-${CLAUDE_POLICY_MD}}"
+      DEST_CLAUDE_AGENTS_MD="$(dirname -- "${DEST_POLICY_MD}")/AGENTS.md"
+      POLICY_MODE="file"
+      AGENT_FILES=("${CLAUDE_AGENT_FILES[@]}")
+      LOCAL_POLICY_FILE="${REPO_ROOT}/dist/claude/CLAUDE.md"
+      LOCAL_POLICY_AGENTS_FILE="${REPO_ROOT}/dist/opencode/AGENTS.md"
+      LOCAL_AGENTS_DIR="${REPO_ROOT}/dist/claude/agents"
+      REMOTE_POLICY_PATH="dist/claude/CLAUDE.md"
+      REMOTE_POLICY_AGENTS_PATH="dist/opencode/AGENTS.md"
+      REMOTE_AGENTS_PATH="dist/claude/agents"
+      ;;
+    claude-project)
+      DEST_AGENTS_DIR="${CLAUDE_PROJECT_AGENTS_DIR}"
+      DEST_POLICY_MD="${CLAUDE_MD:-${CLAUDE_PROJECT_POLICY_MD}}"
       DEST_CLAUDE_AGENTS_MD="$(dirname -- "${DEST_POLICY_MD}")/AGENTS.md"
       POLICY_MODE="file"
       AGENT_FILES=("${CLAUDE_AGENT_FILES[@]}")
