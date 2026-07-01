@@ -110,9 +110,9 @@ Mode constraints:
 - `--claude` and `--claude-project` are mutually exclusive.
 
 Notes:
-- script copies agent files to directory
-- Opencode/generic AGENTS policy is appended/removed via managed block markers
-- Claude target writes/removes managed `CLAUDE.md` and `AGENTS.md` files
+- script copies agent files to target directory
+- AGENTS policy is appended/removed via managed block markers
+- Claude target upserts/removes a managed block in both `CLAUDE.md` and its sibling `AGENTS.md` (existing user content in those files is preserved)
 - use `--skip-skills` if you only need agents + AGENTS policy changes
 - use `--dry-run` to print planned actions + AGENTS.md diff preview without writing
 - install/uninstall always creates policy backup in same dir: `<policy>.bak.<YYYYmmdd-HHMMSS>`
@@ -123,8 +123,8 @@ Notes:
 |---|---|---|---|---|
 | `--opencode` | `~/.config/opencode/agents` | Upsert managed block in `~/.config/opencode/AGENTS.md` | Remove managed block from `~/.config/opencode/AGENTS.md` | `AGENTS.md.bak.<ts>` |
 | generic (`--agents-dir` + `--agents-md`) | your `--agents-dir` | Upsert managed block in your `--agents-md` | Remove managed block from your `--agents-md` | `<agents-md>.bak.<ts>` |
-| `--claude` | `~/.claude/agents` (or custom via `--claude-md`) | Write managed `~/.claude/CLAUDE.md` and sibling `~/.claude/AGENTS.md` | Remove each only if file matches installed artifact; otherwise keep + warn | `CLAUDE.md.bak.<ts>` and `AGENTS.md.bak.<ts>` |
-| `--claude-project` | `./.claude/agents` (or custom via `--claude-md`) | Write managed project `CLAUDE.md` and sibling `AGENTS.md` | Remove each only if file matches installed artifact; otherwise keep + warn | `CLAUDE.md.bak.<ts>` and `AGENTS.md.bak.<ts>` |
+| `--claude` | `~/.claude/agents` (or custom via `--claude-md`) | Upsert managed block in `~/.claude/CLAUDE.md` and sibling `~/.claude/AGENTS.md` | Remove managed block from each; user content preserved | `CLAUDE.md.bak.<ts>` and `AGENTS.md.bak.<ts>` |
+| `--claude-project` | `./.claude/agents` (or custom via `--claude-md`) | Upsert managed block in project `CLAUDE.md` and sibling `AGENTS.md` | Remove managed block from each; user content preserved | `CLAUDE.md.bak.<ts>` and `AGENTS.md.bak.<ts>` |
 
 Claude target installs the full duck set (router + ducklings), not router-only.
 
@@ -134,7 +134,14 @@ Use this to quickly validate behavior and fit in your own workflow.
 
 ### Step 0: Enable Rubber Duck Agent
 
-Depending on your harness, you can invoke the agent via dropdown menu or by name - @🦆 (Opencode) or @agent-rubber-duck (Claude)
+Rubber Duck can run two ways. The distinction matters most on Claude Code:
+
+- **As a subagent (on demand):** invoke it from inside an existing session — `@🦆` (OpenCode) or `@agent-rubber-duck` (Claude), or via your harness dropdown. Spawned per request; the router greeting does not auto-run.
+- **As the main agent (whole session):** the duck *is* the session and routes from the first turn.
+  - Claude Code: `claude --agent rubber-duck`, or set `"agent": "rubber-duck"` in `.claude/settings.json` (project) or `~/.claude/settings.json` (global). The startup header shows `@rubber-duck` to confirm, and the router greeting (`initialPrompt`) auto-runs on the first turn. The `--agent` flag overrides the setting when both are present.
+  - OpenCode: select `🦆` as the primary agent (its `mode: all` allows primary use).
+
+Either way the agent must already be installed for your target (see install matrix above).
 
 ### Step 1: heartbeat check
 

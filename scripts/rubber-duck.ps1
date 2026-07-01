@@ -16,23 +16,8 @@ param(
 )
 
 function rubber-duck {
-param(
-  [ValidateSet("install","uninstall","status","doctor")]
-  [string]$Action = "install",
-  [switch]$OpenCode,
-  [switch]$Claude,
-  [switch]$ClaudeProject,
-  [string]$AgentsDir,
-  [string]$AgentsMd,
-  [string]$ClaudeMd,
-  [switch]$SkipSkills,
-  [switch]$ProjectSkills,
-  [string]$SkillsSource = "https://github.com/sprngr/rubber-duck",
-  [ValidateSet("auto","local","web")]
-  [string]$Source = "auto",
-  [string]$RawBase = "https://raw.githubusercontent.com/sprngr/rubber-duck/main"
-)
-
+# Parameters are declared once in the top-level param() block above and read
+# from script scope here (nested helper functions close over the same scope).
 $ErrorActionPreference = "Stop"
 
 if ($Claude -and $ClaudeProject) {
@@ -43,8 +28,21 @@ if (-not $Claude -and -not $ClaudeProject -and -not [string]::IsNullOrWhiteSpace
   throw "-ClaudeMd requires -Claude or -ClaudeProject."
 }
 
-$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$RepoRoot = Split-Path -Parent $ScriptDir
+# When run via `iwr | iex` there is no backing script file, so
+# $MyInvocation.MyCommand.Path is null and ScriptDir/RepoRoot cannot be
+# resolved. Mirror the .sh running_piped logic: flag it and force web source,
+# since local artifact detection would otherwise use empty/broken paths.
+# Keep ScriptDir/RepoRoot as non-null placeholders so Join-Path never throws;
+# they are never used because Resolve-Source forces web when piped.
+$ScriptPath = $MyInvocation.MyCommand.Path
+$script:RunningPiped = [string]::IsNullOrWhiteSpace($ScriptPath)
+if ($script:RunningPiped) {
+  $ScriptDir = [System.IO.Path]::GetTempPath()
+  $RepoRoot = [System.IO.Path]::GetTempPath()
+} else {
+  $ScriptDir = Split-Path -Parent $ScriptPath
+  $RepoRoot = Split-Path -Parent $ScriptDir
+}
 $LocalAgentsDir = $null
 $LocalPolicyFile = $null
 $LocalAgentsPolicyFile = $null
@@ -163,10 +161,21 @@ function Has-LocalSources {
 
 function Resolve-Source {
   switch ($Source) {
-    "local" { $script:EffectiveSource = "local" }
+    "local" {
+      if ($script:RunningPiped) {
+        throw "local source selected but no repo checkout is available (running via iwr|iex). Use -Source web or run from a repo checkout."
+      }
+      $script:EffectiveSource = "local"
+    }
     "web" { $script:EffectiveSource = "web" }
     "auto" {
-      if (Has-LocalSources) { $script:EffectiveSource = "local" } else { $script:EffectiveSource = "web" }
+      if ($script:RunningPiped) {
+        $script:EffectiveSource = "web"
+      } elseif (Has-LocalSources) {
+        $script:EffectiveSource = "local"
+      } else {
+        $script:EffectiveSource = "web"
+      }
     }
   }
 }
@@ -249,55 +258,42 @@ function Backup-ClaudeAgentsMd {
   Log "Backup created: $backup"
 }
 
-function Upsert-ManagedBlock {
-  $parent = Split-Path -Parent $DestPolicyMd
-  New-Item -ItemType Directory -Force -Path $parent | Out-Null
-  if (-not (Test-Path $DestPolicyMd)) { New-Item -ItemType File -Force -Path $DestPolicyMd | Out-Null }
-  $current = if (Test-Path $DestPolicyMd) { Get-Content -Raw $DestPolicyMd } else { "" }
-  $stripped = Strip-ManagedBlockText $current
-  $policy = Get-Content -Raw (Join-Path $script:TmpDir "AGENTS.md")
-  $next = "$stripped`n$ManagedStart`n$policy`n$ManagedEnd`n"
-  Set-Content -Path $DestPolicyMd -Value $next
-}
-
-function Remove-ManagedBlock {
-  if (-not (Test-Path $DestPolicyMd)) { return }
-  $current = Get-Content -Raw $DestPolicyMd
-  $stripped = Strip-ManagedBlockText $current
-  Set-Content -Path $DestPolicyMd -Value $stripped
-}
-
-function Install-PolicyFile {
-  $parent = Split-Path -Parent $DestPolicyMd
+function Upsert-ManagedBlock([string]$Target, [string]$ContentFile) {
+  $parent = Split-Path -Parent $Target
   if (-not [string]::IsNullOrWhiteSpace($parent)) {
     New-Item -ItemType Directory -Force -Path $parent | Out-Null
   }
-  Copy-Item -Force (Join-Path $script:TmpDir "CLAUDE.md") $DestPolicyMd
-  Copy-Item -Force (Join-Path $script:TmpDir "AGENTS.md") $DestClaudeAgentsMd
-  Log "Installed policy file -> $DestPolicyMd"
-  Log "Installed policy file -> $DestClaudeAgentsMd"
+  if (-not (Test-Path $Target)) { New-Item -ItemType File -Force -Path $Target | Out-Null }
+  $current = if (Test-Path $Target) { Get-Content -Raw $Target } else { "" }
+  $stripped = Strip-ManagedBlockText $current
+  $policy = Get-Content -Raw $ContentFile
+  $next = "$stripped`n$ManagedStart`n$policy`n$ManagedEnd`n"
+  Set-Content -Path $Target -Value $next
+}
+
+function Remove-ManagedBlock([string]$Target) {
+  if (-not (Test-Path $Target)) { return }
+  $current = Get-Content -Raw $Target
+  $stripped = Strip-ManagedBlockText $current
+  Set-Content -Path $Target -Value $stripped
+}
+
+function Install-PolicyFile {
+  # Claude targets keep a two-file layout (CLAUDE.md -> @AGENTS.md include,
+  # AGENTS.md -> policy). Upsert managed blocks into both so user-authored
+  # content in either file is preserved instead of clobbered.
+  Upsert-ManagedBlock $DestClaudeAgentsMd (Join-Path $script:TmpDir "AGENTS.md")
+  Upsert-ManagedBlock $DestPolicyMd (Join-Path $script:TmpDir "CLAUDE.md")
+  Log "Installed policy block -> $DestPolicyMd"
+  Log "Installed policy block -> $DestClaudeAgentsMd"
 }
 
 function Remove-PolicyFile {
-  if (Test-Path $DestPolicyMd) {
-    $installed = Join-Path $script:TmpDir "CLAUDE.md"
-    if ((Get-FileHash $DestPolicyMd).Hash -eq (Get-FileHash $installed).Hash) {
-      Remove-Item -Force $DestPolicyMd
-      Log "Removed policy file $DestPolicyMd"
-    } else {
-      Warn "policy file differs from installed artifact; leaving in place: $DestPolicyMd"
-    }
-  }
-
-  if (Test-Path $DestClaudeAgentsMd) {
-    $installedAgents = Join-Path $script:TmpDir "AGENTS.md"
-    if ((Get-FileHash $DestClaudeAgentsMd).Hash -eq (Get-FileHash $installedAgents).Hash) {
-      Remove-Item -Force $DestClaudeAgentsMd
-      Log "Removed policy file $DestClaudeAgentsMd"
-    } else {
-      Warn "policy file differs from installed artifact; leaving in place: $DestClaudeAgentsMd"
-    }
-  }
+  # Strip only our managed blocks; user content in these files is left intact.
+  Remove-ManagedBlock $DestPolicyMd
+  Remove-ManagedBlock $DestClaudeAgentsMd
+  Log "Removed policy block from $DestPolicyMd"
+  Log "Removed policy block from $DestClaudeAgentsMd"
 }
 
 function Install-Agents {
@@ -372,9 +368,9 @@ function Skills-Status {
   }
 }
 
-function Has-ManagedBlock {
-  if (-not (Test-Path $DestPolicyMd)) { return $false }
-  $text = Get-Content -Raw $DestPolicyMd
+function Has-ManagedBlock([string]$Target) {
+  if (-not (Test-Path $Target)) { return $false }
+  $text = Get-Content -Raw $Target
   return $text.Contains($ManagedStart) -and $text.Contains($ManagedEnd)
 }
 
@@ -388,10 +384,10 @@ function Status {
   }
   Log "agents: $installed/$($AgentFiles.Count) present"
   if ($PolicyMode -eq "managed_block") {
-    if (Has-ManagedBlock) { Log "AGENTS policy block: present" } else { Log "AGENTS policy block: missing" }
+    if (Has-ManagedBlock $DestPolicyMd) { Log "AGENTS policy block: present" } else { Log "AGENTS policy block: missing" }
   } else {
-    if (Test-Path $DestPolicyMd) { Log "CLAUDE.md: present" } else { Log "CLAUDE.md: missing" }
-    if (Test-Path $DestClaudeAgentsMd) { Log "AGENTS.md: present" } else { Log "AGENTS.md: missing" }
+    if (Has-ManagedBlock $DestPolicyMd) { Log "CLAUDE.md policy block: present" } else { Log "CLAUDE.md policy block: missing" }
+    if (Has-ManagedBlock $DestClaudeAgentsMd) { Log "AGENTS.md policy block: present" } else { Log "AGENTS.md policy block: missing" }
   }
   Skills-Status
 }
@@ -423,7 +419,7 @@ try {
       Install-Agents
       Backup-PolicyMd
       if ($PolicyMode -eq "managed_block") {
-        Upsert-ManagedBlock
+        Upsert-ManagedBlock $DestPolicyMd (Join-Path $script:TmpDir "AGENTS.md")
       } else {
         Backup-ClaudeAgentsMd
         Install-PolicyFile
@@ -437,7 +433,7 @@ try {
       Uninstall-Agents
       Backup-PolicyMd
       if ($PolicyMode -eq "managed_block") {
-        Remove-ManagedBlock
+        Remove-ManagedBlock $DestPolicyMd
       } else {
         Backup-ClaudeAgentsMd
         Remove-PolicyFile
@@ -456,5 +452,5 @@ finally {
 }
 
 if ($MyInvocation.InvocationName -ne '.') {
-  rubber-duck @PSBoundParameters
+  rubber-duck
 }

@@ -384,71 +384,52 @@ backup_claude_agents_md() {
 }
 
 upsert_managed_block() {
+  local target="${1:-${DEST_POLICY_MD}}"
+  local content_file="${2:-${TMP_DIR}/AGENTS.md}"
   if (( DRY_RUN == 1 )); then
-    log "[dry-run] upsert managed block in ${DEST_POLICY_MD}"
+    log "[dry-run] upsert managed block in ${target}"
     return
   fi
-  mkdir -p "$(dirname -- "${DEST_POLICY_MD}")"
-  touch "${DEST_POLICY_MD}"
-  strip_managed_block "${DEST_POLICY_MD}"
+  mkdir -p "$(dirname -- "${target}")"
+  touch "${target}"
+  strip_managed_block "${target}"
   {
     printf '\n%s\n' "${MANAGED_START}"
-    cat "${TMP_DIR}/AGENTS.md"
+    cat "${content_file}"
     printf '%s\n' "${MANAGED_END}"
-  } >> "${DEST_POLICY_MD}"
+  } >> "${target}"
 }
 
 remove_managed_block() {
+  local target="${1:-${DEST_POLICY_MD}}"
   if (( DRY_RUN == 1 )); then
-    log "[dry-run] remove managed block from ${DEST_POLICY_MD}"
+    log "[dry-run] remove managed block from ${target}"
     return
   fi
-  [[ -f "${DEST_POLICY_MD}" ]] || return 0
-  strip_managed_block "${DEST_POLICY_MD}"
+  [[ -f "${target}" ]] || return 0
+  strip_managed_block "${target}"
 }
 
 install_policy_file() {
-  if (( DRY_RUN == 1 )); then
-    log "[dry-run] cp ${TMP_DIR}/CLAUDE.md -> ${DEST_POLICY_MD}"
-    log "[dry-run] cp ${TMP_DIR}/AGENTS.md -> ${DEST_CLAUDE_AGENTS_MD}"
-    return
+  # Claude targets keep a two-file layout (CLAUDE.md -> @AGENTS.md include,
+  # AGENTS.md -> policy). Upsert managed blocks into both so user-authored
+  # content in either file is preserved instead of clobbered.
+  upsert_managed_block "${DEST_CLAUDE_AGENTS_MD}" "${TMP_DIR}/AGENTS.md"
+  upsert_managed_block "${DEST_POLICY_MD}" "${TMP_DIR}/CLAUDE.md"
+  if (( DRY_RUN == 0 )); then
+    log "Installed policy block -> ${DEST_POLICY_MD}"
+    log "Installed policy block -> ${DEST_CLAUDE_AGENTS_MD}"
   fi
-  mkdir -p "$(dirname -- "${DEST_POLICY_MD}")"
-  cp -f "${TMP_DIR}/CLAUDE.md" "${DEST_POLICY_MD}"
-  cp -f "${TMP_DIR}/AGENTS.md" "${DEST_CLAUDE_AGENTS_MD}"
-  log "Installed policy file -> ${DEST_POLICY_MD}"
-  log "Installed policy file -> ${DEST_CLAUDE_AGENTS_MD}"
 }
 
 remove_policy_file() {
-  local removed=0
-  if (( DRY_RUN == 1 )); then
-    log "[dry-run] remove ${DEST_POLICY_MD}"
-    log "[dry-run] remove ${DEST_CLAUDE_AGENTS_MD}"
-    return
+  # Strip only our managed blocks; user content in these files is left intact.
+  remove_managed_block "${DEST_POLICY_MD}"
+  remove_managed_block "${DEST_CLAUDE_AGENTS_MD}"
+  if (( DRY_RUN == 0 )); then
+    log "Removed policy block from ${DEST_POLICY_MD}"
+    log "Removed policy block from ${DEST_CLAUDE_AGENTS_MD}"
   fi
-
-  if [[ -f "${DEST_POLICY_MD}" ]]; then
-    if cmp -s "${DEST_POLICY_MD}" "${TMP_DIR}/CLAUDE.md"; then
-      rm -f "${DEST_POLICY_MD}"
-      log "Removed policy file ${DEST_POLICY_MD}"
-      removed=1
-    else
-      warn "policy file differs from installed artifact; leaving in place: ${DEST_POLICY_MD}"
-    fi
-  fi
-
-  if [[ -f "${DEST_CLAUDE_AGENTS_MD}" ]]; then
-    if cmp -s "${DEST_CLAUDE_AGENTS_MD}" "${TMP_DIR}/AGENTS.md"; then
-      rm -f "${DEST_CLAUDE_AGENTS_MD}"
-      log "Removed policy file ${DEST_CLAUDE_AGENTS_MD}"
-      removed=1
-    else
-      warn "policy file differs from installed artifact; leaving in place: ${DEST_CLAUDE_AGENTS_MD}"
-    fi
-  fi
-
-  (( removed == 1 )) || log "No removable policy files matched installed artifacts"
 }
 
 install_agents() {
@@ -555,8 +536,9 @@ skills_status() {
 }
 
 has_managed_block() {
-  [[ -f "${DEST_POLICY_MD}" ]] || return 1
-  grep -Fq "${MANAGED_START}" "${DEST_POLICY_MD}" && grep -Fq "${MANAGED_END}" "${DEST_POLICY_MD}"
+  local target="${1:-${DEST_POLICY_MD}}"
+  [[ -f "${target}" ]] || return 1
+  grep -Fq "${MANAGED_START}" "${target}" && grep -Fq "${MANAGED_END}" "${target}"
 }
 
 status() {
@@ -575,15 +557,15 @@ status() {
       log "AGENTS policy block: missing"
     fi
   else
-    if [[ -f "${DEST_POLICY_MD}" ]]; then
-      log "CLAUDE.md: present"
+    if has_managed_block "${DEST_POLICY_MD}"; then
+      log "CLAUDE.md policy block: present"
     else
-      log "CLAUDE.md: missing"
+      log "CLAUDE.md policy block: missing"
     fi
-    if [[ -f "${DEST_CLAUDE_AGENTS_MD}" ]]; then
-      log "AGENTS.md: present"
+    if has_managed_block "${DEST_CLAUDE_AGENTS_MD}"; then
+      log "AGENTS.md policy block: present"
     else
-      log "AGENTS.md: missing"
+      log "AGENTS.md policy block: missing"
     fi
   fi
   skills_status

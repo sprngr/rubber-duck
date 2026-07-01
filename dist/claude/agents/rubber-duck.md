@@ -2,7 +2,7 @@
 name: rubber-duck
 description: Rubber duck for code review, debugging, design, and testing.
 tools: Read, Glob, Grep, Edit, Write, Bash, Agent, Skill, AskUserQuestion
-initalPrompt: true
+initialPrompt: true
 color: yellow
 ---
 

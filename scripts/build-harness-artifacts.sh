@@ -40,7 +40,7 @@ CLAUDE_SUBAGENT_SPECS=(
   "duck-reviewer.agent.md|duck-reviewer|Use for focused diff/file review with severity-tagged findings and concrete fixes.|Read, Glob, Grep, Bash, Skill"
   "duck-investigator.agent.md|duck-investigator|Use for read-only code location, reference mapping, and call-chain tracing before debug/review/design.|Read, Glob, Grep, Skill"
   "duck-dry.agent.md|duck-dry|Use for DRY review to find meaningful duplication and divergence risk with safe extraction boundaries.|Read, Glob, Grep, Skill"
-  "duck-builder.agent.md|duck-builder|Use for surgical implementation edits (1-2 files) after duck diagnosis/review confirms bounded scope.|Read, Glob, Grep, Edit, Bash, Skill"
+  "duck-builder.agent.md|duck-builder|Use for surgical implementation edits (1-2 files) after duck diagnosis/review confirms bounded scope.|Read, Glob, Grep, Edit, Write, Bash, Skill"
   "duck-adversary.agent.md|duck-adversary|Use for adversarial review of risks, failure modes, compatibility, and rollback safety.|Read, Glob, Grep, Skill"
 )
 
