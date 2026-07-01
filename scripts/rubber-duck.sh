@@ -5,6 +5,7 @@ ACTION="install"
 TARGET="generic"
 AGENTS_DIR=""
 AGENTS_MD=""
+CLAUDE_MD=""
 SKIP_SKILLS=0
 PROJECT_SKILLS=0
 SKILLS_SOURCE="https://github.com/sprngr/rubber-duck"
@@ -20,16 +21,23 @@ else
 fi
 
 REPO_ROOT="$(cd -- "${SCRIPT_DIR}/.." 2>/dev/null && pwd || pwd)"
-LOCAL_AGENTS_DIR="${REPO_ROOT}/agents"
-LOCAL_POLICY_FILE="${REPO_ROOT}/AGENTS.md"
+LOCAL_AGENTS_DIR=""
+LOCAL_POLICY_FILE=""
+LOCAL_POLICY_AGENTS_FILE=""
+REMOTE_AGENTS_PATH=""
+REMOTE_POLICY_PATH=""
+REMOTE_POLICY_AGENTS_PATH=""
+POLICY_MODE="managed_block" # managed_block|file
 
 MANAGED_START="<!-- RUBBER_DUCK_MANAGED_BLOCK START -->"
 MANAGED_END="<!-- RUBBER_DUCK_MANAGED_BLOCK END -->"
 
 OPENCODE_AGENTS_DIR="${HOME}/.config/opencode/agents"
 OPENCODE_AGENTS_MD="${HOME}/.config/opencode/AGENTS.md"
+CLAUDE_AGENTS_DIR=".claude/agents"
+CLAUDE_POLICY_MD="CLAUDE.md"
 
-AGENT_FILES=(
+OPENCODE_AGENT_FILES=(
   "rubber-duck.agent.md"
   "duck-simple.agent.md"
   "duck-reviewer.agent.md"
@@ -39,6 +47,18 @@ AGENT_FILES=(
   "duck-adversary.agent.md"
 )
 
+CLAUDE_AGENT_FILES=(
+  "rubber-duck.md"
+  "duck-simple.md"
+  "duck-reviewer.md"
+  "duck-investigator.md"
+  "duck-dry.md"
+  "duck-builder.md"
+  "duck-adversary.md"
+)
+
+AGENT_FILES=()
+
 usage() {
   cat <<'EOF'
 Usage:
@@ -46,8 +66,10 @@ Usage:
 
 Options:
   --opencode                        Use preconfigured opencode paths
+  --claude                          Use project-default Claude paths (.claude/agents + CLAUDE.md)
   --agents-dir <path>               Generic target agents dir
   --agents-md <path>                Generic target AGENTS.md path
+  --claude-md <path>                Claude target memory file path (default: ./CLAUDE.md)
   --skip-skills                     Skip npx skills add/remove/list
   --project-skills                  Install skills to project scope (default is global via -g)
   --skills-source <url-or-path>     Skills package source
@@ -58,6 +80,7 @@ Options:
 
 Examples:
   scripts/rubber-duck.sh install --opencode
+  scripts/rubber-duck.sh install --claude
   scripts/rubber-duck.sh install --agents-dir ~/.h/agents --agents-md ~/.h/AGENTS.md
   curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh | bash -s -- install --opencode
 EOF
@@ -83,6 +106,10 @@ while [[ $# -gt 0 ]]; do
       TARGET="opencode"
       shift
       ;;
+    --claude)
+      TARGET="claude"
+      shift
+      ;;
     --agents-dir)
       TARGET="generic"
       AGENTS_DIR="${2:-}"
@@ -91,6 +118,11 @@ while [[ $# -gt 0 ]]; do
     --agents-md)
       TARGET="generic"
       AGENTS_MD="${2:-}"
+      shift 2
+      ;;
+    --claude-md)
+      TARGET="claude"
+      CLAUDE_MD="${2:-}"
       shift 2
       ;;
     --skip-skills)
@@ -133,7 +165,31 @@ resolve_target() {
   case "${TARGET}" in
     opencode)
       DEST_AGENTS_DIR="${OPENCODE_AGENTS_DIR}"
-      DEST_AGENTS_MD="${OPENCODE_AGENTS_MD}"
+      DEST_POLICY_MD="${OPENCODE_AGENTS_MD}"
+      POLICY_MODE="managed_block"
+      AGENT_FILES=("${OPENCODE_AGENT_FILES[@]}")
+      if [[ -f "${REPO_ROOT}/dist/opencode/AGENTS.md" ]]; then
+        LOCAL_POLICY_FILE="${REPO_ROOT}/dist/opencode/AGENTS.md"
+        LOCAL_AGENTS_DIR="${REPO_ROOT}/dist/opencode/agents"
+      else
+        LOCAL_POLICY_FILE="${REPO_ROOT}/AGENTS.md"
+        LOCAL_AGENTS_DIR="${REPO_ROOT}/agents"
+      fi
+      REMOTE_POLICY_PATH="dist/opencode/AGENTS.md"
+      REMOTE_AGENTS_PATH="dist/opencode/agents"
+      ;;
+    claude)
+      DEST_AGENTS_DIR="${CLAUDE_AGENTS_DIR}"
+      DEST_POLICY_MD="${CLAUDE_MD:-${CLAUDE_POLICY_MD}}"
+      DEST_CLAUDE_AGENTS_MD="$(dirname -- "${DEST_POLICY_MD}")/AGENTS.md"
+      POLICY_MODE="file"
+      AGENT_FILES=("${CLAUDE_AGENT_FILES[@]}")
+      LOCAL_POLICY_FILE="${REPO_ROOT}/dist/claude/CLAUDE.md"
+      LOCAL_POLICY_AGENTS_FILE="${REPO_ROOT}/dist/opencode/AGENTS.md"
+      LOCAL_AGENTS_DIR="${REPO_ROOT}/dist/claude/agents"
+      REMOTE_POLICY_PATH="dist/claude/CLAUDE.md"
+      REMOTE_POLICY_AGENTS_PATH="dist/opencode/AGENTS.md"
+      REMOTE_AGENTS_PATH="dist/claude/agents"
       ;;
     generic)
       if [[ -z "${AGENTS_DIR}" || -z "${AGENTS_MD}" ]]; then
@@ -141,7 +197,18 @@ resolve_target() {
         exit 1
       fi
       DEST_AGENTS_DIR="${AGENTS_DIR}"
-      DEST_AGENTS_MD="${AGENTS_MD}"
+      DEST_POLICY_MD="${AGENTS_MD}"
+      POLICY_MODE="managed_block"
+      AGENT_FILES=("${OPENCODE_AGENT_FILES[@]}")
+      if [[ -f "${REPO_ROOT}/dist/opencode/AGENTS.md" ]]; then
+        LOCAL_POLICY_FILE="${REPO_ROOT}/dist/opencode/AGENTS.md"
+        LOCAL_AGENTS_DIR="${REPO_ROOT}/dist/opencode/agents"
+      else
+        LOCAL_POLICY_FILE="${REPO_ROOT}/AGENTS.md"
+        LOCAL_AGENTS_DIR="${REPO_ROOT}/agents"
+      fi
+      REMOTE_POLICY_PATH="dist/opencode/AGENTS.md"
+      REMOTE_AGENTS_PATH="dist/opencode/agents"
       ;;
     *)
       err "invalid target: ${TARGET}"
@@ -156,6 +223,9 @@ running_piped() {
 
 has_local_sources() {
   [[ -f "${LOCAL_POLICY_FILE}" ]] || return 1
+  if [[ "${POLICY_MODE}" == "file" ]]; then
+    [[ -f "${LOCAL_POLICY_AGENTS_FILE}" ]] || return 1
+  fi
   for f in "${AGENT_FILES[@]}"; do
     [[ -f "${LOCAL_AGENTS_DIR}/${f}" ]] || return 1
   done
@@ -197,7 +267,12 @@ prepare_sources() {
       err "local source selected but repo artifacts not found. Use --source web or run from repo checkout."
       exit 1
     fi
-    cp -f "${LOCAL_POLICY_FILE}" "${TMP_DIR}/AGENTS.md"
+    if [[ "${POLICY_MODE}" == "managed_block" ]]; then
+      cp -f "${LOCAL_POLICY_FILE}" "${TMP_DIR}/AGENTS.md"
+    else
+      cp -f "${LOCAL_POLICY_FILE}" "${TMP_DIR}/CLAUDE.md"
+      cp -f "${LOCAL_POLICY_AGENTS_FILE}" "${TMP_DIR}/AGENTS.md"
+    fi
     for f in "${AGENT_FILES[@]}"; do
       cp -f "${LOCAL_AGENTS_DIR}/${f}" "${TMP_DIR}/${f}"
     done
@@ -206,9 +281,14 @@ prepare_sources() {
   fi
 
   require_cmd curl
-  curl -fsSL "${RAW_BASE}/AGENTS.md" -o "${TMP_DIR}/AGENTS.md"
+  if [[ "${POLICY_MODE}" == "managed_block" ]]; then
+    curl -fsSL "${RAW_BASE}/${REMOTE_POLICY_PATH}" -o "${TMP_DIR}/AGENTS.md"
+  else
+    curl -fsSL "${RAW_BASE}/${REMOTE_POLICY_PATH}" -o "${TMP_DIR}/CLAUDE.md"
+    curl -fsSL "${RAW_BASE}/${REMOTE_POLICY_AGENTS_PATH}" -o "${TMP_DIR}/AGENTS.md"
+  fi
   for f in "${AGENT_FILES[@]}"; do
-    curl -fsSL "${RAW_BASE}/agents/${f}" -o "${TMP_DIR}/${f}"
+    curl -fsSL "${RAW_BASE}/${REMOTE_AGENTS_PATH}/${f}" -o "${TMP_DIR}/${f}"
   done
   log "source: web (${RAW_BASE})"
 }
@@ -235,16 +315,32 @@ strip_managed_block() {
   mv "${tmp}" "${target}"
 }
 
-backup_agents_md() {
+backup_policy_md() {
   local backup
-  backup="${DEST_AGENTS_MD}.bak.$(timestamp)"
+  backup="${DEST_POLICY_MD}.bak.$(timestamp)"
   if (( DRY_RUN == 1 )); then
-    log "[dry-run] backup ${DEST_AGENTS_MD} -> ${backup}"
+    log "[dry-run] backup ${DEST_POLICY_MD} -> ${backup}"
     return
   fi
-  mkdir -p "$(dirname -- "${DEST_AGENTS_MD}")"
-  if [[ -f "${DEST_AGENTS_MD}" ]]; then
-    cp -f "${DEST_AGENTS_MD}" "${backup}"
+  mkdir -p "$(dirname -- "${DEST_POLICY_MD}")"
+  if [[ -f "${DEST_POLICY_MD}" ]]; then
+    cp -f "${DEST_POLICY_MD}" "${backup}"
+  else
+    : > "${backup}"
+  fi
+  log "Backup created: ${backup}"
+}
+
+backup_claude_agents_md() {
+  local backup
+  backup="${DEST_CLAUDE_AGENTS_MD}.bak.$(timestamp)"
+  if (( DRY_RUN == 1 )); then
+    log "[dry-run] backup ${DEST_CLAUDE_AGENTS_MD} -> ${backup}"
+    return
+  fi
+  mkdir -p "$(dirname -- "${DEST_CLAUDE_AGENTS_MD}")"
+  if [[ -f "${DEST_CLAUDE_AGENTS_MD}" ]]; then
+    cp -f "${DEST_CLAUDE_AGENTS_MD}" "${backup}"
   else
     : > "${backup}"
   fi
@@ -253,26 +349,63 @@ backup_agents_md() {
 
 upsert_managed_block() {
   if (( DRY_RUN == 1 )); then
-    log "[dry-run] upsert managed block in ${DEST_AGENTS_MD}"
+    log "[dry-run] upsert managed block in ${DEST_POLICY_MD}"
     return
   fi
-  mkdir -p "$(dirname -- "${DEST_AGENTS_MD}")"
-  touch "${DEST_AGENTS_MD}"
-  strip_managed_block "${DEST_AGENTS_MD}"
+  mkdir -p "$(dirname -- "${DEST_POLICY_MD}")"
+  touch "${DEST_POLICY_MD}"
+  strip_managed_block "${DEST_POLICY_MD}"
   {
     printf '\n%s\n' "${MANAGED_START}"
     cat "${TMP_DIR}/AGENTS.md"
     printf '%s\n' "${MANAGED_END}"
-  } >> "${DEST_AGENTS_MD}"
+  } >> "${DEST_POLICY_MD}"
 }
 
 remove_managed_block() {
   if (( DRY_RUN == 1 )); then
-    log "[dry-run] remove managed block from ${DEST_AGENTS_MD}"
+    log "[dry-run] remove managed block from ${DEST_POLICY_MD}"
     return
   fi
-  [[ -f "${DEST_AGENTS_MD}" ]] || return 0
-  strip_managed_block "${DEST_AGENTS_MD}"
+  [[ -f "${DEST_POLICY_MD}" ]] || return 0
+  strip_managed_block "${DEST_POLICY_MD}"
+}
+
+install_policy_file() {
+  if (( DRY_RUN == 1 )); then
+    log "[dry-run] cp ${TMP_DIR}/CLAUDE.md -> ${DEST_POLICY_MD}"
+    log "[dry-run] cp ${TMP_DIR}/AGENTS.md -> ${DEST_CLAUDE_AGENTS_MD}"
+    return
+  fi
+  mkdir -p "$(dirname -- "${DEST_POLICY_MD}")"
+  cp -f "${TMP_DIR}/CLAUDE.md" "${DEST_POLICY_MD}"
+  cp -f "${TMP_DIR}/AGENTS.md" "${DEST_CLAUDE_AGENTS_MD}"
+  log "Installed policy file -> ${DEST_POLICY_MD}"
+  log "Installed policy file -> ${DEST_CLAUDE_AGENTS_MD}"
+}
+
+remove_policy_file() {
+  if (( DRY_RUN == 1 )); then
+    log "[dry-run] remove ${DEST_POLICY_MD}"
+    log "[dry-run] remove ${DEST_CLAUDE_AGENTS_MD}"
+    return
+  fi
+  [[ -f "${DEST_POLICY_MD}" ]] || return 0
+  if cmp -s "${DEST_POLICY_MD}" "${TMP_DIR}/CLAUDE.md"; then
+    rm -f "${DEST_POLICY_MD}"
+    log "Removed policy file ${DEST_POLICY_MD}"
+  else
+    warn "policy file differs from installed artifact; leaving in place: ${DEST_POLICY_MD}"
+  fi
+
+  if [[ -f "${DEST_CLAUDE_AGENTS_MD}" ]]; then
+    if cmp -s "${DEST_CLAUDE_AGENTS_MD}" "${TMP_DIR}/AGENTS.md"; then
+      rm -f "${DEST_CLAUDE_AGENTS_MD}"
+      log "Removed policy file ${DEST_CLAUDE_AGENTS_MD}"
+    else
+      warn "policy file differs from installed artifact; leaving in place: ${DEST_CLAUDE_AGENTS_MD}"
+    fi
+  fi
 }
 
 install_agents() {
@@ -335,7 +468,7 @@ skills_uninstall() {
       log "[dry-run] npx skills remove ${SKILLS_SOURCE}"
     else
       log "[dry-run] npx skills remove ${SKILLS_SOURCE} -g"
-    fi 
+    fi
     return
   fi
   if ! command -v npx >/dev/null 2>&1; then
@@ -377,23 +510,36 @@ skills_status() {
 }
 
 has_managed_block() {
-  [[ -f "${DEST_AGENTS_MD}" ]] || return 1
-  grep -Fq "${MANAGED_START}" "${DEST_AGENTS_MD}" && grep -Fq "${MANAGED_END}" "${DEST_AGENTS_MD}"
+  [[ -f "${DEST_POLICY_MD}" ]] || return 1
+  grep -Fq "${MANAGED_START}" "${DEST_POLICY_MD}" && grep -Fq "${MANAGED_END}" "${DEST_POLICY_MD}"
 }
 
 status() {
   log "target: ${TARGET}"
   log "agents_dir: ${DEST_AGENTS_DIR}"
-  log "agents_md: ${DEST_AGENTS_MD}"
+  log "policy_md: ${DEST_POLICY_MD}"
   local installed=0
   for f in "${AGENT_FILES[@]}"; do
     [[ -f "${DEST_AGENTS_DIR}/${f}" ]] && installed=$((installed + 1))
   done
   log "agents: ${installed}/${#AGENT_FILES[@]} present"
-  if has_managed_block; then
-    log "AGENTS policy block: present"
+  if [[ "${POLICY_MODE}" == "managed_block" ]]; then
+    if has_managed_block; then
+      log "AGENTS policy block: present"
+    else
+      log "AGENTS policy block: missing"
+    fi
   else
-    log "AGENTS policy block: missing"
+    if [[ -f "${DEST_POLICY_MD}" ]]; then
+      log "CLAUDE.md: present"
+    else
+      log "CLAUDE.md: missing"
+    fi
+    if [[ -f "${DEST_CLAUDE_AGENTS_MD}" ]]; then
+      log "AGENTS.md: present"
+    else
+      log "AGENTS.md: missing"
+    fi
   fi
   skills_status
 }
@@ -406,10 +552,16 @@ doctor() {
   if [[ "${EFFECTIVE_SOURCE}" == "web" ]]; then require_cmd curl; fi
   if (( DRY_RUN == 1 )); then
     [[ -d "${DEST_AGENTS_DIR}" ]] || warn "doctor: agents dir missing, would create: ${DEST_AGENTS_DIR}"
-    [[ -d "$(dirname -- "${DEST_AGENTS_MD}")" ]] || warn "doctor: AGENTS parent missing, would create: $(dirname -- "${DEST_AGENTS_MD}")"
+    [[ -d "$(dirname -- "${DEST_POLICY_MD}")" ]] || warn "doctor: policy parent missing, would create: $(dirname -- "${DEST_POLICY_MD}")"
+    if [[ "${POLICY_MODE}" == "file" ]]; then
+      [[ -d "$(dirname -- "${DEST_CLAUDE_AGENTS_MD}")" ]] || warn "doctor: policy parent missing, would create: $(dirname -- "${DEST_CLAUDE_AGENTS_MD}")"
+    fi
   else
     mkdir -p "${DEST_AGENTS_DIR}"
-    mkdir -p "$(dirname -- "${DEST_AGENTS_MD}")"
+    mkdir -p "$(dirname -- "${DEST_POLICY_MD}")"
+    if [[ "${POLICY_MODE}" == "file" ]]; then
+      mkdir -p "$(dirname -- "${DEST_CLAUDE_AGENTS_MD}")"
+    fi
   fi
   log "doctor: ok"
 }
@@ -422,8 +574,13 @@ case "${ACTION}" in
     doctor
     prepare_sources
     install_agents
-    backup_agents_md
-    upsert_managed_block
+    backup_policy_md
+    if [[ "${POLICY_MODE}" == "managed_block" ]]; then
+      upsert_managed_block
+    else
+      backup_claude_agents_md
+      install_policy_file
+    fi
     skills_install
     status
     ;;
@@ -431,8 +588,13 @@ case "${ACTION}" in
     doctor
     prepare_sources
     uninstall_agents
-    backup_agents_md
-    remove_managed_block
+    backup_policy_md
+    if [[ "${POLICY_MODE}" == "managed_block" ]]; then
+      remove_managed_block
+    else
+      backup_claude_agents_md
+      remove_policy_file
+    fi
     skills_uninstall
     status
     ;;

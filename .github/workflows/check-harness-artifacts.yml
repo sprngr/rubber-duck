@@ -1,0 +1,20 @@
+name: Check harness artifacts
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  check-harness-artifacts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Make scripts executable
+        run: chmod +x scripts/build-harness-artifacts.sh scripts/check-harness-artifacts.sh
+
+      - name: Verify generated harness artifacts are up to date
+        run: scripts/check-harness-artifacts.sh

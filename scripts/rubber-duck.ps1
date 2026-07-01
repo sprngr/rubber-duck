@@ -3,8 +3,10 @@ param(
   [ValidateSet("install","uninstall","status","doctor")]
   [string]$Action = "install",
   [switch]$OpenCode,
+  [switch]$Claude,
   [string]$AgentsDir,
   [string]$AgentsMd,
+  [string]$ClaudeMd,
   [switch]$SkipSkills,
   [switch]$ProjectSkills,
   [string]$SkillsSource = "https://github.com/sprngr/rubber-duck",
@@ -17,13 +19,18 @@ $ErrorActionPreference = "Stop"
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $RepoRoot = Split-Path -Parent $ScriptDir
-$LocalAgentsDir = Join-Path $RepoRoot "agents"
-$LocalPolicyFile = Join-Path $RepoRoot "AGENTS.md"
+$LocalAgentsDir = $null
+$LocalPolicyFile = $null
+$LocalAgentsPolicyFile = $null
+$RemoteAgentsPath = $null
+$RemotePolicyPath = $null
+$RemoteAgentsPolicyPath = $null
+$PolicyMode = "managed_block" # managed_block|file
 
 $ManagedStart = "<!-- RUBBER_DUCK_MANAGED_BLOCK START -->"
 $ManagedEnd = "<!-- RUBBER_DUCK_MANAGED_BLOCK END -->"
 
-$AgentFiles = @(
+$OpenCodeAgentFiles = @(
   "rubber-duck.agent.md",
   "duck-simple.agent.md",
   "duck-reviewer.agent.md",
@@ -33,6 +40,18 @@ $AgentFiles = @(
   "duck-adversary.agent.md"
 )
 
+$ClaudeAgentFiles = @(
+  "rubber-duck.md",
+  "duck-simple.md",
+  "duck-reviewer.md",
+  "duck-investigator.md",
+  "duck-dry.md",
+  "duck-builder.md",
+  "duck-adversary.md"
+)
+
+$AgentFiles = @()
+
 function Log($msg) { Write-Host $msg }
 function Warn($msg) { Write-Warning $msg }
 
@@ -40,19 +59,60 @@ function Resolve-Target {
   if ($OpenCode) {
     $script:Target = "opencode"
     $script:DestAgentsDir = Join-Path $HOME ".config/opencode/agents"
-    $script:DestAgentsMd = Join-Path $HOME ".config/opencode/AGENTS.md"
+    $script:DestPolicyMd = Join-Path $HOME ".config/opencode/AGENTS.md"
+    $script:PolicyMode = "managed_block"
+    $script:AgentFiles = $OpenCodeAgentFiles
+    if (Test-Path (Join-Path $RepoRoot "dist/opencode/AGENTS.md")) {
+      $script:LocalPolicyFile = Join-Path $RepoRoot "dist/opencode/AGENTS.md"
+      $script:LocalAgentsDir = Join-Path $RepoRoot "dist/opencode/agents"
+    } else {
+      $script:LocalPolicyFile = Join-Path $RepoRoot "AGENTS.md"
+      $script:LocalAgentsDir = Join-Path $RepoRoot "agents"
+    }
+    $script:RemotePolicyPath = "dist/opencode/AGENTS.md"
+    $script:RemoteAgentsPath = "dist/opencode/agents"
     return
   }
+
+  if ($Claude) {
+    $script:Target = "claude"
+    $script:DestAgentsDir = ".claude/agents"
+    $script:DestPolicyMd = if ([string]::IsNullOrWhiteSpace($ClaudeMd)) { "CLAUDE.md" } else { $ClaudeMd }
+    $script:DestClaudeAgentsMd = Join-Path (Split-Path -Parent $script:DestPolicyMd) "AGENTS.md"
+    $script:PolicyMode = "file"
+    $script:AgentFiles = $ClaudeAgentFiles
+    $script:LocalPolicyFile = Join-Path $RepoRoot "dist/claude/CLAUDE.md"
+    $script:LocalAgentsPolicyFile = Join-Path $RepoRoot "dist/opencode/AGENTS.md"
+    $script:LocalAgentsDir = Join-Path $RepoRoot "dist/claude/agents"
+    $script:RemotePolicyPath = "dist/claude/CLAUDE.md"
+    $script:RemoteAgentsPolicyPath = "dist/opencode/AGENTS.md"
+    $script:RemoteAgentsPath = "dist/claude/agents"
+    return
+  }
+
   if ([string]::IsNullOrWhiteSpace($AgentsDir) -or [string]::IsNullOrWhiteSpace($AgentsMd)) {
     throw "Generic target requires -AgentsDir and -AgentsMd (or use -OpenCode)."
   }
+
   $script:Target = "generic"
   $script:DestAgentsDir = $AgentsDir
-  $script:DestAgentsMd = $AgentsMd
+  $script:DestPolicyMd = $AgentsMd
+  $script:PolicyMode = "managed_block"
+  $script:AgentFiles = $OpenCodeAgentFiles
+  if (Test-Path (Join-Path $RepoRoot "dist/opencode/AGENTS.md")) {
+    $script:LocalPolicyFile = Join-Path $RepoRoot "dist/opencode/AGENTS.md"
+    $script:LocalAgentsDir = Join-Path $RepoRoot "dist/opencode/agents"
+  } else {
+    $script:LocalPolicyFile = Join-Path $RepoRoot "AGENTS.md"
+    $script:LocalAgentsDir = Join-Path $RepoRoot "agents"
+  }
+  $script:RemotePolicyPath = "dist/opencode/AGENTS.md"
+  $script:RemoteAgentsPath = "dist/opencode/agents"
 }
 
 function Has-LocalSources {
   if (-not (Test-Path $LocalPolicyFile)) { return $false }
+  if ($PolicyMode -eq "file" -and -not (Test-Path $LocalAgentsPolicyFile)) { return $false }
   foreach ($f in $AgentFiles) {
     if (-not (Test-Path (Join-Path $LocalAgentsDir $f))) { return $false }
   }
@@ -74,7 +134,12 @@ function Download-Sources {
   New-Item -ItemType Directory -Force -Path $script:TmpDir | Out-Null
 
   if ($script:EffectiveSource -eq "local") {
-    Copy-Item -Force $LocalPolicyFile (Join-Path $script:TmpDir "AGENTS.md")
+    if ($script:PolicyMode -eq "managed_block") {
+      Copy-Item -Force $LocalPolicyFile (Join-Path $script:TmpDir "AGENTS.md")
+    } else {
+      Copy-Item -Force $LocalPolicyFile (Join-Path $script:TmpDir "CLAUDE.md")
+      Copy-Item -Force $LocalAgentsPolicyFile (Join-Path $script:TmpDir "AGENTS.md")
+    }
     foreach ($f in $AgentFiles) {
       Copy-Item -Force (Join-Path $LocalAgentsDir $f) (Join-Path $script:TmpDir $f)
     }
@@ -82,9 +147,14 @@ function Download-Sources {
     return
   }
 
-  Invoke-WebRequest -UseBasicParsing -Uri "$RawBase/AGENTS.md" -OutFile (Join-Path $script:TmpDir "AGENTS.md")
+  if ($script:PolicyMode -eq "managed_block") {
+    Invoke-WebRequest -UseBasicParsing -Uri "$RawBase/$($script:RemotePolicyPath)" -OutFile (Join-Path $script:TmpDir "AGENTS.md")
+  } else {
+    Invoke-WebRequest -UseBasicParsing -Uri "$RawBase/$($script:RemotePolicyPath)" -OutFile (Join-Path $script:TmpDir "CLAUDE.md")
+    Invoke-WebRequest -UseBasicParsing -Uri "$RawBase/$($script:RemoteAgentsPolicyPath)" -OutFile (Join-Path $script:TmpDir "AGENTS.md")
+  }
   foreach ($f in $AgentFiles) {
-    Invoke-WebRequest -UseBasicParsing -Uri "$RawBase/agents/$f" -OutFile (Join-Path $script:TmpDir $f)
+    Invoke-WebRequest -UseBasicParsing -Uri "$RawBase/$($script:RemoteAgentsPath)/$f" -OutFile (Join-Path $script:TmpDir $f)
   }
   Log "source: web ($RawBase)"
 }
@@ -107,13 +177,28 @@ function Strip-ManagedBlockText([string]$text) {
   return ($out -join "`n")
 }
 
-function Backup-AgentsMd {
-  $parent = Split-Path -Parent $DestAgentsMd
+function Backup-PolicyMd {
+  $parent = Split-Path -Parent $DestPolicyMd
   New-Item -ItemType Directory -Force -Path $parent | Out-Null
   $stamp = Get-Date -Format "yyyyMMdd-HHmmss"
-  $backup = "$DestAgentsMd.bak.$stamp"
-  if (Test-Path $DestAgentsMd) {
-    Copy-Item -Force $DestAgentsMd $backup
+  $backup = "$DestPolicyMd.bak.$stamp"
+  if (Test-Path $DestPolicyMd) {
+    Copy-Item -Force $DestPolicyMd $backup
+  } else {
+    New-Item -ItemType File -Force -Path $backup | Out-Null
+  }
+  Log "Backup created: $backup"
+}
+
+function Backup-ClaudeAgentsMd {
+  $parent = Split-Path -Parent $DestClaudeAgentsMd
+  if (-not [string]::IsNullOrWhiteSpace($parent)) {
+    New-Item -ItemType Directory -Force -Path $parent | Out-Null
+  }
+  $stamp = Get-Date -Format "yyyyMMdd-HHmmss"
+  $backup = "$DestClaudeAgentsMd.bak.$stamp"
+  if (Test-Path $DestClaudeAgentsMd) {
+    Copy-Item -Force $DestClaudeAgentsMd $backup
   } else {
     New-Item -ItemType File -Force -Path $backup | Out-Null
   }
@@ -121,21 +206,53 @@ function Backup-AgentsMd {
 }
 
 function Upsert-ManagedBlock {
-  $parent = Split-Path -Parent $DestAgentsMd
+  $parent = Split-Path -Parent $DestPolicyMd
   New-Item -ItemType Directory -Force -Path $parent | Out-Null
-  if (-not (Test-Path $DestAgentsMd)) { New-Item -ItemType File -Force -Path $DestAgentsMd | Out-Null }
-  $current = if (Test-Path $DestAgentsMd) { Get-Content -Raw $DestAgentsMd } else { "" }
+  if (-not (Test-Path $DestPolicyMd)) { New-Item -ItemType File -Force -Path $DestPolicyMd | Out-Null }
+  $current = if (Test-Path $DestPolicyMd) { Get-Content -Raw $DestPolicyMd } else { "" }
   $stripped = Strip-ManagedBlockText $current
   $policy = Get-Content -Raw (Join-Path $script:TmpDir "AGENTS.md")
   $next = "$stripped`n$ManagedStart`n$policy`n$ManagedEnd`n"
-  Set-Content -Path $DestAgentsMd -Value $next
+  Set-Content -Path $DestPolicyMd -Value $next
 }
 
 function Remove-ManagedBlock {
-  if (-not (Test-Path $DestAgentsMd)) { return }
-  $current = Get-Content -Raw $DestAgentsMd
+  if (-not (Test-Path $DestPolicyMd)) { return }
+  $current = Get-Content -Raw $DestPolicyMd
   $stripped = Strip-ManagedBlockText $current
-  Set-Content -Path $DestAgentsMd -Value $stripped
+  Set-Content -Path $DestPolicyMd -Value $stripped
+}
+
+function Install-PolicyFile {
+  $parent = Split-Path -Parent $DestPolicyMd
+  if (-not [string]::IsNullOrWhiteSpace($parent)) {
+    New-Item -ItemType Directory -Force -Path $parent | Out-Null
+  }
+  Copy-Item -Force (Join-Path $script:TmpDir "CLAUDE.md") $DestPolicyMd
+  Copy-Item -Force (Join-Path $script:TmpDir "AGENTS.md") $DestClaudeAgentsMd
+  Log "Installed policy file -> $DestPolicyMd"
+  Log "Installed policy file -> $DestClaudeAgentsMd"
+}
+
+function Remove-PolicyFile {
+  if (-not (Test-Path $DestPolicyMd)) { return }
+  $installed = Join-Path $script:TmpDir "CLAUDE.md"
+  if ((Get-FileHash $DestPolicyMd).Hash -eq (Get-FileHash $installed).Hash) {
+    Remove-Item -Force $DestPolicyMd
+    Log "Removed policy file $DestPolicyMd"
+  } else {
+    Warn "policy file differs from installed artifact; leaving in place: $DestPolicyMd"
+  }
+
+  if (Test-Path $DestClaudeAgentsMd) {
+    $installedAgents = Join-Path $script:TmpDir "AGENTS.md"
+    if ((Get-FileHash $DestClaudeAgentsMd).Hash -eq (Get-FileHash $installedAgents).Hash) {
+      Remove-Item -Force $DestClaudeAgentsMd
+      Log "Removed policy file $DestClaudeAgentsMd"
+    } else {
+      Warn "policy file differs from installed artifact; leaving in place: $DestClaudeAgentsMd"
+    }
+  }
 }
 
 function Install-Agents {
@@ -211,21 +328,26 @@ function Skills-Status {
 }
 
 function Has-ManagedBlock {
-  if (-not (Test-Path $DestAgentsMd)) { return $false }
-  $text = Get-Content -Raw $DestAgentsMd
+  if (-not (Test-Path $DestPolicyMd)) { return $false }
+  $text = Get-Content -Raw $DestPolicyMd
   return $text.Contains($ManagedStart) -and $text.Contains($ManagedEnd)
 }
 
 function Status {
   Log "target: $Target"
   Log "agents_dir: $DestAgentsDir"
-  Log "agents_md: $DestAgentsMd"
+  Log "policy_md: $DestPolicyMd"
   $installed = 0
   foreach ($f in $AgentFiles) {
     if (Test-Path (Join-Path $DestAgentsDir $f)) { $installed++ }
   }
   Log "agents: $installed/$($AgentFiles.Count) present"
-  if (Has-ManagedBlock) { Log "AGENTS policy block: present" } else { Log "AGENTS policy block: missing" }
+  if ($PolicyMode -eq "managed_block") {
+    if (Has-ManagedBlock) { Log "AGENTS policy block: present" } else { Log "AGENTS policy block: missing" }
+  } else {
+    if (Test-Path $DestPolicyMd) { Log "CLAUDE.md: present" } else { Log "CLAUDE.md: missing" }
+    if (Test-Path $DestClaudeAgentsMd) { Log "AGENTS.md: present" } else { Log "AGENTS.md: missing" }
+  }
   Skills-Status
 }
 
@@ -233,7 +355,16 @@ function Doctor {
   Resolve-Target
   Resolve-Source
   New-Item -ItemType Directory -Force -Path $DestAgentsDir | Out-Null
-  New-Item -ItemType Directory -Force -Path (Split-Path -Parent $DestAgentsMd) | Out-Null
+  $policyParent = Split-Path -Parent $DestPolicyMd
+  if (-not [string]::IsNullOrWhiteSpace($policyParent)) {
+    New-Item -ItemType Directory -Force -Path $policyParent | Out-Null
+  }
+  if ($PolicyMode -eq "file") {
+    $agentsParent = Split-Path -Parent $DestClaudeAgentsMd
+    if (-not [string]::IsNullOrWhiteSpace($agentsParent)) {
+      New-Item -ItemType Directory -Force -Path $agentsParent | Out-Null
+    }
+  }
   Log "doctor: ok"
 }
 
@@ -245,8 +376,13 @@ try {
       Doctor
       Download-Sources
       Install-Agents
-      Backup-AgentsMd
-      Upsert-ManagedBlock
+      Backup-PolicyMd
+      if ($PolicyMode -eq "managed_block") {
+        Upsert-ManagedBlock
+      } else {
+        Backup-ClaudeAgentsMd
+        Install-PolicyFile
+      }
       Skills-Install
       Status
     }
@@ -254,8 +390,13 @@ try {
       Doctor
       Download-Sources
       Uninstall-Agents
-      Backup-AgentsMd
-      Remove-ManagedBlock
+      Backup-PolicyMd
+      if ($PolicyMode -eq "managed_block") {
+        Remove-ManagedBlock
+      } else {
+        Backup-ClaudeAgentsMd
+        Remove-PolicyFile
+      }
       Skills-Uninstall
       Status
     }
