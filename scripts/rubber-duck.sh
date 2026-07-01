@@ -421,27 +421,34 @@ install_policy_file() {
 }
 
 remove_policy_file() {
+  local removed=0
   if (( DRY_RUN == 1 )); then
     log "[dry-run] remove ${DEST_POLICY_MD}"
     log "[dry-run] remove ${DEST_CLAUDE_AGENTS_MD}"
     return
   fi
-  [[ -f "${DEST_POLICY_MD}" ]] || return 0
-  if cmp -s "${DEST_POLICY_MD}" "${TMP_DIR}/CLAUDE.md"; then
-    rm -f "${DEST_POLICY_MD}"
-    log "Removed policy file ${DEST_POLICY_MD}"
-  else
-    warn "policy file differs from installed artifact; leaving in place: ${DEST_POLICY_MD}"
+
+  if [[ -f "${DEST_POLICY_MD}" ]]; then
+    if cmp -s "${DEST_POLICY_MD}" "${TMP_DIR}/CLAUDE.md"; then
+      rm -f "${DEST_POLICY_MD}"
+      log "Removed policy file ${DEST_POLICY_MD}"
+      removed=1
+    else
+      warn "policy file differs from installed artifact; leaving in place: ${DEST_POLICY_MD}"
+    fi
   fi
 
   if [[ -f "${DEST_CLAUDE_AGENTS_MD}" ]]; then
     if cmp -s "${DEST_CLAUDE_AGENTS_MD}" "${TMP_DIR}/AGENTS.md"; then
       rm -f "${DEST_CLAUDE_AGENTS_MD}"
       log "Removed policy file ${DEST_CLAUDE_AGENTS_MD}"
+      removed=1
     else
       warn "policy file differs from installed artifact; leaving in place: ${DEST_CLAUDE_AGENTS_MD}"
     fi
   fi
+
+  (( removed == 1 )) || log "No removable policy files matched installed artifacts"
 }
 
 install_agents() {
@@ -516,7 +523,7 @@ skills_uninstall() {
       warn "skills remove failed; remove package manually if needed"
     fi
   else
-    if ! npx -g skills remove "${SKILLS_SOURCE}"; then
+    if ! npx skills remove "${SKILLS_SOURCE}" -g; then
       warn "skills remove failed; remove package manually if needed"
     fi
   fi
@@ -528,14 +535,16 @@ skills_status() {
     log "skills: npx missing"
     return
   fi
+  local list
+
   if (( PROJECT_SKILLS == 1 )); then
     SKILLS_LIST_CMD=(npx skills list)
   else
     SKILLS_LIST_CMD=(npx skills list -g)
   fi
 
-  if "${SKILLS_LIST_CMD[@]}" >/tmp/rubber-duck-skills-list.txt 2>/tmp/rubber-duck-skills-list.err; then
-    if grep -Fq "${SKILLS_SOURCE}" /tmp/rubber-duck-skills-list.txt; then
+  if list="$("${SKILLS_LIST_CMD[@]}" 2>/dev/null)"; then
+    if printf '%s' "${list}" | grep -Fq -- "${SKILLS_SOURCE}"; then
       log "skills: installed (${SKILLS_SOURCE})"
     else
       log "skills: not detected (${SKILLS_SOURCE})"
@@ -581,8 +590,6 @@ status() {
 }
 
 doctor() {
-  resolve_target
-  choose_source
   require_cmd awk
   require_cmd cp
   if [[ "${EFFECTIVE_SOURCE}" == "web" ]]; then require_cmd curl; fi

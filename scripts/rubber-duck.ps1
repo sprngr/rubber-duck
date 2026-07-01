@@ -1,3 +1,20 @@
+param(
+  [ValidateSet("install","uninstall","status","doctor")]
+  [string]$Action = "install",
+  [switch]$OpenCode,
+  [switch]$Claude,
+  [switch]$ClaudeProject,
+  [string]$AgentsDir,
+  [string]$AgentsMd,
+  [string]$ClaudeMd,
+  [switch]$SkipSkills,
+  [switch]$ProjectSkills,
+  [string]$SkillsSource = "https://github.com/sprngr/rubber-duck",
+  [ValidateSet("auto","local","web")]
+  [string]$Source = "auto",
+  [string]$RawBase = "https://raw.githubusercontent.com/sprngr/rubber-duck/main"
+)
+
 function rubber-duck {
 param(
   [ValidateSet("install","uninstall","status","doctor")]
@@ -204,7 +221,9 @@ function Strip-ManagedBlockText([string]$text) {
 
 function Backup-PolicyMd {
   $parent = Split-Path -Parent $DestPolicyMd
-  New-Item -ItemType Directory -Force -Path $parent | Out-Null
+  if (-not [string]::IsNullOrWhiteSpace($parent)) {
+    New-Item -ItemType Directory -Force -Path $parent | Out-Null
+  }
   $stamp = Get-Date -Format "yyyyMMdd-HHmmss"
   $backup = "$DestPolicyMd.bak.$stamp"
   if (Test-Path $DestPolicyMd) {
@@ -260,13 +279,14 @@ function Install-PolicyFile {
 }
 
 function Remove-PolicyFile {
-  if (-not (Test-Path $DestPolicyMd)) { return }
-  $installed = Join-Path $script:TmpDir "CLAUDE.md"
-  if ((Get-FileHash $DestPolicyMd).Hash -eq (Get-FileHash $installed).Hash) {
-    Remove-Item -Force $DestPolicyMd
-    Log "Removed policy file $DestPolicyMd"
-  } else {
-    Warn "policy file differs from installed artifact; leaving in place: $DestPolicyMd"
+  if (Test-Path $DestPolicyMd) {
+    $installed = Join-Path $script:TmpDir "CLAUDE.md"
+    if ((Get-FileHash $DestPolicyMd).Hash -eq (Get-FileHash $installed).Hash) {
+      Remove-Item -Force $DestPolicyMd
+      Log "Removed policy file $DestPolicyMd"
+    } else {
+      Warn "policy file differs from installed artifact; leaving in place: $DestPolicyMd"
+    }
   }
 
   if (Test-Path $DestClaudeAgentsMd) {
