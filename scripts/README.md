@@ -11,9 +11,9 @@ CLI reference for install/update/uninstall tooling.
 
 | Command | Purpose |
 |---|---|
-| `install` | Install/update agents, managed AGENTS block, and skills package |
-| `uninstall` | Remove installed agents, remove managed AGENTS block, remove skills package |
-| `status` | Show installed agent count, AGENTS block state, and skills state |
+| `install` | Install/update agents, managed policy file, and skills package |
+| `uninstall` | Remove installed agents, remove managed policy file, remove skills package |
+| `status` | Show installed agent count, policy state, and skills state |
 | `doctor` | Validate target paths and required tooling |
 
 ## Bash CLI (`scripts/rubber-duck.sh`)
@@ -21,8 +21,11 @@ CLI reference for install/update/uninstall tooling.
 | Flag | Type | Description |
 |---|---|---|
 | `--opencode` | switch | Use preconfigured opencode paths |
+| `--claude` | switch | Use global Claude paths (`~/.claude/agents` + `~/.claude/CLAUDE.md` + sibling `~/.claude/AGENTS.md`) |
+| `--claude-project` | switch | Use project Claude paths (`.claude/agents` + `CLAUDE.md` + sibling `AGENTS.md`) |
 | `--agents-dir <path>` | value | Generic target agent directory |
 | `--agents-md <path>` | value | Generic target AGENTS.md file path |
+| `--claude-md <path>` | value | Claude target `CLAUDE.md` path override (global default for `--claude`, project default for `--claude-project`) |
 | `--skip-skills` | switch | Skip `npx skills add/remove/list` |
 | `--project-skills` | switch | Install skills in project scope (default uses global `npx -g`) |
 | `--skills-source <url-or-path>` | value | Override skills package source |
@@ -37,8 +40,11 @@ CLI reference for install/update/uninstall tooling.
 |---|---|---|
 | `-Action install\|uninstall\|status\|doctor` | value | Operation to execute |
 | `-OpenCode` | switch | Use preconfigured opencode paths |
+| `-Claude` | switch | Use global Claude paths (`~/.claude/agents` + `~/.claude/CLAUDE.md` + sibling `~/.claude/AGENTS.md`) |
+| `-ClaudeProject` | switch | Use project Claude paths (`.claude/agents` + `CLAUDE.md` + sibling `AGENTS.md`) |
 | `-AgentsDir <path>` | value | Generic target agent directory |
 | `-AgentsMd <path>` | value | Generic target AGENTS.md file path |
+| `-ClaudeMd <path>` | value | Claude target `CLAUDE.md` path override (global default for `-Claude`, project default for `-ClaudeProject`) |
 | `-SkipSkills` | switch | Skip `npx skills add/remove/list` |
 | `-ProjectSkills` | switch | Install skills in project scope (default uses global `npx -g`) |
 | `-SkillsSource <url-or-path>` | value | Override skills package source |
@@ -48,8 +54,23 @@ CLI reference for install/update/uninstall tooling.
 ## Notes
 
 - Generic target requires agents dir + AGENTS.md path.
-- AGENTS changes are block-managed and backup file is created before mutation:
-  - `AGENTS.md.bak.<YYYYmmdd-HHMMSS>`
+- `--claude-md` / `-ClaudeMd` requires Claude mode:
+  - Bash: `--claude` or `--claude-project`
+  - PowerShell: `-Claude` or `-ClaudeProject`
+- Do not combine global and project Claude modes in one command:
+  - Bash: `--claude` and `--claude-project` are mutually exclusive
+  - PowerShell: `-Claude` and `-ClaudeProject` are mutually exclusive
+- OpenCode/generic targets:
+  - install full duck set (router + ducklings)
+  - use managed block markers in AGENTS.md
+  - backup before mutation: `AGENTS.md.bak.<YYYYmmdd-HHMMSS>`
+- Claude target:
+  - installs full duck set (router + ducklings)
+  - global mode: writes/removes managed `~/.claude/CLAUDE.md` and sibling `~/.claude/AGENTS.md`
+  - project mode (`--claude-project` / `-ClaudeProject`): writes/removes managed project `CLAUDE.md` and sibling `AGENTS.md`
+  - backups before mutation:
+    - `CLAUDE.md.bak.<YYYYmmdd-HHMMSS>`
+    - `AGENTS.md.bak.<YYYYmmdd-HHMMSS>`
 - Installer supports web invocation:
   - Bash: `curl .../scripts/rubber-duck.sh | bash -s -- <command>`
   - PowerShell: download script then execute.

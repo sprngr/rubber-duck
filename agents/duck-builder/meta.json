@@ -1,0 +1,23 @@
+{
+  "name": "duck-builder",
+  "description": "Use for surgical implementation edits (1-2 files) after duck diagnosis/review confirms bounded scope.",
+  "harnesses": {
+    "claude": {
+      "tools": "Read, Glob, Grep, Edit, Write, Bash, Skill"
+    },
+    "opencode": {
+      "mode": "subagent",
+      "permission": {
+        "read": "allow",
+        "edit": "allow",
+        "grep": "allow",
+        "glob": "allow",
+        "bash": "ask",
+        "task": "deny",
+        "skill": "allow",
+        "lsp": "allow",
+        "question": "deny"
+      }
+    }
+  }
+}

@@ -58,43 +58,20 @@ If you require a different path for your setup, use the `--skip-skills` argument
 
 CLI reference: [scripts/README.md](./scripts/README.md)
 
-### One-line installer
+### One-line installer (matrix)
 
-#### macOS / Linux (bash)
-
-Generic target install (requires your local config paths):
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh | bash -s -- install --agents-dir /path/to/harness/agents --agents-md /path/to/harness/AGENTS.md
-```
-
-Install (opencode preconfigured):
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh | bash -s -- install --opencode
-```
+| Target | Bash (macOS/Linux) | PowerShell (Windows) |
+|---|---|---|
+| Generic (custom harness paths) | `curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh \| bash -s -- install --agents-dir /path/to/harness/agents --agents-md /path/to/harness/AGENTS.md` | `$p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.ps1 -OutFile $p; & $p install -AgentsDir C:\path\to\harness\agents -AgentsMd C:\path\to\harness\AGENTS.md` |
+| OpenCode (preconfigured) | `curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh \| bash -s -- install --opencode` | `$p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.ps1 -OutFile $p; & $p install -OpenCode` |
+| Claude Code (global defaults) | `curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh \| bash -s -- install --claude` | `$p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.ps1 -OutFile $p; & $p install -Claude` |
+| Claude Code (project paths) | `curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh \| bash -s -- install --claude-project` | `$p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.ps1 -OutFile $p; & $p install -ClaudeProject` |
 
 Project-scoped skills instead of global:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh | bash -s -- install --opencode --project-skills
 ```
-
-#### Windows (PowerShell)
-
-Generic target install (requires your local config paths):
-
-```powershell
-$p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.ps1 -OutFile $p; & $p install -AgentsDir C:\path\to\harness\agents -AgentsMd C:\path\to\harness\AGENTS.md
-```
-
-Install (opencode preconfigured):
-
-```powershell
-$p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.ps1 -OutFile $p; & $p install -OpenCode
-```
-
-Project-scoped skills instead of global:
 
 ```powershell
 $p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.ps1 -OutFile $p; & $p install -OpenCode -ProjectSkills
@@ -104,60 +81,52 @@ $p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.co
 
 Checkout repo locally, then use installer script.
 
-### Generic harness target (default)
-
-Install to custom agent dir + AGENTS file, using `npx skills add` for skills:
+### Local usage patterns
 
 ```bash
-./scripts/rubber-duck.sh install \
-  --agents-dir /path/to/harness/agents \
-  --agents-md /path/to/harness/AGENTS.md
+# install
+./scripts/rubber-duck.sh install <target-flags>
+
+# uninstall
+./scripts/rubber-duck.sh uninstall <target-flags>
+
+# status
+./scripts/rubber-duck.sh status <target-flags>
+
+# doctor
+./scripts/rubber-duck.sh doctor <target-flags>
 ```
 
-Uninstall from generic target:
+Target flags:
 
-```bash
-./scripts/rubber-duck.sh uninstall \
-  --agents-dir /path/to/harness/agents \
-  --agents-md /path/to/harness/AGENTS.md
-```
+- Generic: `--agents-dir /path/to/harness/agents --agents-md /path/to/harness/AGENTS.md`
+- OpenCode: `--opencode`
+- Claude (global): `--claude` (optional: `--claude-md ~/.claude/CLAUDE.md`)
+- Claude (project): `--claude-project` (optional: `--claude-md ./docs/CLAUDE.md`)
 
-Show status:
+Mode constraints:
 
-```bash
-./scripts/rubber-duck.sh status \
-  --agents-dir /path/to/harness/agents \
-  --agents-md /path/to/harness/AGENTS.md
-```
-
-Run environment checks:
-
-```bash
-./scripts/rubber-duck.sh doctor \
-  --agents-dir /path/to/harness/agents \
-  --agents-md /path/to/harness/AGENTS.md
-```
-
-### Opencode target (preconfigured shortcut)
-
-Install agents + managed AGENTS policy block + skills package:
-
-```bash
-./scripts/rubber-duck.sh install --opencode
-```
-
-Uninstall managed artifacts:
-
-```bash
-./scripts/rubber-duck.sh uninstall --opencode
-```
+- `--claude-md` requires `--claude` or `--claude-project`.
+- `--claude` and `--claude-project` are mutually exclusive.
 
 Notes:
-- script copies agent files to directory
+- script copies agent files to target directory
 - AGENTS policy is appended/removed via managed block markers
+- Claude target upserts/removes a managed block in both `CLAUDE.md` and its sibling `AGENTS.md` (existing user content in those files is preserved)
 - use `--skip-skills` if you only need agents + AGENTS policy changes
 - use `--dry-run` to print planned actions + AGENTS.md diff preview without writing
-- install/uninstall always creates AGENTS backup in same dir: `AGENTS.md.bak.<YYYYmmdd-HHMMSS>`
+- install/uninstall always creates policy backup in same dir: `<policy>.bak.<YYYYmmdd-HHMMSS>`
+
+### Target behavior matrix (simplified)
+
+| Target | Agents installed to | Policy behavior on install | Policy behavior on uninstall | Backups |
+|---|---|---|---|---|
+| `--opencode` | `~/.config/opencode/agents` | Upsert managed block in `~/.config/opencode/AGENTS.md` | Remove managed block from `~/.config/opencode/AGENTS.md` | `AGENTS.md.bak.<ts>` |
+| generic (`--agents-dir` + `--agents-md`) | your `--agents-dir` | Upsert managed block in your `--agents-md` | Remove managed block from your `--agents-md` | `<agents-md>.bak.<ts>` |
+| `--claude` | `~/.claude/agents` (or custom via `--claude-md`) | Upsert managed block in `~/.claude/CLAUDE.md` and sibling `~/.claude/AGENTS.md` | Remove managed block from each; user content preserved | `CLAUDE.md.bak.<ts>` and `AGENTS.md.bak.<ts>` |
+| `--claude-project` | `./.claude/agents` (or custom via `--claude-md`) | Upsert managed block in project `CLAUDE.md` and sibling `AGENTS.md` | Remove managed block from each; user content preserved | `CLAUDE.md.bak.<ts>` and `AGENTS.md.bak.<ts>` |
+
+Claude target installs the full duck set (router + ducklings), not router-only.
 
 ## Verify after install
 
@@ -165,7 +134,14 @@ Use this to quickly validate behavior and fit in your own workflow.
 
 ### Step 0: Enable Rubber Duck Agent
 
-Depending on your harness, can be a dropdown menu or @🦆
+Rubber Duck can run two ways. The distinction matters most on Claude Code:
+
+- **As a subagent (on demand):** invoke it from inside an existing session — `@🦆` (OpenCode) or `@agent-rubber-duck` (Claude), or via your harness dropdown. Spawned per request; the router greeting does not auto-run.
+- **As the main agent (whole session):** the duck *is* the session and routes from the first turn.
+  - Claude Code: `claude --agent rubber-duck`, or set `"agent": "rubber-duck"` in `.claude/settings.json` (project) or `~/.claude/settings.json` (global). The startup header shows `@rubber-duck` to confirm, and the router greeting (`initialPrompt`) auto-runs on the first turn. The `--agent` flag overrides the setting when both are present.
+  - OpenCode: select `🦆` as the primary agent (its `mode: all` allows primary use).
+
+Either way the agent must already be installed for your target (see install matrix above).
 
 ### Step 1: heartbeat check
 

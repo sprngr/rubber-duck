@@ -1,0 +1,23 @@
+{
+  "name": "duck-investigator",
+  "description": "Use for read-only code location, reference mapping, and call-chain tracing before debug/review/design.",
+  "harnesses": {
+    "claude": {
+      "tools": "Read, Glob, Grep, Skill"
+    },
+    "opencode": {
+      "mode": "subagent",
+      "permission": {
+        "read": "allow",
+        "grep": "allow",
+        "glob": "allow",
+        "bash": "deny",
+        "edit": "deny",
+        "task": "deny",
+        "skill": "allow",
+        "lsp": "allow",
+        "question": "deny"
+      }
+    }
+  }
+}
