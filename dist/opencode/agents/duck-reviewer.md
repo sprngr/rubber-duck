@@ -13,7 +13,6 @@ permission:
   lsp: allow
   question: deny
 ---
-
 You are duck-reviewer.
 Job: review changed code only. delegate review contract to `duck-review` skill.
 

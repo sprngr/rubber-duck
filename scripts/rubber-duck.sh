@@ -10,6 +10,7 @@ CLAUDE_MODE_SET=0
 SKIP_SKILLS=0
 PROJECT_SKILLS=0
 SKILLS_SOURCE="https://github.com/sprngr/rubber-duck"
+SKILLS_CLI="skills@^1.5.14" # pinned npx CLI package spec
 SOURCE_MODE="auto" # auto|local|web
 RAW_BASE="https://raw.githubusercontent.com/sprngr/rubber-duck/main"
 DRY_RUN=0
@@ -40,17 +41,8 @@ CLAUDE_POLICY_MD="${HOME}/.claude/CLAUDE.md"
 CLAUDE_PROJECT_AGENTS_DIR=".claude/agents"
 CLAUDE_PROJECT_POLICY_MD="CLAUDE.md"
 
-OPENCODE_AGENT_FILES=(
-  "rubber-duck.agent.md"
-  "duck-simple.agent.md"
-  "duck-reviewer.agent.md"
-  "duck-investigator.agent.md"
-  "duck-dry.agent.md"
-  "duck-builder.agent.md"
-  "duck-adversary.agent.md"
-)
-
-CLAUDE_AGENT_FILES=(
+# Built agent filenames are identical across harnesses (<name>.md).
+AGENT_FILES=(
   "rubber-duck.md"
   "duck-simple.md"
   "duck-reviewer.md"
@@ -59,8 +51,6 @@ CLAUDE_AGENT_FILES=(
   "duck-builder.md"
   "duck-adversary.md"
 )
-
-AGENT_FILES=()
 
 usage() {
   cat <<'EOF'
@@ -190,15 +180,13 @@ resolve_target() {
       DEST_AGENTS_DIR="${OPENCODE_AGENTS_DIR}"
       DEST_POLICY_MD="${OPENCODE_AGENTS_MD}"
       POLICY_MODE="managed_block"
-      AGENT_FILES=("${OPENCODE_AGENT_FILES[@]}")
-      if [[ -f "${REPO_ROOT}/dist/opencode/AGENTS.md" ]]; then
-        LOCAL_POLICY_FILE="${REPO_ROOT}/dist/opencode/AGENTS.md"
+      LOCAL_POLICY_FILE="${REPO_ROOT}/AGENTS.md"
+      if [[ -d "${REPO_ROOT}/dist/opencode/agents" ]]; then
         LOCAL_AGENTS_DIR="${REPO_ROOT}/dist/opencode/agents"
       else
-        LOCAL_POLICY_FILE="${REPO_ROOT}/AGENTS.md"
         LOCAL_AGENTS_DIR="${REPO_ROOT}/agents"
       fi
-      REMOTE_POLICY_PATH="dist/opencode/AGENTS.md"
+      REMOTE_POLICY_PATH="AGENTS.md"
       REMOTE_AGENTS_PATH="dist/opencode/agents"
       ;;
     claude)
@@ -206,12 +194,11 @@ resolve_target() {
       DEST_POLICY_MD="${CLAUDE_MD:-${CLAUDE_POLICY_MD}}"
       DEST_CLAUDE_AGENTS_MD="$(dirname -- "${DEST_POLICY_MD}")/AGENTS.md"
       POLICY_MODE="file"
-      AGENT_FILES=("${CLAUDE_AGENT_FILES[@]}")
       LOCAL_POLICY_FILE="${REPO_ROOT}/dist/claude/CLAUDE.md"
-      LOCAL_POLICY_AGENTS_FILE="${REPO_ROOT}/dist/opencode/AGENTS.md"
+      LOCAL_POLICY_AGENTS_FILE="${REPO_ROOT}/AGENTS.md"
       LOCAL_AGENTS_DIR="${REPO_ROOT}/dist/claude/agents"
       REMOTE_POLICY_PATH="dist/claude/CLAUDE.md"
-      REMOTE_POLICY_AGENTS_PATH="dist/opencode/AGENTS.md"
+      REMOTE_POLICY_AGENTS_PATH="AGENTS.md"
       REMOTE_AGENTS_PATH="dist/claude/agents"
       ;;
     claude-project)
@@ -219,12 +206,11 @@ resolve_target() {
       DEST_POLICY_MD="${CLAUDE_MD:-${CLAUDE_PROJECT_POLICY_MD}}"
       DEST_CLAUDE_AGENTS_MD="$(dirname -- "${DEST_POLICY_MD}")/AGENTS.md"
       POLICY_MODE="file"
-      AGENT_FILES=("${CLAUDE_AGENT_FILES[@]}")
       LOCAL_POLICY_FILE="${REPO_ROOT}/dist/claude/CLAUDE.md"
-      LOCAL_POLICY_AGENTS_FILE="${REPO_ROOT}/dist/opencode/AGENTS.md"
+      LOCAL_POLICY_AGENTS_FILE="${REPO_ROOT}/AGENTS.md"
       LOCAL_AGENTS_DIR="${REPO_ROOT}/dist/claude/agents"
       REMOTE_POLICY_PATH="dist/claude/CLAUDE.md"
-      REMOTE_POLICY_AGENTS_PATH="dist/opencode/AGENTS.md"
+      REMOTE_POLICY_AGENTS_PATH="AGENTS.md"
       REMOTE_AGENTS_PATH="dist/claude/agents"
       ;;
     generic)
@@ -235,15 +221,13 @@ resolve_target() {
       DEST_AGENTS_DIR="${AGENTS_DIR}"
       DEST_POLICY_MD="${AGENTS_MD}"
       POLICY_MODE="managed_block"
-      AGENT_FILES=("${OPENCODE_AGENT_FILES[@]}")
-      if [[ -f "${REPO_ROOT}/dist/opencode/AGENTS.md" ]]; then
-        LOCAL_POLICY_FILE="${REPO_ROOT}/dist/opencode/AGENTS.md"
+      LOCAL_POLICY_FILE="${REPO_ROOT}/AGENTS.md"
+      if [[ -d "${REPO_ROOT}/dist/opencode/agents" ]]; then
         LOCAL_AGENTS_DIR="${REPO_ROOT}/dist/opencode/agents"
       else
-        LOCAL_POLICY_FILE="${REPO_ROOT}/AGENTS.md"
         LOCAL_AGENTS_DIR="${REPO_ROOT}/agents"
       fi
-      REMOTE_POLICY_PATH="dist/opencode/AGENTS.md"
+      REMOTE_POLICY_PATH="AGENTS.md"
       REMOTE_AGENTS_PATH="dist/opencode/agents"
       ;;
     *)
@@ -351,32 +335,17 @@ strip_managed_block() {
   mv "${tmp}" "${target}"
 }
 
-backup_policy_md() {
+backup_md() {
+  local target="$1"
   local backup
-  backup="${DEST_POLICY_MD}.bak.$(timestamp)"
+  backup="${target}.bak.$(timestamp)"
   if (( DRY_RUN == 1 )); then
-    log "[dry-run] backup ${DEST_POLICY_MD} -> ${backup}"
+    log "[dry-run] backup ${target} -> ${backup}"
     return
   fi
-  mkdir -p "$(dirname -- "${DEST_POLICY_MD}")"
-  if [[ -f "${DEST_POLICY_MD}" ]]; then
-    cp -f "${DEST_POLICY_MD}" "${backup}"
-  else
-    : > "${backup}"
-  fi
-  log "Backup created: ${backup}"
-}
-
-backup_claude_agents_md() {
-  local backup
-  backup="${DEST_CLAUDE_AGENTS_MD}.bak.$(timestamp)"
-  if (( DRY_RUN == 1 )); then
-    log "[dry-run] backup ${DEST_CLAUDE_AGENTS_MD} -> ${backup}"
-    return
-  fi
-  mkdir -p "$(dirname -- "${DEST_CLAUDE_AGENTS_MD}")"
-  if [[ -f "${DEST_CLAUDE_AGENTS_MD}" ]]; then
-    cp -f "${DEST_CLAUDE_AGENTS_MD}" "${backup}"
+  mkdir -p "$(dirname -- "${target}")"
+  if [[ -f "${target}" ]]; then
+    cp -f "${target}" "${backup}"
   else
     : > "${backup}"
   fi
@@ -466,47 +435,33 @@ uninstall_agents() {
 
 skills_install() {
   (( SKIP_SKILLS == 1 )) && return 0
+  local scope=""
+  (( PROJECT_SKILLS == 0 )) && scope="-g"
   if (( DRY_RUN == 1 )); then
-    if (( PROJECT_SKILLS == 1 )); then
-      log "[dry-run] npx skills add ${SKILLS_SOURCE} -y"
-    else
-      log "[dry-run] npx skills add ${SKILLS_SOURCE} -y -g"
-    fi
+    log "[dry-run] npx --yes ${SKILLS_CLI} add ${SKILLS_SOURCE} -y ${scope}"
     return
   fi
   if ! command -v npx >/dev/null 2>&1; then
     warn "npx not found; skipping skills install"
     return
   fi
-  if (( PROJECT_SKILLS == 1 )); then
-    npx skills add "${SKILLS_SOURCE}" -y
-  else
-    npx skills add "${SKILLS_SOURCE}" -y -g
-  fi
+  npx --yes "${SKILLS_CLI}" add "${SKILLS_SOURCE}" -y ${scope} </dev/null
 }
 
 skills_uninstall() {
   (( SKIP_SKILLS == 1 )) && return 0
+  local scope=""
+  (( PROJECT_SKILLS == 0 )) && scope="-g"
   if (( DRY_RUN == 1 )); then
-    if (( PROJECT_SKILLS == 1 )); then
-      log "[dry-run] npx skills remove ${SKILLS_SOURCE}"
-    else
-      log "[dry-run] npx skills remove ${SKILLS_SOURCE} -g"
-    fi
+    log "[dry-run] npx --yes ${SKILLS_CLI} remove ${SKILLS_SOURCE} ${scope}"
     return
   fi
   if ! command -v npx >/dev/null 2>&1; then
     warn "npx not found; skipping skills uninstall"
     return
   fi
-  if (( PROJECT_SKILLS == 1 )); then
-    if ! npx skills remove "${SKILLS_SOURCE}"; then
-      warn "skills remove failed; remove package manually if needed"
-    fi
-  else
-    if ! npx skills remove "${SKILLS_SOURCE}" -g; then
-      warn "skills remove failed; remove package manually if needed"
-    fi
+  if ! npx --yes "${SKILLS_CLI}" remove "${SKILLS_SOURCE}" ${scope} </dev/null; then
+    warn "skills remove failed; remove package manually if needed"
   fi
 }
 
@@ -516,15 +471,11 @@ skills_status() {
     log "skills: npx missing"
     return
   fi
-  local list
+  local list scope=""
+  (( PROJECT_SKILLS == 0 )) && scope="-g"
+  SKILLS_LIST_CMD=(npx --yes "${SKILLS_CLI}" list ${scope})
 
-  if (( PROJECT_SKILLS == 1 )); then
-    SKILLS_LIST_CMD=(npx skills list)
-  else
-    SKILLS_LIST_CMD=(npx skills list -g)
-  fi
-
-  if list="$("${SKILLS_LIST_CMD[@]}" 2>/dev/null)"; then
+  if list="$("${SKILLS_LIST_CMD[@]}" </dev/null 2>/dev/null)"; then
     if printf '%s' "${list}" | grep -Fq -- "${SKILLS_SOURCE}"; then
       log "skills: installed (${SKILLS_SOURCE})"
     else
@@ -541,6 +492,12 @@ has_managed_block() {
   grep -Fq "${MANAGED_START}" "${target}" && grep -Fq "${MANAGED_END}" "${target}"
 }
 
+report_policy_block() {
+  local target="$1" state="missing"
+  has_managed_block "${target}" && state="present"
+  log "AGENTS policy block (${target##*/}): ${state}"
+}
+
 status() {
   log "target: ${TARGET}"
   log "agents_dir: ${DEST_AGENTS_DIR}"
@@ -550,24 +507,8 @@ status() {
     [[ -f "${DEST_AGENTS_DIR}/${f}" ]] && installed=$((installed + 1))
   done
   log "agents: ${installed}/${#AGENT_FILES[@]} present"
-  if [[ "${POLICY_MODE}" == "managed_block" ]]; then
-    if has_managed_block; then
-      log "AGENTS policy block: present"
-    else
-      log "AGENTS policy block: missing"
-    fi
-  else
-    if has_managed_block "${DEST_POLICY_MD}"; then
-      log "CLAUDE.md policy block: present"
-    else
-      log "CLAUDE.md policy block: missing"
-    fi
-    if has_managed_block "${DEST_CLAUDE_AGENTS_MD}"; then
-      log "AGENTS.md policy block: present"
-    else
-      log "AGENTS.md policy block: missing"
-    fi
-  fi
+  report_policy_block "${DEST_POLICY_MD}"
+  [[ "${POLICY_MODE}" == "file" ]] && report_policy_block "${DEST_CLAUDE_AGENTS_MD}"
   skills_status
 }
 
@@ -599,11 +540,11 @@ case "${ACTION}" in
     doctor
     prepare_sources
     install_agents
-    backup_policy_md
+    backup_md "${DEST_POLICY_MD}"
     if [[ "${POLICY_MODE}" == "managed_block" ]]; then
       upsert_managed_block
     else
-      backup_claude_agents_md
+      backup_md "${DEST_CLAUDE_AGENTS_MD}"
       install_policy_file
     fi
     skills_install
@@ -613,11 +554,11 @@ case "${ACTION}" in
     doctor
     prepare_sources
     uninstall_agents
-    backup_policy_md
+    backup_md "${DEST_POLICY_MD}"
     if [[ "${POLICY_MODE}" == "managed_block" ]]; then
       remove_managed_block
     else
-      backup_claude_agents_md
+      backup_md "${DEST_CLAUDE_AGENTS_MD}"
       remove_policy_file
     fi
     skills_uninstall

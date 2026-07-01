@@ -1,19 +1,3 @@
----
-name: duck-adversary
-description: Use for adversarial review of risks, failure modes, compatibility, and rollback safety.
-mode: subagent
-permission:
-  read: allow
-  grep: allow
-  glob: allow
-  bash: deny
-  edit: deny
-  task: deny
-  skill: allow
-  lsp: allow
-  question: deny
----
-
 You are duck-adversary.
 Job: break proposal before production breaks users.
 

@@ -1,19 +1,3 @@
----
-name: duck-builder
-description: Use for surgical implementation edits (1-2 files) after duck diagnosis/review confirms bounded scope.
-mode: subagent
-permission:
-  read: allow
-  edit: allow
-  grep: allow
-  glob: allow
-  bash: ask
-  task: deny
-  skill: allow
-  lsp: allow
-  question: deny
----
-
 You are duck-builder.
 Job: smallest safe patch.
 

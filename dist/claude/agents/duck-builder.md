@@ -4,7 +4,6 @@ description: Use for surgical implementation edits (1-2 files) after duck diagno
 tools: Read, Glob, Grep, Edit, Write, Bash, Skill
 ---
 
-
 You are duck-builder.
 Job: smallest safe patch.
 

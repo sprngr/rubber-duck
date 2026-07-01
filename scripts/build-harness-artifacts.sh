@@ -9,40 +9,22 @@ elif [[ $# -gt 0 ]]; then
   exit 1
 fi
 
+if ! command -v jq >/dev/null 2>&1; then
+  printf 'ERROR: jq is required to render agent config (build-time only)\n' >&2
+  exit 1
+fi
+
 SCRIPT_DIR="$(cd -- "$(dirname -- "${0}")" && pwd)"
 REPO_ROOT="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
 
-ROUTER_BODY="${REPO_ROOT}/agents/src/rubber-duck.body.md"
-ROOT_AGENTS_MD="${REPO_ROOT}/AGENTS.md"
 ROOT_AGENTS_DIR="${REPO_ROOT}/agents"
 
 CLAUDE_DIST_DIR="${REPO_ROOT}/dist/claude"
 CLAUDE_AGENT_DIR="${CLAUDE_DIST_DIR}/agents"
-CLAUDE_ROUTER_OUT="${CLAUDE_AGENT_DIR}/rubber-duck.md"
 CLAUDE_MD_OUT="${CLAUDE_DIST_DIR}/CLAUDE.md"
 
 OPENCODE_DIST_DIR="${REPO_ROOT}/dist/opencode"
 OPENCODE_AGENT_DIR="${OPENCODE_DIST_DIR}/agents"
-OPENCODE_AGENTS_MD_OUT="${OPENCODE_DIST_DIR}/AGENTS.md"
-
-OPENCODE_AGENT_FILES=(
-  "rubber-duck.agent.md"
-  "duck-simple.agent.md"
-  "duck-reviewer.agent.md"
-  "duck-investigator.agent.md"
-  "duck-dry.agent.md"
-  "duck-builder.agent.md"
-  "duck-adversary.agent.md"
-)
-
-CLAUDE_SUBAGENT_SPECS=(
-  "duck-simple.agent.md|duck-simple|Use for simplicity review to reduce overengineering, indirection, and unnecessary abstractions.|Read, Glob, Grep, Skill"
-  "duck-reviewer.agent.md|duck-reviewer|Use for focused diff/file review with severity-tagged findings and concrete fixes.|Read, Glob, Grep, Bash, Skill"
-  "duck-investigator.agent.md|duck-investigator|Use for read-only code location, reference mapping, and call-chain tracing before debug/review/design.|Read, Glob, Grep, Skill"
-  "duck-dry.agent.md|duck-dry|Use for DRY review to find meaningful duplication and divergence risk with safe extraction boundaries.|Read, Glob, Grep, Skill"
-  "duck-builder.agent.md|duck-builder|Use for surgical implementation edits (1-2 files) after duck diagnosis/review confirms bounded scope.|Read, Glob, Grep, Edit, Write, Bash, Skill"
-  "duck-adversary.agent.md|duck-adversary|Use for adversarial review of risks, failure modes, compatibility, and rollback safety.|Read, Glob, Grep, Skill"
-)
 
 render_file() {
   local out_path="$1"
@@ -65,30 +47,58 @@ render_file() {
   printf 'Built: %s\n' "${out_path}"
 }
 
-append_body_without_frontmatter() {
-  local src="$1"
-  local out="$2"
-  awk '
-    NR == 1 && $0 == "---" { in_fm=1; next }
-    in_fm == 1 && $0 == "---" { in_fm=0; next }
-    in_fm == 1 { next }
-    { print }
-  ' "${src}" >> "${out}"
+# Render Claude frontmatter from a meta.json into out. Field order:
+# name, description, tools, then optional initialPrompt / color (unquoted).
+# name falls back to the shared top-level name when the harness omits it.
+render_claude_fm() {
+  local meta="$1" out="$2" v
+  {
+    printf -- '---\n'
+    printf 'name: %s\n' "$(jq -r '.harnesses.claude.name // .name' "${meta}")"
+    printf 'description: %s\n' "$(jq -r '.description' "${meta}")"
+    printf 'tools: %s\n' "$(jq -r '.harnesses.claude.tools' "${meta}")"
+    v="$(jq -r '.harnesses.claude.initialPrompt // empty' "${meta}")"
+    [[ -n "${v}" ]] && printf 'initialPrompt: %s\n' "${v}"
+    v="$(jq -r '.harnesses.claude.color // empty' "${meta}")"
+    [[ -n "${v}" ]] && printf 'color: %s\n' "${v}"
+    printf -- '---\n\n'
+  } > "${out}"
 }
 
-if [[ ! -f "${ROUTER_BODY}" ]]; then
-  printf 'ERROR: missing canonical router body: %s\n' "${ROUTER_BODY}" >&2
+# Render OpenCode frontmatter from a meta.json into out. Field order:
+# name, description, optional argument-hint, mode, permission block, optional
+# color (quoted). name falls back to the shared top-level name.
+render_opencode_fm() {
+  local meta="$1" out="$2" v
+  {
+    printf -- '---\n'
+    printf 'name: %s\n' "$(jq -r '.harnesses.opencode.name // .name' "${meta}")"
+    printf 'description: %s\n' "$(jq -r '.description' "${meta}")"
+    v="$(jq -r '.harnesses.opencode."argument-hint" // empty' "${meta}")"
+    [[ -n "${v}" ]] && printf 'argument-hint: %s\n' "${v}"
+    printf 'mode: %s\n' "$(jq -r '.harnesses.opencode.mode' "${meta}")"
+    printf 'permission:\n'
+    jq -r '.harnesses.opencode.permission | to_entries[] | "  \(.key): \(.value)"' "${meta}"
+    v="$(jq -r '.harnesses.opencode.color // empty' "${meta}")"
+    [[ -n "${v}" ]] && printf 'color: "%s"\n' "${v}"
+    printf -- '---\n'
+  } > "${out}"
+}
+
+# Discover config agents: any agents/<name>/ containing a meta.json.
+CONFIG_AGENTS=()
+for meta in "${ROOT_AGENTS_DIR}"/*/meta.json; do
+  [[ -e "${meta}" ]] || continue
+  CONFIG_AGENTS+=("$(basename "$(dirname "${meta}")")")
+done
+if (( ${#CONFIG_AGENTS[@]} == 0 )); then
+  printf 'ERROR: no agent configs found under %s\n' "${ROOT_AGENTS_DIR}" >&2
   exit 1
 fi
 
-if [[ ! -f "${ROOT_AGENTS_MD}" ]]; then
-  printf 'ERROR: missing AGENTS policy source: %s\n' "${ROOT_AGENTS_MD}" >&2
-  exit 1
-fi
-
-for f in "${OPENCODE_AGENT_FILES[@]}"; do
-  if [[ ! -f "${ROOT_AGENTS_DIR}/${f}" ]]; then
-    printf 'ERROR: missing OpenCode agent source: %s\n' "${ROOT_AGENTS_DIR}/${f}" >&2
+for name in "${CONFIG_AGENTS[@]}"; do
+  if [[ ! -f "${ROOT_AGENTS_DIR}/${name}/body.md" ]]; then
+    printf 'ERROR: missing agent body: %s\n' "${ROOT_AGENTS_DIR}/${name}/body.md" >&2
     exit 1
   fi
 done
@@ -99,55 +109,25 @@ mkdir -p "${OPENCODE_AGENT_DIR}"
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "${TMP_DIR}"' EXIT
 
-CLAUDE_ROUTER_TMP="${TMP_DIR}/rubber-duck.md"
-cat > "${CLAUDE_ROUTER_TMP}" <<'EOF'
----
-name: rubber-duck
-description: Rubber duck for code review, debugging, design, and testing.
-tools: Read, Glob, Grep, Edit, Write, Bash, Agent, Skill, AskUserQuestion
-initialPrompt: true
-color: yellow
----
-
-EOF
-
-cat "${ROUTER_BODY}" >> "${CLAUDE_ROUTER_TMP}"
-render_file "${CLAUDE_ROUTER_OUT}" "${CLAUDE_ROUTER_TMP}"
-
+# Claude entrypoint file references the shared policy.
 CLAUDE_MD_TMP="${TMP_DIR}/CLAUDE.md"
 cat > "${CLAUDE_MD_TMP}" <<'EOF'
 @AGENTS.md
 EOF
 render_file "${CLAUDE_MD_OUT}" "${CLAUDE_MD_TMP}"
 
-for spec in "${CLAUDE_SUBAGENT_SPECS[@]}"; do
-  IFS='|' read -r src_file agent_name agent_desc agent_tools <<< "${spec}"
-  src_path="${ROOT_AGENTS_DIR}/${src_file}"
-  out_path="${CLAUDE_AGENT_DIR}/${agent_name}.md"
-  tmp_path="${TMP_DIR}/claude-${agent_name}.md"
+# Render each agent for every harness: harness frontmatter + shared body.
+for name in "${CONFIG_AGENTS[@]}"; do
+  meta="${ROOT_AGENTS_DIR}/${name}/meta.json"
+  body="${ROOT_AGENTS_DIR}/${name}/body.md"
 
-  cat > "${tmp_path}" <<EOF
----
-name: ${agent_name}
-description: ${agent_desc}
-tools: ${agent_tools}
----
+  claude_tmp="${TMP_DIR}/claude-${name}.md"
+  render_claude_fm "${meta}" "${claude_tmp}"
+  cat "${body}" >> "${claude_tmp}"
+  render_file "${CLAUDE_AGENT_DIR}/${name}.md" "${claude_tmp}"
 
-EOF
-  append_body_without_frontmatter "${src_path}" "${tmp_path}"
-  render_file "${out_path}" "${tmp_path}"
-done
-
-OPENCODE_AGENTS_MD_TMP="${TMP_DIR}/opencode-AGENTS.md"
-cat > "${OPENCODE_AGENTS_MD_TMP}" <<EOF
-EOF
-cat "${ROOT_AGENTS_MD}" >> "${OPENCODE_AGENTS_MD_TMP}"
-render_file "${OPENCODE_AGENTS_MD_OUT}" "${OPENCODE_AGENTS_MD_TMP}"
-
-for f in "${OPENCODE_AGENT_FILES[@]}"; do
-  opencode_tmp="${TMP_DIR}/opencode-${f}"
-  cat > "${opencode_tmp}" <<EOF
-EOF
-  cat "${ROOT_AGENTS_DIR}/${f}" >> "${opencode_tmp}"
-  render_file "${OPENCODE_AGENT_DIR}/${f}" "${opencode_tmp}"
+  opencode_tmp="${TMP_DIR}/opencode-${name}.md"
+  render_opencode_fm "${meta}" "${opencode_tmp}"
+  cat "${body}" >> "${opencode_tmp}"
+  render_file "${OPENCODE_AGENT_DIR}/${name}.md" "${opencode_tmp}"
 done

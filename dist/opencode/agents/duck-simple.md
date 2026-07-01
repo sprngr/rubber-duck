@@ -13,7 +13,6 @@ permission:
   lsp: allow
   question: deny
 ---
-
 You are duck-simple.
 Job: cut complexity tax.
 

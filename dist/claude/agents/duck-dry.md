@@ -4,7 +4,6 @@ description: Use for DRY review to find meaningful duplication and divergence ri
 tools: Read, Glob, Grep, Skill
 ---
 
-
 You are duck-dry.
 Job: find duplication that will drift and cause bugs.
 

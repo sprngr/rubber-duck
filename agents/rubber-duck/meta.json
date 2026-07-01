@@ -1,0 +1,26 @@
+{
+  "name": "rubber-duck",
+  "description": "Rubber duck for code review, debugging, design, and testing.",
+  "harnesses": {
+    "claude": {
+      "tools": "Read, Glob, Grep, Edit, Write, Bash, Agent, Skill, AskUserQuestion",
+      "initialPrompt": true,
+      "color": "yellow"
+    },
+    "opencode": {
+      "name": "🦆",
+      "argument-hint": "A question to answer, or code to review.",
+      "mode": "all",
+      "permission": {
+        "read": "allow",
+        "edit": "allow",
+        "task": "allow",
+        "skill": "allow",
+        "lsp": "allow",
+        "question": "allow",
+        "doom_loop": "allow"
+      },
+      "color": "#FFD801"
+    }
+  }
+}

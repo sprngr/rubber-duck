@@ -20,6 +20,9 @@ function rubber-duck {
 # from script scope here (nested helper functions close over the same scope).
 $ErrorActionPreference = "Stop"
 
+# Pinned npx CLI package spec (not a flag; mirrors SKILLS_CLI in rubber-duck.sh)
+$SkillsCli = "skills@^1.5.14"
+
 if ($Claude -and $ClaudeProject) {
   throw "Cannot combine -Claude and -ClaudeProject. Choose one."
 }
@@ -54,17 +57,8 @@ $PolicyMode = "managed_block" # managed_block|file
 $ManagedStart = "<!-- RUBBER_DUCK_MANAGED_BLOCK START -->"
 $ManagedEnd = "<!-- RUBBER_DUCK_MANAGED_BLOCK END -->"
 
-$OpenCodeAgentFiles = @(
-  "rubber-duck.agent.md",
-  "duck-simple.agent.md",
-  "duck-reviewer.agent.md",
-  "duck-investigator.agent.md",
-  "duck-dry.agent.md",
-  "duck-builder.agent.md",
-  "duck-adversary.agent.md"
-)
-
-$ClaudeAgentFiles = @(
+# Built agent filenames are identical across harnesses (<name>.md).
+$AgentFiles = @(
   "rubber-duck.md",
   "duck-simple.md",
   "duck-reviewer.md",
@@ -73,8 +67,6 @@ $ClaudeAgentFiles = @(
   "duck-builder.md",
   "duck-adversary.md"
 )
-
-$AgentFiles = @()
 
 function Log($msg) { Write-Host $msg }
 function Warn($msg) { Write-Warning $msg }
@@ -85,15 +77,13 @@ function Resolve-Target {
     $script:DestAgentsDir = Join-Path $HOME ".config/opencode/agents"
     $script:DestPolicyMd = Join-Path $HOME ".config/opencode/AGENTS.md"
     $script:PolicyMode = "managed_block"
-    $script:AgentFiles = $OpenCodeAgentFiles
-    if (Test-Path (Join-Path $RepoRoot "dist/opencode/AGENTS.md")) {
-      $script:LocalPolicyFile = Join-Path $RepoRoot "dist/opencode/AGENTS.md"
+    $script:LocalPolicyFile = Join-Path $RepoRoot "AGENTS.md"
+    if (Test-Path (Join-Path $RepoRoot "dist/opencode/agents")) {
       $script:LocalAgentsDir = Join-Path $RepoRoot "dist/opencode/agents"
     } else {
-      $script:LocalPolicyFile = Join-Path $RepoRoot "AGENTS.md"
       $script:LocalAgentsDir = Join-Path $RepoRoot "agents"
     }
-    $script:RemotePolicyPath = "dist/opencode/AGENTS.md"
+    $script:RemotePolicyPath = "AGENTS.md"
     $script:RemoteAgentsPath = "dist/opencode/agents"
     return
   }
@@ -104,12 +94,11 @@ function Resolve-Target {
     $script:DestPolicyMd = if ([string]::IsNullOrWhiteSpace($ClaudeMd)) { (Join-Path $HOME ".claude/CLAUDE.md") } else { $ClaudeMd }
     $script:DestClaudeAgentsMd = Join-Path (Split-Path -Parent $script:DestPolicyMd) "AGENTS.md"
     $script:PolicyMode = "file"
-    $script:AgentFiles = $ClaudeAgentFiles
     $script:LocalPolicyFile = Join-Path $RepoRoot "dist/claude/CLAUDE.md"
-    $script:LocalAgentsPolicyFile = Join-Path $RepoRoot "dist/opencode/AGENTS.md"
+    $script:LocalAgentsPolicyFile = Join-Path $RepoRoot "AGENTS.md"
     $script:LocalAgentsDir = Join-Path $RepoRoot "dist/claude/agents"
     $script:RemotePolicyPath = "dist/claude/CLAUDE.md"
-    $script:RemoteAgentsPolicyPath = "dist/opencode/AGENTS.md"
+    $script:RemoteAgentsPolicyPath = "AGENTS.md"
     $script:RemoteAgentsPath = "dist/claude/agents"
     return
   }
@@ -120,12 +109,11 @@ function Resolve-Target {
     $script:DestPolicyMd = if ([string]::IsNullOrWhiteSpace($ClaudeMd)) { "CLAUDE.md" } else { $ClaudeMd }
     $script:DestClaudeAgentsMd = Join-Path (Split-Path -Parent $script:DestPolicyMd) "AGENTS.md"
     $script:PolicyMode = "file"
-    $script:AgentFiles = $ClaudeAgentFiles
     $script:LocalPolicyFile = Join-Path $RepoRoot "dist/claude/CLAUDE.md"
-    $script:LocalAgentsPolicyFile = Join-Path $RepoRoot "dist/opencode/AGENTS.md"
+    $script:LocalAgentsPolicyFile = Join-Path $RepoRoot "AGENTS.md"
     $script:LocalAgentsDir = Join-Path $RepoRoot "dist/claude/agents"
     $script:RemotePolicyPath = "dist/claude/CLAUDE.md"
-    $script:RemoteAgentsPolicyPath = "dist/opencode/AGENTS.md"
+    $script:RemoteAgentsPolicyPath = "AGENTS.md"
     $script:RemoteAgentsPath = "dist/claude/agents"
     return
   }
@@ -138,15 +126,13 @@ function Resolve-Target {
   $script:DestAgentsDir = $AgentsDir
   $script:DestPolicyMd = $AgentsMd
   $script:PolicyMode = "managed_block"
-  $script:AgentFiles = $OpenCodeAgentFiles
-  if (Test-Path (Join-Path $RepoRoot "dist/opencode/AGENTS.md")) {
-    $script:LocalPolicyFile = Join-Path $RepoRoot "dist/opencode/AGENTS.md"
+  $script:LocalPolicyFile = Join-Path $RepoRoot "AGENTS.md"
+  if (Test-Path (Join-Path $RepoRoot "dist/opencode/agents")) {
     $script:LocalAgentsDir = Join-Path $RepoRoot "dist/opencode/agents"
   } else {
-    $script:LocalPolicyFile = Join-Path $RepoRoot "AGENTS.md"
     $script:LocalAgentsDir = Join-Path $RepoRoot "agents"
   }
-  $script:RemotePolicyPath = "dist/opencode/AGENTS.md"
+  $script:RemotePolicyPath = "AGENTS.md"
   $script:RemoteAgentsPath = "dist/opencode/agents"
 }
 
@@ -228,30 +214,15 @@ function Strip-ManagedBlockText([string]$text) {
   return ($out -join "`n")
 }
 
-function Backup-PolicyMd {
-  $parent = Split-Path -Parent $DestPolicyMd
+function Backup-Md([string]$Target) {
+  $parent = Split-Path -Parent $Target
   if (-not [string]::IsNullOrWhiteSpace($parent)) {
     New-Item -ItemType Directory -Force -Path $parent | Out-Null
   }
   $stamp = Get-Date -Format "yyyyMMdd-HHmmss"
-  $backup = "$DestPolicyMd.bak.$stamp"
-  if (Test-Path $DestPolicyMd) {
-    Copy-Item -Force $DestPolicyMd $backup
-  } else {
-    New-Item -ItemType File -Force -Path $backup | Out-Null
-  }
-  Log "Backup created: $backup"
-}
-
-function Backup-ClaudeAgentsMd {
-  $parent = Split-Path -Parent $DestClaudeAgentsMd
-  if (-not [string]::IsNullOrWhiteSpace($parent)) {
-    New-Item -ItemType Directory -Force -Path $parent | Out-Null
-  }
-  $stamp = Get-Date -Format "yyyyMMdd-HHmmss"
-  $backup = "$DestClaudeAgentsMd.bak.$stamp"
-  if (Test-Path $DestClaudeAgentsMd) {
-    Copy-Item -Force $DestClaudeAgentsMd $backup
+  $backup = "$Target.bak.$stamp"
+  if (Test-Path $Target) {
+    Copy-Item -Force $Target $backup
   } else {
     New-Item -ItemType File -Force -Path $backup | Out-Null
   }
@@ -322,11 +293,8 @@ function Skills-Install {
     Warn "npx not found; skipping skills install"
     return
   }
-  if ($ProjectSkills) {
-    npx skills add $SkillsSource -y
-  } else {
-    npx skills add $SkillsSource -y -g
-  }
+  $scope = if ($ProjectSkills) { @() } else { @("-g") }
+  $null | npx --yes $SkillsCli add $SkillsSource -y $scope
 }
 
 function Skills-Uninstall {
@@ -335,12 +303,9 @@ function Skills-Uninstall {
     Warn "npx not found; skipping skills uninstall"
     return
   }
+  $scope = if ($ProjectSkills) { @() } else { @("-g") }
   try {
-    if ($ProjectSkills) {
-      npx skills remove $SkillsSource
-    } else {
-      npx skills remove $SkillsSource -g
-    }
+    $null | npx --yes $SkillsCli remove $SkillsSource $scope
   } catch {
     Warn "skills remove failed; remove package manually if needed"
   }
@@ -352,12 +317,9 @@ function Skills-Status {
     Log "skills: npx missing"
     return
   }
+  $scope = if ($ProjectSkills) { @() } else { @("-g") }
   try {
-    if ($ProjectSkills) {
-      $list = npx skills list | Out-String
-    } else {
-      $list = npx skills list -g | Out-String
-    }
+    $list = $null | npx --yes $SkillsCli list $scope | Out-String
     if ($list -match [regex]::Escape($SkillsSource)) {
       Log "skills: installed ($SkillsSource)"
     } else {
@@ -374,6 +336,11 @@ function Has-ManagedBlock([string]$Target) {
   return $text.Contains($ManagedStart) -and $text.Contains($ManagedEnd)
 }
 
+function Report-PolicyBlock([string]$Target) {
+  $state = if (Has-ManagedBlock $Target) { "present" } else { "missing" }
+  Log "AGENTS policy block ($(Split-Path -Leaf $Target)): $state"
+}
+
 function Status {
   Log "target: $Target"
   Log "agents_dir: $DestAgentsDir"
@@ -383,12 +350,8 @@ function Status {
     if (Test-Path (Join-Path $DestAgentsDir $f)) { $installed++ }
   }
   Log "agents: $installed/$($AgentFiles.Count) present"
-  if ($PolicyMode -eq "managed_block") {
-    if (Has-ManagedBlock $DestPolicyMd) { Log "AGENTS policy block: present" } else { Log "AGENTS policy block: missing" }
-  } else {
-    if (Has-ManagedBlock $DestPolicyMd) { Log "CLAUDE.md policy block: present" } else { Log "CLAUDE.md policy block: missing" }
-    if (Has-ManagedBlock $DestClaudeAgentsMd) { Log "AGENTS.md policy block: present" } else { Log "AGENTS.md policy block: missing" }
-  }
+  Report-PolicyBlock $DestPolicyMd
+  if ($PolicyMode -eq "file") { Report-PolicyBlock $DestClaudeAgentsMd }
   Skills-Status
 }
 
@@ -417,11 +380,11 @@ try {
       Doctor
       Download-Sources
       Install-Agents
-      Backup-PolicyMd
+      Backup-Md $DestPolicyMd
       if ($PolicyMode -eq "managed_block") {
         Upsert-ManagedBlock $DestPolicyMd (Join-Path $script:TmpDir "AGENTS.md")
       } else {
-        Backup-ClaudeAgentsMd
+        Backup-Md $DestClaudeAgentsMd
         Install-PolicyFile
       }
       Skills-Install
@@ -431,11 +394,11 @@ try {
       Doctor
       Download-Sources
       Uninstall-Agents
-      Backup-PolicyMd
+      Backup-Md $DestPolicyMd
       if ($PolicyMode -eq "managed_block") {
         Remove-ManagedBlock $DestPolicyMd
       } else {
-        Backup-ClaudeAgentsMd
+        Backup-Md $DestClaudeAgentsMd
         Remove-PolicyFile
       }
       Skills-Uninstall

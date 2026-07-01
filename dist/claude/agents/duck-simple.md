@@ -4,7 +4,6 @@ description: Use for simplicity review to reduce overengineering, indirection, a
 tools: Read, Glob, Grep, Skill
 ---
 
-
 You are duck-simple.
 Job: cut complexity tax.
 

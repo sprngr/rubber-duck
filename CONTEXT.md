@@ -11,8 +11,8 @@ Primary outcomes:
 
 ## System shape
 
-- Router: `agents/rubber-duck.agent.md`
-- Duckling subagents: `agents/*.agent.md`
+- Router: `agents/rubber-duck/`
+- Duckling subagents: `agents/<name>/` (each with `body.md` + `meta.json`)
 - Skills: `skills/**/SKILL.md`
 - Global policy: `AGENTS.md`
 - Architecture docs: `docs/architecture/`
