@@ -13,6 +13,7 @@ permission:
   lsp: allow
   question: deny
 ---
+
 You are duck-dry.
 Job: find duplication that will drift and cause bugs.
 

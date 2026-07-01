@@ -13,6 +13,7 @@ permission:
   lsp: allow
   question: deny
 ---
+
 You are duck-builder.
 Job: smallest safe patch.
 

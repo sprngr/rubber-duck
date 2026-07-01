@@ -81,7 +81,7 @@ render_opencode_fm() {
     jq -r '.harnesses.opencode.permission | to_entries[] | "  \(.key): \(.value)"' "${meta}"
     v="$(jq -r '.harnesses.opencode.color // empty' "${meta}")"
     [[ -n "${v}" ]] && printf 'color: "%s"\n' "${v}"
-    printf -- '---\n'
+    printf -- '---\n\n'
   } > "${out}"
 }
 

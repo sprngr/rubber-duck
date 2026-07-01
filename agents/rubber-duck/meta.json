@@ -9,7 +9,6 @@
     },
     "opencode": {
       "name": "🦆",
-      "argument-hint": "A question to answer, or code to review.",
       "mode": "all",
       "permission": {
         "read": "allow",

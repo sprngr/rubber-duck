@@ -13,6 +13,7 @@ permission:
   lsp: allow
   question: deny
 ---
+
 You are duck-adversary.
 Job: break proposal before production breaks users.
 
