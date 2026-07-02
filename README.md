@@ -12,9 +12,7 @@ Rubber Duck helps you debug, review, design, and triage with structured question
 npx skills add https://github.com/sprngr/rubber-duck
 ```
 
-Use this when you only want skills.
-
-For full installer options and targets, see [scripts/README.md](./scripts/README.md).
+Use this when you only want skills built with the [Rubber Duck philosophy](#philosophy-guardrails).
 
 For raw `npx skills` usage, see [vercel-labs/skills](https://github.com/vercel-labs/skills).
 
@@ -113,31 +111,30 @@ Expected:
 
 ### Why
 
-Rubber Duck started as my attempt to build a better debugger. I used early versions to do pre-reviews before submitting code.
-Over time, I let the model do more and more work. In team meetings, we realized decisions were being made in our output that we hadn't explicitly discussed. We sacrificed understanding for speed.
+I built Rubber Duck after noticing something in my own agent-assisted workflow: I could ship code faster, but I didn’t always feel like I fully understood the decisions behind it.
 
-This is my attempt to flip the current practice and lean even harder into "human in the loop".
+The same pattern kept showing up — the model would make implicit assumptions or design calls, and I’d only catch them later during review, cleanup, or when explaining the work to someone else.
 
-Most assistant setups optimize for speed-to-output. Rubber Duck optimizes for:
+Rubber Duck is my way of flipping that tradeoff. It prioritizes:
 
 - decision quality,
 - developer understanding,
 - safe, bounded change,
-- reduced rework from shallow fixes.
+- reduced rework.
 
-Core idea: keep human in control, keep reasoning explicit. We're reducing rework by increasing understanding and decisions before they are executed.
+Core idea: keep humans in control and make reasoning explicit before execution.
 
 ### Who this is for
 
-- Developers who want an assistant that sharpens thinking without taking over.
+- This is for you if you want an assistant that helps you think more clearly, challenge assumptions, and keeps decision ownership with you — not the model.
 
 ### Who this is not for
 
-- If you want fully autonomous, no-checkpoint, end-to-end automated runs with minimal human involvement, this project is likely not a fit.
+- This is probably not a fit if you want fully autonomous, end-to-end execution with minimal checkpoints or human involvement.
 
 ### Does it actually work better?
 
-- Depends on your definition of better, but I feel like I actually know what is going on.
+For me, yes — because “better” is not raw speed; it’s leaving a session knowing exactly what was decided, why it was decided, and which risks I’m consciously accepting. Maybe that's what you're searching for too.
 
 ## Philosophy Guardrails
 
