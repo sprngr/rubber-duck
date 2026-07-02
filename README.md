@@ -58,13 +58,13 @@ Rubber Duck can run two ways:
   - Copilot VS Code: select `🦆` from the agent menu, the argument hint should display 'Quack.' to show it's ready.
   - OpenCode: `opencode --agent 🦆` (recommended to assign to alias) or select `🦆` as the primary agent (its `mode: all` allows primary use) through the `/agents` menu or keyboard shortcut (default: tab).
 
+> [!NOTE]
+> All other duckling subagents (ex: `duck-reviewer`, `duck-adversary`) can be invoked directly in the same manner outlined below.
+
 - **As a subagent (on demand):** invoke it from inside an existing session —
   - Claude Code: `@agent-rubber-duck`.
   - Copilot CLI & VS Code: `#runSubagent @rubber-duck`
   - Opencode: `@🦆` (use the autocomplete menu that appears to pick the name).
-
-> [!NOTE]
-> All other duckling subagents (ex: `duck-reviewer`, `duck-adversary`) can be invoked in the same manner.
 
 Either way the agent must already be installed for your target (see install section above).
 
