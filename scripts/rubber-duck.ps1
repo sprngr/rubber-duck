@@ -73,6 +73,16 @@ $AgentFiles = @(
   "duck-adversary.md"
 )
 
+$RequiredSkills = @(
+  "duck-debt",
+  "duck-debug",
+  "duck-design",
+  "duck-explain",
+  "duck-review",
+  "duck-teach",
+  "duck-triage"
+)
+
 function Log($msg) { Write-Host $msg }
 function Warn($msg) { Write-Warning $msg }
 
@@ -140,7 +150,7 @@ function Resolve-Target {
   }
 
   if ([string]::IsNullOrWhiteSpace($AgentsDir) -or [string]::IsNullOrWhiteSpace($AgentsMd)) {
-    throw "Generic target requires -AgentsDir and -AgentsMd (or use -OpenCode or -OpenCodeProject)."
+    throw "Generic target requires -AgentsDir and -AgentsMd."
   }
 
   $script:Target = "generic"
@@ -315,7 +325,8 @@ function Skills-Install {
     return
   }
   $scope = if ($ProjectSkills) { @() } else { @("-g") }
-  $null | npx --yes $SkillsCli add $SkillsSource -y $scope
+  $args = @("--yes", $SkillsCli, "add", $SkillsSource, "--skill") + $RequiredSkills + $scope
+  & npx @args
 }
 
 function Skills-Uninstall {
@@ -326,7 +337,8 @@ function Skills-Uninstall {
   }
   $scope = if ($ProjectSkills) { @() } else { @("-g") }
   try {
-    $null | npx --yes $SkillsCli remove $SkillsSource $scope
+    $args = @("--yes", $SkillsCli, "remove", $SkillsSource, "--skill") + $RequiredSkills + $scope
+    & npx @args
   } catch {
     Warn "skills remove failed; remove package manually if needed"
   }
@@ -339,15 +351,31 @@ function Skills-Status {
     return
   }
   $scope = if ($ProjectSkills) { @() } else { @("-g") }
+  $previousNoColor = $env:NO_COLOR
   try {
-    $list = $null | npx --yes $SkillsCli list $scope | Out-String
-    if ($list -match [regex]::Escape($SkillsSource)) {
+    $env:NO_COLOR = "1"
+    $args = @("--yes", $SkillsCli, "list") + $scope
+    $list = & npx @args | Out-String
+    $allPresent = $true
+    foreach ($skill in $RequiredSkills) {
+      if ($list.IndexOf($skill, [System.StringComparison]::Ordinal) -lt 0) {
+        $allPresent = $false
+        break
+      }
+    }
+    if ($allPresent) {
       Log "skills: installed ($SkillsSource)"
     } else {
       Log "skills: not detected ($SkillsSource)"
     }
   } catch {
     Log "skills: unable to query (npx skills list failed)"
+  } finally {
+    if ($null -eq $previousNoColor) {
+      Remove-Item Env:NO_COLOR -ErrorAction SilentlyContinue
+    } else {
+      $env:NO_COLOR = $previousNoColor
+    }
   }
 }
 
