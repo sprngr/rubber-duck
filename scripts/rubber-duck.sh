@@ -44,7 +44,6 @@ CLAUDE_POLICY_MD="${HOME}/.claude/CLAUDE.md"
 CLAUDE_PROJECT_AGENTS_DIR=".claude/agents"
 CLAUDE_PROJECT_POLICY_MD="CLAUDE.md"
 
-# Built agent filenames are identical across harnesses (<name>.md).
 AGENT_FILES=(
   "rubber-duck.md"
   "duck-simple.md"
@@ -55,13 +54,23 @@ AGENT_FILES=(
   "duck-adversary.md"
 )
 
+REQUIRED_SKILLS=(
+  "duck-debt"
+  "duck-debug"
+  "duck-design"
+  "duck-explain"
+  "duck-review"
+  "duck-teach"
+  "duck-triage"
+)
+
 usage() {
   cat <<'EOF'
 Usage:
   scripts/rubber-duck.sh [install|uninstall|status|doctor] [options]
 
 Options:
-  --opencode                        Use preconfigured opencode paths
+  --opencode                        Use global opencode paths (~/.config/opencode/agents + ~/config/opencode/AGENTS.md)
   --opencode-project                Use project opencode paths (.opencode/agents + AGENTS.md)
   --claude                          Use global Claude paths (~/.claude/agents + ~/.claude/CLAUDE.md)
   --claude-project                  Use project Claude paths (.claude/agents + CLAUDE.md)
@@ -247,7 +256,7 @@ resolve_target() {
       ;;
     generic)
       if [[ -z "${AGENTS_DIR}" || -z "${AGENTS_MD}" ]]; then
-        err "generic target requires --agents-dir and --agents-md (or use --opencode or --opencode-project)"
+        err "generic target requires --agents-dir and --agents-md"
         exit 1
       fi
       DEST_AGENTS_DIR="${AGENTS_DIR}"
@@ -470,14 +479,14 @@ skills_install() {
   local scope=""
   (( PROJECT_SKILLS == 0 )) && scope="-g"
   if (( DRY_RUN == 1 )); then
-    log "[dry-run] npx --yes ${SKILLS_CLI} add ${SKILLS_SOURCE} -y ${scope}"
+    log "[dry-run] npx --yes ${SKILLS_CLI} add ${SKILLS_SOURCE} --skill ${REQUIRED_SKILLS[*]} ${scope}"
     return
   fi
   if ! command -v npx >/dev/null 2>&1; then
     warn "npx not found; skipping skills install"
     return
   fi
-  npx --yes "${SKILLS_CLI}" add "${SKILLS_SOURCE}" -y ${scope} </dev/null
+  npx --yes "${SKILLS_CLI}" add "${SKILLS_SOURCE}" --skill ${REQUIRED_SKILLS[*]} ${scope}
 }
 
 skills_uninstall() {
@@ -485,14 +494,14 @@ skills_uninstall() {
   local scope=""
   (( PROJECT_SKILLS == 0 )) && scope="-g"
   if (( DRY_RUN == 1 )); then
-    log "[dry-run] npx --yes ${SKILLS_CLI} remove ${SKILLS_SOURCE} ${scope}"
+    log "[dry-run] npx --yes ${SKILLS_CLI} remove ${SKILLS_SOURCE} --skill ${REQUIRED_SKILLS[*]} ${scope}"
     return
   fi
   if ! command -v npx >/dev/null 2>&1; then
     warn "npx not found; skipping skills uninstall"
     return
   fi
-  if ! npx --yes "${SKILLS_CLI}" remove "${SKILLS_SOURCE}" ${scope} </dev/null; then
+  if ! npx --yes "${SKILLS_CLI}" remove "${SKILLS_SOURCE}" --skill ${REQUIRED_SKILLS[*]}  ${scope}; then
     warn "skills remove failed; remove package manually if needed"
   fi
 }
@@ -504,11 +513,19 @@ skills_status() {
     return
   fi
   local list scope=""
+  local skill
+  local missing=0
   (( PROJECT_SKILLS == 0 )) && scope="-g"
   SKILLS_LIST_CMD=(npx --yes "${SKILLS_CLI}" list ${scope})
 
-  if list="$("${SKILLS_LIST_CMD[@]}" </dev/null 2>/dev/null)"; then
-    if printf '%s' "${list}" | grep -Fq -- "${SKILLS_SOURCE}"; then
+  if list="$(NO_COLOR=1 "${SKILLS_LIST_CMD[@]}" </dev/null 2>/dev/null)"; then
+    for skill in "${REQUIRED_SKILLS[@]}"; do
+      if ! printf '%s' "${list}" | grep -Fq -- "${skill}"; then
+        missing=1
+        break
+      fi
+    done
+    if (( missing == 0 )); then
       log "skills: installed (${SKILLS_SOURCE})"
     else
       log "skills: not detected (${SKILLS_SOURCE})"
