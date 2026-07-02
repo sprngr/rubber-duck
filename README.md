@@ -134,7 +134,7 @@ Core idea: keep humans in control and make reasoning explicit before execution.
 
 ### Does it actually work better?
 
-For me, yes — because “better” is not raw speed; it’s leaving a session knowing exactly what was decided, why it was decided, and which risks I’m consciously accepting. Maybe that's what you're searching for too.
+- For me, yes — because “better” is not raw speed; it’s leaving a session knowing exactly what was decided, why it was decided, and which risks I’m consciously accepting. Maybe that's what you're searching for too.
 
 ## Philosophy Guardrails
 
