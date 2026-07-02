@@ -26,6 +26,9 @@ CLAUDE_MD_OUT="${CLAUDE_DIST_DIR}/CLAUDE.md"
 OPENCODE_DIST_DIR="${REPO_ROOT}/dist/opencode"
 OPENCODE_AGENT_DIR="${OPENCODE_DIST_DIR}/agents"
 
+COPILOT_DIST_DIR="${REPO_ROOT}/dist/copilot"
+COPILOT_AGENT_DIR="${COPILOT_DIST_DIR}/agents"
+
 render_file() {
   local out_path="$1"
   local tmp_path="$2"
@@ -74,13 +77,29 @@ render_opencode_fm() {
     printf -- '---\n'
     printf 'name: %s\n' "$(jq -r '.harnesses.opencode.name // .name' "${meta}")"
     printf 'description: %s\n' "$(jq -r '.description' "${meta}")"
-    v="$(jq -r '.harnesses.opencode."argument-hint" // empty' "${meta}")"
-    [[ -n "${v}" ]] && printf 'argument-hint: %s\n' "${v}"
     printf 'mode: %s\n' "$(jq -r '.harnesses.opencode.mode' "${meta}")"
     printf 'permission:\n'
     jq -r '.harnesses.opencode.permission | to_entries[] | "  \(.key): \(.value)"' "${meta}"
     v="$(jq -r '.harnesses.opencode.color // empty' "${meta}")"
     [[ -n "${v}" ]] && printf 'color: "%s"\n' "${v}"
+    printf -- '---\n\n'
+  } > "${out}"
+}
+
+# Render Copilot frontmatter from a meta.json into out. Field order:
+# optional name, description, tools.
+# target is intentionally omitted when unset so the profile stays compatible
+# across supported Copilot environments by default.
+render_copilot_fm() {
+  local meta="$1" out="$2" v
+  {
+    printf -- '---\n'
+    v="$(jq -r '.harnesses.copilot.name // empty' "${meta}")"
+    [[ -n "${v}" ]] && printf 'name: %s\n' "${v}"
+    printf 'description: %s\n' "$(jq -r '.description' "${meta}")"
+    v="$(jq -r '.harnesses.copilot."argument-hint" // empty' "${meta}")"
+    [[ -n "${v}" ]] && printf 'argument-hint: %s\n' "${v}"
+    printf 'tools: %s\n' "$(jq -r '.harnesses.copilot.tools' "${meta}")"
     printf -- '---\n\n'
   } > "${out}"
 }
@@ -105,6 +124,7 @@ done
 
 mkdir -p "${CLAUDE_AGENT_DIR}"
 mkdir -p "${OPENCODE_AGENT_DIR}"
+mkdir -p "${COPILOT_AGENT_DIR}"
 
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "${TMP_DIR}"' EXIT
@@ -130,4 +150,13 @@ for name in "${CONFIG_AGENTS[@]}"; do
   render_opencode_fm "${meta}" "${opencode_tmp}"
   cat "${body}" >> "${opencode_tmp}"
   render_file "${OPENCODE_AGENT_DIR}/${name}.md" "${opencode_tmp}"
+
+  # Copilot rendering is opt-in per agent until all meta.json files include
+  # a harnesses.copilot section.
+  if jq -e '.harnesses.copilot? != null' "${meta}" >/dev/null; then
+    copilot_tmp="${TMP_DIR}/copilot-${name}.md"
+    render_copilot_fm "${meta}" "${copilot_tmp}"
+    cat "${body}" >> "${copilot_tmp}"
+    render_file "${COPILOT_AGENT_DIR}/${name}.md" "${copilot_tmp}"
+  fi
 done

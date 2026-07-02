@@ -28,9 +28,9 @@ Full CLI/options are documented in: [scripts/README.md](./scripts/README.md) (ca
 
 | Target | Bash (macOS/Linux) | PowerShell (Windows) |
 |---|---|---|
-| OpenCode (global) | `curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh \| bash -s -- install --opencode` | `$p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.ps1 -OutFile $p; & $p -Action install -OpenCode` |
-| OpenCode (project) | `curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh \| bash -s -- install --opencode-project` | `$p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.ps1 -OutFile $p; & $p -Action install -OpenCodeProject` |
 | Claude (global) | `curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh \| bash -s -- install --claude` | `$p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.ps1 -OutFile $p; & $p -Action install -Claude` |
+| Copilot (global) | `curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh \| bash -s -- install --copilot` | `$p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.ps1 -OutFile $p; & $p -Action install -Copilot` |
+| OpenCode (global) | `curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh \| bash -s -- install --opencode` | `$p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.ps1 -OutFile $p; & $p -Action install -OpenCode` |
 
 Project-scoped skills (instead of global):
 
@@ -52,7 +52,7 @@ Use this to quickly validate behavior and fit in your own workflow.
 
 Rubber Duck can run two ways. The distinction matters most on Claude Code:
 
-- **As a subagent (on demand):** invoke it from inside an existing session — `@🦆` (OpenCode) or `@agent-rubber-duck` (Claude), or via your harness dropdown. Spawned per request; the router greeting does not auto-run.
+- **As a subagent (on demand):** invoke it from inside an existing session — `@agent-rubber-duck` (Claude) or `@🦆` (OpenCode), or via your harness dropdown. Spawned per request; the router greeting does not auto-run.
 - **As the main agent (whole session):** the duck *is* the session and routes from the first turn.
   - Claude Code: `claude --agent rubber-duck`, or set `"agent": "rubber-duck"` in `.claude/settings.json` (project) or `~/.claude/settings.json` (global). The startup header shows `@rubber-duck` to confirm, and the router greeting (`initialPrompt`) auto-runs on the first turn. The `--agent` flag overrides the setting when both are present.
   - OpenCode: select `🦆` as the primary agent (its `mode: all` allows primary use).

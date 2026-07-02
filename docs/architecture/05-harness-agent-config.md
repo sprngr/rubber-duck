@@ -2,7 +2,7 @@
 
 ## Overview
 
-Rubber Duck ships the same agent prompts to multiple harnesses (Claude Code, OpenCode, and extensible to others). Each harness needs different frontmatter. The model is: **one shared agent body + per-harness metadata**, rendered into harness-specific artifacts at build time.
+Rubber Duck ships the same agent prompts to multiple harnesses (Claude Code, Copilot, OpenCode, and extensible to others). Each harness needs different frontmatter. The model is: **one shared agent body + per-harness metadata**, rendered into harness-specific artifacts at build time.
 
 ## Configuration model
 
@@ -18,8 +18,10 @@ Per-harness metadata is authoritative for that harness. There is no cross-harnes
 
 Harness permission surfaces are not equivalent.
 
-- OpenCode uses a `permission:` object (e.g. `read`, `edit`, `task`, `skill`)
 - Claude uses a `tools:` allowlist
+- Copilot custom agents use YAML frontmatter fields such as `description`,
+  optional `name`, and `tools`.
+- OpenCode uses a `permission:` object (e.g. `read`, `edit`, `task`, `skill`)
 
 Keeping sections explicit avoids lossy mapping and keeps each harness configuration auditable.
 
@@ -39,6 +41,7 @@ agents/<name>/
   "description": "Use for simplicity review to reduce overengineering, indirection, and unnecessary abstractions.",
   "harnesses": {
     "claude":   { "tools": "Read, Glob, Grep, Skill" },
+    "copilot": { "tools": "read,search,edit,execute,agent" },
     "opencode": {
       "mode": "all",
       "color": "#FFD801",
@@ -59,6 +62,8 @@ The router follows the same model as every other agent (`body.md` + `meta.json`)
 - The builder (`scripts/build-harness-artifacts.sh`) reads each agent's `meta.json` and `body.md`.
 - For each harness, a renderer emits harness-specific frontmatter (`render_claude_fm`, `render_opencode_fm`, ...), then appends the shared body.
 - Output artifacts are written to `dist/<harness>/` and committed.
+- Copilot rendering is currently optional per agent (builder checks for
+  `harnesses.copilot`) so harness rollout can be phased safely.
 - `--check` mode verifies committed artifacts match a fresh render; mismatch is CI drift.
 - Install mode selection (global vs project) is handled by installer scripts and layered on top of built artifacts.
 
