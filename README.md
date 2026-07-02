@@ -62,9 +62,9 @@ Rubber Duck can run two ways:
 > All duckling subagents (ex: `duck-reviewer`, `duck-adversary`) can be invoked in the same manner outlined below.
 
 - **As a subagent (on demand):** invoke it from inside an existing session —
-  - Claude Code: `@agent-rubber-duck`.
-  - Copilot CLI & VS Code: `#runSubagent @rubber-duck`
-  - Opencode: `@🦆` (use the autocomplete menu that appears to pick the name).
+  - Claude Code: `@agent-rubber-duck <prompt>`.
+  - Copilot CLI & VS Code: `#runSubagent @rubber-duck <prompt>`.
+  - Opencode: `@🦆 <prompt>` (use the autocomplete menu that appears to pick the name).
 
 Either way the agent must already be installed for your target (see install section above).
 
