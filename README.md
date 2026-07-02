@@ -59,7 +59,7 @@ Rubber Duck can run two ways:
   - OpenCode: `opencode --agent 🦆` (recommended to assign to alias) or select `🦆` as the primary agent (its `mode: all` allows primary use) through the `/agents` menu or keyboard shortcut (default: tab).
 
 > [!NOTE]
-> All other duckling subagents (ex: `duck-reviewer`, `duck-adversary`) can be invoked directly in the same manner outlined below.
+> All duckling subagents (ex: `duck-reviewer`, `duck-adversary`) can be invoked in the same manner outlined below.
 
 - **As a subagent (on demand):** invoke it from inside an existing session —
   - Claude Code: `@agent-rubber-duck`.
