@@ -15,7 +15,7 @@ Responsibilities:
 - classify user intent (`debug`, `review`, `design`, `teach`, `explain`, `triage`),
 - activate the primary skill,
 - chain subagents by need,
-- enforce preflight and strict-mode policies.
+- enforce preflight and strict-mode policies,
 - apply adaptive strictness: lighter Socratic flow for non-mutating analysis, mandatory checkpoints for mutating actions.
 
 ### Layer 2: Lens subagents (specialized analysis)
@@ -54,7 +54,7 @@ Subagents provide distinct, bounded perspectives:
 
 ## Agent contracts
 
-Each agent should document three contract blocks.
+Each agent documents three contract blocks.
 
 ### 1) Input contract
 

@@ -22,7 +22,7 @@ Rubber Duck runs adaptive Socratic flow by default:
 
 ## Mandatory decision checkpoints
 
-For strict sessions and all mutating actions, emit these checkpoints in order.
+For strict sessions and all mutating actions, use these checkpoints in order.
 
 ### Checkpoint 1: Problem framing
 
@@ -93,4 +93,4 @@ Use this response shape for strict mode sessions:
 
 ## Operational effect
 
-Strict mode may reduce throughput but should increase developer confidence, explainability, and decision quality by making reasoning explicit and reviewable.
+Strict mode may reduce throughput but increases developer confidence, explainability, and decision quality by making reasoning explicit and reviewable.
