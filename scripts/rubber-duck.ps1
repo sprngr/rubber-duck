@@ -3,6 +3,8 @@ param(
   [string]$Action = "install",
   [switch]$OpenCode,
   [switch]$OpenCodeProject,
+  [switch]$Copilot,
+  [switch]$CopilotProject,
   [switch]$Claude,
   [switch]$ClaudeProject,
   [string]$AgentsDir,
@@ -30,6 +32,10 @@ if ($Claude -and $ClaudeProject) {
 
 if ($OpenCode -and $OpenCodeProject) {
   throw "Cannot combine -OpenCode and -OpenCodeProject. Choose one."
+}
+
+if ($Copilot -and $CopilotProject) {
+  throw "Cannot combine -Copilot and -CopilotProject. Choose one."
 }
 
 if (-not $Claude -and -not $ClaudeProject -and -not [string]::IsNullOrWhiteSpace($ClaudeMd)) {
@@ -131,6 +137,38 @@ function Resolve-Target {
     $script:RemotePolicyPath = "dist/claude/CLAUDE.md"
     $script:RemoteAgentsPolicyPath = "AGENTS.md"
     $script:RemoteAgentsPath = "dist/claude/agents"
+    return
+  }
+
+  if ($Copilot) {
+    $script:Target = "copilot"
+    $script:DestAgentsDir = Join-Path $HOME ".copilot/agents"
+    $script:DestPolicyMd = Join-Path $HOME ".copilot/AGENTS.md"
+    $script:PolicyMode = "managed_block"
+    $script:LocalPolicyFile = Join-Path $RepoRoot "AGENTS.md"
+    if (Test-Path (Join-Path $RepoRoot "dist/copilot/agents")) {
+      $script:LocalAgentsDir = Join-Path $RepoRoot "dist/copilot/agents"
+    } else {
+      $script:LocalAgentsDir = Join-Path $RepoRoot "agents"
+    }
+    $script:RemotePolicyPath = "AGENTS.md"
+    $script:RemoteAgentsPath = "dist/copilot/agents"
+    return
+  }
+
+  if ($CopilotProject) {
+    $script:Target = "copilot-project"
+    $script:DestAgentsDir = ".github/agents"
+    $script:DestPolicyMd = "AGENTS.md"
+    $script:PolicyMode = "managed_block"
+    $script:LocalPolicyFile = Join-Path $RepoRoot "AGENTS.md"
+    if (Test-Path (Join-Path $RepoRoot "dist/copilot/agents")) {
+      $script:LocalAgentsDir = Join-Path $RepoRoot "dist/copilot/agents"
+    } else {
+      $script:LocalAgentsDir = Join-Path $RepoRoot "agents"
+    }
+    $script:RemotePolicyPath = "AGENTS.md"
+    $script:RemoteAgentsPath = "dist/copilot/agents"
     return
   }
 

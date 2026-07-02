@@ -22,6 +22,8 @@ CLI reference for install/update/uninstall tooling.
 |---|---|---|
 | `--opencode` | switch | Use preconfigured opencode paths |
 | `--opencode-project` | switch | Use project opencode paths (`.opencode/agents` + project-root `AGENTS.md`) |
+| `--copilot` | switch | Use global Copilot paths (`~/.copilot/agents` + `~/.copilot/AGENTS.md`) |
+| `--copilot-project` | switch | Use project Copilot paths (`.github/agents` + project-root `AGENTS.md`) |
 | `--claude` | switch | Use global Claude paths (`~/.claude/agents` + `~/.claude/CLAUDE.md` + sibling `~/.claude/AGENTS.md`) |
 | `--claude-project` | switch | Use project Claude paths (`.claude/agents` + `CLAUDE.md` + sibling `AGENTS.md`) |
 | `--agents-dir <path>` | value | Generic target agent directory |
@@ -42,6 +44,8 @@ CLI reference for install/update/uninstall tooling.
 | `-Action install\|uninstall\|status\|doctor` | value | Operation to execute |
 | `-OpenCode` | switch | Use preconfigured opencode paths |
 | `-OpenCodeProject` | switch | Use project opencode paths (`.opencode/agents` + project-root `AGENTS.md`) |
+| `-Copilot` | switch | Use global Copilot paths (`~/.copilot/agents` + `~/.copilot/AGENTS.md`) |
+| `-CopilotProject` | switch | Use project Copilot paths (`.github/agents` + project-root `AGENTS.md`) |
 | `-Claude` | switch | Use global Claude paths (`~/.claude/agents` + `~/.claude/CLAUDE.md` + sibling `~/.claude/AGENTS.md`) |
 | `-ClaudeProject` | switch | Use project Claude paths (`.claude/agents` + `CLAUDE.md` + sibling `AGENTS.md`) |
 | `-AgentsDir <path>` | value | Generic target agent directory |
@@ -65,6 +69,9 @@ CLI reference for install/update/uninstall tooling.
 - Do not combine global and project OpenCode modes in one command:
   - Bash: `--opencode` and `--opencode-project` are mutually exclusive
   - PowerShell: `-OpenCode` and `-OpenCodeProject` are mutually exclusive
+- Do not combine global and project Copilot modes in one command:
+  - Bash: `--copilot` and `--copilot-project` are mutually exclusive
+  - PowerShell: `-Copilot` and `-CopilotProject` are mutually exclusive
 - OpenCode/generic targets:
   - install full duck set (router + ducklings)
   - use managed block markers in AGENTS.md
@@ -72,6 +79,9 @@ CLI reference for install/update/uninstall tooling.
 - OpenCode target:
   - global mode: uses `~/.config/opencode/agents` + `~/.config/opencode/AGENTS.md`
   - project mode (`--opencode-project` / `-OpenCodeProject`): uses `.opencode/agents` + project-root `AGENTS.md`
+- Copilot target:
+  - global mode: uses `~/.copilot/agents` + `~/.copilot/AGENTS.md`
+  - project mode (`--copilot-project` / `-CopilotProject`): uses `.github/agents` + project-root `AGENTS.md`
 - Claude target:
   - installs full duck set (router + ducklings)
   - global mode: writes/removes managed `~/.claude/CLAUDE.md` and sibling `~/.claude/AGENTS.md`

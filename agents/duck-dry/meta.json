@@ -5,6 +5,9 @@
     "claude": {
       "tools": "Read, Glob, Grep, Skill"
     },
+    "copilot": {
+      "tools": "read,search"
+    },
     "opencode": {
       "mode": "subagent",
       "permission": {

@@ -7,6 +7,11 @@
       "initialPrompt": true,
       "color": "yellow"
     },
+    "copilot": {
+      "name": "🦆",
+      "argument-hint": "Quack.",
+      "tools": "read,search,edit,execute,agent"
+    },
     "opencode": {
       "name": "🦆",
       "mode": "all",
