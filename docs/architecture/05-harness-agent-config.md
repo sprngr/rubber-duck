@@ -2,7 +2,7 @@
 
 ## Overview
 
-Rubber Duck ships the same agent prompts to multiple harnesses (Claude Code, OpenCode, Copilot, and extensible to others). Each harness needs different frontmatter. The model is: **one shared agent body + per-harness metadata**, rendered into harness-specific artifacts at build time.
+Rubber Duck ships the same agent prompts to multiple harnesses (Claude Code, Copilot, OpenCode, and extensible to others). Each harness needs different frontmatter. The model is: **one shared agent body + per-harness metadata**, rendered into harness-specific artifacts at build time.
 
 ## Configuration model
 
@@ -18,10 +18,10 @@ Per-harness metadata is authoritative for that harness. There is no cross-harnes
 
 Harness permission surfaces are not equivalent.
 
-- OpenCode uses a `permission:` object (e.g. `read`, `edit`, `task`, `skill`)
 - Claude uses a `tools:` allowlist
 - Copilot custom agents use YAML frontmatter fields such as `description`,
   optional `name`, and `tools`.
+- OpenCode uses a `permission:` object (e.g. `read`, `edit`, `task`, `skill`)
 
 Keeping sections explicit avoids lossy mapping and keeps each harness configuration auditable.
 
