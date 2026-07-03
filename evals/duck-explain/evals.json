@@ -1,0 +1,40 @@
+{
+  "skill_name": "duck-explain",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Explain this function for an on-call handoff note:\n\nfunction parsePrice(input) {\n  const n = Number(String(input).replace(/[$,]/g, \"\"));\n  if (Number.isNaN(n)) return null;\n  return Math.round(n * 100);\n}\n\nConstraints: keep it plain language, call out at least one real risk, and end with one follow-up question that would affect implementation behavior.",
+      "expected_output": "Response uses exactly four labeled blocks (What/Why/Watch out/Next question), explains that the function normalizes a currency-like string to integer cents, mentions NaN->null behavior and rounding side effects, and asks one focused follow-up about input formats or precision expectations.",
+      "assertions": [
+        "Output includes four labeled blocks: What, Why, Watch out, Next question.",
+        "What explains behavior in plain language and mentions integer cents conversion.",
+        "Watch out mentions at least one concrete risk (e.g., floating-point rounding, malformed symbols, null handling).",
+        "Next question is a single targeted question about requirements (input formats, locale, or precision)."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Explain these logs for incident Slack:\n\n2026-06-12T08:41:00Z INFO api request_id=7f2 path=/checkout\n2026-06-12T08:41:01Z WARN db slow_query_ms=2380 sql=SELECT * FROM orders WHERE user_id=?\n2026-06-12T08:41:01Z ERROR api timeout upstream=payments duration_ms=30000\n2026-06-12T08:41:01Z INFO api response status=504 request_id=7f2\n\nNeeds: short, avoid overclaiming root cause, include one watch-out, and ask for exactly one next artifact to confirm/refute diagnosis.",
+      "expected_output": "Response uses the four duck-explain blocks, summarizes the event chain from slow query to upstream timeout and 504, identifies operational risks, and ends with one practical next question about where to instrument or what timestamp/request_id slice to inspect next.",
+      "assertions": [
+        "Output includes exactly the four labeled duck-explain blocks.",
+        "What summarizes the sequence using request_id and the 504 outcome.",
+        "Why connects likely cause(s) without claiming certainty beyond provided logs.",
+        "Watch out highlights at least one risk such as cascading latency, missing correlation, or false attribution.",
+        "Next question requests a specific missing detail (metrics, trace span, or adjacent logs)."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Explain this SQL + config mismatch complaint from analytics:\n\nSQL:\nSELECT u.id, COUNT(o.id) AS orders_last_30d\nFROM users u\nLEFT JOIN orders o ON o.user_id = u.id\nWHERE o.created_at >= NOW() - INTERVAL '30 days'\nGROUP BY u.id;\n\nConfig:\nREPORT_MIN_ORDERS=5\nREPORT_INCLUDE_INACTIVE=false\n\nQuestion from PM: 'Why are users missing?' Explain in plain terms, include one reporting-risk watch-out, and ask one targeted requirement question.",
+      "expected_output": "Response keeps four-block format, explains that the WHERE filter on a LEFT JOINed table effectively drops users with no recent orders, notes how config thresholds can further hide users, calls out ambiguity about report logic, and asks one targeted question to disambiguate inclusion rules.",
+      "assertions": [
+        "Output uses the four blocks with the exact labels What, Why, Watch out, Next question.",
+        "Explanation states that LEFT JOIN plus WHERE on orders can behave like INNER JOIN for rows without matches.",
+        "Watch out mentions at least one reporting risk tied to threshold/config interpretation.",
+        "Next question is targeted to ambiguity (e.g., should zero-order users appear, how inactive is defined).",
+        "Language remains plain and concise rather than deeply academic."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "skill_name": "duck-debug",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Prod-only bug. React save flow throws `TypeError: Cannot read properties of undefined (reading 'id')` in `handleSubmit` after a recent form refactor. I need a fast direction, but please don't guess and don't jump straight to a code patch. Current clues: crash happens only in edit mode, not create mode; Sentry groups to `payload.user.id`; no reliable local repro yet.",
+      "expected_output": "Guides a structured duck-debug conversation: asks targeted clarifying questions first, traces event-handler/data-flow assumptions, proposes likely root-cause checks around undefined state/props, and suggests a minimal safe verification step.",
+      "assertions": [
+        "Starts with at least one clarifying question before prescribing a final fix.",
+        "References an explicit execution path or data flow that could make `id` undefined.",
+        "Proposes a concrete minimal check (e.g., log/assert/guard) to confirm root cause."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Need help debugging a scheduler issue with minimal logs. Job fails near month-end only: Jan 31 and Mar 31 failed, Feb 29 passed in staging, Apr 30 unknown. Runtime uses app-level scheduler + local timezone config, and incident notes mention DST toggles in one region. I need a step-by-step debug plan that avoids premature root-cause claims.",
+      "expected_output": "Handles edge conditions by focusing on time/date boundaries, asks for environment and schedule specifics, avoids premature conclusions, and narrows to reproducible hypotheses with instrumentation suggestions.",
+      "assertions": [
+        "Asks for concrete timing/context details (timezone, schedule expression, month-end behavior).",
+        "Identifies at least one month-end edge-case hypothesis tied to date arithmetic or scheduling semantics.",
+        "Avoids claiming a root cause as certain without requested evidence."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Post-deploy incident triage: intermittent 502 + request timeouts, but some requests still succeed. Changes in this deploy: env var set, cache TTL policy, DB pool limits, and two feature flags enabled for 15% traffic. We need first-pass debugging in the next 15 minutes. Please decompose the problem and give the first falsifiable step, not a broad generic checklist.",
+      "expected_output": "Treats ambiguity/stress by decomposing symptoms, prioritizing high-signal checks, establishing an ordered triage plan across recent changes, and reducing scope to the first falsifiable hypothesis.",
+      "assertions": [
+        "Breaks the broad report into prioritized investigation tracks instead of one vague answer.",
+        "Uses recent-change correlation (env vars/cache/DB pool/flags) to propose an ordered triage sequence.",
+        "Ends with a specific next diagnostic action that can confirm or eliminate one hypothesis quickly."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "skill_name": "duck-review",
+  "eval_assertions": [
+    {
+      "eval_id": 1,
+      "assertions": [
+        {
+          "id": "one-line-schema",
+          "text": "Uses one-line finding format with approved prefix token and includes location + problem + 'Fix:' on each finding.",
+          "type": "deterministic"
+        },
+        {
+          "id": "risk-priority-correctness",
+          "text": "Flags the highest-risk correctness issue before lower-priority comments.",
+          "type": "llm"
+        },
+        {
+          "id": "minimal-fix-direction",
+          "text": "Provides an actionable smallest-safe fix direction tied to the shown diff.",
+          "type": "llm"
+        }
+      ]
+    },
+    {
+      "eval_id": 2,
+      "assertions": [
+        {
+          "id": "ask-missing-artifact",
+          "text": "Requests the concrete review target when artifact is missing.",
+          "type": "deterministic"
+        },
+        {
+          "id": "no-fabrication",
+          "text": "Avoids fabricated findings with fake file paths or line numbers.",
+          "type": "deterministic"
+        },
+        {
+          "id": "concise-clarify",
+          "text": "Keeps the clarification concise and directly actionable.",
+          "type": "llm"
+        }
+      ]
+    },
+    {
+      "eval_id": 3,
+      "assertions": [
+        {
+          "id": "security-first-ordering",
+          "text": "Reports security findings before performance or style findings when multiple risks exist.",
+          "type": "llm"
+        },
+        {
+          "id": "schema-per-finding",
+          "text": "Each finding is a single prefixed line containing location, problem, and 'Fix:'.",
+          "type": "deterministic"
+        },
+        {
+          "id": "concrete-safe-fixes",
+          "text": "Fix directions are concrete and minimal (e.g., parameterized query, remove/redact token logging, restore sane timeout bound).",
+          "type": "llm"
+        }
+      ]
+    }
+  ]
+}

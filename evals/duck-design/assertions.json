@@ -1,0 +1,95 @@
+{
+  "skill_name": "duck-design",
+  "eval_assertions": [
+    {
+      "eval_id": 1,
+      "assertions": [
+        {
+          "id": "1.1",
+          "text": "Opens with a scoped clarifying question before recommending an option.",
+          "type": "llm"
+        },
+        {
+          "id": "1.2",
+          "text": "Response explicitly covers strengths and weaknesses for both provided options.",
+          "type": "llm"
+        },
+        {
+          "id": "1.3",
+          "text": "Response includes at least one alternative path beyond Option A and Option B.",
+          "type": "llm"
+        },
+        {
+          "id": "1.4",
+          "text": "Response treats 'no p95 latency regression' and 'no per-request DB writes' as non-negotiable constraints.",
+          "type": "llm"
+        },
+        {
+          "id": "1.5",
+          "text": "Closes by asking the user to choose which tradeoff dimension to prioritize.",
+          "type": "llm"
+        }
+      ]
+    },
+    {
+      "eval_id": 2,
+      "assertions": [
+        {
+          "id": "2.1",
+          "text": "Starts with a checkout-specific scoping question before suggesting a direction.",
+          "type": "llm"
+        },
+        {
+          "id": "2.2",
+          "text": "Response frames strengths and weaknesses of keeping optimistic updates versus reducing them.",
+          "type": "llm"
+        },
+        {
+          "id": "2.3",
+          "text": "Response proposes at least one alternative mitigation approach.",
+          "type": "llm"
+        },
+        {
+          "id": "2.4",
+          "text": "Response preserves accessibility announcement accuracy and failed-order rate as explicit hard constraints.",
+          "type": "llm"
+        },
+        {
+          "id": "2.5",
+          "text": "Closes with a user-choice question that makes the primary tradeoff explicit.",
+          "type": "llm"
+        }
+      ]
+    },
+    {
+      "eval_id": 3,
+      "assertions": [
+        {
+          "id": "3.1",
+          "text": "Begins by reducing ambiguity with a scoped question before recommending a path.",
+          "type": "llm"
+        },
+        {
+          "id": "3.2",
+          "text": "Response compares monolith cookies, OAuth/OIDC, and hybrid with strengths, weaknesses, and tradeoffs.",
+          "type": "llm"
+        },
+        {
+          "id": "3.3",
+          "text": "Response provides one concrete alternative or phased fallback path.",
+          "type": "llm"
+        },
+        {
+          "id": "3.4",
+          "text": "Response treats complete audit logging as a non-negotiable requirement.",
+          "type": "llm"
+        },
+        {
+          "id": "3.5",
+          "text": "Ends with a concrete tradeoff-choice prompt (e.g., speed vs risk vs complexity).",
+          "type": "llm"
+        }
+      ]
+    }
+  ]
+}
