@@ -21,8 +21,16 @@ Turn local complexity into immediate understanding.
 4. **Next question** — one question that unblocks next step.
 
 Length target:
-- default: 8-16 lines total
-- quick mode: 4-8 lines total
+- default: 6-10 lines total
+- quick mode: 4-6 lines total
+
+Default response budget:
+- max 95 words total
+- one sentence per block by default
+
+Conditional expansion:
+- expand only if user asks for deeper walkthrough
+- or provided artifact spans multiple coupled concerns needing disambiguation
 
 ## Philosophy Guardrails (skill-local)
 
@@ -53,6 +61,7 @@ Use when user asks to explain code, logs, queries, config, function/file behavio
 
 Default depth: short.
 If user asks "quickly explain" or "tl;dr", compress further.
+Do not exceed default response budget unless conditional expansion is triggered.
 
 ## Boundaries & Handoffs
 

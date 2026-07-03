@@ -24,6 +24,16 @@ Compact first-response template (8-10 lines):
 6) one non-negotiable dimension sentence
 7) "Which tradeoff do you accept?"
 
+First-turn budget (default):
+- max 8 lines
+- max 120 words
+- exactly one scoping question
+- exactly one alternative
+
+Conditional expansion:
+- Expand past first-turn budget only if user asks for deeper analysis (matrix/deep dive)
+- or user provides new constraints/evidence requiring re-evaluation
+
 ## Philosophy Guardrails (skill-local)
 
 - Decision ownership: developer selects tradeoff; this skill frames options and consequences.
@@ -112,6 +122,7 @@ Use this pattern:
 
 Step 7 should include equivalent explicit tradeoff-choice question.
 - Brevity target for first response: around 6-12 lines, one alternative, one tradeoff sentence.
+- Keep first response within first-turn budget unless conditional expansion is triggered.
 
 Never prescribe. Always frame as tradeoff choice.
 

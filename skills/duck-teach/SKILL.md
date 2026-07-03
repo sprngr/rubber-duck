@@ -17,6 +17,15 @@ Teach concepts with structured, minimal examples aligned to workspace patterns.
 - shape follows tutorial structure + depth scaling table
 - examples remain under 30 lines with `// ←` annotations for critical lines
 
+Default brevity budgets:
+- "show me X": 70-110 words total, compact example + brief pitfalls
+- "teach me X": 140-220 words total unless user asks for deep dive
+- "walk me through X": 4-7 numbered steps by default
+
+Conditional expansion:
+- expand only when user asks for more depth
+- or required constraints/safety context cannot fit default budget
+
 ## Philosophy Guardrails (skill-local)
 
 - Decision ownership: learner/developer chooses implementation path; this skill teaches options and pitfalls.
@@ -54,6 +63,8 @@ All tutorials follow this skeleton:
 | "show me X"         | Example + Pitfalls only   |
 | "teach me X"        | Full 5-section tutorial   |
 | "walk me through X" | Step-by-step numbered     |
+
+Keep responses within default brevity budgets unless conditional expansion is triggered.
 
 ### Code Conventions
 

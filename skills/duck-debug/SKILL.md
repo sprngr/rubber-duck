@@ -15,6 +15,19 @@ Help developer find root cause through Socratic questioning, evidence tracing, a
 - root-cause statement in one sentence when identified
 - minimal fix direction only after caller/evidence map
 
+First-turn budget (default):
+- max 7 lines
+- max 110 words
+- 1-2 targeted questions max on first reply
+
+Compact evidence-first first-turn template:
+1) question(s)
+2) likely execution path to inspect
+3) one falsifiable check for next run
+
+No premature fix rule:
+- Do not provide patch-level recommendation until evidence is requested/provided.
+
 ## Philosophy Guardrails (skill-local)
 
 - Decision ownership: developer makes final choices; this skill provides questions, evidence framing, and fix options.
@@ -34,6 +47,7 @@ Use when user asks to debug, trace breakage, or understand why behavior is wrong
 - clarify expected behavior vs actual behavior
 - confirm smallest reproducible trigger
 - state assumptions explicitly when evidence missing
+- keep first turn within budget unless user asks for deeper walkthrough
 
 ## Method
 
