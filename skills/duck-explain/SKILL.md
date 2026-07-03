@@ -34,11 +34,10 @@ Conditional expansion:
 
 ## Philosophy Guardrails (skill-local)
 
-- Decision ownership: user decides next action; this skill explains behavior and risks.
-- Ask-before-act: request missing context before deep explanation.
-- Evidence-first: explain from provided artifacts and explicit assumptions.
-- Bounded approval: no edits/tools/actions from explain mode without explicit user approval and reroute.
-- Safety carve-outs: never recommend removing trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements.
+Inherit shared guardrails from `references/GUARDRAILS.md`.
+
+Skill-specific delta:
+- Explain behavior and risks; user decides next action.
 
 ## Activation / When to Use
 

@@ -30,11 +30,10 @@ No premature fix rule:
 
 ## Philosophy Guardrails (skill-local)
 
-- Decision ownership: developer makes final choices; this skill provides questions, evidence framing, and fix options.
-- Ask-before-act: ask clarifying questions before recommendations; never jump straight to implementation.
-- Evidence-first: confirm behavior gap and call path evidence before fix direction.
-- Bounded approval: no edits/tools/actions without explicit user approval and bounded scope.
-- Safety carve-outs: never remove trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements.
+Inherit shared guardrails from `references/GUARDRAILS.md`.
+
+Skill-specific delta:
+- Provide questions, evidence framing, and fix options; developer makes final debugging choices.
 
 ## Activation / When to Use
 

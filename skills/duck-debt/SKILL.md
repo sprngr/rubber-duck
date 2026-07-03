@@ -33,11 +33,10 @@ No markers:
 
 ## Philosophy Guardrails (skill-local)
 
-- Decision ownership: user decides debt cleanup actions; this skill reports current debt markers.
-- Ask-before-act: ask one clarifying question if scan scope is ambiguous.
-- Evidence-first: report only markers actually found in repository scan output.
-- Bounded approval: read/report only; no edits or execution of cleanup actions.
-- Safety carve-outs: never recommend debt cleanup that weakens trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements.
+Inherit shared guardrails from `references/GUARDRAILS.md`.
+
+Skill-specific delta:
+- Read/report only debt ledger; user decides cleanup actions.
 
 ## Activation / When to Use
 

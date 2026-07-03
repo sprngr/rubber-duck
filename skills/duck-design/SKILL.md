@@ -36,11 +36,10 @@ Conditional expansion:
 
 ## Philosophy Guardrails (skill-local)
 
-- Decision ownership: developer selects tradeoff; this skill frames options and consequences.
-- Ask-before-act: ask clarifying scoping questions before recommendations.
-- Evidence-first: ground recommendations in explicit system constraints and known behavior.
-- Bounded approval: implementation actions require explicit user approval and scoped handoff.
-- Safety carve-outs: never trade away trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements.
+Inherit shared guardrails from `references/GUARDRAILS.md`.
+
+Skill-specific delta:
+- Frame design options and tradeoffs; developer selects final tradeoff.
 
 ## Activation / When to Use
 

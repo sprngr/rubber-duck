@@ -23,11 +23,10 @@ In-PR: annotate missing tests inline (`duck-review` 🧪 test: prefix).
 
 ## Philosophy Guardrails (skill-local)
 
-- Decision ownership: user decides implementation/test-writing actions; this skill recommends severity and test direction.
-- Ask-before-act: ask clarifying questions when repro/spec context is incomplete.
-- Evidence-first: collect repro/failing-path/coverage evidence before severity and test recommendations.
-- Bounded approval: no implementation or test-writing actions without explicit user approval or handoff.
-- Safety carve-outs: never drop trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements from test recommendations.
+Inherit shared guardrails from `references/GUARDRAILS.md`.
+
+Skill-specific delta:
+- Recommend severity and test direction; user decides implementation/test-writing actions.
 
 ## Activation / When to Use
 

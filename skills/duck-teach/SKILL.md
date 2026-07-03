@@ -28,11 +28,10 @@ Conditional expansion:
 
 ## Philosophy Guardrails (skill-local)
 
-- Decision ownership: learner/developer chooses implementation path; this skill teaches options and pitfalls.
-- Ask-before-act: ask clarifying questions when goal/runtime/constraints are unclear.
-- Evidence-first: prefer real workspace patterns and explicit assumptions over generic guesses.
-- Bounded approval: teaching mode does not execute edits/actions without explicit user approval and handoff.
-- Safety carve-outs: examples must preserve trust-boundary validation, security controls, data-loss prevention, accessibility requirements, and explicit user requirements.
+Inherit shared guardrails from `references/GUARDRAILS.md`.
+
+Skill-specific delta:
+- Teach options and pitfalls; learner/developer chooses implementation path.
 
 ## Activation / When to Use
 

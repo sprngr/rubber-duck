@@ -36,11 +36,10 @@ Final self-check before send:
 
 ## Philosophy Guardrails (skill-local)
 
-- Decision ownership: user decides merge/approval outcomes; this skill provides findings and fix directions.
-- Ask-before-act: if review target/context unclear, ask clarifying question before comments.
-- Evidence-first: anchor every finding in concrete diff/code evidence.
-- Bounded approval: no code edits, no tool actions, no approval-state changes from this skill.
-- Safety carve-outs: never prefer simplification over trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements.
+Inherit shared guardrails from `references/GUARDRAILS.md`.
+
+Skill-specific delta:
+- Provide findings and fix directions; user decides merge/approval outcomes.
 
 ## Activation / When to Use
 
