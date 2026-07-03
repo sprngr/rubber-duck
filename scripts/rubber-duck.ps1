@@ -7,8 +7,6 @@ param(
   [switch]$CopilotProject,
   [switch]$Claude,
   [switch]$ClaudeProject,
-  [string]$AgentsDir,
-  [string]$AgentsMd,
   [string]$ClaudeMd,
   [switch]$SkipSkills,
   [switch]$ProjectSkills,
@@ -187,13 +185,9 @@ function Resolve-Target {
     return
   }
 
-  if ([string]::IsNullOrWhiteSpace($AgentsDir) -or [string]::IsNullOrWhiteSpace($AgentsMd)) {
-    throw "Generic target requires -AgentsDir and -AgentsMd."
-  }
-
-  $script:Target = "generic"
-  $script:DestAgentsDir = $AgentsDir
-  $script:DestPolicyMd = $AgentsMd
+  $script:Target = "opencode"
+  $script:DestAgentsDir = Join-Path $HOME ".config/opencode/agents"
+  $script:DestPolicyMd = Join-Path $HOME ".config/opencode/AGENTS.md"
   $script:PolicyMode = "managed_block"
   $script:LocalPolicyFile = Join-Path $RepoRoot "AGENTS.md"
   if (Test-Path (Join-Path $RepoRoot "dist/opencode/agents")) {

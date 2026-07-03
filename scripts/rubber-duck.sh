@@ -2,9 +2,7 @@
 set -euo pipefail
 
 ACTION="install"
-TARGET="generic"
-AGENTS_DIR=""
-AGENTS_MD=""
+TARGET="opencode"
 CLAUDE_MD=""
 CLAUDE_MODE_SET=0
 OPENCODE_MODE_SET=0
@@ -81,8 +79,6 @@ Options:
   --copilot-project                 Use project Copilot paths (.github/agents + AGENTS.md)
   --claude                          Use global Claude paths (~/.claude/agents + ~/.claude/CLAUDE.md)
   --claude-project                  Use project Claude paths (.claude/agents + CLAUDE.md)
-  --agents-dir <path>               Generic target agents dir
-  --agents-md <path>                Generic target AGENTS.md path
   --claude-md <path>                Claude target memory file path override
   --skip-skills                     Skip npx skills add/remove/list
   --project-skills                  Install skills to project scope (default is global via -g)
@@ -99,7 +95,6 @@ Examples:
   scripts/rubber-duck.sh install --copilot-project
   scripts/rubber-duck.sh install --claude
   scripts/rubber-duck.sh install --claude-project
-  scripts/rubber-duck.sh install --agents-dir ~/.h/agents --agents-md ~/.h/AGENTS.md
   curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh | bash -s -- install --opencode
 EOF
 }
@@ -173,16 +168,6 @@ while [[ $# -gt 0 ]]; do
       TARGET="claude-project"
       CLAUDE_MODE_SET=1
       shift
-      ;;
-    --agents-dir)
-      TARGET="generic"
-      AGENTS_DIR="${2:-}"
-      shift 2
-      ;;
-    --agents-md)
-      TARGET="generic"
-      AGENTS_MD="${2:-}"
-      shift 2
       ;;
     --claude-md)
       CLAUDE_MD="${2:-}"
@@ -306,23 +291,6 @@ resolve_target() {
       REMOTE_POLICY_PATH="dist/claude/CLAUDE.md"
       REMOTE_POLICY_AGENTS_PATH="AGENTS.md"
       REMOTE_AGENTS_PATH="dist/claude/agents"
-      ;;
-    generic)
-      if [[ -z "${AGENTS_DIR}" || -z "${AGENTS_MD}" ]]; then
-        err "generic target requires --agents-dir and --agents-md"
-        exit 1
-      fi
-      DEST_AGENTS_DIR="${AGENTS_DIR}"
-      DEST_POLICY_MD="${AGENTS_MD}"
-      POLICY_MODE="managed_block"
-      LOCAL_POLICY_FILE="${REPO_ROOT}/AGENTS.md"
-      if [[ -d "${REPO_ROOT}/dist/opencode/agents" ]]; then
-        LOCAL_AGENTS_DIR="${REPO_ROOT}/dist/opencode/agents"
-      else
-        LOCAL_AGENTS_DIR="${REPO_ROOT}/agents"
-      fi
-      REMOTE_POLICY_PATH="AGENTS.md"
-      REMOTE_AGENTS_PATH="dist/opencode/agents"
       ;;
     *)
       err "invalid target: ${TARGET}"

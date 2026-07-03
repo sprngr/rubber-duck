@@ -14,8 +14,11 @@ This runbook standardizes how to run skill evals for the duck skills with reprod
 - Eval configs: `evals/duck-*/evals.json`
 - Assertion maps: `evals/duck-*/assertions.json`
 - Pinned scripts: `evals/_pinned-skill-eval-scripts/`
-- Default scratch workspace: `/tmp/opencode/duck-skill-evals/`
+- Default scratch workspace (run with OpenCode harness): `/tmp/opencode/duck-skill-evals/`
 - Baselines in repo: `evals/baselines/`
+
+Build integration reference:
+- `scripts/README.md` (see harness artifact build + make targets)
 
 ## Prerequisites
 
@@ -75,6 +78,13 @@ Run root should contain:
 7. Compare to iteration-2 baseline:
 - baseline source: `/tmp/opencode/duck-skill-evals/iteration-2/global-benchmark.json`
 - output: `/tmp/opencode/duck-skill-evals/iteration-3/delta-vs-iteration-2.json`
+
+Optional preflight (recommended):
+
+```bash
+make build
+make check
+```
 
 ## Mini A/B Runs (Targeted)
 
