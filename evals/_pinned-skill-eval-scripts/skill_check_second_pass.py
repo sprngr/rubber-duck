@@ -67,8 +67,9 @@ def main() -> int:
     ap.add_argument("--out-root", required=True)
     ap.add_argument("--run-id", default="")
     ap.add_argument("--skills", default=",".join(DEFAULT_SKILLS))
-    ap.add_argument("--validate-script", default="/home/sprngr/.agents/skills/skill-check/scripts/validate-structure.sh")
-    ap.add_argument("--compare-script", default="/home/sprngr/.agents/skills/skill-check/scripts/compare-structure.sh")
+    # Uses skill-check from sprngr/cantrips
+    ap.add_argument("--validate-script", default="~/.agents/skills/skill-check/scripts/validate-structure.sh")
+    ap.add_argument("--compare-script", default="~/.agents/skills/skill-check/scripts/compare-structure.sh")
     args = ap.parse_args()
 
     repo_root = Path(args.repo_root).resolve()

@@ -1,6 +1,6 @@
 # Duck Skill Eval Runbook
 
-This runbook is the canonical process for true-fresh, Copilot-backed duck-skill evals.
+This runbook is the canonical process for true-fresh, GPT-5.3-Codex-backed duck-skill evals using the OpenCode harness.
 
 ## Canonical Paths
 
