@@ -57,6 +57,9 @@ Ambiguous scope rule (hard):
 
 ## Method
 
+Default/Recommended:
+- Recommended default: report `active debt markers` first, then `reference occurrences` only when requested or when disambiguation is needed.
+
 ### Marker Convention
 
 Use marker in code comments:

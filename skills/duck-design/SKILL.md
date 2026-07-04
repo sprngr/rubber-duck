@@ -139,6 +139,11 @@ Frame as question, not prescription.
 Restate chosen approach and accepted tradeoff.
 Ask: "Document this as ADR?" (if project has docs/adr/)
 
+## Edge Cases / Watch out
+
+- Edge case: user asks for whole-system redesign with no constraints. Ask one scoping question first; do not deep-dive until a constraint is confirmed.
+- Watch out: architecture simplification must not weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements.
+
 ## Boundaries & Handoffs
 
 - Don't decide for developer — present options, they decide
