@@ -120,3 +120,38 @@ Completed:
 3. Must-preserve invariants checklist captured ✅
 
 Next: begin Pass 1 (router + global dedupe) using this baseline as reference.
+
+---
+
+## Pass 1 Execution Log (router + global dedupe)
+
+Status: completed
+
+Files changed:
+- `agents/rubber-duck/body.md`
+- `AGENTS.md`
+
+What changed:
+- moved `When to Use` earlier in router body
+- removed duplicate terminal `Output Contract` block in router
+- tightened wording in mutating-scope language (no policy change)
+- added explicit shared-pointer wording to global/router safety text
+
+Estimated token delta (scoped files):
+
+| File | Before | After | Delta |
+|---|---:|---:|---:|
+| `agents/rubber-duck/body.md` | 669 | 637 | -32 |
+| `AGENTS.md` | 279 | 279 | 0 |
+| **Net** | 948 | 916 | **-32** |
+
+Invariant checks after Pass 1:
+- skill-load hard requirement present ✅
+- explicit user approval gate present ✅
+- scope `>2 files` split rule present ✅
+- ordered checkpoints present (`problem framing → solution selection → execution scope → acceptance`) ✅
+
+Next:
+- Pass 2 (duckling normalization), starting with:
+  1) `agents/duck-reviewer/body.md`
+  2) `agents/duck-builder/body.md`

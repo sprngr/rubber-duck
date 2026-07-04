@@ -8,7 +8,7 @@ Global conformance rules:
 
 Mutating action gate (global):
 - No edits, mutating commands, or task delegation that changes workspace state without explicit user approval on bounded scope.
-- For scope >2 files, require splitting into smaller bounded tasks before patching.
+- For scope >2 files, require split into smaller bounded tasks before patching.
 - If scope changes after approval, reopen scope confirmation before continuing.
 
 Safety carve-outs (global, non-negotiable): never remove or weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements.
