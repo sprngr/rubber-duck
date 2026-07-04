@@ -6,7 +6,7 @@
       "assertions": [
         {
           "id": "1.1",
-          "text": "Reports discovered `duck-debt:` markers with location context (path and/or line).",
+          "text": "Reports `duck-debt:` findings with location context (path and/or line), either as active debt markers or clearly labeled non-active reference occurrences.",
           "type": "llm"
         },
         {

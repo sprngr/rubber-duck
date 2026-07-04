@@ -18,6 +18,11 @@ Classify bug severity and expose missing test coverage with smallest runnable ch
 - severity + brief rationale + specific test to add
 - include related test paths or explicit "needs test" when absent
 
+Formatting rule (deterministic):
+- when proposing tests, use explicit `needs test:` prefix lines (one per scenario)
+- default target: at least 3 `needs test:` lines in triage output unless user requests fewer
+- for uncertainty cases, include one `missing evidence:` line with the minimum artifacts needed to refine severity
+
 Pre-PR: suggest what to test (`duck-triage` scope).
 In-PR: annotate missing tests inline (`duck-review` 🧪 test: prefix).
 
@@ -37,6 +42,9 @@ Use for test coverage planning, bug severity triage, and pre-PR test recommendat
 If repro/spec context is missing:
 - Ask 1-3 targeted clarifying questions first.
 - State assumptions explicitly before severity/test recommendations.
+
+If evidence is missing, include explicit marker:
+- `missing evidence:` with concise list (logs/repro steps/release window/affected scope)
 
 ## Method
 

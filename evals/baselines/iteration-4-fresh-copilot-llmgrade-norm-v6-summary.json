@@ -1,0 +1,349 @@
+{
+  "iteration": "iteration-4-fresh-copilot-llmgrade-norm-v6",
+  "skills": {
+    "duck-debt": {
+      "eval_count": 3,
+      "with_skill": {
+        "pass_rate": {
+          "mean": 1.0,
+          "stddev": 0.0,
+          "samples": 3
+        },
+        "tokens": {
+          "mean": 707.3,
+          "stddev": 849.4,
+          "samples": 3
+        },
+        "time_seconds": {
+          "mean": 1.46,
+          "stddev": 1.72,
+          "samples": 3,
+          "raw_samples": 3,
+          "excluded_invalid_samples": 0,
+          "excluded_outlier_samples": 0
+        }
+      },
+      "without_skill": {
+        "pass_rate": {
+          "mean": 0.7778,
+          "stddev": 0.3849,
+          "samples": 3
+        },
+        "tokens": {
+          "mean": 3270.0,
+          "stddev": 2817.8,
+          "samples": 3
+        },
+        "time_seconds": {
+          "mean": 2.24,
+          "stddev": 2.19,
+          "samples": 3,
+          "raw_samples": 3,
+          "excluded_invalid_samples": 0,
+          "excluded_outlier_samples": 0
+        }
+      },
+      "delta": {
+        "pass_rate": 0.2222,
+        "tokens": -2562.7,
+        "time_seconds": -0.78
+      }
+    },
+    "duck-debug": {
+      "eval_count": 3,
+      "with_skill": {
+        "pass_rate": {
+          "mean": 1.0,
+          "stddev": 0.0,
+          "samples": 3
+        },
+        "tokens": {
+          "mean": 534.3,
+          "stddev": 78.5,
+          "samples": 3
+        },
+        "time_seconds": {
+          "mean": 2.83,
+          "stddev": 0.5,
+          "samples": 3,
+          "raw_samples": 3,
+          "excluded_invalid_samples": 0,
+          "excluded_outlier_samples": 0
+        }
+      },
+      "without_skill": {
+        "pass_rate": {
+          "mean": 0.8889,
+          "stddev": 0.1925,
+          "samples": 3
+        },
+        "tokens": {
+          "mean": 1497.7,
+          "stddev": 1148.0,
+          "samples": 3
+        },
+        "time_seconds": {
+          "mean": 6.53,
+          "stddev": 1.84,
+          "samples": 3,
+          "raw_samples": 3,
+          "excluded_invalid_samples": 0,
+          "excluded_outlier_samples": 0
+        }
+      },
+      "delta": {
+        "pass_rate": 0.1111,
+        "tokens": -963.4,
+        "time_seconds": -3.7
+      }
+    },
+    "duck-design": {
+      "eval_count": 3,
+      "with_skill": {
+        "pass_rate": {
+          "mean": 0.8,
+          "stddev": 0.2,
+          "samples": 3
+        },
+        "tokens": {
+          "mean": 655.3,
+          "stddev": 157.0,
+          "samples": 3
+        },
+        "time_seconds": {
+          "mean": 1.65,
+          "stddev": 0.26,
+          "samples": 3,
+          "raw_samples": 3,
+          "excluded_invalid_samples": 0,
+          "excluded_outlier_samples": 0
+        }
+      },
+      "without_skill": {
+        "pass_rate": {
+          "mean": 0.6,
+          "stddev": 0.3464,
+          "samples": 3
+        },
+        "tokens": {
+          "mean": 686.0,
+          "stddev": 101.5,
+          "samples": 3
+        },
+        "time_seconds": {
+          "mean": 4.35,
+          "stddev": 0.31,
+          "samples": 3,
+          "raw_samples": 3,
+          "excluded_invalid_samples": 0,
+          "excluded_outlier_samples": 0
+        }
+      },
+      "delta": {
+        "pass_rate": 0.2,
+        "tokens": -30.7,
+        "time_seconds": -2.7
+      }
+    },
+    "duck-explain": {
+      "eval_count": 3,
+      "with_skill": {
+        "pass_rate": {
+          "mean": 0.9167,
+          "stddev": 0.1443,
+          "samples": 3
+        },
+        "tokens": {
+          "mean": 435.0,
+          "stddev": 74.2,
+          "samples": 3
+        },
+        "time_seconds": {
+          "mean": 2.24,
+          "stddev": 0.23,
+          "samples": 3,
+          "raw_samples": 3,
+          "excluded_invalid_samples": 0,
+          "excluded_outlier_samples": 0
+        }
+      },
+      "without_skill": {
+        "pass_rate": {
+          "mean": 0.5833,
+          "stddev": 0.1443,
+          "samples": 3
+        },
+        "tokens": {
+          "mean": 551.7,
+          "stddev": 158.5,
+          "samples": 3
+        },
+        "time_seconds": {
+          "mean": 2.7,
+          "stddev": 0.65,
+          "samples": 3,
+          "raw_samples": 3,
+          "excluded_invalid_samples": 0,
+          "excluded_outlier_samples": 0
+        }
+      },
+      "delta": {
+        "pass_rate": 0.3334,
+        "tokens": -116.7,
+        "time_seconds": -0.46
+      }
+    },
+    "duck-review": {
+      "eval_count": 3,
+      "with_skill": {
+        "pass_rate": {
+          "mean": 1.0,
+          "stddev": 0.0,
+          "samples": 3
+        },
+        "tokens": {
+          "mean": 585.0,
+          "stddev": 252.9,
+          "samples": 3
+        },
+        "time_seconds": {
+          "mean": 1.78,
+          "stddev": 0.47,
+          "samples": 3,
+          "raw_samples": 3,
+          "excluded_invalid_samples": 0,
+          "excluded_outlier_samples": 0
+        }
+      },
+      "without_skill": {
+        "pass_rate": {
+          "mean": 0.7778,
+          "stddev": 0.1925,
+          "samples": 3
+        },
+        "tokens": {
+          "mean": 1039.0,
+          "stddev": 556.4,
+          "samples": 3
+        },
+        "time_seconds": {
+          "mean": 2.22,
+          "stddev": 0.81,
+          "samples": 3,
+          "raw_samples": 3,
+          "excluded_invalid_samples": 0,
+          "excluded_outlier_samples": 0
+        }
+      },
+      "delta": {
+        "pass_rate": 0.2222,
+        "tokens": -454.0,
+        "time_seconds": -0.44
+      }
+    },
+    "duck-teach": {
+      "eval_count": 3,
+      "with_skill": {
+        "pass_rate": {
+          "mean": 0.9167,
+          "stddev": 0.1443,
+          "samples": 3
+        },
+        "tokens": {
+          "mean": 527.0,
+          "stddev": 253.3,
+          "samples": 3
+        },
+        "time_seconds": {
+          "mean": 2.78,
+          "stddev": 2.5,
+          "samples": 3,
+          "raw_samples": 3,
+          "excluded_invalid_samples": 0,
+          "excluded_outlier_samples": 0
+        }
+      },
+      "without_skill": {
+        "pass_rate": {
+          "mean": 0.9167,
+          "stddev": 0.1443,
+          "samples": 3
+        },
+        "tokens": {
+          "mean": 687.7,
+          "stddev": 788.4,
+          "samples": 3
+        },
+        "time_seconds": {
+          "mean": 6.3,
+          "stddev": 7.51,
+          "samples": 3,
+          "raw_samples": 3,
+          "excluded_invalid_samples": 0,
+          "excluded_outlier_samples": 0
+        }
+      },
+      "delta": {
+        "pass_rate": 0.0,
+        "tokens": -160.7,
+        "time_seconds": -3.52
+      }
+    },
+    "duck-triage": {
+      "eval_count": 3,
+      "with_skill": {
+        "pass_rate": {
+          "mean": 1.0,
+          "stddev": 0.0,
+          "samples": 3
+        },
+        "tokens": {
+          "mean": 784.7,
+          "stddev": 73.6,
+          "samples": 3
+        },
+        "time_seconds": {
+          "mean": 4.12,
+          "stddev": 0.23,
+          "samples": 3,
+          "raw_samples": 3,
+          "excluded_invalid_samples": 0,
+          "excluded_outlier_samples": 0
+        }
+      },
+      "without_skill": {
+        "pass_rate": {
+          "mean": 0.3333,
+          "stddev": 0.3333,
+          "samples": 3
+        },
+        "tokens": {
+          "mean": 1613.3,
+          "stddev": 809.2,
+          "samples": 3
+        },
+        "time_seconds": {
+          "mean": 7.03,
+          "stddev": 1.61,
+          "samples": 3,
+          "raw_samples": 3,
+          "excluded_invalid_samples": 0,
+          "excluded_outlier_samples": 0
+        }
+      },
+      "delta": {
+        "pass_rate": 0.6667,
+        "tokens": -828.6,
+        "time_seconds": -2.91
+      }
+    }
+  },
+  "aggregate": {
+    "count": 7,
+    "mean_delta": {
+      "pass_rate": 0.2508,
+      "tokens": -731.0,
+      "time_seconds": -2.07
+    }
+  }
+}
