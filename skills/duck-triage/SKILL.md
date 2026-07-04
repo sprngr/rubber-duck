@@ -20,7 +20,7 @@ Classify bug severity and expose missing test coverage with smallest runnable ch
 
 Formatting rule (deterministic):
 - when proposing tests, use explicit `needs test:` prefix lines (one per scenario)
-- default target: at least 3 `needs test:` lines in triage output unless user requests fewer
+- default target: 2-3 `needs test:` lines
 - for uncertainty cases, include one `missing evidence:` line with the minimum artifacts needed to refine severity
 
 Pre-PR: suggest what to test (`duck-triage` scope).

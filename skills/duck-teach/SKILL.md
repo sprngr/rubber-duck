@@ -15,7 +15,7 @@ Teach concepts with structured, minimal examples aligned to workspace patterns.
 ## Output Format
 
 - shape follows tutorial structure + depth scaling table
-- examples remain under 30 lines with `// ←` annotations for critical lines
+- keep examples around 30 lines with `// ←` annotations for critical lines
 
 Default brevity budgets:
 - "show me X": 70-110 words total, compact example + brief pitfalls
@@ -49,9 +49,7 @@ Ambiguous target rule (hard):
 - stop after clarification request until user answers
 
 Required clarification prompt shape (when ambiguous):
-- ask exactly two items in first reply:
-  1) target artifact (`concept | file path | function | snippet | command`)
-  2) desired depth (`show me` compact | `teach me` full | `walk me through` steps)
+- ask for target artifact (`concept | file path | function | snippet | command`) and desired depth (`show me` | `teach me` | `walk me through`)
 
 ## Method
 
@@ -84,7 +82,6 @@ Formatting rule:
 - Prefer real project usage patterns over generic samples
 - Prefer ladder order in examples: reuse local → stdlib/native → installed dep → custom code last
 - Preserve trust-boundary validation, security controls, data-loss prevention, accessibility requirements, and explicit user requirements in example code
-
 - Annotate inline with `// ←` for critical lines
 - Keep examples under 30 lines. Split complex examples into "minimal" and "complete"
 
@@ -96,9 +93,7 @@ Formatting rule:
 
 ### See Also Format
 
-- Relative paths to workspace files
-- Related patterns/functions in the codebase
-- Links only for external resources
+- Prefer relative workspace paths; use external links only when needed
 
 ## Boundaries & Handoffs
 

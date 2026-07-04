@@ -26,9 +26,6 @@ Rule (schema-first, prose-flexible):
 - only exception: Auto-Clarity for security/irreversible-risk comments; resume prefixed one-line format immediately after
 - before final response, normalize any non-compliant finding to schema using strongest matching prefix (fallback `⚠️ bug:`)
 
-Schema hint (non-Auto-Clarity findings):
-- `^(🔒 sec:|⚠️ bug:|⚡ perf:|🧪 test:|📝 doc:|🪶 yagni:|📚 stdlib:|🧱 native:|✂️ shrink:|🗑️ delete:)\s+<path[:line|scope]>\s+—\s+<problem>\.\s+Fix:\s+<smallest safe change>\.?$`
-
 Final self-check before send:
 - If any finding line does not start with approved prefix token, rewrite before sending.
 - If any finding line is missing location or `Fix:`, rewrite before sending.

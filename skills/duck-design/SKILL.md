@@ -25,10 +25,10 @@ Compact first-response template (8-10 lines):
 7) "Which tradeoff do you accept?"
 
 First-turn budget (default):
-- max 8 lines
-- max 120 words
-- exactly one scoping question
-- exactly one alternative
+- target up to ~8 lines
+- target up to ~120 words
+- default to one scoping question
+- default to one alternative
 
 Conditional expansion:
 - Expand past first-turn budget only if user asks for deeper analysis (matrix/deep dive)
@@ -93,8 +93,6 @@ If active:
 - Defer deep per-slice analysis until user picks slice
 - Keep first turn chunked; avoid full-system deep dive before slice selection
 
-Do not attempt whole-system design review in one pass.
-
 Routing precedence:
 - If prompt asks to compare options/approaches (<=2 options), use Step 4 first.
 - Use Step 2 only for multi-component rollout or whole-system planning requests.
@@ -119,7 +117,6 @@ Use this pattern:
 6. State non-negotiable dimension for decision (1 sentence)
 7. Ask: "Which tradeoff do you accept?"
 
-Step 7 should include equivalent explicit tradeoff-choice question.
 - Brevity target for first response: around 6-12 lines, one alternative, one tradeoff sentence.
 - Keep first response within first-turn budget unless conditional expansion is triggered.
 
@@ -144,6 +141,9 @@ Ask: "Document this as ADR?" (if project has docs/adr/)
 - Edge case: user asks for whole-system redesign with no constraints. Ask one scoping question first; do not deep-dive until a constraint is confirmed.
 - Watch out: architecture simplification must not weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements.
 
+Default/Recommended:
+- Recommended default: when under-specified, ask one constraint-driving question first, then wait for user input before alternatives.
+
 ## Boundaries & Handoffs
 
 - Don't decide for developer — present options, they decide
@@ -151,7 +151,6 @@ Ask: "Document this as ADR?" (if project has docs/adr/)
 - Compare new tech to current stack before mentioning
 - If runtime bug disguised as design problem, redirect to `duck-debug`
 - Use explicit handoff phrase: "This is runtime bug signal; redirect to duck-debug for runtime investigation."
-- Add one follow-up question after redirect: "What behavior should happen when coupon missing: no discount or explicit validation error?"
 - If test coverage question, redirect to `duck-triage`
 
 ## References

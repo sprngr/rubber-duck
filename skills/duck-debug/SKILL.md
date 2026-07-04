@@ -16,9 +16,9 @@ Help developer find root cause through Socratic questioning, evidence tracing, a
 - minimal fix direction only after caller/evidence map
 
 First-turn budget (default):
-- max 7 lines
-- max 110 words
-- 1-2 targeted questions max on first reply
+- target up to ~7 lines
+- target up to ~110 words
+- typically 1-2 targeted questions on first reply
 
 Compact evidence-first first-turn template:
 1) question(s)
@@ -128,6 +128,9 @@ Don't checklist. Ask:
 
 No repro steps after 2 rounds → redirect `duck-triage`.
 
+Default/Recommended:
+- Recommended default: keep ask-first + one falsifiable check before fix direction when context is incomplete.
+
 ### When to Stop
 
 When:
@@ -142,39 +145,7 @@ If they can't, they haven't found the right question yet. Ask another.
 - Don't give the fix without the developer stating the problem first
 - Don't debug what doesn't need debugging — check if it's a spec issue
 - Don't suggest a framework/tool change — that's a `duck-design` problem
-- For scaling, compat, rollback → redirect `duck-design`
 - No repro steps after 2 rounds → redirect `duck-triage`
-
-## Worked Example
-
-```
-Developer: "My auth middleware keeps returning 401. Here's the stack trace:
-  at AuthMiddleware (middleware/auth.ts:42)
-  at next (node_modules/express/lib/application.js:145)
-  at router.handle (node_modules/express/lib/router/index.js:66)"
-
-Agent: "What should happen here? What's the contract of that middleware?"
-
-Developer: "It reads the Bearer token from headers, validates it against the JWT secret,
-and adds the user to the request object."
-
-Agent: "What actually gets received? Show me what `req.headers` looks like on a 401."
-
-Developer: "req.headers is `{}`. The token isn't there."
-
-Agent: "So the client is sending the request — but no headers? Or are they stripped
-before they reach your app?"
-
-Developer: "Oh... Nginx strips Authorization headers unless I configure `proxy_set_header`."
-
-Agent: "So the gap — spec says middleware reads a header, but Nginx eats the header.
-Bug state: 'X is null because Y didn't call Z' format?"
-
-Developer: "Nginx drops the Authorization header before it reaches Express.
-I need proxy_set_header Authorization $http_authorization in the Nginx config."
-
-Agent: "That's your root cause."
-```
 
 ## Edge Cases
 

@@ -25,7 +25,7 @@ Length target:
 - quick mode: 4-6 lines total
 
 Default response budget:
-- max 95 words total
+- target under ~95 words total
 - one sentence per block by default
 
 Conditional expansion:

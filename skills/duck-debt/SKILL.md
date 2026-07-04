@@ -57,9 +57,6 @@ Ambiguous scope rule (hard):
 
 ## Method
 
-Default/Recommended:
-- Recommended default: report `active debt markers` first, then `reference occurrences` only when requested or when disambiguation is needed.
-
 ### Marker Convention
 
 Use marker in code comments:
@@ -70,6 +67,9 @@ Counting rule (hard):
 - count only active debt markers that match marker convention with concrete deferred debt content
 - do not count plain mentions, docs references, examples, or meta-text that merely contains `duck-debt:` without an active deferred debt item
 - if scope contains only mentions/examples and no active markers, report scoped zero findings
+
+Default/Recommended:
+- Recommended default: report active markers only; include `reference occurrences` only when user asks to list every `duck-debt:` occurrence.
 
 Dual-reporting rule:
 - when user asks to list every `duck-debt:` marker occurrence, report two labeled groups:

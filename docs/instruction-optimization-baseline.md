@@ -234,3 +234,80 @@ Cumulative total after Pass 1 + Pass 2 + Pass 3 wave 1:
 Next (Pass 3 wave 2):
 - `skills/duck-teach/SKILL.md`
 - `skills/duck-review/SKILL.md`
+
+## Pass 3 Execution Log (skills, wave 2)
+
+Status: completed
+
+Files changed (wave 2):
+- `skills/duck-teach/SKILL.md`
+- `skills/duck-review/SKILL.md`
+- `skills/duck-debt/SKILL.md`
+
+What changed:
+- `duck-teach`: softened rigid phrasing (`under`/`exactly`) and trimmed repetitive formatting wording while preserving structure + ambiguity checks
+- `duck-review`: removed heavy regex schema-hint line while preserving schema rules and self-check requirements
+- `duck-debt`: consolidated default/recommended wording to avoid duplication; semantics preserved
+
+Estimated token delta (wave 2):
+
+| File | Before | After | Delta |
+|---|---:|---:|---:|
+| `skills/duck-teach/SKILL.md` | 476 | 464 | -12 |
+| `skills/duck-review/SKILL.md` | 544 | 531 | -13 |
+| `skills/duck-debt/SKILL.md` | 371 | 371 | 0 |
+| **Net (wave 2)** | 1391 | 1366 | **-25** |
+
+Pass 3 aggregate (wave 1 + wave 2):
+- wave 1 net: `-7`
+- wave 2 net: `-25`
+- **Pass 3 net: `-32`**
+
+Cumulative total after Pass 1 + Pass 2 + Pass 3:
+- Pass 1 net: `-32`
+- Pass 2 net: `-76`
+- Pass 3 net: `-32`
+- **Cumulative net: `-140` estimated tokens**
+
+Next:
+- optional Pass 3b candidates: `skills/duck-debug/SKILL.md`, `skills/duck-design/SKILL.md`
+- then run mini evals before a full rerun
+
+## Pass 3 Execution Log (skills, wave 3 / optional 3b)
+
+Status: completed
+
+Files changed (wave 3):
+- `skills/duck-debug/SKILL.md`
+- `skills/duck-design/SKILL.md`
+
+What changed:
+- `duck-debug`: softened budget wording and removed long worked example block to keep core method/rules always-loaded while preserving ask-first, ladder, and handoff rules
+- `duck-design`: softened rigid budget wording and trimmed duplicated phrasing while preserving tradeoff workflow and handoffs
+
+Estimated token delta (wave 3):
+
+| File | Before | After | Delta |
+|---|---:|---:|---:|
+| `skills/duck-debug/SKILL.md` | 776 | 664 | -112 |
+| `skills/duck-design/SKILL.md` | 676 | 667 | -9 |
+| **Net (wave 3)** | 1452 | 1331 | **-121** |
+
+Pass 3 aggregate (wave 1 + wave 2 + wave 3):
+- wave 1 net: `-7`
+- wave 2 net: `-25`
+- wave 3 net: `-121`
+- **Pass 3 net: `-153`**
+
+Cumulative total after Pass 1 + Pass 2 + Pass 3:
+- Pass 1 net: `-32`
+- Pass 2 net: `-76`
+- Pass 3 net: `-153`
+- **Cumulative net: `-261` estimated tokens**
+
+Quick invariants check (wave 3):
+- `duck-debug`: ask-first cadence + Duck Ladder + triage/design redirects present ✅
+- `duck-design`: Duck Ladder + tradeoff flow + debug/triage redirects present ✅
+
+Next:
+- run mini evals on touched skills before full rerun (`duck-debug`, `duck-design`, plus earlier pass-3 skills as needed)
