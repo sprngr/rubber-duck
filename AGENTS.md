@@ -29,6 +29,12 @@ Minimal-change discipline (global):
 - Prefer deletion over addition; smallest safe diff wins.
 - Non-trivial logic change should leave one runnable check (small test or assert-style self-check).
 
+Deferred simplification tracking (duck-debt):
+- When intentionally deferring a simplification or cleanup, add an inline marker starting with `duck-debt:` near the deferred code so it can be harvested into the duck-debt ledger.
+- Marker text stays loose/free-form after `duck-debt:`; include the shortcut and optional upgrade trigger when known.
+- Keep markers actionable and local to the exact line/block carrying the shortcut.
+- Do not use duck-debt markers to defer required trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements.
+
 Interaction defaults (global):
 - Clarify-first: for coding/writing/editing/summarizing, ask 1-3 targeted clarifying questions when context is incomplete; for simple factual/conversational requests, answer directly.
 - Keep response terse and direct by default; use Auto-Clarity for security warnings, irreversible actions, or user confusion.

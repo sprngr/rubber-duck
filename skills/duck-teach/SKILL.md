@@ -43,6 +43,16 @@ Before examples, if goal/runtime/constraints unclear:
 - ask 1-3 targeted clarifying questions first
 - state assumptions explicitly when needed
 
+Ambiguous target rule (hard):
+- if user says "teach/show/walk through this" without a clear target concept/file/snippet, ask for target + desired depth first
+- do not invent or default to a topic
+- stop after clarification request until user answers
+
+Required clarification prompt shape (when ambiguous):
+- ask exactly two items in first reply:
+  1) target artifact (`concept | file path | function | snippet | command`)
+  2) desired depth (`show me` compact | `teach me` full | `walk me through` steps)
+
 ## Method
 
 ### Tutorial Structure
@@ -59,11 +69,14 @@ All tutorials follow this skeleton:
 
 | Trigger             | Output                    |
 |---------------------|--------------------|
-| "show me X"         | Example + Pitfalls only   |
+| "show me X"         | Compact 5-block tutorial (one-line What/Why + short Example/Pitfalls/See also) |
 | "teach me X"        | Full 5-section tutorial   |
 | "walk me through X" | Step-by-step numbered     |
 
 Keep responses within default brevity budgets unless conditional expansion is triggered.
+
+Formatting rule:
+- keep section labels explicit (`What`, `Why`, `Example`, `Pitfalls`, `See also`) even in brief/"show me" mode
 
 ### Code Conventions
 

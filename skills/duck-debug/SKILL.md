@@ -48,6 +48,24 @@ Use when user asks to debug, trace breakage, or understand why behavior is wrong
 - state assumptions explicitly when evidence missing
 - keep first turn within budget unless user asks for deeper walkthrough
 
+### Domain-Specific Prompting (general rule)
+
+When symptom language signals a specific domain, anchor first response to domain contract inputs and competing hypotheses.
+
+Required shape:
+- request the minimum domain contract inputs needed to test behavior
+- list at least two competing hypotheses from different failure classes
+- keep hypotheses falsifiable and evidence-seeking (no certainty claim before evidence)
+
+Time/scheduling domain trigger examples:
+- month-end/date boundary, cron/scheduler, timezone, DST, trigger drift
+
+For time/scheduling bugs, first response should include:
+- contract inputs: scheduler semantics/expression, timezone source, failing/expected trigger timestamps
+- competing hypotheses from at least two classes:
+  1) calendar arithmetic/semantics (month length, last-day rules, rollover)
+  2) timezone/clock conversion (DST, offset normalization, local-vs-UTC mismatch)
+
 ## Method
 
 ### Duck Ladder (for fix direction)

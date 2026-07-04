@@ -31,6 +31,10 @@ No markers:
 
 `No duck-debt markers. Clean ledger.`
 
+Scoped no-markers format:
+
+`No duck-debt markers in <scope>. Clean ledger.`
+
 ## Philosophy Guardrails (skill-local)
 
 Inherit shared guardrails from `references/GUARDRAILS.md`.
@@ -46,6 +50,11 @@ Use when user asks for deferred simplification inventory (`duck debt`, `/duck-de
 
 - if repository/module scope ambiguous, ask one clarifying question before scanning
 
+Ambiguous scope rule (hard):
+- if prompt does not specify repository/path scope (for example: "Show me all deferred simplification debt."), ask exactly one concise clarifying question first
+- do not claim completed extraction before scope is confirmed
+- stop after the clarification question until user answers
+
 ## Method
 
 ### Marker Convention
@@ -53,6 +62,18 @@ Use when user asks for deferred simplification inventory (`duck debt`, `/duck-de
 Use marker in code comments:
 
 `duck-debt: <ceiling>, upgrade when <trigger>`
+
+Counting rule (hard):
+- count only active debt markers that match marker convention with concrete deferred debt content
+- do not count plain mentions, docs references, examples, or meta-text that merely contains `duck-debt:` without an active deferred debt item
+- if scope contains only mentions/examples and no active markers, report scoped zero findings
+
+Dual-reporting rule:
+- when user asks to list every `duck-debt:` marker occurrence, report two labeled groups:
+  1) `active debt markers` (actionable deferred items)
+  2) `reference occurrences` (mentions/examples/templates/non-active)
+- keep reference occurrences explicitly labeled non-active so they are not mistaken for actionable debt
+- for scoped audits that ask for zero findings behavior, prioritize active-marker result in final zero line (`No active duck-debt markers in <scope>. Clean ledger.`)
 
 Examples:
 - `duck-debt: O(n²) scan, upgrade when list >10k`
@@ -64,6 +85,9 @@ Search repo for comment markers:
 - `duck-debt:`
 
 Ignore generated/vendor paths (`node_modules`, `.git`, build outputs).
+
+Scoped reporting rule:
+- when user supplies scope (example: `docs/`), explicitly echo scope in output header or no-markers line
 
 ## Boundaries & Handoffs
 
