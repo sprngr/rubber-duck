@@ -155,3 +155,82 @@ Next:
 - Pass 2 (duckling normalization), starting with:
   1) `agents/duck-reviewer/body.md`
   2) `agents/duck-builder/body.md`
+
+---
+
+## Pass 2 Execution Log (duckling normalization)
+
+Status: completed
+
+Files changed:
+- `agents/duck-reviewer/body.md`
+- `agents/duck-builder/body.md`
+- `agents/duck-investigator/body.md`
+- `agents/duck-adversary/body.md`
+- `agents/duck-simple/body.md`
+- `agents/duck-dry/body.md`
+
+What changed:
+- compressed repeated ownership/safety prose and replaced long repeated carve-out phrasing with shared-pointer wording (`AGENTS.md`)
+- removed standalone repeated hard-boundary headings where content duplicated nearby sections
+- preserved role-specific workflow focus and output-contract schemas
+- retained boundary constraints (no edits outside role, no cross-lens ownership drift)
+
+Estimated token delta (duckling bodies):
+
+| File | Before | After | Delta |
+|---|---:|---:|---:|
+| `agents/duck-reviewer/body.md` | 292 | 258 | -34 |
+| `agents/duck-builder/body.md` | 356 | 350 | -6 |
+| `agents/duck-investigator/body.md` | 231 | 225 | -6 |
+| `agents/duck-adversary/body.md` | 225 | 224 | -1 |
+| `agents/duck-simple/body.md` | 247 | 232 | -15 |
+| `agents/duck-dry/body.md` | 256 | 242 | -14 |
+| **Net** | 1607 | 1531 | **-76** |
+
+Safety/boundary checks after Pass 2:
+- all six ducklings still include shared safety pointer/phrase ✅
+- output-contract sections preserved across all six ✅
+- role boundary constraints preserved (lens separation intact) ✅
+
+Cumulative total after Pass 1 + Pass 2:
+- Pass 1 net: `-32`
+- Pass 2 net: `-76`
+- **Cumulative net: `-108` estimated tokens**
+
+Next:
+- Pass 3 (skill anti-overfit softening), start with:
+  1) `skills/duck-triage/SKILL.md`
+  2) `skills/duck-explain/SKILL.md`
+
+---
+
+## Pass 3 Execution Log (skills, wave 1)
+
+Status: in progress (wave 1 completed)
+
+Files changed (wave 1):
+- `skills/duck-triage/SKILL.md`
+- `skills/duck-explain/SKILL.md`
+
+What changed:
+- `duck-triage`: softened rigid output minimum phrasing from hard count framing to default range framing while preserving deterministic `needs test:` / `missing evidence:` markers
+- `duck-explain`: softened strict budget wording (`max` → `target`) to reduce overfit rigidity without changing 4-block structure
+
+Estimated token delta (wave 1):
+
+| File | Before | After | Delta |
+|---|---:|---:|---:|
+| `skills/duck-triage/SKILL.md` | 574 | 567 | -7 |
+| `skills/duck-explain/SKILL.md` | 286 | 286 | 0 |
+| **Net (wave 1)** | 860 | 853 | **-7** |
+
+Cumulative total after Pass 1 + Pass 2 + Pass 3 wave 1:
+- Pass 1 net: `-32`
+- Pass 2 net: `-76`
+- Pass 3 wave 1 net: `-7`
+- **Cumulative net: `-115` estimated tokens**
+
+Next (Pass 3 wave 2):
+- `skills/duck-teach/SKILL.md`
+- `skills/duck-review/SKILL.md`
