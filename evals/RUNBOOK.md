@@ -69,6 +69,45 @@ Use `--skills` to limit scope, e.g.:
 
 Everything else stays identical to full run.
 
+## Pinned Utilities (Baseline Freeze + Comparison)
+
+Use pinned scripts in `evals/_pinned-skill-eval-scripts/` for repeatable baseline operations.
+
+### Freeze baseline (scripted)
+
+```bash
+python3 "evals/_pinned-skill-eval-scripts/freeze_baseline.py" \
+  --repo-root "/mnt/f/workspace/rubber-duck" \
+  --iteration "<iteration>" \
+  --out-root "/tmp/opencode/duck-skill-evals"
+```
+
+Optional overwrite:
+
+```bash
+python3 "evals/_pinned-skill-eval-scripts/freeze_baseline.py" \
+  --repo-root "/mnt/f/workspace/rubber-duck" \
+  --iteration "<iteration>" \
+  --out-root "/tmp/opencode/duck-skill-evals" \
+  --force
+```
+
+### Build baseline comparison markdown (scripted)
+
+```bash
+python3 "evals/_pinned-skill-eval-scripts/compare_baselines.py" \
+  --repo-root "/mnt/f/workspace/rubber-duck" \
+  --entry "iteration-2=evals/baselines/iteration-2-summary.json" \
+  --entry "norm-v4=evals/baselines/iteration-4-fresh-copilot-llmgrade-norm-v4-summary.json" \
+  --entry "norm-v5=/tmp/opencode/duck-skill-evals/iteration-4-fresh-copilot-llmgrade-norm-v5/global-benchmark.json" \
+  --entry "norm-v6=evals/baselines/iteration-4-fresh-copilot-llmgrade-norm-v6-summary.json" \
+  --progression "norm-v4,norm-v5,norm-v6" \
+  --include-methodology-note \
+  --output-md "evals/BASELINE_COMPARISON.md"
+```
+
+This keeps historical anchors and normalized-track progression in one report with explicit methodology caveat.
+
 ## Expected Artifacts
 
 For each iteration directory:
@@ -96,6 +135,15 @@ For each iteration directory:
 ```bash
 cp "/tmp/opencode/duck-skill-evals/<iteration>/global-benchmark.json" \
   "evals/baselines/<iteration>-summary.json"
+```
+
+Equivalent scripted form (preferred for consistency):
+
+```bash
+python3 "evals/_pinned-skill-eval-scripts/freeze_baseline.py" \
+  --repo-root "/mnt/f/workspace/rubber-duck" \
+  --iteration "<iteration>" \
+  --out-root "/tmp/opencode/duck-skill-evals"
 ```
 
 Then verify:
