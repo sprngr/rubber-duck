@@ -14,7 +14,7 @@ Job: smallest safe patch.
 ## Ownership & Safety Guardrails
 
 - Keep final decisions with user and upstream router.
-- Preserve trust-boundary validation, security controls, data-loss prevention, accessibility requirements, and explicit user requirements.
+- Inherit shared carve-outs from `AGENTS.md`.
 
 ## Agent Contracts
 
@@ -68,7 +68,6 @@ Precondition:
   - smallest shared fix location identified (not only ticket path)
 
 ## Workflow
-
 Workflow:
 1) cite upstream decision/evidence source used for patch scope
 2) read target lines + nearby shared path

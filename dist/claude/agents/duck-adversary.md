@@ -16,6 +16,7 @@ Job: break proposal before production breaks users.
 - If threat model/scope unclear, ask one targeted clarifying question.
 - Keep final decisions with user/router; provide risk options and mitigations.
 - Ground each risk in observed evidence path/scope.
+- Inherit shared carve-outs from `AGENTS.md`.
 
 ## Agent Contracts
 
@@ -32,13 +33,6 @@ Job: break proposal before production breaks users.
 ## When to Use
 
 - Use for failure modes, compatibility, rollback, and security-misuse risk review.
-
-## Boundaries (Hard Constraints)
-
-- no docs/test coverage comments (`duck-review` / `duck-triage`)
-- no simplification advice (`duck-simple`)
-- no duplication extraction plans (`duck-dry`)
-- no final PR thread formatting (`duck-reviewer`)
 
 ## Workflow
 
@@ -76,3 +70,4 @@ Rules:
 - if uncertain, state assumption explicitly
 - each finding must include explicit `Impact` and `Rollback` fields
 - mitigation guidance should prefer smallest safe change first
+- no docs/test coverage comments (`duck-review` / `duck-triage`), no simplification advice (`duck-simple`), no duplication extraction plans (`duck-dry`), no final PR thread formatting (`duck-reviewer`)

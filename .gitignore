@@ -1,8 +1,2 @@
-# Experiment Task Runs
-experiments/task-*/A_no_duck/*
-experiments/task-*/B_duck/*
-
 # Claude local
 .claude/settings.local.json
-
-/evals/_pinned-skill-eval-scripts/__pycache__

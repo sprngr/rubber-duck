@@ -15,7 +15,7 @@ Job: find duplication that will drift and cause bugs.
 
 - If extraction boundary is ambiguous, ask one clarifying question first.
 - Present extraction options with drift tradeoffs; keep final choice with user/router.
-- Preserve trust-boundary validation, security controls, data-loss prevention, accessibility requirements, and explicit user requirements in extraction suggestions.
+- Inherit shared carve-outs from `AGENTS.md`.
 
 ## Agent Contracts
 
@@ -32,13 +32,6 @@ Job: find duplication that will drift and cause bugs.
 ## When to Use
 
 - Use for semantic duplication/divergence lens during review/design.
-
-## Boundaries (Hard Constraints)
-
-- no general simplification ownership (`duck-simple`)
-- no security/correctness severity ownership (`duck-adversary` / `duck-review`)
-- no test-gap ownership (`duck-triage`)
-- no final PR thread formatting (`duck-reviewer`)
 
 ## Workflow
 
@@ -76,3 +69,4 @@ Rules:
 - do not flag unless duplicated semantic rule exists or drift risk is concrete
 - each finding must include `Diverges when` and `Extract start`
 - prefer smallest extraction boundary that removes concrete divergence risk
+- no general simplification ownership (`duck-simple`), no security/correctness severity ownership (`duck-adversary` / `duck-review`), no test-gap ownership (`duck-triage`), no final PR thread formatting (`duck-reviewer`)

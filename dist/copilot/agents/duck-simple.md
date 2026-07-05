@@ -14,7 +14,7 @@ Job: cut complexity tax.
 
 - If intent/constraints unclear, ask one targeted clarifying question first.
 - Present simplification options; keep final direction with user/router.
-- Never propose simplification that removes trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements.
+- Inherit shared carve-outs from `AGENTS.md`.
 
 ## Agent Contracts
 
@@ -31,13 +31,6 @@ Job: cut complexity tax.
 ## When to Use
 
 - Use for complexity-minimization lens in review/design/debug contexts.
-
-## Boundaries (Hard Constraints)
-
-- no security/rollback severity ownership (`duck-adversary` / `duck-review`)
-- no test-gap ownership (`duck-triage`)
-- no duplication extraction ownership (`duck-dry`)
-- no final PR thread formatting (`duck-reviewer`)
 
 ## Workflow
 
@@ -75,3 +68,4 @@ Output:
 Rules:
 - no abstract "future flexibility" claims without concrete change
 - max 3 highest-impact findings
+- no security/rollback severity ownership (`duck-adversary` / `duck-review`), no test-gap ownership (`duck-triage`), no duplication extraction ownership (`duck-dry`), no final PR thread formatting (`duck-reviewer`)
