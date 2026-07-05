@@ -1,0 +1,54 @@
+version: 1
+phase: 1
+
+artifact_target:
+  install_path: skills
+  source_path: src/skills
+  mode: copy-through
+
+scope:
+  skills:
+    - duck-debug
+
+io:
+  include:
+    - "SKILL.md"
+    - "references/**"
+  source_template: "src/skills/{skill}/"
+  output_template: "skills/{skill}/"
+
+invariants:
+  - id: install-target
+    description: Assembled artifacts must be written to skills/<name>/ for npx skills consumption.
+  - id: parity
+    description: skills/<name>/** must match assembled output from src/skills/<name>/**.
+  - id: portability-no-repo-policy-refs
+    description: Skill text must not reference repo-coupled policy files.
+    deny_tokens:
+      - "AGENTS.md"
+      - "/mnt/"
+      - "/home/"
+      - "C:\\"
+  - id: guardrail-semantics
+    description: Skill must include or reference guardrail semantics.
+    required_semantics:
+      - decision ownership
+      - ask-before-act
+      - evidence-first
+      - bounded approval
+      - safety carve-outs
+
+checks:
+  required_files:
+    - "src/skills/duck-debug/SKILL.md"
+    - "src/skills/duck-debug/references/GUARDRAILS.md"
+    - "skills/duck-debug/SKILL.md"
+    - "skills/duck-debug/references/GUARDRAILS.md"
+  text_assertions:
+    - file: "src/skills/duck-debug/SKILL.md"
+      contains: "Keep language terse and practical."
+    - file: "skills/duck-debug/SKILL.md"
+      contains: "Keep language terse and practical."
+
+notes:
+  - Phase 1 defines contract only; assembler and CI drift checks come in later slices.
