@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "phase": 1,
+  "artifact_target": {
+    "source_path": "src/agents",
+    "output_paths": [
+      "dist/claude",
+      "dist/opencode",
+      "dist/copilot"
+    ]
+  },
+  "scope": {
+    "agents": [
+      "duck-*",
+      "rubber-duck"
+    ]
+  },
+  "checks": {
+    "required_files": [
+      "src/agents/duck-adversary/meta.json",
+      "src/agents/duck-adversary/body.md",
+      "src/agents/duck-builder/meta.json",
+      "src/agents/duck-builder/body.md",
+      "src/agents/duck-dry/meta.json",
+      "src/agents/duck-dry/body.md",
+      "src/agents/duck-investigator/meta.json",
+      "src/agents/duck-investigator/body.md",
+      "src/agents/duck-reviewer/meta.json",
+      "src/agents/duck-reviewer/body.md",
+      "src/agents/duck-simple/meta.json",
+      "src/agents/duck-simple/body.md",
+      "src/agents/rubber-duck/meta.json",
+      "src/agents/rubber-duck/body.md",
+      "dist/claude/CLAUDE.md",
+      "dist/claude/agents/duck-adversary.md",
+      "dist/claude/agents/duck-builder.md",
+      "dist/claude/agents/duck-dry.md",
+      "dist/claude/agents/duck-investigator.md",
+      "dist/claude/agents/duck-reviewer.md",
+      "dist/claude/agents/duck-simple.md",
+      "dist/claude/agents/rubber-duck.md",
+      "dist/opencode/agents/duck-adversary.md",
+      "dist/opencode/agents/duck-builder.md",
+      "dist/opencode/agents/duck-dry.md",
+      "dist/opencode/agents/duck-investigator.md",
+      "dist/opencode/agents/duck-reviewer.md",
+      "dist/opencode/agents/duck-simple.md",
+      "dist/opencode/agents/rubber-duck.md",
+      "dist/copilot/agents/duck-adversary.md",
+      "dist/copilot/agents/duck-builder.md",
+      "dist/copilot/agents/duck-dry.md",
+      "dist/copilot/agents/duck-investigator.md",
+      "dist/copilot/agents/duck-reviewer.md",
+      "dist/copilot/agents/duck-simple.md",
+      "dist/copilot/agents/rubber-duck.md"
+    ],
+    "text_assertions": [
+      {
+        "file": "src/agents/rubber-duck/body.md",
+        "contains": "You are a rubber duck"
+      },
+      {
+        "file": "src/agents/duck-builder/body.md",
+        "contains": "Job: smallest safe patch."
+      }
+    ]
+  },
+  "notes": [
+    "Enforced by scripts/build-harness-artifacts.sh in --check mode."
+  ]
+}

@@ -5,11 +5,14 @@ CLI reference for install/update/uninstall tooling.
 ## Quick Start
 
 ```bash
-# Build generated harness artifacts (includes guardrails sync)
+# Build skill install artifacts from source-of-truth (src/skills -> skills)
+bash scripts/assemble-skills.sh
+
+# Build generated harness artifacts (src/agents -> dist)
 make build
 
-# Verify guardrails + generated artifacts are up to date
-make check-harness
+# Verify guardrails + skills + generated artifacts are up to date
+make check
 
 # Install agents (example: project OpenCode target)
 ./scripts/rubber-duck.sh install --opencode-project
@@ -19,12 +22,15 @@ make check-harness
 
 | Target | Purpose |
 |---|---|
-| `make sync-guardrails` | Copy `skills/_shared/GUARDRAILS.md` into each `skills/duck-*/references/GUARDRAILS.md` |
 | `make check-guardrails` | Verify no drift between canonical and vendored guardrails |
+| `make build-skills` | Assemble skills from `src/skills/*` into `skills/*` |
+| `make check-skills` | Verify assembled skills are up to date |
+| `make build-agents` | Build harness artifacts into `dist/*` from `src/agents/*` |
+| `make check-agents` | Verify harness artifacts are up to date |
 | `make build-harness` | Build harness artifacts into `dist/*` |
 | `make check-harness` | Verify guardrails drift + harness artifacts are up to date |
-| `make build` | Sync guardrails, then build harness artifacts |
-| `make check` | Check guardrails drift, then check harness artifacts |
+| `make build` | Build skills + harness artifacts |
+| `make check` | Check guardrails drift + skills + harness artifacts |
 
 ## Harness Artifact Build Script
 
@@ -43,16 +49,30 @@ Examples:
 Notes:
 
 - Requires `jq` at build/check time.
-- Build mode syncs vendored guardrails before rendering.
 - Check mode validates guardrails drift before artifact freshness checks.
+- Agent source-of-truth is `src/agents/*`.
 
 ## Scripts
 
 - `scripts/rubber-duck.sh` — Bash installer/manager (local + web-compatible)
 - `scripts/rubber-duck.ps1` — PowerShell installer/manager (Windows)
-- `scripts/build-harness-artifacts.sh` — render harness artifacts into `dist/*` from `agents/*` config/body sources
-- `scripts/sync-guardrails.sh` — sync canonical shared guardrails to each duck skill vendored reference
+- `scripts/assemble-skills.sh` — assemble `src/skills/duck-*` into install artifacts under `skills/duck-*` (`--check` verifies drift + portability lint)
+- `scripts/build-harness-artifacts.sh` — render harness artifacts into `dist/*` from `src/agents/*` config/body sources
 - `scripts/check-guardrails-drift.sh` — fail if vendored guardrails drift from canonical
+
+## Skill Assembly Script
+
+`scripts/assemble-skills.sh` supports:
+
+- build mode (default): copy-through from `src/skills/duck-*` to `skills/duck-*`
+- check mode (`--check`): fail on stale/missing artifacts and portability deny-token violations
+
+Examples:
+
+```bash
+bash scripts/assemble-skills.sh
+bash scripts/assemble-skills.sh --check
+```
 
 ## Commands
 
@@ -105,6 +125,20 @@ Use PowerShell CLI for Windows-native environments.
 | `-RawBase <url>` | value | Raw GitHub base URL for web source |
 
 ## Notes
+
+### Optional local pre-commit hook
+
+Enable repository-local pre-commit checks:
+
+```bash
+git config core.hooksPath .githooks
+chmod +x .githooks/pre-commit
+```
+
+Hook runs:
+- `scripts/check-guardrails-drift.sh`
+- `scripts/assemble-skills.sh --check`
+- `scripts/build-harness-artifacts.sh --check`
 
 ### Mode and Flag Constraints
 

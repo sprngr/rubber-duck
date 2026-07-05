@@ -8,7 +8,7 @@ Rubber Duck architecture separates orchestration, analysis lenses, and implement
 
 ### Layer 1: Router (intent orchestration)
 
-Primary artifact: [`agents/rubber-duck/`](../../agents/rubber-duck)
+Primary artifact source: [`src/agents/rubber-duck/`](../../src/agents/rubber-duck)
 
 Responsibilities:
 

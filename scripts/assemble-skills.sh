@@ -11,13 +11,19 @@ fi
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${0}")" && pwd)"
 REPO_ROOT="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
+RULES_FILE="${REPO_ROOT}/build/skill-assembly/rules.json"
 
-SKILL_NAME="duck-debug"
-SRC_DIR="${REPO_ROOT}/src/skills/${SKILL_NAME}"
-OUT_DIR="${REPO_ROOT}/skills/${SKILL_NAME}"
+SRC_ROOT="${REPO_ROOT}/src/skills"
+OUT_ROOT="${REPO_ROOT}/skills"
+CANONICAL_GUARDRAILS="${REPO_ROOT}/src/skills/shared/GUARDRAILS.md"
 
-if [[ ! -d "${SRC_DIR}" ]]; then
-  printf 'ERROR: missing source dir: %s\n' "${SRC_DIR}" >&2
+if [[ ! -d "${SRC_ROOT}" ]]; then
+  printf 'ERROR: missing source root: %s\n' "${SRC_ROOT}" >&2
+  exit 1
+fi
+
+if [[ ! -f "${CANONICAL_GUARDRAILS}" ]]; then
+  printf 'ERROR: missing canonical guardrails: %s\n' "${CANONICAL_GUARDRAILS}" >&2
   exit 1
 fi
 
@@ -48,12 +54,166 @@ copy_or_check() {
   printf 'Built: %s\n' "${out}"
 }
 
+load_deny_tokens() {
+  local rules_file="$1"
+  if [[ ! -f "${rules_file}" ]]; then
+    printf 'ERROR: missing rules file: %s\n' "${rules_file}" >&2
+    return 1
+  fi
+
+  mapfile -t DENY_TOKENS < <(
+    python3 - "${rules_file}" <<'PY'
+import json
+import sys
+
+path = sys.argv[1]
+with open(path, "r", encoding="utf-8") as f:
+    data = json.load(f)
+
+tokens = []
+for inv in data.get("invariants", []):
+    for token in inv.get("deny_tokens", []):
+        tokens.append(token)
+
+for token in tokens:
+    print(token)
+PY
+  )
+
+  if (( ${#DENY_TOKENS[@]} == 0 )); then
+    printf 'ERROR: no deny tokens loaded from %s\n' "${rules_file}" >&2
+    return 1
+  fi
+
+  return 0
+}
+
+check_portability() {
+  local file_path="$1"
+  local line_no=0
+
+  while IFS= read -r line || [[ -n "${line}" ]]; do
+    line_no=$((line_no + 1))
+    for token in "${DENY_TOKENS[@]}"; do
+      [[ -n "${token}" ]] || continue
+      if [[ "${line}" == *"${token}"* ]]; then
+        printf 'PORTABILITY: %s:%d contains denied token: %s\n' "${file_path}" "${line_no}" "${token}" >&2
+        return 1
+      fi
+    done
+  done < "${file_path}"
+
+  return 0
+}
+
+enforce_rule_checks() {
+  local rules_file="$1"
+  local repo_root="$2"
+
+  python3 - "${rules_file}" "${repo_root}" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+rules_path = Path(sys.argv[1])
+repo_root = Path(sys.argv[2])
+
+if not rules_path.exists():
+    print(f"RULES: missing rules file: {rules_path}", file=sys.stderr)
+    sys.exit(1)
+
+with rules_path.open("r", encoding="utf-8") as f:
+    data = json.load(f)
+
+checks = data.get("checks", {})
+required_files = checks.get("required_files", [])
+text_assertions = checks.get("text_assertions", [])
+
+errors = 0
+
+for rel in required_files:
+    target = repo_root / rel
+    if not target.exists():
+        print(f"RULES: missing required file: {rel}", file=sys.stderr)
+        errors += 1
+
+for idx, assertion in enumerate(text_assertions, start=1):
+    file_rel = assertion.get("file")
+    contains = assertion.get("contains")
+
+    if not file_rel or contains is None:
+        print(f"RULES: malformed text_assertion #{idx}", file=sys.stderr)
+        errors += 1
+        continue
+
+    target = repo_root / file_rel
+    if not target.exists():
+        print(f"RULES: text_assertion file missing: {file_rel}", file=sys.stderr)
+        errors += 1
+        continue
+
+    content = target.read_text(encoding="utf-8")
+    if contains not in content:
+        print(f"RULES: text_assertion failed: {file_rel} missing substring: {contains}", file=sys.stderr)
+        errors += 1
+
+if errors:
+    sys.exit(1)
+PY
+}
+
 failed=0
-copy_or_check "${SRC_DIR}/SKILL.md" "${OUT_DIR}/SKILL.md" || failed=1
-copy_or_check "${SRC_DIR}/references/GUARDRAILS.md" "${OUT_DIR}/references/GUARDRAILS.md" || failed=1
+
+if (( CHECK_ONLY == 1 )); then
+  load_deny_tokens "${RULES_FILE}" || exit 1
+  enforce_rule_checks "${RULES_FILE}" "${REPO_ROOT}" || exit 1
+fi
+
+shopt -s nullglob
+SKILL_DIRS=("${SRC_ROOT}"/duck-*)
+
+if (( ${#SKILL_DIRS[@]} == 0 )); then
+  printf 'ERROR: no duck-* skills found under %s\n' "${SRC_ROOT}" >&2
+  exit 1
+fi
+
+processed=0
+for src_dir in "${SKILL_DIRS[@]}"; do
+  [[ -d "${src_dir}" ]] || continue
+  skill_name="$(basename -- "${src_dir}")"
+  out_dir="${OUT_ROOT}/${skill_name}"
+
+  if (( CHECK_ONLY == 1 )); then
+    check_portability "${src_dir}/SKILL.md" || failed=1
+  fi
+  copy_or_check "${src_dir}/SKILL.md" "${out_dir}/SKILL.md" || failed=1
+
+  if [[ -d "${src_dir}/references" ]]; then
+    shopt -s globstar
+    for ref in "${src_dir}"/references/**; do
+      [[ -f "${ref}" ]] || continue
+      [[ "$(basename -- "${ref}")" == "GUARDRAILS.md" ]] && continue
+      rel="${ref#${src_dir}/}"
+      if (( CHECK_ONLY == 1 )); then
+        check_portability "${ref}" || failed=1
+      fi
+      copy_or_check "${ref}" "${out_dir}/${rel}" || failed=1
+    done
+    shopt -u globstar
+  fi
+
+  if (( CHECK_ONLY == 1 )); then
+    check_portability "${CANONICAL_GUARDRAILS}" || failed=1
+  fi
+  copy_or_check "${CANONICAL_GUARDRAILS}" "${out_dir}/references/GUARDRAILS.md" || failed=1
+
+  processed=$((processed + 1))
+done
+
+shopt -u nullglob
 
 if (( failed != 0 )); then
   exit 1
 fi
 
-printf 'assemble-skills: %s (%s)\n' "${SKILL_NAME}" "$([[ ${CHECK_ONLY} -eq 1 ]] && printf 'check' || printf 'build')"
+printf 'assemble-skills: %s skills (%s)\n' "${processed}" "$([[ ${CHECK_ONLY} -eq 1 ]] && printf 'check' || printf 'build')"

@@ -1,0 +1,113 @@
+name: Check source-generated artifacts
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      guardrails: ${{ steps.filter.outputs.guardrails }}
+      skills: ${{ steps.filter.outputs.skills }}
+      agents: ${{ steps.filter.outputs.agents }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detect changed paths
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            guardrails:
+              - 'src/skills/shared/GUARDRAILS.md'
+              - 'scripts/check-guardrails-drift.sh'
+              - 'scripts/assemble-skills.sh'
+              - 'src/skills/**'
+              - 'skills/**'
+              - 'Makefile'
+              - '.github/workflows/check-source-generated-artifacts.yml'
+            skills:
+              - 'src/skills/**'
+              - 'skills/**'
+              - 'scripts/assemble-skills.sh'
+              - 'build/skill-assembly/**'
+              - 'Makefile'
+              - '.github/workflows/check-source-generated-artifacts.yml'
+            agents:
+              - 'src/agents/**'
+              - 'dist/**'
+              - 'scripts/build-harness-artifacts.sh'
+              - 'build/agent-assembly/**'
+              - 'Makefile'
+              - '.github/workflows/check-source-generated-artifacts.yml'
+
+  check-guardrails:
+    needs: changes
+    if: ${{ needs.changes.outputs.guardrails == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Make scripts executable
+        run: chmod +x scripts/check-guardrails-drift.sh
+
+      - name: Verify canonical guardrails sync in assembled skills
+        run: scripts/check-guardrails-drift.sh
+
+  check-skills:
+    needs: changes
+    if: ${{ needs.changes.outputs.skills == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Make scripts executable
+        run: chmod +x scripts/assemble-skills.sh
+
+      - name: Verify skills assembly artifacts are up to date
+        run: scripts/assemble-skills.sh --check
+
+  check-agents-dist:
+    needs: changes
+    if: ${{ needs.changes.outputs.agents == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Make scripts executable
+        run: chmod +x scripts/build-harness-artifacts.sh
+
+      - name: Verify agent dist artifacts are up to date
+        run: scripts/build-harness-artifacts.sh --check
+
+  check-generated-artifacts-clean:
+    if: ${{ github.event_name == 'pull_request' }}
+    needs:
+      - check-skills
+      - check-agents-dist
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Make scripts executable
+        run: chmod +x scripts/assemble-skills.sh scripts/build-harness-artifacts.sh
+
+      - name: Regenerate artifacts
+        run: bash scripts/assemble-skills.sh && bash scripts/build-harness-artifacts.sh
+
+      - name: Ensure generated artifacts are committed
+        run: |
+          if [[ -n "$(git status --porcelain -- skills dist)" ]]; then
+            echo "Generated artifacts drift detected under skills/ or dist/." >&2
+            echo "Run: bash scripts/assemble-skills.sh && bash scripts/build-harness-artifacts.sh and commit results." >&2
+            git status --porcelain -- skills dist >&2
+            exit 1
+          fi

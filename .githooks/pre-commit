@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(git rev-parse --show-toplevel)"
+cd "$ROOT"
+
+echo "[pre-commit] checking guardrails drift"
+bash scripts/check-guardrails-drift.sh
+
+echo "[pre-commit] checking skills assembly artifacts"
+bash scripts/assemble-skills.sh --check
+
+echo "[pre-commit] checking agent dist artifacts"
+bash scripts/build-harness-artifacts.sh --check
+
+echo "[pre-commit] ok"

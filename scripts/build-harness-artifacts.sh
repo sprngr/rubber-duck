@@ -16,8 +16,9 @@ fi
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${0}")" && pwd)"
 REPO_ROOT="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
+RULES_FILE="${REPO_ROOT}/build/agent-assembly/rules.json"
 
-ROOT_AGENTS_DIR="${REPO_ROOT}/agents"
+SRC_AGENTS_DIR="${REPO_ROOT}/src/agents"
 
 CLAUDE_DIST_DIR="${REPO_ROOT}/dist/claude"
 CLAUDE_AGENT_DIR="${CLAUDE_DIST_DIR}/agents"
@@ -28,6 +29,66 @@ OPENCODE_AGENT_DIR="${OPENCODE_DIST_DIR}/agents"
 
 COPILOT_DIST_DIR="${REPO_ROOT}/dist/copilot"
 COPILOT_AGENT_DIR="${COPILOT_DIST_DIR}/agents"
+
+enforce_rule_checks() {
+  local rules_file="$1"
+  local repo_root="$2"
+
+  python3 - "${rules_file}" "${repo_root}" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+rules_path = Path(sys.argv[1])
+repo_root = Path(sys.argv[2])
+
+if not rules_path.exists():
+    print(f"RULES: missing rules file: {rules_path}", file=sys.stderr)
+    sys.exit(1)
+
+with rules_path.open("r", encoding="utf-8") as f:
+    data = json.load(f)
+
+checks = data.get("checks", {})
+required_files = checks.get("required_files", [])
+text_assertions = checks.get("text_assertions", [])
+
+errors = 0
+
+for rel in required_files:
+    target = repo_root / rel
+    if not target.exists():
+        print(f"RULES: missing required file: {rel}", file=sys.stderr)
+        errors += 1
+
+for idx, assertion in enumerate(text_assertions, start=1):
+    file_rel = assertion.get("file")
+    contains = assertion.get("contains")
+
+    if not file_rel or contains is None:
+        print(f"RULES: malformed text_assertion #{idx}", file=sys.stderr)
+        errors += 1
+        continue
+
+    target = repo_root / file_rel
+    if not target.exists():
+        print(f"RULES: text_assertion file missing: {file_rel}", file=sys.stderr)
+        errors += 1
+        continue
+
+    content = target.read_text(encoding="utf-8")
+    if contains not in content:
+        print(f"RULES: text_assertion failed: {file_rel} missing substring: {contains}", file=sys.stderr)
+        errors += 1
+
+if errors:
+    sys.exit(1)
+PY
+}
+
+if (( CHECK_ONLY == 1 )); then
+  enforce_rule_checks "${RULES_FILE}" "${REPO_ROOT}" || exit 1
+fi
 
 render_file() {
   local out_path="$1"
@@ -104,23 +165,27 @@ render_copilot_fm() {
   } > "${out}"
 }
 
-# Discover config agents: any agents/<name>/ containing a meta.json.
+# Discover config agents from source-of-truth tree only.
 CONFIG_AGENTS=()
-for meta in "${ROOT_AGENTS_DIR}"/*/meta.json; do
-  [[ -e "${meta}" ]] || continue
-  CONFIG_AGENTS+=("$(basename "$(dirname "${meta}")")")
-done
-if (( ${#CONFIG_AGENTS[@]} == 0 )); then
-  printf 'ERROR: no agent configs found under %s\n' "${ROOT_AGENTS_DIR}" >&2
-  exit 1
+if [[ -d "${SRC_AGENTS_DIR}" ]]; then
+  for meta in "${SRC_AGENTS_DIR}"/*/meta.json; do
+    [[ -e "${meta}" ]] || continue
+    CONFIG_AGENTS+=("$(basename "$(dirname "${meta}")")")
+  done
 fi
 
 for name in "${CONFIG_AGENTS[@]}"; do
-  if [[ ! -f "${ROOT_AGENTS_DIR}/${name}/body.md" ]]; then
-    printf 'ERROR: missing agent body: %s\n' "${ROOT_AGENTS_DIR}/${name}/body.md" >&2
+  agent_dir="${SRC_AGENTS_DIR}/${name}"
+  if [[ ! -f "${agent_dir}/meta.json" || ! -f "${agent_dir}/body.md" ]]; then
+    printf 'ERROR: missing agent config files for %s under %s\n' "${name}" "${agent_dir}" >&2
     exit 1
   fi
 done
+
+if (( ${#CONFIG_AGENTS[@]} == 0 )); then
+  printf 'ERROR: no agent configs found under %s\n' "${SRC_AGENTS_DIR}" >&2
+  exit 1
+fi
 
 mkdir -p "${CLAUDE_AGENT_DIR}"
 mkdir -p "${OPENCODE_AGENT_DIR}"
@@ -138,8 +203,9 @@ render_file "${CLAUDE_MD_OUT}" "${CLAUDE_MD_TMP}"
 
 # Render each agent for every harness: harness frontmatter + shared body.
 for name in "${CONFIG_AGENTS[@]}"; do
-  meta="${ROOT_AGENTS_DIR}/${name}/meta.json"
-  body="${ROOT_AGENTS_DIR}/${name}/body.md"
+  agent_dir="${SRC_AGENTS_DIR}/${name}"
+  meta="${agent_dir}/meta.json"
+  body="${agent_dir}/body.md"
 
   claude_tmp="${TMP_DIR}/claude-${name}.md"
   render_claude_fm "${meta}" "${claude_tmp}"

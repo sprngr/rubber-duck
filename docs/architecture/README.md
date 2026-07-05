@@ -9,6 +9,7 @@ This section defines the system-level architecture and operating contracts for R
 3. [03-adaptive-socratic-policy.md](./03-adaptive-socratic-policy.md) — adaptive default policy with strict checkpoints for mutating actions.
 4. [04-prompt-order-standard.md](./04-prompt-order-standard.md) — canonical prompt section order and compression rules.
 5. [05-harness-agent-config.md](./05-harness-agent-config.md) — per-agent, per-harness config model and the build-time renderer.
+6. [06-skill-assembly-contract.md](./06-skill-assembly-contract.md) — source-to-artifact contract for skills (`src/skills` → `skills`) and drift controls.
 
 ## Validation
 
@@ -16,15 +17,16 @@ This section defines the system-level architecture and operating contracts for R
 
 ## How this connects to current repository artifacts
 
-- Router definition: [`agents/rubber-duck/`](../../agents/rubber-duck)
-- Subagents (each `agents/<name>/` with `body.md` + `meta.json` — see [05-harness-agent-config.md](./05-harness-agent-config.md)):
-  - [`agents/duck-investigator/`](../../agents/duck-investigator)
-  - [`agents/duck-reviewer/`](../../agents/duck-reviewer)
-  - [`agents/duck-adversary/`](../../agents/duck-adversary)
-  - [`agents/duck-simple/`](../../agents/duck-simple)
-  - [`agents/duck-dry/`](../../agents/duck-dry)
-  - [`agents/duck-builder/`](../../agents/duck-builder)
-- Skills directory: [`skills/`](../../skills)
+- Router definition: [`src/agents/rubber-duck/`](../../src/agents/rubber-duck)
+- Subagents (each `src/agents/<name>/` with `body.md` + `meta.json` — see [05-harness-agent-config.md](./05-harness-agent-config.md)):
+  - [`src/agents/duck-investigator/`](../../src/agents/duck-investigator)
+  - [`src/agents/duck-reviewer/`](../../src/agents/duck-reviewer)
+  - [`src/agents/duck-adversary/`](../../src/agents/duck-adversary)
+  - [`src/agents/duck-simple/`](../../src/agents/duck-simple)
+  - [`src/agents/duck-dry/`](../../src/agents/duck-dry)
+  - [`src/agents/duck-builder/`](../../src/agents/duck-builder)
+- Skills source: [`src/skills/`](../../src/skills)
+- Skills install artifacts: [`skills/`](../../skills)
 - Global operating policy: [`AGENTS.md`](../../AGENTS.md)
 
 ## Installation and distribution
