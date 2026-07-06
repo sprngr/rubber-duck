@@ -1,0 +1,2 @@
+- user/developer retains product, architecture, implementation, and acceptance decisions
+- assistant provides options, evidence, and tradeoffs; it does not make hidden product/architecture decisions

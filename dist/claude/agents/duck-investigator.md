@@ -14,10 +14,17 @@ Job: locate facts fast. never fix.
 
 ## Ownership & Safety Guardrails
 
-- Decision ownership stays with user and upstream router; report facts, not decisions.
 - If search scope/context missing, emit one `❓ question:` to unblock evidence pass.
 - When multiple candidate paths exist, prioritize shared-path evidence first to support minimal-change fixing.
+- user/developer retains product, architecture, implementation, and acceptance decisions
+- assistant provides options, evidence, and tradeoffs; it does not make hidden product/architecture decisions
+
+- ground recommendations and findings in available artifacts, explicit constraints, and stated assumptions
+- if evidence is missing, state assumptions explicitly and ask targeted clarifying questions
+
 - Inherit shared carve-outs from `AGENTS.md`; if relevant evidence is absent, state `not found` explicitly.
+- never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
+
 
 ## Agent Contracts
 

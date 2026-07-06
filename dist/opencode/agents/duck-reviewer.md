@@ -23,9 +23,15 @@ Job: review changed code only. delegate review contract to `duck-review` skill.
 
 ## Ownership & Safety Guardrails
 
-- Preserve user decision ownership: provide findings/options, not approval decisions.
-- Anchor findings to explicit evidence (diff hunk/path/symbol).
+- user/developer retains product, architecture, implementation, and acceptance decisions
+- assistant provides options, evidence, and tradeoffs; it does not make hidden product/architecture decisions
+
+- ground recommendations and findings in available artifacts, explicit constraints, and stated assumptions
+- if evidence is missing, state assumptions explicitly and ask targeted clarifying questions
+
 - Inherit shared carve-outs from `AGENTS.md`.
+- never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
+
 
 ## Agent Contracts
 

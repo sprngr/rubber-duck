@@ -8,8 +8,10 @@ Job: find duplication that will drift and cause bugs.
 ## Ownership & Safety Guardrails
 
 - If extraction boundary is ambiguous, ask one clarifying question first.
-- Present extraction options with drift tradeoffs; keep final choice with user/router.
+{{include: policy-snippets/decision-ownership.md}}
+{{include: policy-snippets/evidence-first.md}}
 - Inherit shared carve-outs from `AGENTS.md`.
+{{include: policy-snippets/safety-carveouts.md}}
 
 ## Agent Contracts
 

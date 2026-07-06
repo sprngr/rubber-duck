@@ -19,6 +19,7 @@ REPO_ROOT="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
 RULES_FILE="${REPO_ROOT}/build/agent-assembly/rules.json"
 
 SRC_AGENTS_DIR="${REPO_ROOT}/src/agents"
+POLICY_SNIPPETS_DIR="${REPO_ROOT}/src/shared/policy-snippets"
 
 CLAUDE_DIST_DIR="${REPO_ROOT}/dist/claude"
 CLAUDE_AGENT_DIR="${CLAUDE_DIST_DIR}/agents"
@@ -109,6 +110,39 @@ render_file() {
 
   cp -f "${tmp_path}" "${out_path}"
   printf 'Built: %s\n' "${out_path}"
+}
+
+render_body_markdown() {
+  local src="$1"
+  local out="$2"
+  local line=""
+
+  if [[ ! -f "${src}" ]]; then
+    printf 'ERROR: missing body source file: %s\n' "${src}" >&2
+    return 1
+  fi
+
+  mkdir -p "$(dirname -- "${out}")"
+  : > "${out}"
+
+  while IFS= read -r line || [[ -n "${line}" ]]; do
+    if [[ "${line}" =~ ^[[:space:]]*\{\{include:[[:space:]]*policy-snippets/([^[:space:]\}]+)[[:space:]]*\}\}[[:space:]]*$ ]]; then
+      local snippet_name="${BASH_REMATCH[1]}"
+      local snippet_path="${POLICY_SNIPPETS_DIR}/${snippet_name}"
+      if [[ ! -f "${snippet_path}" ]]; then
+        printf 'ERROR: missing policy snippet: %s\n' "${snippet_path}" >&2
+        rm -f "${out}"
+        return 1
+      fi
+      cat "${snippet_path}" >> "${out}"
+      printf '\n' >> "${out}"
+      continue
+    fi
+
+    printf '%s\n' "${line}" >> "${out}"
+  done < "${src}"
+
+  return 0
 }
 
 # Render Claude frontmatter from a meta.json into out. Field order:
@@ -206,15 +240,18 @@ for name in "${CONFIG_AGENTS[@]}"; do
   agent_dir="${SRC_AGENTS_DIR}/${name}"
   meta="${agent_dir}/meta.json"
   body="${agent_dir}/body.md"
+  rendered_body="${TMP_DIR}/body-${name}.md"
+
+  render_body_markdown "${body}" "${rendered_body}"
 
   claude_tmp="${TMP_DIR}/claude-${name}.md"
   render_claude_fm "${meta}" "${claude_tmp}"
-  cat "${body}" >> "${claude_tmp}"
+  cat "${rendered_body}" >> "${claude_tmp}"
   render_file "${CLAUDE_AGENT_DIR}/${name}.md" "${claude_tmp}"
 
   opencode_tmp="${TMP_DIR}/opencode-${name}.md"
   render_opencode_fm "${meta}" "${opencode_tmp}"
-  cat "${body}" >> "${opencode_tmp}"
+  cat "${rendered_body}" >> "${opencode_tmp}"
   render_file "${OPENCODE_AGENT_DIR}/${name}.md" "${opencode_tmp}"
 
   # Copilot rendering is opt-in per agent until all meta.json files include
@@ -222,7 +259,7 @@ for name in "${CONFIG_AGENTS[@]}"; do
   if jq -e '.harnesses.copilot? != null' "${meta}" >/dev/null; then
     copilot_tmp="${TMP_DIR}/copilot-${name}.md"
     render_copilot_fm "${meta}" "${copilot_tmp}"
-    cat "${body}" >> "${copilot_tmp}"
+    cat "${rendered_body}" >> "${copilot_tmp}"
     render_file "${COPILOT_AGENT_DIR}/${name}.md" "${copilot_tmp}"
   fi
 done

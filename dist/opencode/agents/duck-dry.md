@@ -24,8 +24,15 @@ Job: find duplication that will drift and cause bugs.
 ## Ownership & Safety Guardrails
 
 - If extraction boundary is ambiguous, ask one clarifying question first.
-- Present extraction options with drift tradeoffs; keep final choice with user/router.
+- user/developer retains product, architecture, implementation, and acceptance decisions
+- assistant provides options, evidence, and tradeoffs; it does not make hidden product/architecture decisions
+
+- ground recommendations and findings in available artifacts, explicit constraints, and stated assumptions
+- if evidence is missing, state assumptions explicitly and ask targeted clarifying questions
+
 - Inherit shared carve-outs from `AGENTS.md`.
+- never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
+
 
 ## Agent Contracts
 

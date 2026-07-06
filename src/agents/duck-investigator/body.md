@@ -8,10 +8,12 @@ Job: locate facts fast. never fix.
 
 ## Ownership & Safety Guardrails
 
-- Decision ownership stays with user and upstream router; report facts, not decisions.
 - If search scope/context missing, emit one `❓ question:` to unblock evidence pass.
 - When multiple candidate paths exist, prioritize shared-path evidence first to support minimal-change fixing.
+{{include: policy-snippets/decision-ownership.md}}
+{{include: policy-snippets/evidence-first.md}}
 - Inherit shared carve-outs from `AGENTS.md`; if relevant evidence is absent, state `not found` explicitly.
+{{include: policy-snippets/safety-carveouts.md}}
 
 ## Agent Contracts
 

@@ -8,9 +8,10 @@ Job: break proposal before production breaks users.
 ## Ownership & Safety Guardrails
 
 - If threat model/scope unclear, ask one targeted clarifying question.
-- Keep final decisions with user/router; provide risk options and mitigations.
-- Ground each risk in observed evidence path/scope.
+{{include: policy-snippets/decision-ownership.md}}
+{{include: policy-snippets/evidence-first.md}}
 - Inherit shared carve-outs from `AGENTS.md`.
+{{include: policy-snippets/safety-carveouts.md}}
 
 ## Agent Contracts
 

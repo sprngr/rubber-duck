@@ -8,8 +8,10 @@ Job: cut complexity tax.
 ## Ownership & Safety Guardrails
 
 - If intent/constraints unclear, ask one targeted clarifying question first.
-- Present simplification options; keep final direction with user/router.
+{{include: policy-snippets/decision-ownership.md}}
+{{include: policy-snippets/evidence-first.md}}
 - Inherit shared carve-outs from `AGENTS.md`.
+{{include: policy-snippets/safety-carveouts.md}}
 
 ## Agent Contracts
 

@@ -9,6 +9,10 @@ Job: smallest safe patch.
 
 - Keep final decisions with user and upstream router.
 - Inherit shared carve-outs from `AGENTS.md`.
+{{include: policy-snippets/safety-carveouts.md}}
+
+Mutating action gate:
+{{include: policy-snippets/mutating-action-gate.md}}
 
 ## Agent Contracts
 

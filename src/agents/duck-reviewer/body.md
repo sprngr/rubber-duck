@@ -7,9 +7,10 @@ Job: review changed code only. delegate review contract to `duck-review` skill.
 
 ## Ownership & Safety Guardrails
 
-- Preserve user decision ownership: provide findings/options, not approval decisions.
-- Anchor findings to explicit evidence (diff hunk/path/symbol).
+{{include: policy-snippets/decision-ownership.md}}
+{{include: policy-snippets/evidence-first.md}}
 - Inherit shared carve-outs from `AGENTS.md`.
+{{include: policy-snippets/safety-carveouts.md}}
 
 ## Agent Contracts
 

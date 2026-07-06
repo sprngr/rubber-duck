@@ -38,8 +38,92 @@
         "contains": "You are a rubber duck"
       },
       {
+        "file": "src/agents/duck-adversary/body.md",
+        "contains": "{{include: policy-snippets/safety-carveouts.md}}"
+      },
+      {
+        "file": "src/agents/duck-adversary/body.md",
+        "contains": "{{include: policy-snippets/decision-ownership.md}}"
+      },
+      {
+        "file": "src/agents/duck-adversary/body.md",
+        "contains": "{{include: policy-snippets/evidence-first.md}}"
+      },
+      {
+        "file": "src/agents/duck-reviewer/body.md",
+        "contains": "{{include: policy-snippets/safety-carveouts.md}}"
+      },
+      {
+        "file": "src/agents/duck-reviewer/body.md",
+        "contains": "{{include: policy-snippets/decision-ownership.md}}"
+      },
+      {
+        "file": "src/agents/duck-reviewer/body.md",
+        "contains": "{{include: policy-snippets/evidence-first.md}}"
+      },
+      {
+        "file": "src/agents/duck-simple/body.md",
+        "contains": "{{include: policy-snippets/safety-carveouts.md}}"
+      },
+      {
+        "file": "src/agents/duck-simple/body.md",
+        "contains": "{{include: policy-snippets/decision-ownership.md}}"
+      },
+      {
+        "file": "src/agents/duck-simple/body.md",
+        "contains": "{{include: policy-snippets/evidence-first.md}}"
+      },
+      {
+        "file": "src/agents/duck-dry/body.md",
+        "contains": "{{include: policy-snippets/safety-carveouts.md}}"
+      },
+      {
+        "file": "src/agents/duck-dry/body.md",
+        "contains": "{{include: policy-snippets/decision-ownership.md}}"
+      },
+      {
+        "file": "src/agents/duck-dry/body.md",
+        "contains": "{{include: policy-snippets/evidence-first.md}}"
+      },
+      {
+        "file": "src/agents/duck-investigator/body.md",
+        "contains": "{{include: policy-snippets/safety-carveouts.md}}"
+      },
+      {
+        "file": "src/agents/duck-investigator/body.md",
+        "contains": "{{include: policy-snippets/decision-ownership.md}}"
+      },
+      {
+        "file": "src/agents/duck-investigator/body.md",
+        "contains": "{{include: policy-snippets/evidence-first.md}}"
+      },
+      {
+        "file": "src/agents/rubber-duck/body.md",
+        "contains": "{{include: policy-snippets/mutating-action-gate.md}}"
+      },
+      {
+        "file": "src/agents/rubber-duck/body.md",
+        "contains": "{{include: policy-snippets/decision-ownership.md}}"
+      },
+      {
+        "file": "src/agents/rubber-duck/body.md",
+        "contains": "{{include: policy-snippets/evidence-first.md}}"
+      },
+      {
+        "file": "src/agents/rubber-duck/body.md",
+        "contains": "{{include: policy-snippets/safety-carveouts.md}}"
+      },
+      {
         "file": "src/agents/duck-builder/body.md",
         "contains": "Job: smallest safe patch."
+      },
+      {
+        "file": "src/agents/duck-builder/body.md",
+        "contains": "{{include: policy-snippets/mutating-action-gate.md}}"
+      },
+      {
+        "file": "src/agents/duck-builder/body.md",
+        "contains": "{{include: policy-snippets/safety-carveouts.md}}"
       }
     ]
   },
