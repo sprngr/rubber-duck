@@ -22,7 +22,7 @@ Strict branch trigger:
 
 ## Preflight Checks
 
-{{include: shared/chunks/clarify-first-preflight.md}}
+{{include: skill-snippets/clarify-first-preflight.md}}
 - Debt-specific override: if repository/module scope is ambiguous, ask exactly one clarifying question before scanning
 - inherit shared guardrails from `references/GUARDRAILS.md`
 
@@ -64,7 +64,7 @@ Scoped no-entries format:
 
 `No deferred-work entries in <scope>. Clean ledger.`
 
-{{include: shared/chunks/philosophy-guardrails.md}}
+{{include: skill-snippets/philosophy-guardrails.md}}
 
 Skill-specific delta:
 - Read/report only debt ledger; user decides cleanup actions.
@@ -136,7 +136,7 @@ If uncertainty remains after loop, classify conservatively (`weak`) and add one 
 - No debt-priority roadmap unless user asks.
 - If asked to apply cleanup directly, route to `duck-review` (findings) then `duck-builder` (bounded patch).
 - Do not recommend debt cleanup paths that weaken core safeguards:
-  {{include: shared/chunks/safety-carveouts.md}}
+  {{include: policy-snippets/safety-carveouts.md}}
 - If user asks for cleanup planning, prefer smallest safe follow-up path first.
 
 ## Examples

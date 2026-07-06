@@ -15,8 +15,9 @@ RULES_FILE="${REPO_ROOT}/build/skill-assembly/rules.json"
 
 SRC_ROOT="${REPO_ROOT}/src/skills"
 OUT_ROOT="${REPO_ROOT}/skills"
-CANONICAL_GUARDRAILS="${REPO_ROOT}/src/skills/shared/references/GUARDRAILS.md"
-SHARED_CHUNKS_ROOT="${REPO_ROOT}/src/skills/shared/chunks"
+CANONICAL_GUARDRAILS="${REPO_ROOT}/src/shared/references/GUARDRAILS.md"
+SKILL_SNIPPETS_ROOT="${REPO_ROOT}/src/shared/skill-snippets"
+POLICY_SNIPPETS_ROOT="${REPO_ROOT}/src/shared/policy-snippets"
 
 if [[ ! -d "${SRC_ROOT}" ]]; then
   printf 'ERROR: missing source root: %s\n' "${SRC_ROOT}" >&2
@@ -69,15 +70,28 @@ render_skill_markdown() {
   : > "${out}"
 
   while IFS= read -r line || [[ -n "${line}" ]]; do
-    if [[ "${line}" =~ ^[[:space:]]*\{\{include:[[:space:]]*shared/chunks/([^[:space:]\}]+)[[:space:]]*\}\}[[:space:]]*$ ]]; then
-      local chunk_name="${BASH_REMATCH[1]}"
-      local chunk_path="${SHARED_CHUNKS_ROOT}/${chunk_name}"
-      if [[ ! -f "${chunk_path}" ]]; then
-        printf 'ERROR: missing shared chunk: %s\n' "${chunk_path}" >&2
+    if [[ "${line}" =~ ^[[:space:]]*\{\{include:[[:space:]]*skill-snippets/([^[:space:]\}]+)[[:space:]]*\}\}[[:space:]]*$ ]]; then
+      local snippet_name="${BASH_REMATCH[1]}"
+      local snippet_path="${SKILL_SNIPPETS_ROOT}/${snippet_name}"
+      if [[ ! -f "${snippet_path}" ]]; then
+        printf 'ERROR: missing skill snippet: %s\n' "${snippet_path}" >&2
         rm -f "${out}"
         return 1
       fi
-      cat "${chunk_path}" >> "${out}"
+      cat "${snippet_path}" >> "${out}"
+      printf '\n' >> "${out}"
+      continue
+    fi
+
+    if [[ "${line}" =~ ^[[:space:]]*\{\{include:[[:space:]]*policy-snippets/([^[:space:]\}]+)[[:space:]]*\}\}[[:space:]]*$ ]]; then
+      local snippet_name="${BASH_REMATCH[1]}"
+      local snippet_path="${POLICY_SNIPPETS_ROOT}/${snippet_name}"
+      if [[ ! -f "${snippet_path}" ]]; then
+        printf 'ERROR: missing policy snippet: %s\n' "${snippet_path}" >&2
+        rm -f "${out}"
+        return 1
+      fi
+      cat "${snippet_path}" >> "${out}"
       printf '\n' >> "${out}"
       continue
     fi

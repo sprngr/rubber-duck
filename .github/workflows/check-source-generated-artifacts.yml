@@ -23,7 +23,7 @@ jobs:
         with:
           filters: |
             guardrails:
-              - 'src/skills/shared/references/GUARDRAILS.md'
+              - 'src/shared/references/GUARDRAILS.md'
               - 'scripts/check-guardrails-drift.sh'
               - 'scripts/assemble-skills.sh'
               - 'src/skills/**'

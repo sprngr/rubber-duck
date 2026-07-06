@@ -31,7 +31,7 @@ Final self-check before send:
 - If any finding line is missing location or `Fix:`, rewrite before sending.
 - Never emit mixed formats (`- HIGH`, `- MED`, numbered bullets for findings).
 
-{{include: shared/chunks/philosophy-guardrails.md}}
+{{include: skill-snippets/philosophy-guardrails.md}}
 
 Skill-specific delta:
 - Provide findings and fix directions; user decides merge/approval outcomes.
@@ -42,7 +42,7 @@ Use when user asks to review diff/code/PR for issues and fix direction.
 
 ## Preflight Checks
 
-{{include: shared/chunks/clarify-first-preflight.md}}
+{{include: skill-snippets/clarify-first-preflight.md}}
 - Review-specific override: if review context is ambiguous, ask one targeted clarifying question first.
 - Anchor each finding in explicit diff/code evidence.
 - Provide findings and fix directions; final merge/approval decisions remain with user.
@@ -52,7 +52,7 @@ Use when user asks to review diff/code/PR for issues and fix direction.
 ### Duck Ladder (complexity guard)
 
 When proposing fix direction, stop at first rung:
-{{include: shared/chunks/duck-ladder-core.md}}
+{{include: skill-snippets/duck-ladder-core.md}}
 
 ### Workflow
 

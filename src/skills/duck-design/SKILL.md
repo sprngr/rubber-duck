@@ -34,7 +34,7 @@ Conditional expansion:
 - Expand past first-turn budget only if user asks for deeper analysis (matrix/deep dive)
 - or user provides new constraints/evidence requiring re-evaluation
 
-{{include: shared/chunks/philosophy-guardrails.md}}
+{{include: skill-snippets/philosophy-guardrails.md}}
 
 Skill-specific delta:
 - Frame design options and tradeoffs; developer selects final tradeoff.
@@ -46,18 +46,18 @@ Trigger when user asks to compare approaches, evaluate architecture, or choose t
 ## Preflight Checks
 
 Before recommendations:
-{{include: shared/chunks/clarify-first-preflight.md}}
+{{include: skill-snippets/clarify-first-preflight.md}}
 - ground analysis in explicit evidence/constraints from current system state
 - if implementation action requested, require explicit approval and bounded scope before handoff
 - architectural neatness must not bypass core safeguards:
-{{include: shared/chunks/safety-carveouts.md}}
+{{include: policy-snippets/safety-carveouts.md}}
 
 ## Method
 
 ### Duck Ladder (when design implies implementation)
 
 If discussion enters implementation choices, stop at first rung:
-{{include: shared/chunks/duck-ladder-core.md}}
+{{include: skill-snippets/duck-ladder-core.md}}
 
 Redirect to `duck-debug` if runtime bug/data issue wrapped in design language.
 

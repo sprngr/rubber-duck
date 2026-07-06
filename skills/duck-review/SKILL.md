@@ -46,7 +46,6 @@ Use when user asks to review diff/code/PR for issues and fix direction.
 
 - ask 1-3 targeted clarifying questions when context is incomplete
 - state assumptions explicitly when evidence is missing
-
 - Review-specific override: if review context is ambiguous, ask one targeted clarifying question first.
 - Anchor each finding in explicit diff/code evidence.
 - Provide findings and fix directions; final merge/approval decisions remain with user.

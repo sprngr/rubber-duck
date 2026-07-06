@@ -32,7 +32,7 @@ Conditional expansion:
 - expand only if user asks for deeper walkthrough
 - or provided artifact spans multiple coupled concerns needing disambiguation
 
-{{include: shared/chunks/philosophy-guardrails.md}}
+{{include: skill-snippets/philosophy-guardrails.md}}
 
 Skill-specific delta:
 - Explain behavior and risks; user decides next action.
@@ -44,7 +44,7 @@ Use when user asks to explain code, logs, queries, config, function/file behavio
 ## Preflight Checks
 
 - if no concrete artifact, ask one targeted question to get exact target
-{{include: shared/chunks/clarify-first-preflight.md}}
+{{include: skill-snippets/clarify-first-preflight.md}}
 
 ## Method
 
@@ -54,7 +54,7 @@ Use when user asks to explain code, logs, queries, config, function/file behavio
 4. Name sharp edges (ordering, nullability, retries, hidden coupling).
 5. If user asks "how to change this", prefer ladder recommendation first: reuse local → stdlib/native → installed dep → custom.
 6. If suggestion implies implementation, keep recommendation minimal and preserve core safeguards:
-   {{include: shared/chunks/safety-carveouts.md}}
+   {{include: policy-snippets/safety-carveouts.md}}
 
 Default depth: short.
 If user asks "quickly explain" or "tl;dr", compress further.

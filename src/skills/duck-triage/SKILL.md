@@ -26,7 +26,7 @@ Formatting rule (deterministic):
 Pre-PR: suggest what to test (`duck-triage` scope).
 In-PR: annotate missing tests inline (`duck-review` 🧪 test: prefix).
 
-{{include: shared/chunks/philosophy-guardrails.md}}
+{{include: skill-snippets/philosophy-guardrails.md}}
 
 Skill-specific delta:
 - Recommend severity and test direction; user decides implementation/test-writing actions.
@@ -38,7 +38,7 @@ Use for test coverage planning, bug severity triage, and pre-PR test recommendat
 ## Preflight Checks
 
 If repro/spec context is missing:
-{{include: shared/chunks/clarify-first-preflight.md}}
+{{include: skill-snippets/clarify-first-preflight.md}}
 - Triage-specific override: ask one targeted clarifying question about missing repro/spec first.
 
 If evidence is missing, include explicit marker:
@@ -101,7 +101,7 @@ For every input/output, check:
   - one assert-style self-check/demo if test framework path is heavy.
 - Trivial one-liner with existing coverage may not need new test.
 - Never drop core safeguards for brevity:
-  {{include: shared/chunks/safety-carveouts.md}}
+  {{include: policy-snippets/safety-carveouts.md}}
 
 ## Bug Severity Classification
 

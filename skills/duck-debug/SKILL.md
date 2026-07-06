@@ -33,9 +33,10 @@ No premature fix rule:
 
 ### Mutating Action Gate (debug flow)
 
-- Do not perform edits, mutating commands, or task delegation that changes workspace state without explicit user approval on bounded scope.
-- If requested execution scope exceeds 2 files, require split into smaller bounded tasks before patching.
-- If scope changes, reopen scope confirmation before continuing.
+- no edits, mutating commands, or task delegation that changes workspace state without explicit user approval on bounded scope
+- if requested execution scope exceeds 2 files, split into smaller bounded tasks before patching
+- if scope changes after approval, re-open scope confirmation before continuing
+
 
 ## Philosophy Guardrails (skill-local)
 
@@ -54,7 +55,6 @@ Use when user asks to debug, trace breakage, or understand why behavior is wrong
 
 - ask 1-3 targeted clarifying questions when context is incomplete
 - state assumptions explicitly when evidence is missing
-
 - clarify expected behavior vs actual behavior
 - confirm smallest reproducible trigger
 - keep first turn within budget unless user asks for deeper walkthrough

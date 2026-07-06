@@ -43,7 +43,6 @@ Before examples, if goal/runtime/constraints unclear:
 - ask 1-3 targeted clarifying questions when context is incomplete
 - state assumptions explicitly when evidence is missing
 
-
 Ambiguous target rule (hard):
 - if user says "teach/show/walk through this" without a clear target concept/file/snippet, ask for target + desired depth first
 - do not invent or default to a topic

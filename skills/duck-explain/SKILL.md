@@ -49,7 +49,6 @@ Use when user asks to explain code, logs, queries, config, function/file behavio
 - ask 1-3 targeted clarifying questions when context is incomplete
 - state assumptions explicitly when evidence is missing
 
-
 ## Method
 
 1. Identify execution role (entry point, transformer, validator, side effect, orchestrator).

@@ -42,7 +42,6 @@ Use for test coverage planning, bug severity triage, and pre-PR test recommendat
 If repro/spec context is missing:
 - ask 1-3 targeted clarifying questions when context is incomplete
 - state assumptions explicitly when evidence is missing
-
 - Triage-specific override: ask one targeted clarifying question about missing repro/spec first.
 
 If evidence is missing, include explicit marker:

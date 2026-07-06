@@ -24,7 +24,6 @@ Strict branch trigger:
 
 - ask 1-3 targeted clarifying questions when context is incomplete
 - state assumptions explicitly when evidence is missing
-
 - Debt-specific override: if repository/module scope is ambiguous, ask exactly one clarifying question before scanning
 - inherit shared guardrails from `references/GUARDRAILS.md`
 

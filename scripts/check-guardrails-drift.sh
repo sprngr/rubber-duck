@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-CANONICAL="$ROOT/src/skills/shared/references/GUARDRAILS.md"
+CANONICAL="$ROOT/src/shared/references/GUARDRAILS.md"
 
 if [ ! -f "$CANONICAL" ]; then
   echo "Missing canonical guardrails: $CANONICAL" >&2

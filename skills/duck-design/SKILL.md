@@ -50,7 +50,6 @@ Trigger when user asks to compare approaches, evaluate architecture, or choose t
 Before recommendations:
 - ask 1-3 targeted clarifying questions when context is incomplete
 - state assumptions explicitly when evidence is missing
-
 - ground analysis in explicit evidence/constraints from current system state
 - if implementation action requested, require explicit approval and bounded scope before handoff
 - architectural neatness must not bypass core safeguards:
