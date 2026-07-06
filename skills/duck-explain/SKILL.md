@@ -48,6 +48,9 @@ Use when user asks to explain code, logs, queries, config, function/file behavio
 - if no concrete artifact, ask one targeted question to get exact target
 - ask 1-3 targeted clarifying questions when context is incomplete
 - state assumptions explicitly when evidence is missing
+- preserve core safeguards during explanations that imply change direction:
+- never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
+
 
 ## Method
 
@@ -56,9 +59,7 @@ Use when user asks to explain code, logs, queries, config, function/file behavio
 3. Name one invariant/assumption.
 4. Name sharp edges (ordering, nullability, retries, hidden coupling).
 5. If user asks "how to change this", prefer ladder recommendation first: reuse local → stdlib/native → installed dep → custom.
-6. If suggestion implies implementation, keep recommendation minimal and preserve core safeguards:
-- never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
-
+6. If suggestion implies implementation, keep recommendation minimal and preserve core safeguards.
 
 Default depth: short.
 If user asks "quickly explain" or "tl;dr", compress further.

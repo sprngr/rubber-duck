@@ -42,6 +42,9 @@ Use for "teach me", "show me", or "walk me through" requests.
 Before examples, if goal/runtime/constraints unclear:
 - ask 1-3 targeted clarifying questions when context is incomplete
 - state assumptions explicitly when evidence is missing
+- preserve core safeguards in any example or recommendation:
+- never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
+
 
 Ambiguous target rule (hard):
 - if user says "teach/show/walk through this" without a clear target concept/file/snippet, ask for target + desired depth first
@@ -81,9 +84,6 @@ Formatting rule:
 - Use workspace tech stack — don't default to a different language/framework
 - Prefer real project usage patterns over generic samples
 - Prefer ladder order in examples: reuse local → stdlib/native → installed dep → custom code last
-- Preserve core safeguards in example code:
-- never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
-
 - Annotate inline with `// ←` for critical lines
 - Keep examples under 30 lines. Split complex examples into "minimal" and "complete"
 

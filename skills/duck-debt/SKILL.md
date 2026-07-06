@@ -13,6 +13,13 @@ Duck debt ledger 🦆. Audit deferred work. Keep language terse and practical.
 
 Build a read-only ledger of deferred-work entries from common comment conventions.
 
+## Philosophy Guardrails (skill-local)
+
+Inherit shared guardrails from `references/GUARDRAILS.md`.
+
+Skill-specific delta:
+- Read/report only debt ledger; user decides cleanup actions.
+
 ## Activation / When to Use
 
 Use when users ask for deferred-work inventory (for example: `duck debt`, `what did we defer`, `/duck-debt`).
@@ -64,13 +71,6 @@ No entries:
 Scoped no-entries format:
 
 `No deferred-work entries in <scope>. Clean ledger.`
-
-## Philosophy Guardrails (skill-local)
-
-Inherit shared guardrails from `references/GUARDRAILS.md`.
-
-Skill-specific delta:
-- Read/report only debt ledger; user decides cleanup actions.
 
 ## Method
 

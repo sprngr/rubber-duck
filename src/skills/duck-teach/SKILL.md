@@ -39,6 +39,8 @@ Use for "teach me", "show me", or "walk me through" requests.
 
 Before examples, if goal/runtime/constraints unclear:
 {{include: skill-snippets/clarify-first-preflight.md}}
+- preserve core safeguards in any example or recommendation:
+  {{include: policy-snippets/safety-carveouts.md}}
 
 Ambiguous target rule (hard):
 - if user says "teach/show/walk through this" without a clear target concept/file/snippet, ask for target + desired depth first
@@ -78,8 +80,6 @@ Formatting rule:
 - Use workspace tech stack — don't default to a different language/framework
 - Prefer real project usage patterns over generic samples
 - Prefer ladder order in examples: reuse local → stdlib/native → installed dep → custom code last
-- Preserve core safeguards in example code:
-  {{include: policy-snippets/safety-carveouts.md}}
 - Annotate inline with `// ←` for critical lines
 - Keep examples under 30 lines. Split complex examples into "minimal" and "complete"
 

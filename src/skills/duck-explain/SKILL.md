@@ -45,6 +45,8 @@ Use when user asks to explain code, logs, queries, config, function/file behavio
 
 - if no concrete artifact, ask one targeted question to get exact target
 {{include: skill-snippets/clarify-first-preflight.md}}
+- preserve core safeguards during explanations that imply change direction:
+  {{include: policy-snippets/safety-carveouts.md}}
 
 ## Method
 
@@ -53,8 +55,7 @@ Use when user asks to explain code, logs, queries, config, function/file behavio
 3. Name one invariant/assumption.
 4. Name sharp edges (ordering, nullability, retries, hidden coupling).
 5. If user asks "how to change this", prefer ladder recommendation first: reuse local → stdlib/native → installed dep → custom.
-6. If suggestion implies implementation, keep recommendation minimal and preserve core safeguards:
-   {{include: policy-snippets/safety-carveouts.md}}
+6. If suggestion implies implementation, keep recommendation minimal and preserve core safeguards.
 
 Default depth: short.
 If user asks "quickly explain" or "tl;dr", compress further.
