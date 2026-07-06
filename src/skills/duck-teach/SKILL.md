@@ -26,9 +26,7 @@ Conditional expansion:
 - expand only when user asks for more depth
 - or required constraints/safety context cannot fit default budget
 
-## Philosophy Guardrails (skill-local)
-
-Inherit shared guardrails from `references/GUARDRAILS.md`.
+{{include: shared/chunks/philosophy-guardrails.md}}
 
 Skill-specific delta:
 - Teach options and pitfalls; learner/developer chooses implementation path.
@@ -40,8 +38,7 @@ Use for "teach me", "show me", or "walk me through" requests.
 ## Preflight Checks
 
 Before examples, if goal/runtime/constraints unclear:
-- ask 1-3 targeted clarifying questions first
-- state assumptions explicitly when needed
+{{include: shared/chunks/clarify-first-preflight.md}}
 
 Ambiguous target rule (hard):
 - if user says "teach/show/walk through this" without a clear target concept/file/snippet, ask for target + desired depth first
@@ -81,7 +78,8 @@ Formatting rule:
 - Use workspace tech stack — don't default to a different language/framework
 - Prefer real project usage patterns over generic samples
 - Prefer ladder order in examples: reuse local → stdlib/native → installed dep → custom code last
-- Preserve trust-boundary validation, security controls, data-loss prevention, accessibility requirements, and explicit user requirements in example code
+- Preserve core safeguards in example code:
+  {{include: shared/chunks/safety-carveouts.md}}
 - Annotate inline with `// ←` for critical lines
 - Keep examples under 30 lines. Split complex examples into "minimal" and "complete"
 

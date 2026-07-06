@@ -48,9 +48,14 @@ Trigger when user asks to compare approaches, evaluate architecture, or choose t
 ## Preflight Checks
 
 Before recommendations:
+- ask 1-3 targeted clarifying questions when context is incomplete
+- state assumptions explicitly when evidence is missing
+
 - ground analysis in explicit evidence/constraints from current system state
 - if implementation action requested, require explicit approval and bounded scope before handoff
-- never trade away trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements for architectural neatness
+- architectural neatness must not bypass core safeguards:
+- never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
+
 
 ## Method
 
@@ -139,7 +144,6 @@ Ask: "Document this as ADR?" (if project has docs/adr/)
 ## Edge Cases / Watch out
 
 - Edge case: user asks for whole-system redesign with no constraints. Ask one scoping question first; do not deep-dive until a constraint is confirmed.
-- Watch out: architecture simplification must not weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements.
 
 Default/Recommended:
 - Recommended default: when under-specified, ask one constraint-driving question first, then wait for user input before alternatives.

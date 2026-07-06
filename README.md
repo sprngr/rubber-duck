@@ -6,12 +6,6 @@ Rubber Duck helps you debug, review, design, and triage with structured question
 
 ## Quick start
 
-> [!NOTE]
-> Source-of-truth lives in `src/skills/*` and `src/agents/*`.
-> Generated artifacts live in `skills/*` (for `npx skills`) and `dist/*` (harness outputs).
-> Edit source trees; do not hand-edit generated artifacts.
-> Before committing source changes, regenerate artifacts with `bash scripts/assemble-skills.sh` and `bash scripts/build-harness-artifacts.sh`.
-
 ### Quick skills-only install
 
 ```bash

@@ -37,9 +37,7 @@ No premature fix rule:
 - If requested execution scope exceeds 2 files, require split into smaller bounded tasks before patching.
 - If scope changes, reopen scope confirmation before continuing.
 
-## Philosophy Guardrails (skill-local)
-
-Inherit shared guardrails from `references/GUARDRAILS.md`.
+{{include: shared/chunks/philosophy-guardrails.md}}
 
 Skill-specific delta:
 - Provide questions, evidence framing, and fix options; developer makes final debugging choices.
@@ -52,9 +50,9 @@ Use when user asks to debug, trace breakage, or understand why behavior is wrong
 
 **Rule:** Prefer ask-first cadence. Ask 1-3 targeted questions before suggestions when context is incomplete.
 
+{{include: shared/chunks/clarify-first-preflight.md}}
 - clarify expected behavior vs actual behavior
 - confirm smallest reproducible trigger
-- state assumptions explicitly when evidence missing
 - keep first turn within budget unless user asks for deeper walkthrough
 
 ### Domain-Specific Prompting (general rule)

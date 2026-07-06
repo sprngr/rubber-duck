@@ -2,21 +2,34 @@
 
 ## Mission
 
-Rubber Duck is an assistant operating system focused on **better engineering decisions**, not blind automation.
+Rubber Duck optimizes for decision quality over blind automation.
 
-Primary outcomes:
-- keep developer in decision seat
-- improve reasoning quality with evidence + questioning
-- reduce rework via bounded, safe change
+Outcomes:
+- developer stays in decision seat
+- evidence + questioning improve reasoning
+- bounded change reduces rework
 
-## System shape
+## Current system shape (source-first)
 
-- Router: `agents/rubber-duck/`
-- Duckling subagents: `agents/<name>/` (each with `body.md` + `meta.json`)
-- Skills: `skills/**/SKILL.md`
+- Agent source: `src/agents/<name>/` (`meta.json` + `body.md`)
+- Skill source: `src/skills/duck-*/SKILL.md`
+- Canonical shared guardrails source: `src/skills/shared/GUARDRAILS.md`
+- Generated skill artifacts: `skills/duck-*/` (for `npx skills`)
+- Generated harness artifacts: `dist/{claude,opencode,copilot}/`
 - Global policy: `AGENTS.md`
 - Architecture docs: `docs/architecture/`
 - Validation suite: `docs/validation/`
+
+## Build + check contract
+
+- Skills assembly/check: `scripts/assemble-skills.sh`
+- Agent artifact build/check: `scripts/build-harness-artifacts.sh`
+- Guardrails drift check: `scripts/check-guardrails-drift.sh`
+- `make build` → skills + agents
+- `make check` → guardrails + skills + agents
+- CI workflow: `.github/workflows/check-source-generated-artifacts.yml`
+  - split checks (guardrails/skills/agents), path-gated
+  - PR check regenerates and requires clean `skills/` + `dist/`
 
 ## Non-negotiable guardrails
 
@@ -25,34 +38,27 @@ Primary outcomes:
 2. **Evidence-first**
    - claims anchored in code/diff/log/tests/constraints
 3. **Mutating action gate**
-   - no edits/mutating commands/task delegation without explicit user approval on bounded scope
+   - no edits/mutating commands/task delegation without explicit approval on bounded scope
 4. **Scope limit**
-   - if requested execution scope >2 files, split into smaller bounded tasks first
+   - scope >2 files must be split first
 5. **Safety carve-outs**
    - never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
 
 ## Interaction model
 
-- Adaptive by default:
-  - non-mutating analysis can use lighter Socratic flow
-  - mutating actions require ordered checkpoints + approval
-- Clarify-first:
-  - ask 1–3 targeted clarifying questions when context is incomplete
-- Terse style by default; expand only for security warnings, irreversible actions, or user confusion
+- Non-mutating analysis: lighter Socratic flow allowed.
+- Mutating actions: ordered checkpoints + explicit approval required.
+- Clarify-first: ask 1–3 targeted questions when context is incomplete.
+- Terse by default; expand for security/irreversible risk/user confusion.
 
 ## Prompt maintenance guidelines
 
-Use canonical prompt order from:
-- `docs/architecture/04-prompt-order-standard.md`
-
-Keep prompts:
-- schema-first (especially review output contracts)
-- minimal duplication (single canonical section per concern)
-- explicit about boundaries and handoffs
+- Canonical order: `docs/architecture/04-prompt-order-standard.md`
+- Keep prompts schema-first, non-duplicative, explicit on boundaries/handoffs.
 
 ## Review output contract (important)
 
-`duck-review`/`duck-reviewer` must keep findings in prefixed schema:
+`duck-review`/`duck-reviewer` findings are prefixed one-liners:
 - prefix + location + problem + `Fix:`
 - Auto-Clarity exception only for security/irreversible-risk comments
 - normalize non-compliant finding lines before final output
@@ -69,7 +75,7 @@ Skills install behavior:
 
 ## How to verify behavior
 
-Primary validation docs:
+Validation docs:
 - `docs/validation/README.md`
 - `docs/validation/RUNBOOK.md`
 - `docs/validation/CHANGELOG.md`
@@ -78,17 +84,10 @@ Quick subset gate (must pass):
 - V02, V03, V04, V11, V12, V13, V14
 - fail if any Critical/High in subset fails
 
-## Experiment harness
-
-For head-to-head evaluation (with/without Rubber Duck):
-- protocol: `experiments/README.md`
-- tasks: `experiments/task-01`..`task-04`
-- each task has `fixture/`, `packet.md`, and `scorecard.md`
-
 ## Session handoff expectation
 
-When changing prompts/policy:
+When changing prompts/policy/tooling:
 1. preserve non-negotiable guardrails
 2. keep diffs minimal
 3. update docs/links if renamed/moved
-4. run at least quick validation subset
+4. run `make check`

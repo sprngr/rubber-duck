@@ -16,6 +16,7 @@ RULES_FILE="${REPO_ROOT}/build/skill-assembly/rules.json"
 SRC_ROOT="${REPO_ROOT}/src/skills"
 OUT_ROOT="${REPO_ROOT}/skills"
 CANONICAL_GUARDRAILS="${REPO_ROOT}/src/skills/shared/GUARDRAILS.md"
+SHARED_CHUNKS_ROOT="${REPO_ROOT}/src/skills/shared/chunks"
 
 if [[ ! -d "${SRC_ROOT}" ]]; then
   printf 'ERROR: missing source root: %s\n' "${SRC_ROOT}" >&2
@@ -52,6 +53,73 @@ copy_or_check() {
   mkdir -p "$(dirname -- "${out}")"
   cp -f "${src}" "${out}"
   printf 'Built: %s\n' "${out}"
+}
+
+render_skill_markdown() {
+  local src="$1"
+  local out="$2"
+  local line=""
+
+  if [[ ! -f "${src}" ]]; then
+    printf 'ERROR: missing source file: %s\n' "${src}" >&2
+    return 1
+  fi
+
+  mkdir -p "$(dirname -- "${out}")"
+  : > "${out}"
+
+  while IFS= read -r line || [[ -n "${line}" ]]; do
+    if [[ "${line}" =~ ^[[:space:]]*\{\{include:[[:space:]]*shared/chunks/([^[:space:]\}]+)[[:space:]]*\}\}[[:space:]]*$ ]]; then
+      local chunk_name="${BASH_REMATCH[1]}"
+      local chunk_path="${SHARED_CHUNKS_ROOT}/${chunk_name}"
+      if [[ ! -f "${chunk_path}" ]]; then
+        printf 'ERROR: missing shared chunk: %s\n' "${chunk_path}" >&2
+        rm -f "${out}"
+        return 1
+      fi
+      cat "${chunk_path}" >> "${out}"
+      printf '\n' >> "${out}"
+      continue
+    fi
+
+    printf '%s\n' "${line}" >> "${out}"
+  done < "${src}"
+
+  return 0
+}
+
+render_or_check_skill() {
+  local src="$1"
+  local out="$2"
+  local tmp
+
+  tmp="$(mktemp)"
+  if ! render_skill_markdown "${src}" "${tmp}"; then
+    rm -f "${tmp}"
+    return 1
+  fi
+
+  if (( CHECK_ONLY == 1 )); then
+    if [[ ! -f "${out}" ]]; then
+      printf 'MISSING: %s\n' "${out}" >&2
+      rm -f "${tmp}"
+      return 1
+    fi
+    if ! cmp -s "${tmp}" "${out}"; then
+      printf 'STALE: %s\n' "${out}" >&2
+      rm -f "${tmp}"
+      return 1
+    fi
+    printf 'Checked: %s\n' "${out}"
+    rm -f "${tmp}"
+    return 0
+  fi
+
+  mkdir -p "$(dirname -- "${out}")"
+  cp -f "${tmp}" "${out}"
+  printf 'Built: %s\n' "${out}"
+  rm -f "${tmp}"
+  return 0
 }
 
 load_deny_tokens() {
@@ -186,7 +254,7 @@ for src_dir in "${SKILL_DIRS[@]}"; do
   if (( CHECK_ONLY == 1 )); then
     check_portability "${src_dir}/SKILL.md" || failed=1
   fi
-  copy_or_check "${src_dir}/SKILL.md" "${out_dir}/SKILL.md" || failed=1
+  render_or_check_skill "${src_dir}/SKILL.md" "${out_dir}/SKILL.md" || failed=1
 
   if [[ -d "${src_dir}/references" ]]; then
     shopt -s globstar

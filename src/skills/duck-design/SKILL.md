@@ -34,9 +34,7 @@ Conditional expansion:
 - Expand past first-turn budget only if user asks for deeper analysis (matrix/deep dive)
 - or user provides new constraints/evidence requiring re-evaluation
 
-## Philosophy Guardrails (skill-local)
-
-Inherit shared guardrails from `references/GUARDRAILS.md`.
+{{include: shared/chunks/philosophy-guardrails.md}}
 
 Skill-specific delta:
 - Frame design options and tradeoffs; developer selects final tradeoff.
@@ -48,9 +46,11 @@ Trigger when user asks to compare approaches, evaluate architecture, or choose t
 ## Preflight Checks
 
 Before recommendations:
+{{include: shared/chunks/clarify-first-preflight.md}}
 - ground analysis in explicit evidence/constraints from current system state
 - if implementation action requested, require explicit approval and bounded scope before handoff
-- never trade away trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements for architectural neatness
+- architectural neatness must not bypass core safeguards:
+{{include: shared/chunks/safety-carveouts.md}}
 
 ## Method
 
@@ -139,7 +139,6 @@ Ask: "Document this as ADR?" (if project has docs/adr/)
 ## Edge Cases / Watch out
 
 - Edge case: user asks for whole-system redesign with no constraints. Ask one scoping question first; do not deep-dive until a constraint is confirmed.
-- Watch out: architecture simplification must not weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements.
 
 Default/Recommended:
 - Recommended default: when under-specified, ask one constraint-driving question first, then wait for user input before alternatives.

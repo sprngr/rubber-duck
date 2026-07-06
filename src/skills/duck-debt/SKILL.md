@@ -22,8 +22,9 @@ Strict branch trigger:
 
 ## Preflight Checks
 
-- if repository/module scope ambiguous, ask one clarifying question before scanning
-- load `references/GUARDRAILS.md` only when policy conflict or safety uncertainty appears
+{{include: shared/chunks/clarify-first-preflight.md}}
+- Debt-specific override: if repository/module scope is ambiguous, ask exactly one clarifying question before scanning
+- inherit shared guardrails from `references/GUARDRAILS.md`
 
 Mode default rule (hard):
 - default to broad mode unless users explicitly ask for strict mode
@@ -63,9 +64,7 @@ Scoped no-entries format:
 
 `No deferred-work entries in <scope>. Clean ledger.`
 
-## Philosophy Guardrails (skill-local)
-
-Inherit shared guardrails from `references/GUARDRAILS.md`.
+{{include: shared/chunks/philosophy-guardrails.md}}
 
 Skill-specific delta:
 - Read/report only debt ledger; user decides cleanup actions.
@@ -136,7 +135,8 @@ If uncertainty remains after loop, classify conservatively (`weak`) and add one 
 - Read/report only. No edits.
 - No debt-priority roadmap unless user asks.
 - If asked to apply cleanup directly, route to `duck-review` (findings) then `duck-builder` (bounded patch).
-- Do not recommend debt cleanup paths that weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements.
+- Do not recommend debt cleanup paths that weaken core safeguards:
+  {{include: shared/chunks/safety-carveouts.md}}
 - If user asks for cleanup planning, prefer smallest safe follow-up path first.
 
 ## Examples

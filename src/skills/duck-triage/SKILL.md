@@ -26,9 +26,7 @@ Formatting rule (deterministic):
 Pre-PR: suggest what to test (`duck-triage` scope).
 In-PR: annotate missing tests inline (`duck-review` 🧪 test: prefix).
 
-## Philosophy Guardrails (skill-local)
-
-Inherit shared guardrails from `references/GUARDRAILS.md`.
+{{include: shared/chunks/philosophy-guardrails.md}}
 
 Skill-specific delta:
 - Recommend severity and test direction; user decides implementation/test-writing actions.
@@ -40,8 +38,8 @@ Use for test coverage planning, bug severity triage, and pre-PR test recommendat
 ## Preflight Checks
 
 If repro/spec context is missing:
-- Ask 1-3 targeted clarifying questions first.
-- State assumptions explicitly before severity/test recommendations.
+{{include: shared/chunks/clarify-first-preflight.md}}
+- Triage-specific override: ask one targeted clarifying question about missing repro/spec first.
 
 If evidence is missing, include explicit marker:
 - `missing evidence:` with concise list (logs/repro steps/release window/affected scope)
@@ -102,7 +100,8 @@ For every input/output, check:
   - one focused test, or
   - one assert-style self-check/demo if test framework path is heavy.
 - Trivial one-liner with existing coverage may not need new test.
-- Never drop trust-boundary/security/data-loss checks for brevity.
+- Never drop core safeguards for brevity:
+  {{include: shared/chunks/safety-carveouts.md}}
 
 ## Bug Severity Classification
 
@@ -124,11 +123,11 @@ For every input/output, check:
 4. Check: does existing test coverage exist? If not, flag missing coverage as contributing factor.
 5. Output: severity + brief rationale + which test to add
 
-Triage recommends severity and test direction only; implementation/test-writing actions require explicit user approval or handoff.
+Triage recommends severity and test direction only; implementation/test-writing actions require explicit user approval on bounded scope (handoff does not replace approval).
 
 ## Boundaries & Handoffs
 
-- Triage recommends direction; implementation/test writing requires explicit approval or handoff.
+- Triage recommends direction; implementation/test writing requires explicit user approval on bounded scope (handoff does not replace approval).
 - In-PR inline review comments route through `duck-review`.
 
 ## Bug Report Format

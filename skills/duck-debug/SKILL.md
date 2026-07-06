@@ -52,9 +52,11 @@ Use when user asks to debug, trace breakage, or understand why behavior is wrong
 
 **Rule:** Prefer ask-first cadence. Ask 1-3 targeted questions before suggestions when context is incomplete.
 
+- ask 1-3 targeted clarifying questions when context is incomplete
+- state assumptions explicitly when evidence is missing
+
 - clarify expected behavior vs actual behavior
 - confirm smallest reproducible trigger
-- state assumptions explicitly when evidence missing
 - keep first turn within budget unless user asks for deeper walkthrough
 
 ### Domain-Specific Prompting (general rule)
