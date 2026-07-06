@@ -1,0 +1,110 @@
+{
+  "version": 1,
+  "phase": 1,
+  "artifact_target": {
+    "install_path": "skills",
+    "source_path": "src/skills",
+    "mode": "copy-through"
+  },
+  "scope": {
+    "skills": [
+      "duck-*"
+    ]
+  },
+  "io": {
+    "include": [
+      "SKILL.md",
+      "references/**"
+    ],
+    "source_template": "src/skills/{skill}/",
+    "output_template": "skills/{skill}/"
+  },
+  "invariants": [
+    {
+      "id": "install-target",
+      "description": "Assembled artifacts must be written to skills/<name>/ for npx skills consumption."
+    },
+    {
+      "id": "parity",
+      "description": "skills/<name>/** must match assembled output from src/skills/<name>/**."
+    },
+    {
+      "id": "portability-no-repo-policy-refs",
+      "description": "Skill text must not reference repo-coupled policy files.",
+      "deny_tokens": [
+        "AGENTS.md",
+        "/mnt/",
+        "/home/",
+        "C:\\\\"
+      ]
+    },
+    {
+      "id": "guardrail-semantics",
+      "description": "Skill must include or reference guardrail semantics.",
+      "required_semantics": [
+        "decision ownership",
+        "ask-before-act",
+        "evidence-first",
+        "bounded approval",
+        "safety carve-outs"
+      ]
+    }
+  ],
+  "checks": {
+    "required_files": [
+      "src/shared/references/GUARDRAILS.md"
+    ],
+    "required_dir_file_sets": [
+      {
+        "dirs_glob": "src/skills/duck-*",
+        "required_files": [
+          "SKILL.md"
+        ]
+      }
+    ],
+    "skill_groups": {
+      "all_skills": [
+        "duck-debt",
+        "duck-debug",
+        "duck-design",
+        "duck-explain",
+        "duck-review",
+        "duck-teach",
+        "duck-triage"
+      ],
+      "skills_with_ladder": [
+        "duck-debug",
+        "duck-design",
+        "duck-review"
+      ],
+      "skills_with_safety": [
+        "duck-debt",
+        "duck-design",
+        "duck-explain",
+        "duck-teach",
+        "duck-triage"
+      ],
+      "skills_with_mutating_gate": [
+        "duck-debug"
+      ]
+    },
+    "group_assertions": {
+      "all_skills": [
+        "{{include: skill-snippets/philosophy-guardrails.md}}",
+        "{{include: skill-snippets/clarify-first-preflight.md}}"
+      ],
+      "skills_with_ladder": [
+        "{{include: skill-snippets/duck-ladder-core.md}}"
+      ],
+      "skills_with_safety": [
+        "{{include: policy-snippets/safety-carveouts.md}}"
+      ],
+      "skills_with_mutating_gate": [
+        "{{include: policy-snippets/mutating-action-gate.md}}"
+      ]
+    }
+  },
+  "notes": [
+    "Enforced by scripts/assemble-skills.sh in --check mode (including grouped assertions)."
+  ]
+}

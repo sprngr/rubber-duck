@@ -11,7 +11,7 @@ fi
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${0}")" && pwd)"
 REPO_ROOT="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
-RULES_FILE="${REPO_ROOT}/build/skill-assembly/rules.json"
+RULES_FILE="${REPO_ROOT}/build/skill-assembly.rules.json"
 
 SRC_ROOT="${REPO_ROOT}/src/skills"
 OUT_ROOT="${REPO_ROOT}/skills"
@@ -60,6 +60,7 @@ render_skill_markdown() {
   local src="$1"
   local out="$2"
   local line=""
+  local include_status=0
 
   if [[ ! -f "${src}" ]]; then
     printf 'ERROR: missing source file: %s\n' "${src}" >&2
@@ -70,36 +71,51 @@ render_skill_markdown() {
   : > "${out}"
 
   while IFS= read -r line || [[ -n "${line}" ]]; do
-    if [[ "${line}" =~ ^[[:space:]]*\{\{include:[[:space:]]*skill-snippets/([^[:space:]\}]+)[[:space:]]*\}\}[[:space:]]*$ ]]; then
-      local snippet_name="${BASH_REMATCH[1]}"
-      local snippet_path="${SKILL_SNIPPETS_ROOT}/${snippet_name}"
-      if [[ ! -f "${snippet_path}" ]]; then
-        printf 'ERROR: missing skill snippet: %s\n' "${snippet_path}" >&2
-        rm -f "${out}"
-        return 1
-      fi
-      cat "${snippet_path}" >> "${out}"
-      printf '\n' >> "${out}"
+    include_status=0
+    append_include_if_match "${line}" "${out}" || include_status=$?
+    if (( include_status == 0 )); then
       continue
     fi
-
-    if [[ "${line}" =~ ^[[:space:]]*\{\{include:[[:space:]]*policy-snippets/([^[:space:]\}]+)[[:space:]]*\}\}[[:space:]]*$ ]]; then
-      local snippet_name="${BASH_REMATCH[1]}"
-      local snippet_path="${POLICY_SNIPPETS_ROOT}/${snippet_name}"
-      if [[ ! -f "${snippet_path}" ]]; then
-        printf 'ERROR: missing policy snippet: %s\n' "${snippet_path}" >&2
-        rm -f "${out}"
-        return 1
-      fi
-      cat "${snippet_path}" >> "${out}"
-      printf '\n' >> "${out}"
-      continue
+    if (( include_status == 2 )); then
+      rm -f "${out}"
+      return 1
     fi
 
     printf '%s\n' "${line}" >> "${out}"
   done < "${src}"
 
   return 0
+}
+
+append_include_if_match() {
+  local line="$1"
+  local out="$2"
+
+  if [[ "${line}" =~ ^[[:space:]]*\{\{include:[[:space:]]*skill-snippets/([^[:space:]\}]+)[[:space:]]*\}\}[[:space:]]*$ ]]; then
+    local snippet_name="${BASH_REMATCH[1]}"
+    local snippet_path="${SKILL_SNIPPETS_ROOT}/${snippet_name}"
+    if [[ ! -f "${snippet_path}" ]]; then
+      printf 'ERROR: missing skill snippet: %s\n' "${snippet_path}" >&2
+      return 2
+    fi
+    cat "${snippet_path}" >> "${out}"
+    printf '\n' >> "${out}"
+    return 0
+  fi
+
+  if [[ "${line}" =~ ^[[:space:]]*\{\{include:[[:space:]]*policy-snippets/([^[:space:]\}]+)[[:space:]]*\}\}[[:space:]]*$ ]]; then
+    local snippet_name="${BASH_REMATCH[1]}"
+    local snippet_path="${POLICY_SNIPPETS_ROOT}/${snippet_name}"
+    if [[ ! -f "${snippet_path}" ]]; then
+      printf 'ERROR: missing policy snippet: %s\n' "${snippet_path}" >&2
+      return 2
+    fi
+    cat "${snippet_path}" >> "${out}"
+    printf '\n' >> "${out}"
+    return 0
+  fi
+
+  return 1
 }
 
 render_or_check_skill() {
@@ -113,27 +129,30 @@ render_or_check_skill() {
     return 1
   fi
 
+  render_or_check_file "${tmp}" "${out}"
+  rm -f "${tmp}"
+}
+
+render_or_check_file() {
+  local tmp_path="$1"
+  local out_path="$2"
+
   if (( CHECK_ONLY == 1 )); then
-    if [[ ! -f "${out}" ]]; then
-      printf 'MISSING: %s\n' "${out}" >&2
-      rm -f "${tmp}"
+    if [[ ! -f "${out_path}" ]]; then
+      printf 'MISSING: %s\n' "${out_path}" >&2
       return 1
     fi
-    if ! cmp -s "${tmp}" "${out}"; then
-      printf 'STALE: %s\n' "${out}" >&2
-      rm -f "${tmp}"
+    if ! cmp -s "${tmp_path}" "${out_path}"; then
+      printf 'STALE: %s\n' "${out_path}" >&2
       return 1
     fi
-    printf 'Checked: %s\n' "${out}"
-    rm -f "${tmp}"
+    printf 'Checked: %s\n' "${out_path}"
     return 0
   fi
 
-  mkdir -p "$(dirname -- "${out}")"
-  cp -f "${tmp}" "${out}"
-  printf 'Built: %s\n' "${out}"
-  rm -f "${tmp}"
-  return 0
+  mkdir -p "$(dirname -- "${out_path}")"
+  cp -f "${tmp_path}" "${out_path}"
+  printf 'Built: %s\n' "${out_path}"
 }
 
 load_deny_tokens() {
@@ -192,56 +211,11 @@ enforce_rule_checks() {
   local rules_file="$1"
   local repo_root="$2"
 
-  python3 - "${rules_file}" "${repo_root}" <<'PY'
-import json
-import sys
-from pathlib import Path
-
-rules_path = Path(sys.argv[1])
-repo_root = Path(sys.argv[2])
-
-if not rules_path.exists():
-    print(f"RULES: missing rules file: {rules_path}", file=sys.stderr)
-    sys.exit(1)
-
-with rules_path.open("r", encoding="utf-8") as f:
-    data = json.load(f)
-
-checks = data.get("checks", {})
-required_files = checks.get("required_files", [])
-text_assertions = checks.get("text_assertions", [])
-
-errors = 0
-
-for rel in required_files:
-    target = repo_root / rel
-    if not target.exists():
-        print(f"RULES: missing required file: {rel}", file=sys.stderr)
-        errors += 1
-
-for idx, assertion in enumerate(text_assertions, start=1):
-    file_rel = assertion.get("file")
-    contains = assertion.get("contains")
-
-    if not file_rel or contains is None:
-        print(f"RULES: malformed text_assertion #{idx}", file=sys.stderr)
-        errors += 1
-        continue
-
-    target = repo_root / file_rel
-    if not target.exists():
-        print(f"RULES: text_assertion file missing: {file_rel}", file=sys.stderr)
-        errors += 1
-        continue
-
-    content = target.read_text(encoding="utf-8")
-    if contains not in content:
-        print(f"RULES: text_assertion failed: {file_rel} missing substring: {contains}", file=sys.stderr)
-        errors += 1
-
-if errors:
-    sys.exit(1)
-PY
+  python3 "${REPO_ROOT}/scripts/lib/check-rules.py" \
+    "${rules_file}" \
+    "${repo_root}" \
+    --groups-key skill_groups \
+    --group-file-template 'src/skills/{item}/SKILL.md'
 }
 
 failed=0

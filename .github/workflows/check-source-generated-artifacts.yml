@@ -34,14 +34,14 @@ jobs:
               - 'src/skills/**'
               - 'skills/**'
               - 'scripts/assemble-skills.sh'
-              - 'build/skill-assembly/**'
+              - 'build/skill-assembly.rules.json'
               - 'Makefile'
               - '.github/workflows/check-source-generated-artifacts.yml'
             agents:
               - 'src/agents/**'
               - 'dist/**'
               - 'scripts/build-harness-artifacts.sh'
-              - 'build/agent-assembly/**'
+              - 'build/agent-assembly.rules.json'
               - 'Makefile'
               - '.github/workflows/check-source-generated-artifacts.yml'
 

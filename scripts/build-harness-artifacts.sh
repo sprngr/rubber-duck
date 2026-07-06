@@ -16,7 +16,7 @@ fi
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${0}")" && pwd)"
 REPO_ROOT="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
-RULES_FILE="${REPO_ROOT}/build/agent-assembly/rules.json"
+RULES_FILE="${REPO_ROOT}/build/agent-assembly.rules.json"
 
 SRC_AGENTS_DIR="${REPO_ROOT}/src/agents"
 POLICY_SNIPPETS_DIR="${REPO_ROOT}/src/shared/policy-snippets"
@@ -35,65 +35,20 @@ enforce_rule_checks() {
   local rules_file="$1"
   local repo_root="$2"
 
-  python3 - "${rules_file}" "${repo_root}" <<'PY'
-import json
-import sys
-from pathlib import Path
-
-rules_path = Path(sys.argv[1])
-repo_root = Path(sys.argv[2])
-
-if not rules_path.exists():
-    print(f"RULES: missing rules file: {rules_path}", file=sys.stderr)
-    sys.exit(1)
-
-with rules_path.open("r", encoding="utf-8") as f:
-    data = json.load(f)
-
-checks = data.get("checks", {})
-required_files = checks.get("required_files", [])
-text_assertions = checks.get("text_assertions", [])
-
-errors = 0
-
-for rel in required_files:
-    target = repo_root / rel
-    if not target.exists():
-        print(f"RULES: missing required file: {rel}", file=sys.stderr)
-        errors += 1
-
-for idx, assertion in enumerate(text_assertions, start=1):
-    file_rel = assertion.get("file")
-    contains = assertion.get("contains")
-
-    if not file_rel or contains is None:
-        print(f"RULES: malformed text_assertion #{idx}", file=sys.stderr)
-        errors += 1
-        continue
-
-    target = repo_root / file_rel
-    if not target.exists():
-        print(f"RULES: text_assertion file missing: {file_rel}", file=sys.stderr)
-        errors += 1
-        continue
-
-    content = target.read_text(encoding="utf-8")
-    if contains not in content:
-        print(f"RULES: text_assertion failed: {file_rel} missing substring: {contains}", file=sys.stderr)
-        errors += 1
-
-if errors:
-    sys.exit(1)
-PY
+  python3 "${REPO_ROOT}/scripts/lib/check-rules.py" \
+    "${rules_file}" \
+    "${repo_root}" \
+    --groups-key agent_groups \
+    --group-file-template 'src/agents/{item}/body.md'
 }
 
 if (( CHECK_ONLY == 1 )); then
   enforce_rule_checks "${RULES_FILE}" "${REPO_ROOT}" || exit 1
 fi
 
-render_file() {
-  local out_path="$1"
-  local tmp_path="$2"
+render_or_check_file() {
+  local tmp_path="$1"
+  local out_path="$2"
 
   if (( CHECK_ONLY == 1 )); then
     if [[ ! -f "${out_path}" ]]; then
@@ -116,6 +71,7 @@ render_body_markdown() {
   local src="$1"
   local out="$2"
   local line=""
+  local include_status=0
 
   if [[ ! -f "${src}" ]]; then
     printf 'ERROR: missing body source file: %s\n' "${src}" >&2
@@ -126,23 +82,39 @@ render_body_markdown() {
   : > "${out}"
 
   while IFS= read -r line || [[ -n "${line}" ]]; do
-    if [[ "${line}" =~ ^[[:space:]]*\{\{include:[[:space:]]*policy-snippets/([^[:space:]\}]+)[[:space:]]*\}\}[[:space:]]*$ ]]; then
-      local snippet_name="${BASH_REMATCH[1]}"
-      local snippet_path="${POLICY_SNIPPETS_DIR}/${snippet_name}"
-      if [[ ! -f "${snippet_path}" ]]; then
-        printf 'ERROR: missing policy snippet: %s\n' "${snippet_path}" >&2
-        rm -f "${out}"
-        return 1
-      fi
-      cat "${snippet_path}" >> "${out}"
-      printf '\n' >> "${out}"
+    include_status=0
+    append_policy_include_if_match "${line}" "${out}" || include_status=$?
+    if (( include_status == 0 )); then
       continue
+    fi
+    if (( include_status == 2 )); then
+      rm -f "${out}"
+      return 1
     fi
 
     printf '%s\n' "${line}" >> "${out}"
   done < "${src}"
 
   return 0
+}
+
+append_policy_include_if_match() {
+  local line="$1"
+  local out="$2"
+
+  if [[ "${line}" =~ ^[[:space:]]*\{\{include:[[:space:]]*policy-snippets/([^[:space:]\}]+)[[:space:]]*\}\}[[:space:]]*$ ]]; then
+    local snippet_name="${BASH_REMATCH[1]}"
+    local snippet_path="${POLICY_SNIPPETS_DIR}/${snippet_name}"
+    if [[ ! -f "${snippet_path}" ]]; then
+      printf 'ERROR: missing policy snippet: %s\n' "${snippet_path}" >&2
+      return 2
+    fi
+    cat "${snippet_path}" >> "${out}"
+    printf '\n' >> "${out}"
+    return 0
+  fi
+
+  return 1
 }
 
 # Render Claude frontmatter from a meta.json into out. Field order:
@@ -233,7 +205,7 @@ CLAUDE_MD_TMP="${TMP_DIR}/CLAUDE.md"
 cat > "${CLAUDE_MD_TMP}" <<'EOF'
 @AGENTS.md
 EOF
-render_file "${CLAUDE_MD_OUT}" "${CLAUDE_MD_TMP}"
+render_or_check_file "${CLAUDE_MD_TMP}" "${CLAUDE_MD_OUT}"
 
 # Render each agent for every harness: harness frontmatter + shared body.
 for name in "${CONFIG_AGENTS[@]}"; do
@@ -247,12 +219,12 @@ for name in "${CONFIG_AGENTS[@]}"; do
   claude_tmp="${TMP_DIR}/claude-${name}.md"
   render_claude_fm "${meta}" "${claude_tmp}"
   cat "${rendered_body}" >> "${claude_tmp}"
-  render_file "${CLAUDE_AGENT_DIR}/${name}.md" "${claude_tmp}"
+  render_or_check_file "${claude_tmp}" "${CLAUDE_AGENT_DIR}/${name}.md"
 
   opencode_tmp="${TMP_DIR}/opencode-${name}.md"
   render_opencode_fm "${meta}" "${opencode_tmp}"
   cat "${rendered_body}" >> "${opencode_tmp}"
-  render_file "${OPENCODE_AGENT_DIR}/${name}.md" "${opencode_tmp}"
+  render_or_check_file "${opencode_tmp}" "${OPENCODE_AGENT_DIR}/${name}.md"
 
   # Copilot rendering is opt-in per agent until all meta.json files include
   # a harnesses.copilot section.
@@ -260,6 +232,6 @@ for name in "${CONFIG_AGENTS[@]}"; do
     copilot_tmp="${TMP_DIR}/copilot-${name}.md"
     render_copilot_fm "${meta}" "${copilot_tmp}"
     cat "${rendered_body}" >> "${copilot_tmp}"
-    render_file "${COPILOT_AGENT_DIR}/${name}.md" "${copilot_tmp}"
+    render_or_check_file "${copilot_tmp}" "${COPILOT_AGENT_DIR}/${name}.md"
   fi
 done
