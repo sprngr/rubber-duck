@@ -83,12 +83,7 @@ For time/scheduling bugs, first response should include:
 ### Duck Ladder (for fix direction)
 
 Before suggesting implementation, stop at first rung that holds:
-1. Need change at all?
-2. Reuse existing local helper/shared function?
-3. Stdlib/native feature covers it?
-4. Installed dependency already covers it?
-5. Smallest safe bounded diff?
-6. Only then propose new code/abstraction.
+{{include: shared/chunks/duck-ladder-core.md}}
 
 ### Core Framework
 

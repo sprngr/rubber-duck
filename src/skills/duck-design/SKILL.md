@@ -57,12 +57,7 @@ Before recommendations:
 ### Duck Ladder (when design implies implementation)
 
 If discussion enters implementation choices, stop at first rung:
-1) no new build needed (YAGNI)
-2) reuse existing local pattern
-3) stdlib/native feature
-4) already-installed dependency
-5) smallest safe bounded change
-6) only then new abstraction/code
+{{include: shared/chunks/duck-ladder-core.md}}
 
 Redirect to `duck-debug` if runtime bug/data issue wrapped in design language.
 

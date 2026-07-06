@@ -62,12 +62,12 @@ Before recommendations:
 ### Duck Ladder (when design implies implementation)
 
 If discussion enters implementation choices, stop at first rung:
-1) no new build needed (YAGNI)
-2) reuse existing local pattern
-3) stdlib/native feature
-4) already-installed dependency
-5) smallest safe bounded change
-6) only then new abstraction/code
+1. No change needed (YAGNI)
+2. Reuse existing local helper/pattern
+3. Replace with stdlib/native
+4. Use already-installed dependency
+5. Shrink to smallest safe diff
+6. Only then add new code/abstraction
 
 Redirect to `duck-debug` if runtime bug/data issue wrapped in design language.
 

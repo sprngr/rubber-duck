@@ -79,6 +79,10 @@
         "contains": "{{include: shared/chunks/clarify-first-preflight.md}}"
       },
       {
+        "file": "src/skills/duck-debug/SKILL.md",
+        "contains": "{{include: shared/chunks/duck-ladder-core.md}}"
+      },
+      {
         "file": "src/skills/duck-design/SKILL.md",
         "contains": "{{include: shared/chunks/philosophy-guardrails.md}}"
       },
@@ -89,6 +93,10 @@
       {
         "file": "src/skills/duck-design/SKILL.md",
         "contains": "{{include: shared/chunks/safety-carveouts.md}}"
+      },
+      {
+        "file": "src/skills/duck-design/SKILL.md",
+        "contains": "{{include: shared/chunks/duck-ladder-core.md}}"
       },
       {
         "file": "src/skills/duck-explain/SKILL.md",
@@ -109,6 +117,10 @@
       {
         "file": "src/skills/duck-review/SKILL.md",
         "contains": "{{include: shared/chunks/clarify-first-preflight.md}}"
+      },
+      {
+        "file": "src/skills/duck-review/SKILL.md",
+        "contains": "{{include: shared/chunks/duck-ladder-core.md}}"
       },
       {
         "file": "src/skills/duck-teach/SKILL.md",
