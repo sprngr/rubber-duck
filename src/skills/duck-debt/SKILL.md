@@ -88,7 +88,8 @@ Issue-link detection:
 ### Counting + Classification Rules (hard)
 
 - count only active deferred-work comment signals with concrete deferred work content
-- do not count plain mentions in docs/references/examples/templates/meta-text
+- count deferred-work signals in code and docs artifacts (including ADR/policy/runbooks) as active entries by default
+- treat only obvious teaching/reference samples as non-active (for example fenced examples labeled "example", "template", or "sample")
 - if scope contains only mentions/examples and no active entries, report scoped zero findings
 - classify tiers as:
   - `explicit` — signal includes issue link
@@ -128,7 +129,8 @@ If uncertainty remains after loop, classify conservatively (`weak`) and add one 
 
 - missing issue ref in broad mode: keep entry and tier as `likely`/`weak`
 - strict mode with no issue-linked entries: output clean-ledger line only
-- comments inside docs/examples/templates are non-active reference occurrences unless user asks for all occurrences
+- deferred-work markers in docs/ADR/policy are active entries by default
+- only explicit examples/templates/samples are non-active reference occurrences unless user asks for all occurrences
 
 ## Boundaries & Handoffs
 
