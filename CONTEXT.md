@@ -13,7 +13,7 @@ Outcomes:
 
 - Agent source: `src/agents/<name>/` (`meta.json` + `body.md`)
 - Skill source: `src/skills/duck-*/SKILL.md`
-- Canonical shared guardrails source: `src/skills/shared/GUARDRAILS.md`
+- Canonical shared guardrails source: `src/skills/shared/references/GUARDRAILS.md`
 - Generated skill artifacts: `skills/duck-*/` (for `npx skills`)
 - Generated harness artifacts: `dist/{claude,opencode,copilot}/`
 - Global policy: `AGENTS.md`

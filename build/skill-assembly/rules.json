@@ -52,7 +52,7 @@
   ],
   "checks": {
     "required_files": [
-      "src/skills/shared/GUARDRAILS.md",
+      "src/skills/shared/references/GUARDRAILS.md",
       "src/skills/duck-debt/SKILL.md",
       "src/skills/duck-debug/SKILL.md",
       "src/skills/duck-design/SKILL.md",

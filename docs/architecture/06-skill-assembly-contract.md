@@ -7,7 +7,7 @@ Define the authoritative source-to-artifact model for skills and the checks that
 ## Source of Truth
 
 - Skill source lives in `src/skills/`.
-- Canonical shared guardrails live in `src/skills/shared/GUARDRAILS.md`.
+- Canonical shared guardrails live in `src/skills/shared/references/GUARDRAILS.md`.
 
 Do not hand-edit generated artifacts.
 
@@ -58,5 +58,5 @@ Contract includes:
 
 1. `src/skills/**` is authoritative.
 2. `skills/**` is generated and must be reproducible.
-3. Canonical guardrails come only from `src/skills/shared/GUARDRAILS.md`.
+3. Canonical guardrails come only from `src/skills/shared/references/GUARDRAILS.md`.
 4. Any source change that affects skills must be reflected in generated artifacts.

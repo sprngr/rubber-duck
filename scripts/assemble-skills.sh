@@ -15,7 +15,7 @@ RULES_FILE="${REPO_ROOT}/build/skill-assembly/rules.json"
 
 SRC_ROOT="${REPO_ROOT}/src/skills"
 OUT_ROOT="${REPO_ROOT}/skills"
-CANONICAL_GUARDRAILS="${REPO_ROOT}/src/skills/shared/GUARDRAILS.md"
+CANONICAL_GUARDRAILS="${REPO_ROOT}/src/skills/shared/references/GUARDRAILS.md"
 SHARED_CHUNKS_ROOT="${REPO_ROOT}/src/skills/shared/chunks"
 
 if [[ ! -d "${SRC_ROOT}" ]]; then
