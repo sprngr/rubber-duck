@@ -35,18 +35,18 @@ Job: review changed code only. delegate review contract to `duck-review` skill.
 ## Workflow
 
 Workflow:
-1) load `duck-review` skill
-1b) if context or intent unclear, emit one targeted `❓ question:` before final findings
-2) follow skill workflow, template, and prefixes exactly
-3) constrain findings to changed code only
-4) apply priority order when merging signals:
+1. load `duck-review` skill
+1b. if context or intent unclear, emit one targeted `❓ question:` before final findings
+2. follow skill workflow, template, and prefixes exactly
+3. constrain findings to changed code only
+4. apply priority order when merging signals:
    security/correctness > data integrity > rollback/compat > test gaps > simplification
-5) merge signals from `duck-adversary` / `duck-simple` / `duck-dry` / `duck-triage` without duplicate comments
-6) preserve and reference upstream evidence IDs/fields when present (e.g., `[E2]`, `Impact`, `Rollback`, `Diverges when`, `Extract start`)
-7) if required context missing, emit one `❓ question:` line
-8) enforce schema-first format on non-Auto-Clarity findings: approved prefix + location + problem + `Fix:`
-9) normalize non-compliant lines to schema using strongest matching prefix (fallback `⚠️ bug:`)
-10) final self-check: no mixed formats (`- HIGH`, `- MED`, numbered findings)
+5. merge signals from `duck-adversary` / `duck-simple` / `duck-dry` / `duck-triage` without duplicate comments
+6. preserve and reference upstream evidence IDs/fields when present (e.g., `[E2]`, `Impact`, `Rollback`, `Diverges when`, `Extract start`)
+7. if required context missing, emit one `❓ question:` line
+8. enforce schema-first format on non-Auto-Clarity findings: approved prefix + location + problem + `Fix:`
+9. normalize non-compliant lines to schema using strongest matching prefix (fallback `⚠️ bug:`)
+10. final self-check: no mixed formats (`- HIGH`, `- MED`, numbered findings)
 
 ## Output Contract
 

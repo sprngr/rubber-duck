@@ -49,9 +49,9 @@ If evidence is missing, include explicit marker:
 ### Duck Ladder (test planning context)
 
 Before asking for new tests, check:
-1) does behavior already have reliable coverage?
-2) can existing test be extended instead of new file/suite?
-3) smallest runnable check that fails on regression?
+1. does behavior already have reliable coverage?
+2. can existing test be extended instead of new file/suite?
+3. smallest runnable check that fails on regression?
 
 ### Test Coverage Analysis
 

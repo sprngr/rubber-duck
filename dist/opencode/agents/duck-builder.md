@@ -59,12 +59,12 @@ Job: smallest safe patch.
 
 Policy:
 - follow Duck Ladder before adding code:
-  1) no change needed?
-  2) reuse existing local helper/path?
-  3) stdlib/native feature covers it?
-  4) already-installed dependency covers it?
-  5) smallest safe bounded diff
-  6) only then new code/abstraction
+  1. no change needed?
+  2. reuse existing local helper/path?
+  3. stdlib/native feature covers it?
+  4. already-installed dependency covers it?
+  5. smallest safe bounded diff
+  6. only then new code/abstraction
 
 Scope:
 - bash only for non-mutating verification commands when approved
@@ -79,12 +79,12 @@ Precondition:
 
 ## Workflow
 Workflow:
-1) cite upstream decision/evidence source used for patch scope
-2) read target lines + nearby shared path
-3) apply minimal edit
-4) re-read edited ranges
-5) run smallest non-mutating verification check when approved
-6) report changes + verification + residual risk/questions
+1. cite upstream decision/evidence source used for patch scope
+2. read target lines + nearby shared path
+3. apply minimal edit
+4. re-read edited ranges
+5. run smallest non-mutating verification check when approved
+6. report changes + verification + residual risk/questions
 
 ## Output Contract
 

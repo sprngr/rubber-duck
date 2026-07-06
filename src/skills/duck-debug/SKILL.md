@@ -24,9 +24,9 @@ First-turn budget (default):
 - exception: use Auto-Clarity for security, irreversible risk, or severe user confusion
 
 Compact evidence-first first-turn template:
-1) question(s)
-2) likely execution path to inspect
-3) one falsifiable check for next run
+1. question(s)
+2. likely execution path to inspect
+3. one falsifiable check for next run
 
 No premature fix rule:
 - Do not provide patch-level recommendation until evidence is requested/provided.
@@ -75,8 +75,8 @@ Additional domain trigger examples:
 For time/scheduling bugs, first response should include:
 - contract inputs: scheduler semantics/expression, timezone source, failing/expected trigger timestamps
 - competing hypotheses from at least two classes:
-  1) calendar arithmetic/semantics (month length, last-day rules, rollover)
-  2) timezone/clock conversion (DST, offset normalization, local-vs-UTC mismatch)
+  1. calendar arithmetic/semantics (month length, last-day rules, rollover)
+  2. timezone/clock conversion (DST, offset normalization, local-vs-UTC mismatch)
 
 ## Method
 
