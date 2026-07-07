@@ -7,6 +7,7 @@ CLAUDE_MD=""
 CLAUDE_MODE_SET=0
 OPENCODE_MODE_SET=0
 COPILOT_MODE_SET=0
+PI_MODE_SET=0
 SKIP_SKILLS=0
 PROJECT_SKILLS=0
 SKILLS_SOURCE="https://github.com/sprngr/rubber-duck"
@@ -46,6 +47,10 @@ CLAUDE_AGENTS_DIR="${HOME}/.claude/agents"
 CLAUDE_POLICY_MD="${HOME}/.claude/CLAUDE.md"
 CLAUDE_PROJECT_AGENTS_DIR=".claude/agents"
 CLAUDE_PROJECT_POLICY_MD="CLAUDE.md"
+PI_AGENTS_DIR="${HOME}/.pi/agent/agents"
+PI_AGENTS_MD="${HOME}/.pi/agent/AGENTS.md"
+PI_PROJECT_AGENTS_DIR=".pi/agents"
+PI_PROJECT_AGENTS_MD="AGENTS.md"
 
 AGENT_FILES=(
   "rubber-duck.md"
@@ -202,6 +207,8 @@ Options:
   --opencode-project                Use project opencode paths (.opencode/agents + AGENTS.md)
   --copilot                         Use global Copilot paths (~/.copilot/agents + ~/.copilot/AGENTS.md)
   --copilot-project                 Use project Copilot paths (.github/agents + AGENTS.md)
+  --pi                              Use global Pi paths (~/.pi/agent/agents + ~/.pi/agent/AGENTS.md)
+  --pi-project                      Use project Pi paths (.pi/agents + AGENTS.md)
   --claude                          Use global Claude paths (~/.claude/agents + ~/.claude/CLAUDE.md)
   --claude-project                  Use project Claude paths (.claude/agents + CLAUDE.md)
   --claude-md <path>                Claude target memory file path override
@@ -218,6 +225,8 @@ Examples:
   scripts/rubber-duck.sh install --opencode-project
   scripts/rubber-duck.sh install --copilot
   scripts/rubber-duck.sh install --copilot-project
+  scripts/rubber-duck.sh install --pi
+  scripts/rubber-duck.sh install --pi-project
   scripts/rubber-duck.sh install --claude
   scripts/rubber-duck.sh install --claude-project
   curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh | bash -s -- install --opencode
@@ -274,6 +283,24 @@ while [[ $# -gt 0 ]]; do
       fi
       TARGET="copilot-project"
       COPILOT_MODE_SET=1
+      shift
+      ;;
+    --pi)
+      if (( PI_MODE_SET == 1 )) && [[ "${TARGET}" != "pi" ]]; then
+        err "cannot combine --pi and --pi-project"
+        exit 1
+      fi
+      TARGET="pi"
+      PI_MODE_SET=1
+      shift
+      ;;
+    --pi-project)
+      if (( PI_MODE_SET == 1 )) && [[ "${TARGET}" != "pi-project" ]]; then
+        err "cannot combine --pi and --pi-project"
+        exit 1
+      fi
+      TARGET="pi-project"
+      PI_MODE_SET=1
       shift
       ;;
     --claude)
@@ -393,6 +420,44 @@ resolve_target() {
       REMOTE_POLICY_PATH="AGENTS.md"
       REMOTE_AGENTS_PATH="dist/copilot/agents"
       ;;
+    pi)
+      DEST_AGENTS_DIR="${PI_AGENTS_DIR}"
+      DEST_POLICY_MD="${PI_AGENTS_MD}"
+      POLICY_MODE="managed_block"
+      LOCAL_POLICY_FILE="${REPO_ROOT}/AGENTS.md"
+      if [[ -d "${REPO_ROOT}/dist/pi/agents" ]]; then
+        LOCAL_AGENTS_DIR="${REPO_ROOT}/dist/pi/agents"
+      elif [[ -d "${REPO_ROOT}/dist/opencode/agents" ]]; then
+        LOCAL_AGENTS_DIR="${REPO_ROOT}/dist/opencode/agents"
+      else
+        LOCAL_AGENTS_DIR="${REPO_ROOT}/agents"
+      fi
+      REMOTE_POLICY_PATH="AGENTS.md"
+      if [[ -d "${REPO_ROOT}/dist/pi/agents" ]]; then
+        REMOTE_AGENTS_PATH="dist/pi/agents"
+      else
+        REMOTE_AGENTS_PATH="dist/opencode/agents"
+      fi
+      ;;
+    pi-project)
+      DEST_AGENTS_DIR="${PI_PROJECT_AGENTS_DIR}"
+      DEST_POLICY_MD="${PI_PROJECT_AGENTS_MD}"
+      POLICY_MODE="managed_block"
+      LOCAL_POLICY_FILE="${REPO_ROOT}/AGENTS.md"
+      if [[ -d "${REPO_ROOT}/dist/pi/agents" ]]; then
+        LOCAL_AGENTS_DIR="${REPO_ROOT}/dist/pi/agents"
+      elif [[ -d "${REPO_ROOT}/dist/opencode/agents" ]]; then
+        LOCAL_AGENTS_DIR="${REPO_ROOT}/dist/opencode/agents"
+      else
+        LOCAL_AGENTS_DIR="${REPO_ROOT}/agents"
+      fi
+      REMOTE_POLICY_PATH="AGENTS.md"
+      if [[ -d "${REPO_ROOT}/dist/pi/agents" ]]; then
+        REMOTE_AGENTS_PATH="dist/pi/agents"
+      else
+        REMOTE_AGENTS_PATH="dist/opencode/agents"
+      fi
+      ;;
     claude)
       DEST_AGENTS_DIR="${CLAUDE_AGENTS_DIR}"
       DEST_POLICY_MD="${CLAUDE_MD:-${CLAUDE_POLICY_MD}}"
@@ -422,6 +487,188 @@ resolve_target() {
       exit 1
       ;;
   esac
+}
+
+pi_target_enabled() {
+  [[ "${TARGET}" == "pi" || "${TARGET}" == "pi-project" ]]
+}
+
+csv_contains_tool() {
+  local csv="$1"
+  local needle="$2"
+  local item
+  IFS=',' read -r -a __csv_items <<< "${csv}"
+  for item in "${__csv_items[@]}"; do
+    [[ "${item}" == "${needle}" ]] && return 0
+  done
+  return 1
+}
+
+join_by_comma() {
+  local out=""
+  local part
+  for part in "$@"; do
+    if [[ -z "${out}" ]]; then
+      out="${part}"
+    else
+      out="${out},${part}"
+    fi
+  done
+  printf '%s' "${out}"
+}
+
+pi_clean_token() {
+  local token="$1"
+  token="${token//,/}"
+  token="${token//;/}"
+  token="${token//(/}"
+  token="${token//)/}"
+  token="${token//[/}"
+  token="${token//]/}"
+  token="${token//\"/}"
+  token="${token//\'/}"
+  printf '%s' "${token}"
+}
+
+pi_extract_plugin_version_from_list() {
+  local pi_list="$1"
+  local plugin_id="$2"
+  local raw token
+
+  for raw in ${pi_list}; do
+    token="$(pi_clean_token "${raw}")"
+    if [[ "${token}" == "${plugin_id}"@* ]]; then
+      printf '%s' "${token##*@}"
+      return 0
+    fi
+  done
+
+  printf 'unknown'
+  return 0
+}
+
+pi_detect_unknown_subagent_token() {
+  local pi_list="$1"
+  local match=""
+
+  match="$(printf '%s\n' "${pi_list}" \
+    | grep -Eoi '@[[:alnum:]._-]+/[[:alnum:]._-]*subagents[[:alnum:]._-]*(@[0-9][^[:space:]]*)?|[[:alnum:]._-]*subagents[[:alnum:]._-]*(@[0-9][^[:space:]]*)?' \
+    | grep -Evi 'worktree|permission' \
+    | head -n 1 || true)"
+
+  printf '%s' "${match}"
+}
+
+pi_policy_gate() {
+  local pi_list=""
+  local plugin_kind="none"
+  local plugin_id=""
+  local plugin_version="unknown"
+  local subagents_ok="0"
+  local permissions_detected="0"
+  local probe_error=""
+  local tools_output=""
+  local tools_csv=""
+  local unknown_token=""
+  local missing_tools=()
+  local missing_csv=""
+  local required_tool
+  local message=""
+  local subagent_probe_cmd="${PI_SUBAGENT_PROBE_CMD:-pi subagent --help}"
+  local tools_probe_cmd="${PI_TOOLS_PROBE_CMD:-pi tools list}"
+
+  if (( DRY_RUN == 1 )); then
+    log "[dry-run] skipping Pi capability probes"
+    return 0
+  fi
+
+  if ! pi_list="$(pi list 2>/dev/null)"; then
+    probe_error="pi list failed"
+  fi
+
+  if [[ -z "${probe_error}" ]]; then
+    if printf '%s' "${pi_list}" | grep -Fq '@gotgenes/pi-subagents'; then
+      plugin_kind="known"
+      plugin_id='@gotgenes/pi-subagents'
+    elif printf '%s' "${pi_list}" | grep -Fq '@tintinweb/pi-subagents'; then
+      plugin_kind="known"
+      plugin_id='@tintinweb/pi-subagents'
+    elif printf '%s' "${pi_list}" | grep -Fq 'pi-subagents'; then
+      plugin_kind="known"
+      plugin_id='pi-subagents'
+    elif printf '%s' "${pi_list}" | grep -qi 'subagents'; then
+      plugin_kind="unknown"
+      unknown_token="$(pi_detect_unknown_subagent_token "${pi_list}")"
+      if [[ -n "${unknown_token}" ]]; then
+        if [[ "${unknown_token}" == *@[0-9]* ]]; then
+          plugin_id="${unknown_token%@*}"
+          plugin_version="${unknown_token##*@}"
+        else
+          plugin_id="${unknown_token}"
+        fi
+      else
+        plugin_id='unknown-subagents-plugin'
+      fi
+    else
+      plugin_kind="none"
+    fi
+
+    if printf '%s' "${pi_list}" | grep -qi 'pi-permission-system'; then
+      permissions_detected="1"
+    fi
+
+    if [[ -n "${plugin_id}" && "${plugin_version}" == "unknown" ]]; then
+      plugin_version="$(pi_extract_plugin_version_from_list "${pi_list}" "${plugin_id}")"
+    fi
+  fi
+
+  if [[ -z "${probe_error}" && "${plugin_kind}" != "none" ]]; then
+    if bash -lc "${subagent_probe_cmd}" >/dev/null 2>&1; then
+      subagents_ok="1"
+    fi
+
+    if tools_output="$(bash -lc "${tools_probe_cmd}" 2>/dev/null)"; then
+      local candidate
+      local tools_lower
+      tools_lower="$(printf '%s' "${tools_output}" | tr '[:upper:]' '[:lower:]')"
+      for candidate in ${PI_REQUIRED_TOOLS[*]}; do
+        if printf '%s' "${tools_lower}" | grep -Eq "(^|[^a-z0-9_-])${candidate}([^a-z0-9_-]|$)"; then
+          if [[ -z "${tools_csv}" ]]; then
+            tools_csv="${candidate}"
+          else
+            tools_csv="${tools_csv},${candidate}"
+          fi
+        fi
+      done
+    fi
+  fi
+
+  if [[ "${subagents_ok}" == "1" ]]; then
+    for required_tool in "${PI_REQUIRED_TOOLS[@]}"; do
+      if ! csv_contains_tool "${tools_csv}" "${required_tool}"; then
+        missing_tools+=("${required_tool}")
+      fi
+    done
+  fi
+
+  if (( ${#missing_tools[@]} > 0 )); then
+    missing_csv="$(join_by_comma "${missing_tools[@]}")"
+  fi
+
+  pi_policy_decide "${plugin_kind}" "${subagents_ok}" "${missing_csv}" "${permissions_detected}" "${probe_error}"
+  message="$(pi_policy_message "${PI_POLICY_STATUS}" "${plugin_id}" "${plugin_version}" "${missing_csv}" "${probe_error}")"
+
+  if (( PI_POLICY_EXIT_CODE == 0 )); then
+    if [[ "${PI_POLICY_STATUS}" == "${PI_STATUS_SUPPORTED_WITH_NOTE}" || "${PI_POLICY_STATUS}" == "${PI_STATUS_UNSUPPORTED_BUT_COMPATIBLE}" ]]; then
+      warn "${message}"
+    else
+      log "${message}"
+    fi
+    return 0
+  fi
+
+  err "${message}"
+  return "${PI_POLICY_EXIT_CODE}"
 }
 
 running_piped() {
@@ -711,6 +958,7 @@ doctor() {
   require_cmd awk
   require_cmd cp
   if [[ "${EFFECTIVE_SOURCE}" == "web" ]]; then require_cmd curl; fi
+  if pi_target_enabled; then require_cmd pi; fi
   if (( DRY_RUN == 1 )); then
     [[ -d "${DEST_AGENTS_DIR}" ]] || warn "doctor: agents dir missing, would create: ${DEST_AGENTS_DIR}"
     [[ -d "$(dirname -- "${DEST_POLICY_MD}")" ]] || warn "doctor: policy parent missing, would create: $(dirname -- "${DEST_POLICY_MD}")"
@@ -741,6 +989,11 @@ assert_eq() {
 run_policy_tests() {
   local failures=0
   local msg
+
+  if ! pi_target_enabled; then
+    err "policy-test requires a Pi target. Use --pi or --pi-project."
+    return 1
+  fi
 
   # R1
   pi_policy_decide "known" "1" "" "1" ""
@@ -822,6 +1075,9 @@ choose_source
 case "${ACTION}" in
   install)
     doctor
+    if pi_target_enabled; then
+      pi_policy_gate
+    fi
     prepare_sources
     install_agents
     backup_md "${DEST_POLICY_MD}"

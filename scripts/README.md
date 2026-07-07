@@ -94,6 +94,8 @@ Use Bash CLI for Linux/macOS and shell-based CI.
 | `--claude-project` | switch | Use project Claude paths (`.claude/agents` + `CLAUDE.md` + sibling `AGENTS.md`) |
 | `--copilot` | switch | Use global Copilot paths (`~/.copilot/agents` + `~/.copilot/AGENTS.md`) |
 | `--copilot-project` | switch | Use project Copilot paths (`.github/agents` + project-root `AGENTS.md`) |
+| `--pi` | switch | Use global Pi paths (`~/.pi/agent/agents` + `~/.pi/agent/AGENTS.md`) |
+| `--pi-project` | switch | Use project Pi paths (`.pi/agents` + project-root `AGENTS.md`) |
 | `--opencode` | switch | Use preconfigured opencode paths |
 | `--opencode-project` | switch | Use project opencode paths (`.opencode/agents` + project-root `AGENTS.md`) |
 | `--claude-md <path>` | value | Claude target `CLAUDE.md` path override (global default for `--claude`, project default for `--claude-project`) |
@@ -169,6 +171,8 @@ Hook runs:
 - Do not combine global and project OpenCode modes in one command:
   - Bash: `--opencode` and `--opencode-project` are mutually exclusive
   - PowerShell: `-OpenCode` and `-OpenCodeProject` are mutually exclusive
+- Do not combine global and project Pi modes in one command:
+  - Bash: `--pi` and `--pi-project` are mutually exclusive
 
 ### Target Path Behavior
 
@@ -186,6 +190,18 @@ Hook runs:
   - installs full duck set (router + ducklings)
   - global mode: uses `~/.config/opencode/agents` + `~/.config/opencode/AGENTS.md`
   - project mode (`--opencode-project` / `-OpenCodeProject`): uses `.opencode/agents` + project-root `AGENTS.md`
+
+- Pi target (Bash):
+  - installs full duck set (router + ducklings)
+  - global mode: uses `~/.pi/agent/agents` + `~/.pi/agent/AGENTS.md`
+  - project mode (`--pi-project`): uses `.pi/agents` + project-root `AGENTS.md`
+  - install action applies Pi capability policy gate before mutation:
+    - supported/supported_with_note/unsupported_but_compatible -> continue
+    - incompatible_* / no_compatible_plugin -> fail with exit code 2
+    - environment_probe_failed -> fail with exit code 3
+  - probe command overrides (Bash env vars):
+    - `PI_SUBAGENT_PROBE_CMD` (default: `pi subagent --help`)
+    - `PI_TOOLS_PROBE_CMD` (default: `pi tools list`)
 
 - OpenCode targets:
   - use managed block markers in AGENTS.md
