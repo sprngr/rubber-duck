@@ -212,7 +212,7 @@ Hook runs:
     - `environment_probe_failed` -> fail with exit code 3
   - probe command overrides (Bash/PowerShell env vars):
     - `PI_SUBAGENT_PROBE_CMD` (default: `pi subagent --help`)
-    - `PI_TOOLS_PROBE_CMD` (default: `pi tools list`)
+    - `PI_TOOLS_PROBE_CMD` (default: `pi -p "tools"`)
   - supported known plugins: `pi-subagents`, `@tintinweb/pi-subagents`, `@gotgenes/pi-subagents`
 
 ### Installation Behavior

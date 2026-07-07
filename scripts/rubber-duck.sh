@@ -82,7 +82,8 @@ REQUIRED_SKILLS=(
 # R6 unknown + capability fail => unsupported_and_incompatible (2)
 # R7 no plugin detected => no_compatible_plugin (2)
 # R8 probe infrastructure failure => environment_probe_failed (3)
-PI_REQUIRED_TOOLS=("read" "bash" "edit" "write" "grep" "find" "ls")
+PI_REQUIRED_TOOLS=("read" "bash" "edit" "write")
+PI_OPTIONAL_TOOLS=("grep" "find" "ls")
 PI_STATUS_SUPPORTED="supported"
 PI_STATUS_SUPPORTED_WITH_NOTE="supported_with_note"
 PI_STATUS_INCOMPATIBLE_MISSING_TOOLS="incompatible_missing_tools"
@@ -183,7 +184,7 @@ pi_policy_message() {
       printf 'Cannot enable Pi coding harness: detected plugin %s@%s, but subagent capability probe failed.\n' "${plugin_id}" "${version}"
       ;;
     "${PI_STATUS_INCOMPATIBLE_MISSING_TOOLS}")
-      printf 'Cannot enable Pi coding harness: missing required tools: %s. Required: read, bash, edit, write, grep, find, ls.\n' "${missing_csv}"
+      printf 'Cannot enable Pi coding harness: missing required tools: %s. Required: read, bash, edit, write.\n' "${missing_csv}"
       ;;
     "${PI_STATUS_UNSUPPORTED_AND_INCOMPATIBLE}")
       printf 'Cannot enable Pi coding harness: detected unsupported plugin %s@%s, and compatibility probes failed.\n' "${plugin_id}" "${version}"
@@ -511,7 +512,7 @@ join_by_comma() {
     if [[ -z "${out}" ]]; then
       out="${part}"
     else
-      out="${out},${part}"
+      out="${out}, ${part}"
     fi
   done
   printf '%s' "${out}"
@@ -574,8 +575,11 @@ pi_policy_gate() {
   local missing_csv=""
   local required_tool
   local message=""
-  local subagent_probe_cmd="${PI_SUBAGENT_PROBE_CMD:-pi subagent --help}"
-  local tools_probe_cmd="${PI_TOOLS_PROBE_CMD:-pi tools list}"
+  local subagent_probe_cmd="${PI_SUBAGENT_PROBE_CMD:-pi list | grep "subagent"}"
+  local tools_probe_cmd="${PI_TOOLS_PROBE_CMD:-pi -p \"tools\"}"
+  local optional_tools_csv=""
+  local missing_optional_tools=()
+  local missing_optional_csv=""
 
   log "Checking Pi compatibility..."
 
@@ -633,7 +637,7 @@ pi_policy_gate() {
       local candidate
       local tools_lower
       tools_lower="$(printf '%s' "${tools_output}" | tr '[:upper:]' '[:lower:]')"
-      for candidate in ${PI_REQUIRED_TOOLS[*]}; do
+      for candidate in ${PI_REQUIRED_TOOLS[*]} ${PI_OPTIONAL_TOOLS[*]}; do
         if printf '%s' "${tools_lower}" | grep -Eq "(^|[^a-z0-9_-])${candidate}([^a-z0-9_-]|$)"; then
           if [[ -z "${tools_csv}" ]]; then
             tools_csv="${candidate}"
@@ -651,10 +655,20 @@ pi_policy_gate() {
         missing_tools+=("${required_tool}")
       fi
     done
+
+    for required_tool in "${PI_OPTIONAL_TOOLS[@]}"; do
+      if ! csv_contains_tool "${tools_csv}" "${required_tool}"; then
+        missing_optional_tools+=("${required_tool}")
+      fi
+    done
   fi
 
   if (( ${#missing_tools[@]} > 0 )); then
     missing_csv="$(join_by_comma "${missing_tools[@]}")"
+  fi
+
+  if (( ${#missing_optional_tools[@]} > 0 )); then
+    missing_optional_csv="$(join_by_comma "${missing_optional_tools[@]}")"
   fi
 
   pi_policy_decide "${plugin_kind}" "${subagents_ok}" "${missing_csv}" "${permissions_detected}" "${probe_error}"
@@ -665,6 +679,9 @@ pi_policy_gate() {
       warn "${message}"
     else
       log "${message}"
+    fi
+    if [[ -n "${missing_optional_csv}" ]]; then
+      warn "Optional Pi tools not available: ${missing_optional_csv}. Some read-only helper behaviors may be reduced."
     fi
     log "Pi compatibility status: ${PI_POLICY_STATUS} (exit ${PI_POLICY_EXIT_CODE})"
     return 0
@@ -680,8 +697,8 @@ pi_policy_gate() {
       err "Next step: verify plugin is enabled and subagent commands work (try: pi subagent --help)."
       ;;
     "${PI_STATUS_INCOMPATIBLE_MISSING_TOOLS}")
-      err "Next step: ensure required tools are exposed in Pi subagents plugin config (read,bash,edit,write,grep,find,ls)."
-      err "Check: pi tools list"
+      err "Next step: ensure required tools are exposed in Pi subagents plugin config (read,bash,edit,write)."
+      err "Check: pi -p \"tools\""
       ;;
     "${PI_STATUS_UNSUPPORTED_AND_INCOMPATIBLE}")
       err "Next step: use a supported plugin or configure your plugin to pass capability probes."

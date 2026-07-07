@@ -93,7 +93,8 @@ $RequiredSkills = @(
   "duck-triage"
 )
 
-$PiRequiredTools = @("read","bash","edit","write","grep","find","ls")
+$PiRequiredTools = @("read","bash","edit","write")
+$PiOptionalTools = @("grep","find","ls")
 $PiStatusSupported = "supported"
 $PiStatusSupportedWithNote = "supported_with_note"
 $PiStatusIncompatibleMissingTools = "incompatible_missing_tools"
@@ -192,7 +193,7 @@ function Pi-PolicyMessage([string]$Status, [string]$PluginId, [string]$Version, 
       return "Cannot enable Pi coding harness: detected plugin $PluginId@$Version, but subagent capability probe failed."
     }
     $PiStatusIncompatibleMissingTools {
-      return "Cannot enable Pi coding harness: missing required tools: $MissingCsv. Required: read, bash, edit, write, grep, find, ls."
+      return "Cannot enable Pi coding harness: missing required tools: $MissingCsv. Required: read, bash, edit, write."
     }
     $PiStatusUnsupportedAndIncompatible {
       return "Cannot enable Pi coding harness: detected unsupported plugin $PluginId@$Version, and compatibility probes failed."
@@ -217,6 +218,7 @@ function Pi-PolicyGate {
   $probeError = ""
   $toolsCsv = ""
   $missingTools = @()
+  $missingOptionalTools = @()
 
   if (-not (Get-Command pi -ErrorAction SilentlyContinue)) {
     throw "required command missing: pi"
@@ -269,18 +271,23 @@ function Pi-PolicyGate {
   }
 
   if ([string]::IsNullOrWhiteSpace($probeError) -and $pluginKind -ne "none") {
-    $subagentProbeCmd = if ($env:PI_SUBAGENT_PROBE_CMD) { $env:PI_SUBAGENT_PROBE_CMD } else { "pi subagent --help" }
-    $toolsProbeCmd = if ($env:PI_TOOLS_PROBE_CMD) { $env:PI_TOOLS_PROBE_CMD } else { "pi tools list" }
+    $subagentProbeCmd = if ($env:PI_SUBAGENT_PROBE_CMD) { $env:PI_SUBAGENT_PROBE_CMD } else { "pi list | Select-String -Pattern 'subagent'" }
+    $toolsProbeCmd = if ($env:PI_TOOLS_PROBE_CMD) { $env:PI_TOOLS_PROBE_CMD } else { "pi -p 'tools'" }
 
     try {
-      Invoke-Expression $subagentProbeCmd *> $null
-      if ($LASTEXITCODE -eq 0) { $subagentsOk = $true }
+      if ($env:PI_SUBAGENT_PROBE_CMD) {
+        Invoke-Expression $subagentProbeCmd *> $null
+        if ($LASTEXITCODE -eq 0) { $subagentsOk = $true }
+      } else {
+        $subagentProbeOut = (Invoke-Expression $subagentProbeCmd 2>$null | Out-String)
+        if (-not [string]::IsNullOrWhiteSpace($subagentProbeOut)) { $subagentsOk = $true }
+      }
     } catch { }
 
     try {
       $toolsOutput = (Invoke-Expression $toolsProbeCmd 2>$null | Out-String).ToLowerInvariant()
       $present = @()
-      foreach ($tool in $PiRequiredTools) {
+      foreach ($tool in ($PiRequiredTools + $PiOptionalTools)) {
         if ($toolsOutput -match "(^|[^a-z0-9_-])$tool([^a-z0-9_-]|$)") {
           $present += $tool
         }
@@ -295,6 +302,11 @@ function Pi-PolicyGate {
         $missingTools += $required
       }
     }
+    foreach ($optional in $PiOptionalTools) {
+      if ($toolsCsv -notmatch "(^|,)$optional(,|$)") {
+        $missingOptionalTools += $optional
+      }
+    }
   }
 
   $missingCsv = Join-Csv $missingTools
@@ -307,6 +319,10 @@ function Pi-PolicyGate {
     } else {
       Log $message
     }
+    $missingOptionalCsv = Join-Csv $missingOptionalTools
+    if (-not [string]::IsNullOrWhiteSpace($missingOptionalCsv)) {
+      Warn "Optional Pi tools not available: $missingOptionalCsv. Some read-only helper behaviors may be reduced."
+    }
     Log "Pi compatibility status: $($decision.status) (exit $($decision.exitCode))"
     return
   }
@@ -318,11 +334,11 @@ function Pi-PolicyGate {
       Write-Error "Example: pi add pi-subagents"
     }
     $PiStatusIncompatibleSubagentProbeFailed {
-      Write-Error "Next step: verify plugin is enabled and subagent commands work (try: pi subagent --help)."
+      Write-Error "Next step: verify plugin is enabled and subagent detection works (try: pi list | Select-String -Pattern 'subagent')."
     }
     $PiStatusIncompatibleMissingTools {
-      Write-Error "Next step: ensure required tools are exposed in Pi subagents plugin config (read,bash,edit,write,grep,find,ls)."
-      Write-Error "Check: pi tools list"
+      Write-Error "Next step: ensure required tools are exposed in Pi subagents plugin config (read,bash,edit,write)."
+      Write-Error "Check: pi -p 'tools'"
     }
     $PiStatusUnsupportedAndIncompatible {
       Write-Error "Next step: use a supported plugin or configure your plugin to pass capability probes."

@@ -29,7 +29,7 @@
     "pi": {
       "package": "rubber-duck",
       "name": "🦆",
-      "tools": "read,bash,edit,write,grep,find,ls",
+      "tools": "read,bash,edit,write,grep,find,ls,subagent,subagent_supervisor",
       "permission": {
         "read": "allow",
         "bash": "allow",
@@ -37,7 +37,9 @@
         "write": "allow",
         "grep": "allow",
         "find": "allow",
-        "ls": "allow"
+        "ls": "allow",
+        "subagent": "allow",
+        "subagent_supervisor": "allow"
       }
     }
   }
