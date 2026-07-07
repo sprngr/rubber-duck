@@ -1,0 +1,20 @@
+{
+  "name": "@sprngr/pi-rubber-duck-extension",
+  "version": "0.1.0",
+  "description": "Pi extension for Rubber Duck routing, controls, and status UX.",
+  "type": "module",
+  "license": "MIT",
+  "keywords": [
+    "pi-package",
+    "pi-extension",
+    "rubber-duck"
+  ],
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*"
+  },
+  "pi": {
+    "extensions": [
+      "./src/index.ts"
+    ]
+  }
+}
