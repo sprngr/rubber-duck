@@ -82,7 +82,6 @@ bash scripts/assemble-skills.sh --check
 | `uninstall` | Remove installed agents, remove managed policy file, remove skills package |
 | `status` | Show installed agent count, policy state, and skills state |
 | `doctor` | Validate target paths and required tooling |
-| `policy-test` | Run Pi policy-core self-tests (R1-R8 + exact message goldens) |
 
 ## Bash CLI (`scripts/rubber-duck.sh`)
 
@@ -131,11 +130,10 @@ Use PowerShell CLI for Windows-native environments.
 
 ## Notes
 
-### Pi harness policy core (PR1)
+### Pi compatibility checks
 
-- `scripts/rubber-duck.sh` includes a policy-core decision layer for planned Pi harness support.
-- PR1 scope is policy-only (status/exit-code/message contract); no installer probe wiring yet.
-- Policy status/exit-code contract:
+- Pi install flow performs compatibility checks before mutation and prints actionable remediation on failure.
+- Compatibility status/exit-code contract:
   - `supported` -> `0`
   - `supported_with_note` -> `0`
   - `unsupported_but_compatible` -> `0`

@@ -31,6 +31,9 @@ OPENCODE_AGENT_DIR="${OPENCODE_DIST_DIR}/agents"
 COPILOT_DIST_DIR="${REPO_ROOT}/dist/copilot"
 COPILOT_AGENT_DIR="${COPILOT_DIST_DIR}/agents"
 
+PI_DIST_DIR="${REPO_ROOT}/dist/pi"
+PI_AGENT_DIR="${PI_DIST_DIR}/agents"
+
 enforce_rule_checks() {
   local rules_file="$1"
   local repo_root="$2"
@@ -171,6 +174,24 @@ render_copilot_fm() {
   } > "${out}"
 }
 
+# Render Pi frontmatter from a meta.json into out. Pi currently reuses the
+# OpenCode-compatible harness shape (mode + permission + optional color), with
+# optional pi-specific overrides when present.
+render_pi_fm() {
+  local meta="$1" out="$2" v
+  {
+    printf -- '---\n'
+    printf 'name: %s\n' "$(jq -r '.harnesses.pi.name // .harnesses.opencode.name // .name' "${meta}")"
+    printf 'description: %s\n' "$(jq -r '.description' "${meta}")"
+    printf 'mode: %s\n' "$(jq -r '.harnesses.pi.mode // .harnesses.opencode.mode' "${meta}")"
+    printf 'permission:\n'
+    jq -r '(.harnesses.pi.permission // .harnesses.opencode.permission) | to_entries[] | "  \(.key): \(.value)"' "${meta}"
+    v="$(jq -r '.harnesses.pi.color // .harnesses.opencode.color // empty' "${meta}")"
+    [[ -n "${v}" ]] && printf 'color: "%s"\n' "${v}"
+    printf -- '---\n\n'
+  } > "${out}"
+}
+
 # Discover config agents from source-of-truth tree only.
 CONFIG_AGENTS=()
 if [[ -d "${SRC_AGENTS_DIR}" ]]; then
@@ -196,6 +217,7 @@ fi
 mkdir -p "${CLAUDE_AGENT_DIR}"
 mkdir -p "${OPENCODE_AGENT_DIR}"
 mkdir -p "${COPILOT_AGENT_DIR}"
+mkdir -p "${PI_AGENT_DIR}"
 
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "${TMP_DIR}"' EXIT
@@ -225,6 +247,11 @@ for name in "${CONFIG_AGENTS[@]}"; do
   render_opencode_fm "${meta}" "${opencode_tmp}"
   cat "${rendered_body}" >> "${opencode_tmp}"
   render_or_check_file "${opencode_tmp}" "${OPENCODE_AGENT_DIR}/${name}.md"
+
+  pi_tmp="${TMP_DIR}/pi-${name}.md"
+  render_pi_fm "${meta}" "${pi_tmp}"
+  cat "${rendered_body}" >> "${pi_tmp}"
+  render_or_check_file "${pi_tmp}" "${PI_AGENT_DIR}/${name}.md"
 
   # Copilot rendering is opt-in per agent until all meta.json files include
   # a harnesses.copilot section.

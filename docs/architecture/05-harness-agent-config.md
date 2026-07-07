@@ -2,7 +2,7 @@
 
 ## Overview
 
-Rubber Duck ships the same agent prompts to multiple harnesses (Claude Code, Copilot, OpenCode, and extensible to others). Each harness needs different frontmatter. The model is: **one shared agent body + per-harness metadata**, rendered into harness-specific artifacts at build time.
+Rubber Duck ships the same agent prompts to multiple harnesses (Claude Code, Copilot, OpenCode, Pi, and extensible to others). Each harness needs different frontmatter. The model is: **one shared agent body + per-harness metadata**, rendered into harness-specific artifacts at build time.
 
 ## Configuration model
 
@@ -22,6 +22,7 @@ Harness permission surfaces are not equivalent.
 - Copilot custom agents use YAML frontmatter fields such as `description`,
   optional `name`, and `tools`.
 - OpenCode uses a `permission:` object (e.g. `read`, `edit`, `task`, `skill`)
+- Pi currently uses an OpenCode-compatible frontmatter shape (`mode`, `permission`, optional `color`) with optional `harnesses.pi` overrides
 
 Keeping sections explicit avoids lossy mapping and keeps each harness configuration auditable.
 
@@ -62,6 +63,7 @@ The router follows the same model as every other agent (`body.md` + `meta.json`)
 - The builder (`scripts/build-harness-artifacts.sh`) reads each agent's `meta.json` and `body.md`.
 - For each harness, a renderer emits harness-specific frontmatter (`render_claude_fm`, `render_opencode_fm`, ...), then appends the shared body.
 - Output artifacts are written to `dist/<harness>/` and committed.
+- Pi artifacts are written to `dist/pi/agents` via `render_pi_fm` (defaulting to OpenCode-compatible metadata when `harnesses.pi` overrides are absent).
 - Copilot rendering is currently optional per agent (builder checks for
   `harnesses.copilot`) so harness rollout can be phased safely.
 - `--check` mode verifies committed artifacts match a fresh render; mismatch is CI drift.

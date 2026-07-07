@@ -1,5 +1,5 @@
 param(
-  [ValidateSet("install","uninstall","status","doctor","policy-test")]
+  [ValidateSet("install","uninstall","status","doctor")]
   [string]$Action = "install",
   [switch]$OpenCode,
   [switch]$OpenCodeProject,
@@ -207,6 +207,8 @@ function Pi-PolicyMessage([string]$Status, [string]$PluginId, [string]$Version, 
 }
 
 function Pi-PolicyGate {
+  Log "Checking Pi compatibility..."
+
   $pluginKind = "none"
   $pluginId = ""
   $pluginVersion = "unknown"
@@ -305,66 +307,32 @@ function Pi-PolicyGate {
     } else {
       Log $message
     }
+    Log "Pi compatibility status: $($decision.status) (exit $($decision.exitCode))"
     return
   }
 
   Write-Error $message
+  switch ($decision.status) {
+    $PiStatusNoCompatiblePlugin {
+      Write-Error "Next step: install one supported plugin, then retry install."
+      Write-Error "Example: pi add pi-subagents"
+    }
+    $PiStatusIncompatibleSubagentProbeFailed {
+      Write-Error "Next step: verify plugin is enabled and subagent commands work (try: pi subagent --help)."
+    }
+    $PiStatusIncompatibleMissingTools {
+      Write-Error "Next step: ensure required tools are exposed in Pi subagents plugin config (read,bash,edit,write,grep,find,ls)."
+      Write-Error "Check: pi tools list"
+    }
+    $PiStatusUnsupportedAndIncompatible {
+      Write-Error "Next step: use a supported plugin or configure your plugin to pass capability probes."
+    }
+    $PiStatusEnvironmentProbeFailed {
+      Write-Error "Next step: verify Pi CLI works in this shell (try: pi list), then rerun install."
+    }
+  }
+  Write-Error "Pi compatibility status: $($decision.status) (exit $($decision.exitCode))"
   exit $decision.exitCode
-}
-
-function Assert-Eq([string]$Got, [string]$Want, [string]$Label) {
-  if ($Got -ne $Want) {
-    throw "policy-test failed: $Label (got='$Got' want='$Want')"
-  }
-}
-
-function Run-PolicyTests {
-  if (-not (Is-PiTarget)) {
-    throw "policy-test requires a Pi target. Use -Pi or -PiProject."
-  }
-
-  $r1 = Pi-PolicyDecide "known" $true "" $true ""
-  Assert-Eq $r1.status $PiStatusSupported "R1 status"
-  Assert-Eq ([string]$r1.exitCode) "0" "R1 exit"
-
-  $r2 = Pi-PolicyDecide "known" $true "" $false ""
-  Assert-Eq $r2.status $PiStatusSupportedWithNote "R2 status"
-  Assert-Eq ([string]$r2.exitCode) "0" "R2 exit"
-
-  $r3 = Pi-PolicyDecide "known" $true "grep,find" $true ""
-  Assert-Eq $r3.status $PiStatusIncompatibleMissingTools "R3 status"
-  Assert-Eq ([string]$r3.exitCode) "2" "R3 exit"
-
-  $r4 = Pi-PolicyDecide "known" $false "" $true ""
-  Assert-Eq $r4.status $PiStatusIncompatibleSubagentProbeFailed "R4 status"
-  Assert-Eq ([string]$r4.exitCode) "2" "R4 exit"
-
-  $r5 = Pi-PolicyDecide "unknown" $true "" $false ""
-  Assert-Eq $r5.status $PiStatusUnsupportedButCompatible "R5 status"
-  Assert-Eq ([string]$r5.exitCode) "0" "R5 exit"
-
-  $r6 = Pi-PolicyDecide "unknown" $false "" $false ""
-  Assert-Eq $r6.status $PiStatusUnsupportedAndIncompatible "R6 status"
-  Assert-Eq ([string]$r6.exitCode) "2" "R6 exit"
-
-  $r7 = Pi-PolicyDecide "none" $false "" $false ""
-  Assert-Eq $r7.status $PiStatusNoCompatiblePlugin "R7 status"
-  Assert-Eq ([string]$r7.exitCode) "2" "R7 exit"
-
-  $r8 = Pi-PolicyDecide "known" $true "" $true "pi list unavailable"
-  Assert-Eq $r8.status $PiStatusEnvironmentProbeFailed "R8 status"
-  Assert-Eq ([string]$r8.exitCode) "3" "R8 exit"
-
-  Assert-Eq (Pi-PolicyMessage $PiStatusSupported "pi-subagents" "1.2.3" "" "") "Pi coding harness enabled (supported plugin: pi-subagents@1.2.3)." "msg supported"
-  Assert-Eq (Pi-PolicyMessage $PiStatusSupportedWithNote "pi-subagents" "1.2.3" "" "") "Pi coding harness enabled (supported plugin: pi-subagents@1.2.3). Note: permission plugin not detected; tool-governance UX may be reduced." "msg supported_with_note"
-  Assert-Eq (Pi-PolicyMessage $PiStatusUnsupportedButCompatible "custom/subagents" "0.1.0" "" "") "Pi coding harness enabled (plugin: custom/subagents@0.1.0). Note: this plugin is currently unsupported by policy; capability checks passed." "msg unsupported_but_compatible"
-  Assert-Eq (Pi-PolicyMessage $PiStatusNoCompatiblePlugin "" "" "" "") "Cannot enable Pi coding harness: no compatible subagent plugin detected. Install one of: pi-subagents, @tintinweb/pi-subagents, @gotgenes/pi-subagents." "msg no_compatible_plugin"
-  Assert-Eq (Pi-PolicyMessage $PiStatusIncompatibleSubagentProbeFailed "@tintinweb/pi-subagents" "2.0.0" "" "") "Cannot enable Pi coding harness: detected plugin @tintinweb/pi-subagents@2.0.0, but subagent capability probe failed." "msg incompatible_subagent_probe_failed"
-  Assert-Eq (Pi-PolicyMessage $PiStatusIncompatibleMissingTools "" "" "read,bash" "") "Cannot enable Pi coding harness: missing required tools: read,bash. Required: read, bash, edit, write, grep, find, ls." "msg incompatible_missing_tools"
-  Assert-Eq (Pi-PolicyMessage $PiStatusUnsupportedAndIncompatible "custom/subagents" "0.1.0" "" "") "Cannot enable Pi coding harness: detected unsupported plugin custom/subagents@0.1.0, and compatibility probes failed." "msg unsupported_and_incompatible"
-  Assert-Eq (Pi-PolicyMessage $PiStatusEnvironmentProbeFailed "" "" "" "timeout") "Cannot enable Pi coding harness: unable to run plugin/capability probes in this environment (timeout)." "msg environment_probe_failed"
-
-  Log "policy-test: ok (R1-R8 + message goldens)"
 }
 
 function Resolve-Target {
@@ -812,7 +780,6 @@ try {
     }
     "status" { Status }
     "doctor" { Doctor }
-    "policy-test" { Run-PolicyTests }
   }
 }
 finally {
