@@ -118,6 +118,8 @@ Use PowerShell CLI for Windows-native environments.
 | `-ClaudeProject` | switch | Use project Claude paths (`.claude/agents` + `CLAUDE.md` + sibling `AGENTS.md`) |
 | `-Copilot` | switch | Use global Copilot paths (`~/.copilot/agents` + `~/.copilot/AGENTS.md`) |
 | `-CopilotProject` | switch | Use project Copilot paths (`.github/agents` + project-root `AGENTS.md`) |
+| `-Pi` | switch | Use global Pi paths (`~/.pi/agent/agents` + `~/.pi/agent/AGENTS.md`) |
+| `-PiProject` | switch | Use project Pi paths (`.pi/agents` + project-root `AGENTS.md`) |
 | `-OpenCode` | switch | Use preconfigured opencode paths |
 | `-OpenCodeProject` | switch | Use project opencode paths (`.opencode/agents` + project-root `AGENTS.md`) |
 | `-ClaudeMd <path>` | value | Claude target `CLAUDE.md` path override (global default for `-Claude`, project default for `-ClaudeProject`) |
@@ -173,6 +175,7 @@ Hook runs:
   - PowerShell: `-OpenCode` and `-OpenCodeProject` are mutually exclusive
 - Do not combine global and project Pi modes in one command:
   - Bash: `--pi` and `--pi-project` are mutually exclusive
+  - PowerShell: `-Pi` and `-PiProject` are mutually exclusive
 
 ### Target Path Behavior
 
@@ -183,29 +186,36 @@ Hook runs:
   - backups before mutation:
     - `CLAUDE.md.bak.<YYYYmmdd-HHMMSS>`
     - `AGENTS.md.bak.<YYYYmmdd-HHMMSS>`
+
 - Copilot target:
   - global mode: uses `~/.copilot/agents` + `~/.copilot/AGENTS.md`
   - project mode (`--copilot-project` / `-CopilotProject`): uses `.github/agents` + project-root `AGENTS.md`
+  - use managed block markers in AGENTS.md
+  - backup before mutation: `AGENTS.md.bak.<YYYYmmdd-HHMMSS>`
+
 - OpenCode target:
   - installs full duck set (router + ducklings)
   - global mode: uses `~/.config/opencode/agents` + `~/.config/opencode/AGENTS.md`
   - project mode (`--opencode-project` / `-OpenCodeProject`): uses `.opencode/agents` + project-root `AGENTS.md`
-
-- Pi target (Bash):
-  - installs full duck set (router + ducklings)
-  - global mode: uses `~/.pi/agent/agents` + `~/.pi/agent/AGENTS.md`
-  - project mode (`--pi-project`): uses `.pi/agents` + project-root `AGENTS.md`
-  - install action applies Pi capability policy gate before mutation:
-    - supported/supported_with_note/unsupported_but_compatible -> continue
-    - incompatible_* / no_compatible_plugin -> fail with exit code 2
-    - environment_probe_failed -> fail with exit code 3
-  - probe command overrides (Bash env vars):
-    - `PI_SUBAGENT_PROBE_CMD` (default: `pi subagent --help`)
-    - `PI_TOOLS_PROBE_CMD` (default: `pi tools list`)
-
-- OpenCode targets:
   - use managed block markers in AGENTS.md
   - backup before mutation: `AGENTS.md.bak.<YYYYmmdd-HHMMSS>`
+
+- Pi target:
+  - installs full duck set (router + ducklings)
+  - global mode:
+    - Bash (`--pi`): uses `~/.pi/agent/agents` + `~/.pi/agent/AGENTS.md`
+    - PowerShell (`-Pi`): uses `~/.pi/agent/agents` + `~/.pi/agent/AGENTS.md`
+  - project mode:
+    - Bash (`--pi-project`): uses `.pi/agents` + project-root `AGENTS.md`
+    - PowerShell (`-PiProject`): uses `.pi/agents` + project-root `AGENTS.md`
+  - install action applies Pi capability policy gate before mutation:
+    - `supported` / `supported_with_note` / `unsupported_but_compatible` -> continue
+    - `incompatible_*` / `no_compatible_plugin` -> fail with exit code 2
+    - `environment_probe_failed` -> fail with exit code 3
+  - probe command overrides (Bash/PowerShell env vars):
+    - `PI_SUBAGENT_PROBE_CMD` (default: `pi subagent --help`)
+    - `PI_TOOLS_PROBE_CMD` (default: `pi tools list`)
+  - supported known plugins: `pi-subagents`, `@tintinweb/pi-subagents`, `@gotgenes/pi-subagents`
 
 ### Installation Behavior
 
