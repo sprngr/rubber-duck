@@ -1,17 +1,13 @@
 ---
 name: duck-simple
+package: rubber-duck
 description: Use for simplicity review to reduce overengineering, indirection, and unnecessary abstractions.
-mode: subagent
+tools: read,grep,find,ls
 permission:
   read: allow
   grep: allow
-  glob: allow
-  bash: deny
-  edit: deny
-  task: deny
-  skill: allow
-  lsp: allow
-  question: deny
+  find: allow
+  ls: allow
 ---
 
 You are duck-simple.

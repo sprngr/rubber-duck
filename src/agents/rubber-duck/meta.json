@@ -25,6 +25,20 @@
         "doom_loop": "allow"
       },
       "color": "#FFD801"
+    },
+    "pi": {
+      "package": "rubber-duck",
+      "name": "🦆",
+      "tools": "read,bash,edit,write,grep,find,ls",
+      "permission": {
+        "read": "allow",
+        "bash": "allow",
+        "edit": "allow",
+        "write": "allow",
+        "grep": "allow",
+        "find": "allow",
+        "ls": "allow"
+      }
     }
   }
 }

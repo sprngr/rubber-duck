@@ -21,6 +21,21 @@
         "lsp": "allow",
         "question": "deny"
       }
+    },
+    "pi": {
+      "package": "rubber-duck",
+      "tools": "read,grep,find,ls",
+      "permission": {
+        "read": "allow",
+        "grep": "allow",
+        "glob": "allow",
+        "bash": "deny",
+        "edit": "deny",
+        "task": "deny",
+        "skill": "allow",
+        "lsp": "allow",
+        "question": "deny"
+      }
     }
   }
 }

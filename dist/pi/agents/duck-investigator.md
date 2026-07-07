@@ -1,7 +1,8 @@
 ---
 name: duck-investigator
+package: rubber-duck
 description: Use for read-only code location, reference mapping, and call-chain tracing before debug/review/design.
-mode: subagent
+tools: read,grep,find,ls
 permission:
   read: allow
   grep: allow

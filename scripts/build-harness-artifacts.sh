@@ -33,6 +33,7 @@ COPILOT_AGENT_DIR="${COPILOT_DIST_DIR}/agents"
 
 PI_DIST_DIR="${REPO_ROOT}/dist/pi"
 PI_AGENT_DIR="${PI_DIST_DIR}/agents"
+PI_ALLOWED_TOOLS_CSV="read,bash,edit,write,grep,find,ls"
 
 enforce_rule_checks() {
   local rules_file="$1"
@@ -174,20 +175,21 @@ render_copilot_fm() {
   } > "${out}"
 }
 
-# Render Pi frontmatter from a meta.json into out. Pi currently reuses the
-# OpenCode-compatible harness shape (mode + permission + optional color), with
-# optional pi-specific overrides when present.
+# Render Pi frontmatter from a meta.json into out. Pi uses tools visibility
+# plus optional permission policy overrides.
 render_pi_fm() {
   local meta="$1" out="$2" v
   {
     printf -- '---\n'
-    printf 'name: %s\n' "$(jq -r '.harnesses.pi.name // .harnesses.opencode.name // .name' "${meta}")"
+    printf 'name: %s\n' "$(jq -r '.harnesses.pi.name // .name' "${meta}")"
+    v="$(jq -r '.harnesses.pi.package // empty' "${meta}")"
+    [[ -n "${v}" ]] && printf 'package: %s\n' "${v}"
     printf 'description: %s\n' "$(jq -r '.description' "${meta}")"
-    printf 'mode: %s\n' "$(jq -r '.harnesses.pi.mode // .harnesses.opencode.mode' "${meta}")"
-    printf 'permission:\n'
-    jq -r '(.harnesses.pi.permission // .harnesses.opencode.permission) | to_entries[] | "  \(.key): \(.value)"' "${meta}"
-    v="$(jq -r '.harnesses.pi.color // .harnesses.opencode.color // empty' "${meta}")"
-    [[ -n "${v}" ]] && printf 'color: "%s"\n' "${v}"
+    printf 'tools: %s\n' "$(jq -r '.harnesses.pi.tools' "${meta}")"
+    if jq -e '.harnesses.pi.permission? != null' "${meta}" >/dev/null; then
+      printf 'permission:\n'
+      jq -r '.harnesses.pi.permission | to_entries[] | "  \(.key): \(.value)"' "${meta}"
+    fi
     printf -- '---\n\n'
   } > "${out}"
 }
@@ -205,6 +207,28 @@ for name in "${CONFIG_AGENTS[@]}"; do
   agent_dir="${SRC_AGENTS_DIR}/${name}"
   if [[ ! -f "${agent_dir}/meta.json" || ! -f "${agent_dir}/body.md" ]]; then
     printf 'ERROR: missing agent config files for %s under %s\n' "${name}" "${agent_dir}" >&2
+    exit 1
+  fi
+
+  if ! jq -e '.harnesses.pi? != null' "${agent_dir}/meta.json" >/dev/null; then
+    printf 'ERROR: missing required harnesses.pi config for %s in %s\n' "${name}" "${agent_dir}/meta.json" >&2
+    exit 1
+  fi
+
+  if ! jq -e '.harnesses.pi.tools? != null' "${agent_dir}/meta.json" >/dev/null; then
+    printf 'ERROR: missing required harnesses.pi.tools config for %s in %s\n' "${name}" "${agent_dir}/meta.json" >&2
+    exit 1
+  fi
+
+  if ! jq -e --arg allowed "${PI_ALLOWED_TOOLS_CSV}" '
+    (.harnesses.pi.tools // "")
+    | split(",")
+    | map(gsub("^\\s+|\\s+$"; ""))
+    | map(select(length > 0)) as $tools
+    | ($allowed | split(",")) as $allowedTools
+    | ($tools | all(. as $t | $allowedTools | index($t) != null))
+  ' "${agent_dir}/meta.json" >/dev/null; then
+    printf 'ERROR: invalid harnesses.pi.tools for %s in %s (allowed: %s)\n' "${name}" "${agent_dir}/meta.json" "${PI_ALLOWED_TOOLS_CSV}" >&2
     exit 1
   fi
 done

@@ -1,17 +1,13 @@
 ---
 name: duck-dry
+package: rubber-duck
 description: Use for DRY review to find meaningful duplication and divergence risk with safe extraction boundaries.
-mode: subagent
+tools: read,grep,find,ls
 permission:
   read: allow
   grep: allow
-  glob: allow
-  bash: deny
-  edit: deny
-  task: deny
-  skill: allow
-  lsp: allow
-  question: deny
+  find: allow
+  ls: allow
 ---
 
 You are duck-dry.

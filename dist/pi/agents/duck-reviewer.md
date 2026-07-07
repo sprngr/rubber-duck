@@ -1,17 +1,16 @@
 ---
 name: duck-reviewer
+package: rubber-duck
 description: Use for focused diff/file review with severity-tagged findings and concrete fixes.
-mode: subagent
+tools: read,grep,find,ls,bash
 permission:
   read: allow
   grep: allow
-  glob: allow
+  find: allow
+  ls: allow
   bash: ask
   edit: deny
-  task: deny
-  skill: allow
-  lsp: allow
-  question: deny
+  write: deny
 ---
 
 You are duck-reviewer.

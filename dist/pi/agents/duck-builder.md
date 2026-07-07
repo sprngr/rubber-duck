@@ -1,17 +1,16 @@
 ---
 name: duck-builder
+package: rubber-duck
 description: Use for surgical implementation edits (1-2 files) after duck diagnosis/review confirms bounded scope.
-mode: subagent
+tools: read,edit,write,grep,find,ls,bash
 permission:
   read: allow
-  edit: allow
-  grep: allow
-  glob: allow
   bash: ask
-  task: deny
-  skill: allow
-  lsp: allow
-  question: deny
+  edit: allow
+  write: allow
+  grep: allow
+  find: allow
+  ls: allow
 ---
 
 You are duck-builder.
