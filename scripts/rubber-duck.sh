@@ -67,10 +67,135 @@ REQUIRED_SKILLS=(
   "duck-triage"
 )
 
+# Pi harness compatibility policy (PR1 core; integration in PR2).
+# Rows:
+# R1 known + subagent pass + tools pass + permissions present => supported (0)
+# R2 known + subagent pass + tools pass + permissions missing => supported_with_note (0)
+# R3 known + subagent pass + tools missing => incompatible_missing_tools (2)
+# R4 known + subagent fail => incompatible_subagent_probe_failed (2)
+# R5 unknown + capability pass => unsupported_but_compatible (0)
+# R6 unknown + capability fail => unsupported_and_incompatible (2)
+# R7 no plugin detected => no_compatible_plugin (2)
+# R8 probe infrastructure failure => environment_probe_failed (3)
+PI_REQUIRED_TOOLS=("read" "bash" "edit" "write" "grep" "find" "ls")
+PI_STATUS_SUPPORTED="supported"
+PI_STATUS_SUPPORTED_WITH_NOTE="supported_with_note"
+PI_STATUS_INCOMPATIBLE_MISSING_TOOLS="incompatible_missing_tools"
+PI_STATUS_INCOMPATIBLE_SUBAGENT_PROBE_FAILED="incompatible_subagent_probe_failed"
+PI_STATUS_UNSUPPORTED_BUT_COMPATIBLE="unsupported_but_compatible"
+PI_STATUS_UNSUPPORTED_AND_INCOMPATIBLE="unsupported_and_incompatible"
+PI_STATUS_NO_COMPATIBLE_PLUGIN="no_compatible_plugin"
+PI_STATUS_ENVIRONMENT_PROBE_FAILED="environment_probe_failed"
+
+# Decision inputs (all as strings for portability in shell code):
+#   plugin_kind: known|unknown|none
+#   subagents_ok: 1|0
+#   missing_tools_csv: comma-separated list (empty means none missing)
+#   permissions_detected: 1|0
+#   probe_error: non-empty means infrastructure/probe execution failure
+# Outputs (globals):
+#   PI_POLICY_STATUS, PI_POLICY_EXIT_CODE
+pi_policy_decide() {
+  local plugin_kind="$1"
+  local subagents_ok="$2"
+  local missing_tools_csv="$3"
+  local permissions_detected="$4"
+  local probe_error="$5"
+
+  PI_POLICY_STATUS=""
+  PI_POLICY_EXIT_CODE=2
+
+  # R8
+  if [[ -n "${probe_error}" ]]; then
+    PI_POLICY_STATUS="${PI_STATUS_ENVIRONMENT_PROBE_FAILED}"
+    PI_POLICY_EXIT_CODE=3
+    return 0
+  fi
+
+  # R7
+  if [[ "${plugin_kind}" == "none" ]]; then
+    PI_POLICY_STATUS="${PI_STATUS_NO_COMPATIBLE_PLUGIN}"
+    PI_POLICY_EXIT_CODE=2
+    return 0
+  fi
+
+  # R4 / R6 (capability fail path)
+  if [[ "${subagents_ok}" != "1" ]]; then
+    if [[ "${plugin_kind}" == "known" ]]; then
+      PI_POLICY_STATUS="${PI_STATUS_INCOMPATIBLE_SUBAGENT_PROBE_FAILED}"
+    else
+      PI_POLICY_STATUS="${PI_STATUS_UNSUPPORTED_AND_INCOMPATIBLE}"
+    fi
+    PI_POLICY_EXIT_CODE=2
+    return 0
+  fi
+
+  # R3 (known partial due to missing tools)
+  if [[ "${plugin_kind}" == "known" && -n "${missing_tools_csv}" ]]; then
+    PI_POLICY_STATUS="${PI_STATUS_INCOMPATIBLE_MISSING_TOOLS}"
+    PI_POLICY_EXIT_CODE=2
+    return 0
+  fi
+
+  # R1 / R2
+  if [[ "${plugin_kind}" == "known" ]]; then
+    if [[ "${permissions_detected}" == "1" ]]; then
+      PI_POLICY_STATUS="${PI_STATUS_SUPPORTED}"
+    else
+      PI_POLICY_STATUS="${PI_STATUS_SUPPORTED_WITH_NOTE}"
+    fi
+    PI_POLICY_EXIT_CODE=0
+    return 0
+  fi
+
+  # R5 (unknown + capabilities pass). Missing tools already handled in probe path.
+  PI_POLICY_STATUS="${PI_STATUS_UNSUPPORTED_BUT_COMPATIBLE}"
+  PI_POLICY_EXIT_CODE=0
+  return 0
+}
+
+pi_policy_message() {
+  local status="$1"
+  local plugin_id="$2"
+  local version="$3"
+  local missing_csv="$4"
+  local probe_error="$5"
+
+  case "${status}" in
+    "${PI_STATUS_SUPPORTED}")
+      printf 'Pi coding harness enabled (supported plugin: %s@%s).\n' "${plugin_id}" "${version}"
+      ;;
+    "${PI_STATUS_SUPPORTED_WITH_NOTE}")
+      printf 'Pi coding harness enabled (supported plugin: %s@%s). Note: permission plugin not detected; tool-governance UX may be reduced.\n' "${plugin_id}" "${version}"
+      ;;
+    "${PI_STATUS_UNSUPPORTED_BUT_COMPATIBLE}")
+      printf 'Pi coding harness enabled (plugin: %s@%s). Note: this plugin is currently unsupported by policy; capability checks passed.\n' "${plugin_id}" "${version}"
+      ;;
+    "${PI_STATUS_NO_COMPATIBLE_PLUGIN}")
+      printf 'Cannot enable Pi coding harness: no compatible subagent plugin detected. Install one of: pi-subagents, @tintinweb/pi-subagents, @gotgenes/pi-subagents.\n'
+      ;;
+    "${PI_STATUS_INCOMPATIBLE_SUBAGENT_PROBE_FAILED}")
+      printf 'Cannot enable Pi coding harness: detected plugin %s@%s, but subagent capability probe failed.\n' "${plugin_id}" "${version}"
+      ;;
+    "${PI_STATUS_INCOMPATIBLE_MISSING_TOOLS}")
+      printf 'Cannot enable Pi coding harness: missing required tools: %s. Required: read, bash, edit, write, grep, find, ls.\n' "${missing_csv}"
+      ;;
+    "${PI_STATUS_UNSUPPORTED_AND_INCOMPATIBLE}")
+      printf 'Cannot enable Pi coding harness: detected unsupported plugin %s@%s, and compatibility probes failed.\n' "${plugin_id}" "${version}"
+      ;;
+    "${PI_STATUS_ENVIRONMENT_PROBE_FAILED}")
+      printf 'Cannot enable Pi coding harness: unable to run plugin/capability probes in this environment (%s).\n' "${probe_error}"
+      ;;
+    *)
+      printf 'Cannot enable Pi coding harness: internal policy status not recognized (%s).\n' "${status}"
+      ;;
+  esac
+}
+
 usage() {
   cat <<'EOF'
 Usage:
-  scripts/rubber-duck.sh [install|uninstall|status|doctor] [options]
+  scripts/rubber-duck.sh [install|uninstall|status|doctor|policy-test] [options]
 
 Options:
   --opencode                        Use global opencode paths (~/.config/opencode/agents + ~/config/opencode/AGENTS.md)
@@ -106,7 +231,7 @@ timestamp() { date +%Y%m%d-%H%M%S; }
 
 if [[ $# -gt 0 ]]; then
   case "$1" in
-    install|uninstall|status|doctor)
+    install|uninstall|status|doctor|policy-test)
       ACTION="$1"
       shift
       ;;
@@ -602,6 +727,95 @@ doctor() {
   log "doctor: ok"
 }
 
+assert_eq() {
+  local got="$1"
+  local want="$2"
+  local label="$3"
+  if [[ "${got}" != "${want}" ]]; then
+    err "policy-test failed: ${label} (got='${got}' want='${want}')"
+    return 1
+  fi
+  return 0
+}
+
+run_policy_tests() {
+  local failures=0
+  local msg
+
+  # R1
+  pi_policy_decide "known" "1" "" "1" ""
+  assert_eq "${PI_POLICY_STATUS}" "${PI_STATUS_SUPPORTED}" "R1 status" || failures=$((failures + 1))
+  assert_eq "${PI_POLICY_EXIT_CODE}" "0" "R1 exit" || failures=$((failures + 1))
+
+  # R2
+  pi_policy_decide "known" "1" "" "0" ""
+  assert_eq "${PI_POLICY_STATUS}" "${PI_STATUS_SUPPORTED_WITH_NOTE}" "R2 status" || failures=$((failures + 1))
+  assert_eq "${PI_POLICY_EXIT_CODE}" "0" "R2 exit" || failures=$((failures + 1))
+
+  # R3
+  pi_policy_decide "known" "1" "grep,find" "1" ""
+  assert_eq "${PI_POLICY_STATUS}" "${PI_STATUS_INCOMPATIBLE_MISSING_TOOLS}" "R3 status" || failures=$((failures + 1))
+  assert_eq "${PI_POLICY_EXIT_CODE}" "2" "R3 exit" || failures=$((failures + 1))
+
+  # R4
+  pi_policy_decide "known" "0" "" "1" ""
+  assert_eq "${PI_POLICY_STATUS}" "${PI_STATUS_INCOMPATIBLE_SUBAGENT_PROBE_FAILED}" "R4 status" || failures=$((failures + 1))
+  assert_eq "${PI_POLICY_EXIT_CODE}" "2" "R4 exit" || failures=$((failures + 1))
+
+  # R5
+  pi_policy_decide "unknown" "1" "" "0" ""
+  assert_eq "${PI_POLICY_STATUS}" "${PI_STATUS_UNSUPPORTED_BUT_COMPATIBLE}" "R5 status" || failures=$((failures + 1))
+  assert_eq "${PI_POLICY_EXIT_CODE}" "0" "R5 exit" || failures=$((failures + 1))
+
+  # R6
+  pi_policy_decide "unknown" "0" "" "0" ""
+  assert_eq "${PI_POLICY_STATUS}" "${PI_STATUS_UNSUPPORTED_AND_INCOMPATIBLE}" "R6 status" || failures=$((failures + 1))
+  assert_eq "${PI_POLICY_EXIT_CODE}" "2" "R6 exit" || failures=$((failures + 1))
+
+  # R7
+  pi_policy_decide "none" "0" "" "0" ""
+  assert_eq "${PI_POLICY_STATUS}" "${PI_STATUS_NO_COMPATIBLE_PLUGIN}" "R7 status" || failures=$((failures + 1))
+  assert_eq "${PI_POLICY_EXIT_CODE}" "2" "R7 exit" || failures=$((failures + 1))
+
+  # R8
+  pi_policy_decide "known" "1" "" "1" "pi list unavailable"
+  assert_eq "${PI_POLICY_STATUS}" "${PI_STATUS_ENVIRONMENT_PROBE_FAILED}" "R8 status" || failures=$((failures + 1))
+  assert_eq "${PI_POLICY_EXIT_CODE}" "3" "R8 exit" || failures=$((failures + 1))
+
+  # Message goldens (exact)
+  msg="$(pi_policy_message "${PI_STATUS_SUPPORTED}" "pi-subagents" "1.2.3" "" "")"
+  assert_eq "${msg}" "Pi coding harness enabled (supported plugin: pi-subagents@1.2.3)." "msg supported" || failures=$((failures + 1))
+
+  msg="$(pi_policy_message "${PI_STATUS_SUPPORTED_WITH_NOTE}" "pi-subagents" "1.2.3" "" "")"
+  assert_eq "${msg}" "Pi coding harness enabled (supported plugin: pi-subagents@1.2.3). Note: permission plugin not detected; tool-governance UX may be reduced." "msg supported_with_note" || failures=$((failures + 1))
+
+  msg="$(pi_policy_message "${PI_STATUS_UNSUPPORTED_BUT_COMPATIBLE}" "custom/subagents" "0.1.0" "" "")"
+  assert_eq "${msg}" "Pi coding harness enabled (plugin: custom/subagents@0.1.0). Note: this plugin is currently unsupported by policy; capability checks passed." "msg unsupported_but_compatible" || failures=$((failures + 1))
+
+  msg="$(pi_policy_message "${PI_STATUS_NO_COMPATIBLE_PLUGIN}" "" "" "" "")"
+  assert_eq "${msg}" "Cannot enable Pi coding harness: no compatible subagent plugin detected. Install one of: pi-subagents, @tintinweb/pi-subagents, @gotgenes/pi-subagents." "msg no_compatible_plugin" || failures=$((failures + 1))
+
+  msg="$(pi_policy_message "${PI_STATUS_INCOMPATIBLE_SUBAGENT_PROBE_FAILED}" "@tintinweb/pi-subagents" "2.0.0" "" "")"
+  assert_eq "${msg}" "Cannot enable Pi coding harness: detected plugin @tintinweb/pi-subagents@2.0.0, but subagent capability probe failed." "msg incompatible_subagent_probe_failed" || failures=$((failures + 1))
+
+  msg="$(pi_policy_message "${PI_STATUS_INCOMPATIBLE_MISSING_TOOLS}" "" "" "read,bash" "")"
+  assert_eq "${msg}" "Cannot enable Pi coding harness: missing required tools: read,bash. Required: read, bash, edit, write, grep, find, ls." "msg incompatible_missing_tools" || failures=$((failures + 1))
+
+  msg="$(pi_policy_message "${PI_STATUS_UNSUPPORTED_AND_INCOMPATIBLE}" "custom/subagents" "0.1.0" "" "")"
+  assert_eq "${msg}" "Cannot enable Pi coding harness: detected unsupported plugin custom/subagents@0.1.0, and compatibility probes failed." "msg unsupported_and_incompatible" || failures=$((failures + 1))
+
+  msg="$(pi_policy_message "${PI_STATUS_ENVIRONMENT_PROBE_FAILED}" "" "" "" "timeout")"
+  assert_eq "${msg}" "Cannot enable Pi coding harness: unable to run plugin/capability probes in this environment (timeout)." "msg environment_probe_failed" || failures=$((failures + 1))
+
+  if (( failures > 0 )); then
+    err "policy-test: ${failures} failure(s)"
+    return 1
+  fi
+
+  log "policy-test: ok (R1-R8 + message goldens)"
+  return 0
+}
+
 resolve_target
 choose_source
 
@@ -639,6 +853,9 @@ case "${ACTION}" in
     ;;
   doctor)
     doctor
+    ;;
+  policy-test)
+    run_policy_tests
     ;;
   *)
     err "unknown action: ${ACTION}"
