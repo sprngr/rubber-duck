@@ -33,7 +33,27 @@ COPILOT_AGENT_DIR="${COPILOT_DIST_DIR}/agents"
 
 PI_DIST_DIR="${REPO_ROOT}/dist/pi"
 PI_AGENT_DIR="${PI_DIST_DIR}/agents"
-PI_ALLOWED_TOOLS_CSV="read,bash,edit,write,grep,find,ls,subagent,subagent_supervisor"
+PI_POLICY_FILE="${REPO_ROOT}/scripts/pi-policy.json"
+PI_ALLOWED_TOOLS_CSV_DEFAULT="read,bash,edit,write,grep,find,ls,subagent,subagent_supervisor"
+PI_ALLOWED_TOOLS_CSV="${PI_ALLOWED_TOOLS_CSV_DEFAULT}"
+
+if [[ -f "${PI_POLICY_FILE}" ]]; then
+  policy_allowed_tools_csv="$(jq -r '
+    [
+      (.required_tools // [])[],
+      (.optional_tools // [])[],
+      "subagent",
+      "subagent_supervisor"
+    ]
+    | map(tostring | gsub("^\\s+|\\s+$"; ""))
+    | map(select(length > 0))
+    | unique
+    | join(",")
+  ' "${PI_POLICY_FILE}" 2>/dev/null || true)"
+  if [[ -n "${policy_allowed_tools_csv}" ]]; then
+    PI_ALLOWED_TOOLS_CSV="${policy_allowed_tools_csv}"
+  fi
+fi
 
 enforce_rule_checks() {
   local rules_file="$1"

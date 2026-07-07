@@ -211,9 +211,10 @@ Hook runs:
     - `incompatible_*` / `no_compatible_plugin` -> fail with exit code 2
     - `environment_probe_failed` -> fail with exit code 3
   - probe command overrides (Bash/PowerShell env vars):
-    - `PI_SUBAGENT_PROBE_CMD` (default: `pi subagent --help`)
+    - `PI_SUBAGENT_PROBE_CMD` (default: unset; when unset, subagent capability is inferred from tools output by checking for `subagent` or `subagent_supervisor`)
     - `PI_TOOLS_PROBE_CMD` (default: `pi -p "tools"`)
   - supported known plugins: `pi-subagents`, `@tintinweb/pi-subagents`, `@gotgenes/pi-subagents`
+  - shared policy source: `scripts/pi-policy.json` (`required_tools`, `optional_tools`, `known_plugins`) consumed by Bash/PowerShell installers and build-time Pi tool validation.
 
 ### Installation Behavior
 

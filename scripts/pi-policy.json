@@ -1,0 +1,9 @@
+{
+  "required_tools": ["read", "bash", "edit", "write"],
+  "optional_tools": ["grep", "find", "ls"],
+  "known_plugins": [
+    "@gotgenes/pi-subagents",
+    "@tintinweb/pi-subagents",
+    "pi-subagents"
+  ]
+}

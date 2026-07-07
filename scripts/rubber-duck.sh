@@ -72,6 +72,8 @@ REQUIRED_SKILLS=(
   "duck-triage"
 )
 
+PI_POLICY_FILE="${REPO_ROOT}/scripts/pi-policy.json"
+
 # Pi harness compatibility policy (PR1 core; integration in PR2).
 # Rows:
 # R1 known + subagent pass + tools pass + permissions present => supported (0)
@@ -84,6 +86,7 @@ REQUIRED_SKILLS=(
 # R8 probe infrastructure failure => environment_probe_failed (3)
 PI_REQUIRED_TOOLS=("read" "bash" "edit" "write")
 PI_OPTIONAL_TOOLS=("grep" "find" "ls")
+PI_KNOWN_PLUGINS=("@gotgenes/pi-subagents" "@tintinweb/pi-subagents" "pi-subagents")
 PI_STATUS_SUPPORTED="supported"
 PI_STATUS_SUPPORTED_WITH_NOTE="supported_with_note"
 PI_STATUS_INCOMPATIBLE_MISSING_TOOLS="incompatible_missing_tools"
@@ -92,6 +95,48 @@ PI_STATUS_UNSUPPORTED_BUT_COMPATIBLE="unsupported_but_compatible"
 PI_STATUS_UNSUPPORTED_AND_INCOMPATIBLE="unsupported_and_incompatible"
 PI_STATUS_NO_COMPATIBLE_PLUGIN="no_compatible_plugin"
 PI_STATUS_ENVIRONMENT_PROBE_FAILED="environment_probe_failed"
+
+pi_policy_exit_code_for_status() {
+  local status="$1"
+  case "${status}" in
+    "${PI_STATUS_SUPPORTED}"|"${PI_STATUS_SUPPORTED_WITH_NOTE}"|"${PI_STATUS_UNSUPPORTED_BUT_COMPATIBLE}")
+      printf '0'
+      ;;
+    "${PI_STATUS_ENVIRONMENT_PROBE_FAILED}")
+      printf '3'
+      ;;
+    *)
+      printf '2'
+      ;;
+  esac
+}
+
+pi_policy_load() {
+  if ! command -v jq >/dev/null 2>&1; then
+    return 0
+  fi
+  if [[ ! -f "${PI_POLICY_FILE}" ]]; then
+    return 0
+  fi
+
+  local -a required_tools=()
+  local -a optional_tools=()
+  local -a known_plugins=()
+
+  mapfile -t required_tools < <(jq -r '.required_tools[]? // empty' "${PI_POLICY_FILE}" 2>/dev/null || true)
+  mapfile -t optional_tools < <(jq -r '.optional_tools[]? // empty' "${PI_POLICY_FILE}" 2>/dev/null || true)
+  mapfile -t known_plugins < <(jq -r '.known_plugins[]? // empty' "${PI_POLICY_FILE}" 2>/dev/null || true)
+
+  if (( ${#required_tools[@]} > 0 )); then
+    PI_REQUIRED_TOOLS=("${required_tools[@]}")
+  fi
+  if (( ${#optional_tools[@]} > 0 )); then
+    PI_OPTIONAL_TOOLS=("${optional_tools[@]}")
+  fi
+  if (( ${#known_plugins[@]} > 0 )); then
+    PI_KNOWN_PLUGINS=("${known_plugins[@]}")
+  fi
+}
 
 # Decision inputs (all as strings for portability in shell code):
 #   plugin_kind: known|unknown|none
@@ -114,14 +159,14 @@ pi_policy_decide() {
   # R8
   if [[ -n "${probe_error}" ]]; then
     PI_POLICY_STATUS="${PI_STATUS_ENVIRONMENT_PROBE_FAILED}"
-    PI_POLICY_EXIT_CODE=3
+    PI_POLICY_EXIT_CODE="$(pi_policy_exit_code_for_status "${PI_POLICY_STATUS}")"
     return 0
   fi
 
   # R7
   if [[ "${plugin_kind}" == "none" ]]; then
     PI_POLICY_STATUS="${PI_STATUS_NO_COMPATIBLE_PLUGIN}"
-    PI_POLICY_EXIT_CODE=2
+    PI_POLICY_EXIT_CODE="$(pi_policy_exit_code_for_status "${PI_POLICY_STATUS}")"
     return 0
   fi
 
@@ -132,14 +177,14 @@ pi_policy_decide() {
     else
       PI_POLICY_STATUS="${PI_STATUS_UNSUPPORTED_AND_INCOMPATIBLE}"
     fi
-    PI_POLICY_EXIT_CODE=2
+    PI_POLICY_EXIT_CODE="$(pi_policy_exit_code_for_status "${PI_POLICY_STATUS}")"
     return 0
   fi
 
   # R3 (known partial due to missing tools)
   if [[ "${plugin_kind}" == "known" && -n "${missing_tools_csv}" ]]; then
     PI_POLICY_STATUS="${PI_STATUS_INCOMPATIBLE_MISSING_TOOLS}"
-    PI_POLICY_EXIT_CODE=2
+    PI_POLICY_EXIT_CODE="$(pi_policy_exit_code_for_status "${PI_POLICY_STATUS}")"
     return 0
   fi
 
@@ -150,13 +195,13 @@ pi_policy_decide() {
     else
       PI_POLICY_STATUS="${PI_STATUS_SUPPORTED_WITH_NOTE}"
     fi
-    PI_POLICY_EXIT_CODE=0
+    PI_POLICY_EXIT_CODE="$(pi_policy_exit_code_for_status "${PI_POLICY_STATUS}")"
     return 0
   fi
 
   # R5 (unknown + capabilities pass). Missing tools already handled in probe path.
   PI_POLICY_STATUS="${PI_STATUS_UNSUPPORTED_BUT_COMPATIBLE}"
-  PI_POLICY_EXIT_CODE=0
+  PI_POLICY_EXIT_CODE="$(pi_policy_exit_code_for_status "${PI_POLICY_STATUS}")"
   return 0
 }
 
@@ -178,7 +223,7 @@ pi_policy_message() {
       printf 'Pi coding harness enabled (plugin: %s@%s). Note: this plugin is currently unsupported by policy; capability checks passed.\n' "${plugin_id}" "${version}"
       ;;
     "${PI_STATUS_NO_COMPATIBLE_PLUGIN}")
-      printf 'Cannot enable Pi coding harness: no compatible subagent plugin detected. Install one of: pi-subagents, @tintinweb/pi-subagents, @gotgenes/pi-subagents.\n'
+      printf 'Cannot enable Pi coding harness: no compatible subagent plugin detected. Install one of: %s.\n' "$(join_by_comma "${PI_KNOWN_PLUGINS[@]}")"
       ;;
     "${PI_STATUS_INCOMPATIBLE_SUBAGENT_PROBE_FAILED}")
       printf 'Cannot enable Pi coding harness: detected plugin %s@%s, but subagent capability probe failed.\n' "${plugin_id}" "${version}"
@@ -575,7 +620,7 @@ pi_policy_gate() {
   local missing_csv=""
   local required_tool
   local message=""
-  local subagent_probe_cmd="${PI_SUBAGENT_PROBE_CMD:-pi list | grep "subagent"}"
+  local subagent_probe_cmd="${PI_SUBAGENT_PROBE_CMD:-}"
   local tools_probe_cmd="${PI_TOOLS_PROBE_CMD:-pi -p \"tools\"}"
   local optional_tools_csv=""
   local missing_optional_tools=()
@@ -593,16 +638,16 @@ pi_policy_gate() {
   fi
 
   if [[ -z "${probe_error}" ]]; then
-    if printf '%s' "${pi_list}" | grep -Fq '@gotgenes/pi-subagents'; then
-      plugin_kind="known"
-      plugin_id='@gotgenes/pi-subagents'
-    elif printf '%s' "${pi_list}" | grep -Fq '@tintinweb/pi-subagents'; then
-      plugin_kind="known"
-      plugin_id='@tintinweb/pi-subagents'
-    elif printf '%s' "${pi_list}" | grep -Fq 'pi-subagents'; then
-      plugin_kind="known"
-      plugin_id='pi-subagents'
-    elif printf '%s' "${pi_list}" | grep -qi 'subagents'; then
+    local known_plugin
+    for known_plugin in "${PI_KNOWN_PLUGINS[@]}"; do
+      if printf '%s' "${pi_list}" | grep -Fq "${known_plugin}"; then
+        plugin_kind="known"
+        plugin_id="${known_plugin}"
+        break
+      fi
+    done
+
+    if [[ "${plugin_kind}" == "none" ]] && printf '%s' "${pi_list}" | grep -qi 'subagents'; then
       plugin_kind="unknown"
       unknown_token="$(pi_detect_unknown_subagent_token "${pi_list}")"
       if [[ -n "${unknown_token}" ]]; then
@@ -615,7 +660,7 @@ pi_policy_gate() {
       else
         plugin_id='unknown-subagents-plugin'
       fi
-    else
+    elif [[ "${plugin_kind}" == "none" ]]; then
       plugin_kind="none"
     fi
 
@@ -629,14 +674,18 @@ pi_policy_gate() {
   fi
 
   if [[ -z "${probe_error}" && "${plugin_kind}" != "none" ]]; then
-    if bash -lc "${subagent_probe_cmd}" >/dev/null 2>&1; then
-      subagents_ok="1"
-    fi
-
     if tools_output="$(bash -lc "${tools_probe_cmd}" 2>/dev/null)"; then
       local candidate
       local tools_lower
       tools_lower="$(printf '%s' "${tools_output}" | tr '[:upper:]' '[:lower:]')"
+      if [[ -n "${PI_SUBAGENT_PROBE_CMD:-}" ]]; then
+        if bash -lc "${subagent_probe_cmd}" >/dev/null 2>&1; then
+          subagents_ok="1"
+        fi
+      elif printf '%s' "${tools_lower}" | grep -Eq "(^|[^a-z0-9_-])(subagent|subagent_supervisor)([^a-z0-9_-]|$)"; then
+        subagents_ok="1"
+      fi
+
       for candidate in ${PI_REQUIRED_TOOLS[*]} ${PI_OPTIONAL_TOOLS[*]}; do
         if printf '%s' "${tools_lower}" | grep -Eq "(^|[^a-z0-9_-])${candidate}([^a-z0-9_-]|$)"; then
           if [[ -z "${tools_csv}" ]]; then
@@ -691,10 +740,10 @@ pi_policy_gate() {
   case "${PI_POLICY_STATUS}" in
     "${PI_STATUS_NO_COMPATIBLE_PLUGIN}")
       err "Next step: install one supported plugin, then retry install."
-      err "Example: pi add pi-subagents"
+      err "Example: pi add ${PI_KNOWN_PLUGINS[-1]}"
       ;;
     "${PI_STATUS_INCOMPATIBLE_SUBAGENT_PROBE_FAILED}")
-      err "Next step: verify plugin is enabled and subagent commands work (try: pi subagent --help)."
+      err "Next step: verify subagent tools are exposed in Pi plugin config (try: pi -p \"tools\" and confirm subagent/subagent_supervisor)."
       ;;
     "${PI_STATUS_INCOMPATIBLE_MISSING_TOOLS}")
       err "Next step: ensure required tools are exposed in Pi subagents plugin config (read,bash,edit,write)."
@@ -1017,6 +1066,7 @@ doctor() {
 
 resolve_target
 choose_source
+pi_policy_load
 
 case "${ACTION}" in
   install)

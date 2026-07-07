@@ -95,6 +95,8 @@ $RequiredSkills = @(
 
 $PiRequiredTools = @("read","bash","edit","write")
 $PiOptionalTools = @("grep","find","ls")
+$PiKnownPlugins = @("@gotgenes/pi-subagents","@tintinweb/pi-subagents","pi-subagents")
+$PiPolicyFile = Join-Path $RepoRoot "scripts/pi-policy.json"
 $PiStatusSupported = "supported"
 $PiStatusSupportedWithNote = "supported_with_note"
 $PiStatusIncompatibleMissingTools = "incompatible_missing_tools"
@@ -144,6 +146,24 @@ function Pi-DetectUnknownSubagentToken([string]$PiList) {
   return ""
 }
 
+function Pi-PolicyLoad {
+  if (-not (Test-Path $PiPolicyFile)) { return }
+  try {
+    $policy = Get-Content -Raw $PiPolicyFile | ConvertFrom-Json
+    if ($policy.required_tools -and $policy.required_tools.Count -gt 0) {
+      $script:PiRequiredTools = @($policy.required_tools | ForEach-Object { [string]$_ })
+    }
+    if ($policy.optional_tools -and $policy.optional_tools.Count -gt 0) {
+      $script:PiOptionalTools = @($policy.optional_tools | ForEach-Object { [string]$_ })
+    }
+    if ($policy.known_plugins -and $policy.known_plugins.Count -gt 0) {
+      $script:PiKnownPlugins = @($policy.known_plugins | ForEach-Object { [string]$_ })
+    }
+  } catch {
+    # Keep built-in defaults when policy file is missing/invalid.
+  }
+}
+
 function Pi-PolicyDecide(
   [string]$PluginKind,
   [bool]$SubagentsOk,
@@ -152,27 +172,45 @@ function Pi-PolicyDecide(
   [string]$ProbeError
 ) {
   if (-not [string]::IsNullOrWhiteSpace($ProbeError)) {
-    return @{ status = $PiStatusEnvironmentProbeFailed; exitCode = 3 }
+    $status = $PiStatusEnvironmentProbeFailed
+    return @{ status = $status; exitCode = (Pi-ExitCodeForStatus $status) }
   }
   if ($PluginKind -eq "none") {
-    return @{ status = $PiStatusNoCompatiblePlugin; exitCode = 2 }
+    $status = $PiStatusNoCompatiblePlugin
+    return @{ status = $status; exitCode = (Pi-ExitCodeForStatus $status) }
   }
   if (-not $SubagentsOk) {
     if ($PluginKind -eq "known") {
-      return @{ status = $PiStatusIncompatibleSubagentProbeFailed; exitCode = 2 }
+      $status = $PiStatusIncompatibleSubagentProbeFailed
+      return @{ status = $status; exitCode = (Pi-ExitCodeForStatus $status) }
     }
-    return @{ status = $PiStatusUnsupportedAndIncompatible; exitCode = 2 }
+    $status = $PiStatusUnsupportedAndIncompatible
+    return @{ status = $status; exitCode = (Pi-ExitCodeForStatus $status) }
   }
   if ($PluginKind -eq "known" -and -not [string]::IsNullOrWhiteSpace($MissingToolsCsv)) {
-    return @{ status = $PiStatusIncompatibleMissingTools; exitCode = 2 }
+    $status = $PiStatusIncompatibleMissingTools
+    return @{ status = $status; exitCode = (Pi-ExitCodeForStatus $status) }
   }
   if ($PluginKind -eq "known") {
     if ($PermissionsDetected) {
-      return @{ status = $PiStatusSupported; exitCode = 0 }
+      $status = $PiStatusSupported
+      return @{ status = $status; exitCode = (Pi-ExitCodeForStatus $status) }
     }
-    return @{ status = $PiStatusSupportedWithNote; exitCode = 0 }
+    $status = $PiStatusSupportedWithNote
+    return @{ status = $status; exitCode = (Pi-ExitCodeForStatus $status) }
   }
-  return @{ status = $PiStatusUnsupportedButCompatible; exitCode = 0 }
+  $status = $PiStatusUnsupportedButCompatible
+  return @{ status = $status; exitCode = (Pi-ExitCodeForStatus $status) }
+}
+
+function Pi-ExitCodeForStatus([string]$Status) {
+  switch ($Status) {
+    $PiStatusSupported { return 0 }
+    $PiStatusSupportedWithNote { return 0 }
+    $PiStatusUnsupportedButCompatible { return 0 }
+    $PiStatusEnvironmentProbeFailed { return 3 }
+    default { return 2 }
+  }
 }
 
 function Pi-PolicyMessage([string]$Status, [string]$PluginId, [string]$Version, [string]$MissingCsv, [string]$ProbeError) {
@@ -187,7 +225,7 @@ function Pi-PolicyMessage([string]$Status, [string]$PluginId, [string]$Version, 
       return "Pi coding harness enabled (plugin: $PluginId@$Version). Note: this plugin is currently unsupported by policy; capability checks passed."
     }
     $PiStatusNoCompatiblePlugin {
-      return "Cannot enable Pi coding harness: no compatible subagent plugin detected. Install one of: pi-subagents, @tintinweb/pi-subagents, @gotgenes/pi-subagents."
+      return "Cannot enable Pi coding harness: no compatible subagent plugin detected. Install one of: $([string]::Join(', ', $PiKnownPlugins))."
     }
     $PiStatusIncompatibleSubagentProbeFailed {
       return "Cannot enable Pi coding harness: detected plugin $PluginId@$Version, but subagent capability probe failed."
@@ -232,16 +270,15 @@ function Pi-PolicyGate {
   }
 
   if ([string]::IsNullOrWhiteSpace($probeError)) {
-    if ($piList -match '@gotgenes/pi-subagents') {
-      $pluginKind = "known"
-      $pluginId = "@gotgenes/pi-subagents"
-    } elseif ($piList -match '@tintinweb/pi-subagents') {
-      $pluginKind = "known"
-      $pluginId = "@tintinweb/pi-subagents"
-    } elseif ($piList -match 'pi-subagents') {
-      $pluginKind = "known"
-      $pluginId = "pi-subagents"
-    } elseif ($piList -match '(?i)subagents') {
+    foreach ($knownPlugin in $PiKnownPlugins) {
+      if ($piList -match [regex]::Escape($knownPlugin)) {
+        $pluginKind = "known"
+        $pluginId = $knownPlugin
+        break
+      }
+    }
+
+    if ($pluginKind -eq "none" -and $piList -match '(?i)subagents') {
       $pluginKind = "unknown"
       $unknown = Pi-DetectUnknownSubagentToken $piList
       if (-not [string]::IsNullOrWhiteSpace($unknown)) {
@@ -271,21 +308,20 @@ function Pi-PolicyGate {
   }
 
   if ([string]::IsNullOrWhiteSpace($probeError) -and $pluginKind -ne "none") {
-    $subagentProbeCmd = if ($env:PI_SUBAGENT_PROBE_CMD) { $env:PI_SUBAGENT_PROBE_CMD } else { "pi list | Select-String -Pattern 'subagent'" }
+    $subagentProbeCmd = if ($env:PI_SUBAGENT_PROBE_CMD) { $env:PI_SUBAGENT_PROBE_CMD } else { "" }
     $toolsProbeCmd = if ($env:PI_TOOLS_PROBE_CMD) { $env:PI_TOOLS_PROBE_CMD } else { "pi -p 'tools'" }
 
     try {
-      if ($env:PI_SUBAGENT_PROBE_CMD) {
-        Invoke-Expression $subagentProbeCmd *> $null
-        if ($LASTEXITCODE -eq 0) { $subagentsOk = $true }
-      } else {
-        $subagentProbeOut = (Invoke-Expression $subagentProbeCmd 2>$null | Out-String)
-        if (-not [string]::IsNullOrWhiteSpace($subagentProbeOut)) { $subagentsOk = $true }
-      }
-    } catch { }
-
-    try {
       $toolsOutput = (Invoke-Expression $toolsProbeCmd 2>$null | Out-String).ToLowerInvariant()
+      if ($env:PI_SUBAGENT_PROBE_CMD) {
+        try {
+          Invoke-Expression $subagentProbeCmd *> $null
+          if ($LASTEXITCODE -eq 0) { $subagentsOk = $true }
+        } catch { }
+      } elseif ($toolsOutput -match '(^|[^a-z0-9_-])(subagent|subagent_supervisor)([^a-z0-9_-]|$)') {
+        $subagentsOk = $true
+      }
+
       $present = @()
       foreach ($tool in ($PiRequiredTools + $PiOptionalTools)) {
         if ($toolsOutput -match "(^|[^a-z0-9_-])$tool([^a-z0-9_-]|$)") {
@@ -331,10 +367,10 @@ function Pi-PolicyGate {
   switch ($decision.status) {
     $PiStatusNoCompatiblePlugin {
       Write-Error "Next step: install one supported plugin, then retry install."
-      Write-Error "Example: pi add pi-subagents"
+      Write-Error "Example: pi add $($PiKnownPlugins[-1])"
     }
     $PiStatusIncompatibleSubagentProbeFailed {
-      Write-Error "Next step: verify plugin is enabled and subagent detection works (try: pi list | Select-String -Pattern 'subagent')."
+      Write-Error "Next step: verify subagent tools are exposed in Pi plugin config (try: pi -p 'tools' and confirm subagent/subagent_supervisor)."
     }
     $PiStatusIncompatibleMissingTools {
       Write-Error "Next step: ensure required tools are exposed in Pi subagents plugin config (read,bash,edit,write)."
@@ -760,6 +796,7 @@ function Doctor {
 }
 
 try {
+  Pi-PolicyLoad
   Resolve-Target
   Resolve-Source
   switch ($Action) {
