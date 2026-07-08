@@ -1,6 +1,6 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { KNOWN_DUCKLINGS } from "./agents.ts";
-import { routeAmbient } from "./routing.ts";
+import { routeAmbient, UNRECOGNIZED_CLARIFY_QUESTION } from "./routing.ts";
 import { statusText } from "./status.ts";
 import type { DuckState } from "./state.ts";
 
@@ -90,11 +90,16 @@ export function registerDuckCommands(pi: ExtensionAPI, deps: RegisterDuckCommand
 
           const route = routeAmbient(input);
           if (!route) {
-            ctx.ui.notify("Route: pass-through (no subagent)", "info");
+            ctx.ui.notify(`Route: clarify\nQuestion: ${UNRECOGNIZED_CLARIFY_QUESTION}`, "info");
             return;
           }
 
-          ctx.ui.notify(`Route: ${route.agent}\nReason: ${route.reason}`, "info");
+          const execChain = route.executionChain.join(" > ") || route.agent;
+          const metaChain = route.metaChain.join(" > ") || execChain;
+          ctx.ui.notify(
+            `Route: ${route.intent}\nSkill: ${route.skill}\nExec chain: ${execChain}\nMeta chain: ${metaChain}\nReason: ${route.reason}`,
+            "info",
+          );
           return;
         }
         default: {

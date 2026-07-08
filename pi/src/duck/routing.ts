@@ -32,10 +32,29 @@ export function routeAmbient(text: string): RouteDecision {
     /(explicit bounded patch|bounded patch|small patch|1-2 files|one or two files|one file|two files)/.test(t) &&
     /(patch|fix|implement|edit|change code|apply)/.test(t);
   const hasIssueSignal = /(broken|failing|error|exception|bug|wrong output|500|issue)/.test(t);
-  const hasReviewRequestSignal = /(review this|code review|review|pr review|audit|diff)/.test(t);
+  const hasReviewRequestSignal =
+    /(review this|code review|pr review|audit|\bdiff\b|review (the )?(diff|code|snippet|changes))/i.test(t);
   const hasInlinePrCommentsSignal = /(inline pr comments|inline review comments|pr comments)/.test(t);
+  const hasTriageIntent =
+    /(test coverage|what to test|pre-pr planning|pre pr planning|bug severity|triage this bug|\btriage\b|test review|coverage analysis)/.test(
+      t,
+    );
 
-  // Priority: debug > review > explain > teach > design > triage
+  // Priority: triage > debug > review > explain > teach > design
+  if (hasTriageIntent) {
+    const executionChain: KnownDuckling[] = [hasInlinePrCommentsSignal ? "duck-reviewer" : "duck-investigator"];
+    const metaChain: string[] = ["duck-triage(skill)", ...executionChain];
+
+    return {
+      intent: "triage",
+      skill: "duck-triage",
+      agent: executionChain[0],
+      executionChain,
+      metaChain,
+      reason: "test/triage planning signal",
+    };
+  }
+
   if (/(debug this|debug|broken|failing|error|exception|stack trace|500|bug|root cause|complaint)/.test(t)) {
     const executionChain: KnownDuckling[] = ["duck-investigator"];
     const metaChain: string[] = ["duck-investigator"];
@@ -143,21 +162,6 @@ export function routeAmbient(text: string): RouteDecision {
       executionChain: uniqueChain(executionChain),
       metaChain,
       reason: "design/tradeoff signal",
-    };
-  }
-
-  if (/(test coverage|what to test|pre-pr planning|pre pr planning|bug severity|triage)/.test(t)) {
-    const executionChain: KnownDuckling[] = [hasInlinePrCommentsSignal ? "duck-reviewer" : "duck-investigator"];
-    const metaChain: string[] = ["duck-triage(skill)"];
-    if (hasInlinePrCommentsSignal) metaChain.push("duck-reviewer");
-
-    return {
-      intent: "triage",
-      skill: "duck-triage",
-      agent: executionChain[0],
-      executionChain,
-      metaChain,
-      reason: "test/triage planning signal",
     };
   }
 
