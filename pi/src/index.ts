@@ -6,8 +6,6 @@ import {
   type KnownDuckling,
   type RouteDecision,
 } from "./duck/routing.ts";
-import { truncateOutput } from "./duck/runner.ts";
-import { executeDuckChain, formatDuckChainSummary, type DuckChainPlan } from "./duck/chain.ts";
 import { buildStatusLine, type DuckStatusRuntime } from "./duck/status.ts";
 import { createInvokeAgent, type DuckInvokeContext } from "./duck/orchestrator.ts";
 import {
@@ -80,7 +78,7 @@ export default function duckExtension(pi: ExtensionAPI): void {
     runtime.runningAgent = agentName;
     refreshStatus(ctx);
     try {
-      await invokeAgentImpl(agentName, task, ctx);
+      return await invokeAgentImpl(agentName, task, ctx);
     } finally {
       runtime.runningAgent = undefined;
       refreshStatus(ctx);
@@ -89,31 +87,9 @@ export default function duckExtension(pi: ExtensionAPI): void {
 
   const invokeRouteChain = async (route: Exclude<RouteDecision, null>, task: string, ctx: DuckUiContext) => {
     const chain = dedupeChain(route.executionChain.length > 0 ? route.executionChain : [route.agent]);
-    const plan: DuckChainPlan = {
-      steps: chain.map((agentName) => ({
-        mode: "single",
-        task: {
-          agent: agentName,
-          task: "{input}\n\nPrevious agent output:\n{previous}",
-        },
-      })),
-    };
-
-    const execution = await executeDuckChain({
-      plan,
-      inputTask: task,
-      invokeAgent,
-      ctx,
-      continueOnError: true,
-    });
-
-    if (execution.failed > 0) {
-      ctx.ui.notify(formatDuckChainSummary(execution), "warning");
-      return;
-    }
-
-    if (execution.lastOutput.trim()) {
-      ctx.ui.notify(`Chain final output:\n\n${truncateOutput(execution.lastOutput, 1200)}`, "info");
+    for (const agentName of chain) {
+      const result = await invokeAgent(agentName, task, ctx);
+      if (!result.ok) return;
     }
   };
 
