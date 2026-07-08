@@ -1,5 +1,11 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { KNOWN_DUCKLINGS } from "./agents.ts";
+import {
+  executeDuckChain,
+  formatDuckChainSummary,
+  parseDuckChainSpec,
+  splitChainAndInput,
+} from "./chain.ts";
 import { routeAmbient, UNRECOGNIZED_CLARIFY_QUESTION } from "./routing.ts";
 import { statusText } from "./status.ts";
 import type { DuckState } from "./state.ts";
@@ -8,6 +14,7 @@ type CommandContext = {
   ui: {
     notify(message: string, level?: "info" | "warning" | "error"): void;
   };
+  cwd: string;
 };
 
 type RegisterDuckCommandsDeps = {
@@ -15,22 +22,49 @@ type RegisterDuckCommandsDeps = {
   persistState(): void;
   refreshStatus(ctx: CommandContext): void;
   reset(ctx: CommandContext): void;
-  invokeAgent(agentName: string, task: string, ctx: CommandContext): Promise<void>;
+  invokeAgent(
+    agentName: string,
+    task: string,
+    ctx: CommandContext,
+  ): Promise<{ ok: boolean; output: string; exitCode: number; stderr: string }>;
 };
 
-function parseDuckCommandArgs(args: string | undefined): string[] {
-  return (args ?? "")
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean);
+function firstToken(raw: string): { command: string; remainder: string } {
+  const trimmed = raw.trim();
+  if (!trimmed) return { command: "status", remainder: "" };
+  const idx = trimmed.search(/\s/);
+  if (idx < 0) return { command: trimmed, remainder: "" };
+  return {
+    command: trimmed.slice(0, idx),
+    remainder: trimmed.slice(idx).trim(),
+  };
+}
+
+async function runChainFromRaw(raw: string, ctx: CommandContext, deps: RegisterDuckCommandsDeps): Promise<void> {
+  const { chainSpec, inputTask } = splitChainAndInput(raw);
+  const parsed = parseDuckChainSpec(chainSpec);
+
+  if (!parsed.plan) {
+    ctx.ui.notify(`Invalid chain: ${parsed.error ?? "parse error"}`, "warning");
+    return;
+  }
+
+  const result = await executeDuckChain({
+    plan: parsed.plan,
+    inputTask,
+    invokeAgent: deps.invokeAgent,
+    ctx,
+    continueOnError: true,
+  });
+
+  ctx.ui.notify(formatDuckChainSummary(result), result.failed > 0 ? "warning" : "info");
 }
 
 export function registerDuckCommands(pi: ExtensionAPI, deps: RegisterDuckCommandsDeps): void {
   pi.registerCommand("duck", {
-    description: "Duck controls: /duck status|reset|on|off|policy|mode|route",
+    description: "Duck controls: /duck status|reset|on|off|policy|mode|route|chain",
     handler: async (args, ctx) => {
-      const tokens = parseDuckCommandArgs(args);
-      const command = tokens[0] ?? "status";
+      const { command, remainder } = firstToken(args ?? "");
       const state = deps.getState();
 
       switch (command) {
@@ -58,7 +92,7 @@ export function registerDuckCommands(pi: ExtensionAPI, deps: RegisterDuckCommand
           return;
         }
         case "policy": {
-          const value = tokens[1];
+          const value = firstToken(remainder).command;
           if (value !== "on" && value !== "off") {
             ctx.ui.notify("Usage: /duck policy on|off", "warning");
             return;
@@ -70,7 +104,7 @@ export function registerDuckCommands(pi: ExtensionAPI, deps: RegisterDuckCommand
           return;
         }
         case "mode": {
-          const value = tokens[1];
+          const value = firstToken(remainder).command;
           if (value !== "on" && value !== "off") {
             ctx.ui.notify("Usage: /duck mode on|off", "warning");
             return;
@@ -82,7 +116,7 @@ export function registerDuckCommands(pi: ExtensionAPI, deps: RegisterDuckCommand
           return;
         }
         case "route": {
-          const input = tokens.slice(1).join(" ").trim();
+          const input = remainder.trim();
           if (!input) {
             ctx.ui.notify("Usage: /duck route <text>", "warning");
             return;
@@ -102,8 +136,20 @@ export function registerDuckCommands(pi: ExtensionAPI, deps: RegisterDuckCommand
           );
           return;
         }
+        case "chain": {
+          if (!remainder.trim()) {
+            ctx.ui.notify(
+              "Usage: /duck chain duck-investigator \"scan\" -> (duck-reviewer \"A\" | duck-simple \"B\")[concurrency=2,failFast] -- global task",
+              "warning",
+            );
+            return;
+          }
+
+          await runChainFromRaw(remainder, ctx, deps);
+          return;
+        }
         default: {
-          ctx.ui.notify("Unknown duck command. Use: /duck status|reset|on|off|policy|mode|route", "warning");
+          ctx.ui.notify("Unknown duck command. Use: /duck status|reset|on|off|policy|mode|route|chain", "warning");
         }
       }
     },
@@ -111,10 +157,20 @@ export function registerDuckCommands(pi: ExtensionAPI, deps: RegisterDuckCommand
 
   for (const agentName of KNOWN_DUCKLINGS) {
     pi.registerCommand(agentName, {
-      description: `Invoke ${agentName}. Usage: /${agentName} <task>`,
+      description: `Invoke ${agentName}. Usage: /${agentName} <task> (or chain tail with ->)`,
       handler: async (args, ctx) => {
-        const task = (args ?? "").trim();
-        await deps.invokeAgent(agentName, task, ctx);
+        const raw = (args ?? "").trim();
+        if (!raw) {
+          await deps.invokeAgent(agentName, "", ctx);
+          return;
+        }
+
+        if (raw.includes("->")) {
+          await runChainFromRaw(`${agentName} ${raw}`.trim(), ctx, deps);
+          return;
+        }
+
+        await deps.invokeAgent(agentName, raw, ctx);
       },
     });
   }

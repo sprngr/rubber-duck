@@ -42,7 +42,7 @@ export async function runDuckAgent(
   cwd: string,
   policyText?: string,
 ): Promise<{ output: string; exitCode: number; stderr: string }> {
-  const args: string[] = ["--mode", "json", "-p", "--no-session"];
+  const args: string[] = ["--mode", "json", "-p", "--no-session", "--no-extensions"];
   if (agent.model) args.push("--model", agent.model);
   if (agent.tools?.length) args.push("--tools", agent.tools.join(","));
 

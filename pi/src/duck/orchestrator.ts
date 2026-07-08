@@ -10,6 +10,13 @@ export type DuckInvokeContext = {
   cwd: string;
 };
 
+export type DuckInvokeResult = {
+  ok: boolean;
+  output: string;
+  exitCode: number;
+  stderr: string;
+};
+
 type CreateInvokeAgentDeps = {
   getState(): DuckState;
   persistState(): void;
@@ -17,19 +24,19 @@ type CreateInvokeAgentDeps = {
 };
 
 export function createInvokeAgent(deps: CreateInvokeAgentDeps) {
-  return async (agentName: string, task: string, ctx: DuckInvokeContext): Promise<void> => {
+  return async (agentName: string, task: string, ctx: DuckInvokeContext): Promise<DuckInvokeResult> => {
     const discovery = discoverDuckAgents();
     const agent = discovery.agents.find((a) => a.name === agentName);
 
     if (!agent) {
       const available = discovery.agents.map((a) => a.name).join(", ") || "(none)";
       ctx.ui.notify(`Unknown duck agent: ${agentName}. Available: ${available}`, "error");
-      return;
+      return { ok: false, output: "", exitCode: 1, stderr: `Unknown duck agent: ${agentName}` };
     }
 
     if (!task.trim()) {
       ctx.ui.notify(`Missing task. Usage: /${agentName} <task>`, "warning");
-      return;
+      return { ok: false, output: "", exitCode: 1, stderr: "Missing task" };
     }
 
     let policyText = "";
@@ -55,10 +62,12 @@ export function createInvokeAgent(deps: CreateInvokeAgentDeps) {
         `${agent.name} failed (exit ${result.exitCode}). ${result.stderr || "No stderr output."}`,
         "error",
       );
-      return;
+      return { ok: false, output: result.output, exitCode: result.exitCode, stderr: result.stderr };
     }
 
-    const output = truncateOutput(result.output || "(no output)");
-    ctx.ui.notify(`${agent.name} complete.\n\n${output}`, "info");
+    const output = result.output || "(no output)";
+    ctx.ui.notify(`${agent.name} complete.\n\n${truncateOutput(output)}`, "info");
+
+    return { ok: true, output, exitCode: result.exitCode, stderr: result.stderr };
   };
 }
