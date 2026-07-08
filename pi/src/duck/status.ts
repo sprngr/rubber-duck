@@ -2,14 +2,31 @@ import { discoverDuckAgents } from "./agents.ts";
 import { bundledPolicyExists, bundledPolicyPath } from "./policy.ts";
 import type { DuckState } from "./state.ts";
 
-export function buildStatusLine(state: DuckState): string | undefined {
+export type DuckStatusRuntime = {
+  runningAgent?: string;
+};
+
+function presentAgentName(name: string): string {
+  return name.replace(/^duck-/, "");
+}
+
+export function buildStatusLine(state: DuckState, runtime?: DuckStatusRuntime): string | undefined {
   if (!state.enabled) return undefined;
-  const active = state.activeSubagent ? ` (${state.activeSubagent})` : "";
+
+  const core = runtime?.runningAgent
+    ? `running ${presentAgentName(runtime.runningAgent)}`
+    : state.activeSubagent
+      ? presentAgentName(state.activeSubagent)
+      : "";
+
   const flags: string[] = [];
-  if (!state.policyEnabled) flags.push("policy:off");
-  if (!state.ambientMode) flags.push("ambient:off");
-  const suffix = flags.length > 0 ? ` ${flags.join(" ")}` : "";
-  return `🦆${active}${suffix}`;
+  if (!state.ambientMode) flags.push("ambient off");
+  if (!state.policyEnabled) flags.push("policy off");
+
+  const parts = ["🦆"];
+  if (core) parts.push(core);
+  if (flags.length > 0) parts.push(flags.join(" · "));
+  return parts.join(" ");
 }
 
 export async function statusText(state: DuckState): Promise<string> {

@@ -22,26 +22,150 @@ function uniqueChain(chain: KnownDuckling[]): KnownDuckling[] {
   return out;
 }
 
+function normalizeInput(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[`'"(){}\[\],.:;!?]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function hasAny(text: string, terms: string[]): boolean {
+  return terms.some((term) => text.includes(term));
+}
+
+function scoreTerms(text: string, terms: string[]): number {
+  let score = 0;
+  for (const term of terms) {
+    if (text.includes(term)) score += 1;
+  }
+  return score;
+}
+
+const TRIAGE_TERMS = [
+  "triage",
+  "test coverage",
+  "coverage",
+  "coverage analysis",
+  "what to test",
+  "missing test",
+  "untested",
+  "test review",
+  "bug severity",
+  "pre pr planning",
+  "pre-pr planning",
+];
+
+const DEBUG_TERMS = [
+  "debug",
+  "broken",
+  "failing",
+  "fails",
+  "failure",
+  "error",
+  "exception",
+  "stack trace",
+  "bug",
+  "wrong output",
+  "root cause",
+  "500",
+  "investigate",
+  "issue",
+];
+
+const REVIEW_TERMS = [
+  "review",
+  "code review",
+  "pr review",
+  "pull request",
+  "diff",
+  "audit",
+  "changes",
+  "snippet review",
+];
+
+const EXPLAIN_TERMS = [
+  "explain",
+  "what does this do",
+  "walkthrough",
+  "walk through",
+  "explain function",
+  "explain file",
+  "explain snippet",
+];
+
+const TEACH_TERMS = [
+  "teach me",
+  "how does",
+  "how do",
+  "walk me through",
+  "tutorial",
+  "show me",
+];
+
+const DESIGN_TERMS = [
+  "design",
+  "tradeoff",
+  "tradeoffs",
+  "architecture",
+  "evaluate approach",
+  "help me choose",
+  "risk model",
+  "what could go wrong",
+  "simplify",
+];
+
+const DUPLICATION_TERMS = ["duplicate", "duplication", "drift", "repeated logic", "copy paste", "shared rule"];
+const TEST_GAP_TERMS = ["test gap", "coverage gap", "missing test", "untested", "what to test", "test coverage"];
+const REPRO_WEAK_TERMS = [
+  "hard to reproduce",
+  "cant reproduce",
+  "can t reproduce",
+  "intermittent",
+  "flaky",
+  "unclear repro",
+  "unknown repro",
+];
+const PATCH_SCOPE_TERMS = ["bounded patch", "small patch", "1-2 files", "one file", "two files"];
+const PATCH_ACTION_TERMS = ["patch", "fix", "implement", "edit", "change code", "apply"];
+const INLINE_PR_COMMENT_TERMS = ["inline pr comments", "inline review comments", "pr comments"];
+
 export function routeAmbient(text: string): RouteDecision {
-  const t = text.toLowerCase();
+  const t = normalizeInput(text);
 
-  const hasDuplicationSignal = /(duplicate|duplication|drift|repeated logic|copy\s?paste|shared-rule)/.test(t);
-  const hasTestGapSignal = /(test gap|coverage gap|missing tests?|untested|what to test|test coverage)/.test(t);
-  const hasReproWeakSignal = /(hard to reproduce|can'?t reproduce|intermittent|flaky|unclear repro|unknown repro)/.test(t);
-  const hasBoundedPatchSignal =
-    /(explicit bounded patch|bounded patch|small patch|1-2 files|one or two files|one file|two files)/.test(t) &&
-    /(patch|fix|implement|edit|change code|apply)/.test(t);
-  const hasIssueSignal = /(broken|failing|error|exception|bug|wrong output|500|issue)/.test(t);
-  const hasReviewRequestSignal =
-    /(review this|code review|pr review|audit|\bdiff\b|review (the )?(diff|code|snippet|changes))/i.test(t);
-  const hasInlinePrCommentsSignal = /(inline pr comments|inline review comments|pr comments)/.test(t);
-  const hasTriageIntent =
-    /(test coverage|what to test|pre-pr planning|pre pr planning|bug severity|triage this bug|\btriage\b|test review|coverage analysis)/.test(
-      t,
-    );
+  const hasDuplicationSignal = hasAny(t, DUPLICATION_TERMS);
+  const hasTestGapSignal = hasAny(t, TEST_GAP_TERMS);
+  const hasReproWeakSignal = hasAny(t, REPRO_WEAK_TERMS);
+  const hasBoundedPatchSignal = hasAny(t, PATCH_SCOPE_TERMS) && hasAny(t, PATCH_ACTION_TERMS);
+  const hasIssueSignal = hasAny(t, DEBUG_TERMS);
+  const hasReviewRequestSignal = hasAny(t, REVIEW_TERMS);
+  const hasInlinePrCommentsSignal = hasAny(t, INLINE_PR_COMMENT_TERMS);
 
-  // Priority: triage > debug > review > explain > teach > design
-  if (hasTriageIntent) {
+  const scores = {
+    triage: scoreTerms(t, TRIAGE_TERMS),
+    debug: scoreTerms(t, DEBUG_TERMS),
+    review: scoreTerms(t, REVIEW_TERMS),
+    explain: scoreTerms(t, EXPLAIN_TERMS),
+    teach: scoreTerms(t, TEACH_TERMS),
+    design: scoreTerms(t, DESIGN_TERMS),
+  } as const;
+
+  const maxScore = Math.max(
+    scores.triage,
+    scores.debug,
+    scores.review,
+    scores.explain,
+    scores.teach,
+    scores.design,
+  );
+
+  if (maxScore <= 0) return null;
+
+  const priority: Array<keyof typeof scores> = ["triage", "debug", "review", "explain", "teach", "design"];
+  const chosen = priority.find((key) => scores[key] === maxScore);
+  if (!chosen) return null;
+
+  if (chosen === "triage") {
     const executionChain: KnownDuckling[] = [hasInlinePrCommentsSignal ? "duck-reviewer" : "duck-investigator"];
     const metaChain: string[] = ["duck-triage(skill)", ...executionChain];
 
@@ -55,7 +179,7 @@ export function routeAmbient(text: string): RouteDecision {
     };
   }
 
-  if (/(debug this|debug|broken|failing|error|exception|stack trace|500|bug|root cause|complaint)/.test(t)) {
+  if (chosen === "debug") {
     const executionChain: KnownDuckling[] = ["duck-investigator"];
     const metaChain: string[] = ["duck-investigator"];
 
@@ -77,7 +201,7 @@ export function routeAmbient(text: string): RouteDecision {
     };
   }
 
-  if (/(paste diff|review this|code review|\bdiff\b|pr review|audit)/.test(t) || hasReviewRequestSignal) {
+  if (chosen === "review") {
     const executionChain: KnownDuckling[] = ["duck-reviewer", "duck-adversary", "duck-simple"];
     const metaChain: string[] = ["duck-reviewer", "duck-adversary", "duck-simple"];
 
@@ -99,7 +223,7 @@ export function routeAmbient(text: string): RouteDecision {
     };
   }
 
-  if (/(explain this|what does this do|explain this function|explain this file|explain this snippet)/.test(t)) {
+  if (chosen === "explain") {
     const executionChain: KnownDuckling[] = ["duck-investigator"];
     const metaChain: string[] = ["duck-investigator"];
 
@@ -121,7 +245,7 @@ export function routeAmbient(text: string): RouteDecision {
     };
   }
 
-  if (/(teach me|how does .* work|walk me through)/.test(t)) {
+  if (chosen === "teach") {
     const executionChain: KnownDuckling[] = ["duck-simple"];
     const metaChain: string[] = ["duck-simple"];
 
@@ -143,29 +267,25 @@ export function routeAmbient(text: string): RouteDecision {
     };
   }
 
-  if (/(design this|tradeoff|tradeoffs|architecture|evaluate approach|help me choose|design)/.test(t)) {
-    const executionChain: KnownDuckling[] = ["duck-simple", "duck-adversary"];
-    const metaChain: string[] = ["duck-simple", "duck-adversary"];
+  const executionChain: KnownDuckling[] = ["duck-simple", "duck-adversary"];
+  const metaChain: string[] = ["duck-simple", "duck-adversary"];
 
-    if (hasDuplicationSignal) {
-      executionChain.push("duck-dry");
-      metaChain.push("duck-dry");
-    }
-    if (hasIssueSignal) {
-      metaChain.push("duck-debug(skill)");
-    }
-
-    return {
-      intent: "design",
-      skill: "duck-design",
-      agent: "duck-simple",
-      executionChain: uniqueChain(executionChain),
-      metaChain,
-      reason: "design/tradeoff signal",
-    };
+  if (hasDuplicationSignal) {
+    executionChain.push("duck-dry");
+    metaChain.push("duck-dry");
+  }
+  if (hasIssueSignal) {
+    metaChain.push("duck-debug(skill)");
   }
 
-  return null;
+  return {
+    intent: "design",
+    skill: "duck-design",
+    agent: "duck-simple",
+    executionChain: uniqueChain(executionChain),
+    metaChain,
+    reason: "design/tradeoff signal",
+  };
 }
 
 export function fallbackRouteAfterClarification(_text: string): Exclude<RouteDecision, null> {

@@ -6,7 +6,7 @@ import {
   type KnownDuckling,
   type RouteDecision,
 } from "./duck/routing.ts";
-import { buildStatusLine } from "./duck/status.ts";
+import { buildStatusLine, type DuckStatusRuntime } from "./duck/status.ts";
 import { createInvokeAgent, type DuckInvokeContext } from "./duck/orchestrator.ts";
 import {
   DEFAULT_STATE,
@@ -25,8 +25,8 @@ type DuckUiContext = DuckInvokeContext & {
   };
 };
 
-function applyStatus(ctx: DuckUiContext, state: DuckState): void {
-  ctx.ui.setStatus("duck", buildStatusLine(state));
+function applyStatus(ctx: DuckUiContext, state: DuckState, runtime: DuckStatusRuntime): void {
+  ctx.ui.setStatus("duck", buildStatusLine(state, runtime));
 }
 
 function routeMetaLine(route: Exclude<RouteDecision, null>): string {
@@ -47,6 +47,7 @@ function dedupeChain(chain: KnownDuckling[]): KnownDuckling[] {
 
 export default function duckExtension(pi: ExtensionAPI): void {
   let state: DuckState = { ...DEFAULT_STATE };
+  const runtime: DuckStatusRuntime = {};
   let lastRouteMeta = "route=(none) skill=(none) chain=(none)";
   let pendingClarification: { original: string } | null = null;
 
@@ -55,22 +56,34 @@ export default function duckExtension(pi: ExtensionAPI): void {
   };
 
   const refreshStatus = (ctx: DuckUiContext) => {
-    applyStatus(ctx, state);
+    applyStatus(ctx, state, runtime);
   };
 
   const reset = (ctx: DuckUiContext) => {
     state = { ...DEFAULT_STATE };
+    runtime.runningAgent = undefined;
     pendingClarification = null;
     lastRouteMeta = "route=(none) skill=(none) chain=(none)";
     persistState();
     refreshStatus(ctx);
   };
 
-  const invokeAgent = createInvokeAgent({
+  const invokeAgentImpl = createInvokeAgent({
     getState: () => state,
     persistState,
     refreshStatus,
   });
+
+  const invokeAgent = async (agentName: string, task: string, ctx: DuckUiContext) => {
+    runtime.runningAgent = agentName;
+    refreshStatus(ctx);
+    try {
+      await invokeAgentImpl(agentName, task, ctx);
+    } finally {
+      runtime.runningAgent = undefined;
+      refreshStatus(ctx);
+    }
+  };
 
   const invokeRouteChain = async (route: Exclude<RouteDecision, null>, task: string, ctx: DuckUiContext) => {
     const chain = dedupeChain(route.executionChain.length > 0 ? route.executionChain : [route.agent]);
@@ -92,8 +105,8 @@ export default function duckExtension(pi: ExtensionAPI): void {
     if (!text.trim() || text.trim().startsWith("/")) return { action: "continue" };
 
     if (text.trim().toLowerCase() === "quack") {
-      const brief = `enabled=${state.enabled ? "on" : "off"} ambient=${state.ambientMode ? "on" : "off"} policy=${state.policyEnabled ? "on" : "off"} active=${state.activeSubagent ?? "none"}`;
-      ctx.ui.notify(`🦆 ${brief}\n${lastRouteMeta}`, "info");
+      const line = buildStatusLine(state, runtime) ?? "🦆 off";
+      ctx.ui.notify(`${line}\n${lastRouteMeta}`, "info");
       return { action: "handled" };
     }
 
