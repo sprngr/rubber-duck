@@ -20,6 +20,7 @@ type RegisterDuckCommandsDeps = {
     task: string,
     ctx: CommandContext,
   ): Promise<{ ok: boolean; output: string; exitCode: number; stderr: string }>;
+  invokeSupervisorRun(agentName: string, task: string, ctx: CommandContext): Promise<void>;
 };
 
 function parseDuckCommandArgs(args: string | undefined): string[] {
@@ -118,7 +119,11 @@ export function registerDuckCommands(pi: ExtensionAPI, deps: RegisterDuckCommand
       description: `Invoke ${agentName}. Usage: /${agentName} <task>`,
       handler: async (args, ctx) => {
         const task = (args ?? "").trim();
-        await deps.invokeAgent(agentName, task, ctx);
+        if (!task) {
+          await deps.invokeAgent(agentName, task, ctx);
+          return;
+        }
+        await deps.invokeSupervisorRun(agentName, task, ctx);
       },
     });
   }

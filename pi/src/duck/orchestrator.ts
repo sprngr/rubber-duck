@@ -66,8 +66,8 @@ export function createInvokeAgent(deps: CreateInvokeAgentDeps) {
     }
 
     const output = result.output || "(no output)";
-    ctx.ui.notify(`${agent.name} complete.\n\n${truncateOutput(output)}`, "info");
+    ctx.ui.notify(`${agent.name} complete.`, "info");
 
-    return { ok: true, output, exitCode: result.exitCode, stderr: result.stderr };
+    return { ok: true, output: truncateOutput(output, 12000), exitCode: result.exitCode, stderr: result.stderr };
   };
 }
