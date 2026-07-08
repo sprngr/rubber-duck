@@ -24,23 +24,32 @@ jobs:
           filters: |
             guardrails:
               - 'src/shared/references/GUARDRAILS.md'
+              - 'src/shared/skill-snippets/**'
+              - 'src/shared/policy-snippets/**'
               - 'scripts/check-guardrails-drift.sh'
               - 'scripts/assemble-skills.sh'
+              - 'scripts/lib/check-rules.py'
               - 'src/skills/**'
               - 'skills/**'
               - 'Makefile'
               - '.github/workflows/check-source-generated-artifacts.yml'
             skills:
               - 'src/skills/**'
+              - 'src/shared/skill-snippets/**'
+              - 'src/shared/policy-snippets/**'
               - 'skills/**'
               - 'scripts/assemble-skills.sh'
+              - 'scripts/lib/check-rules.py'
               - 'build/skill-assembly.rules.json'
               - 'Makefile'
               - '.github/workflows/check-source-generated-artifacts.yml'
             agents:
               - 'src/agents/**'
+              - 'src/shared/skill-snippets/**'
+              - 'src/shared/policy-snippets/**'
               - 'dist/**'
               - 'scripts/build-harness-artifacts.sh'
+              - 'scripts/lib/check-rules.py'
               - 'build/agent-assembly.rules.json'
               - 'Makefile'
               - '.github/workflows/check-source-generated-artifacts.yml'
@@ -88,10 +97,7 @@ jobs:
         run: scripts/build-harness-artifacts.sh --check
 
   check-generated-artifacts-clean:
-    if: ${{ github.event_name == 'pull_request' }}
-    needs:
-      - check-skills
-      - check-agents-dist
+    if: ${{ always() && github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
