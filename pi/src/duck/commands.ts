@@ -1,5 +1,6 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { KNOWN_DUCKLINGS } from "./agents.ts";
+import { DUCK_HELP_LINES, DUCK_USAGE } from "./messages.ts";
 import { UNRECOGNIZED_CLARIFY_QUESTION, type RouteDecision } from "./routing.ts";
 import { statusText } from "./status.ts";
 import type { DuckState } from "./state.ts";
@@ -51,19 +52,7 @@ export function registerDuckCommands(pi: ExtensionAPI, deps: RegisterDuckCommand
 
       switch (command) {
         case "help": {
-          ctx.ui.notify(
-            [
-              "Duck commands",
-              "- /duck status|reset|on|off|policy on|off|mode on|off|route <text>",
-              "- /duck proceed [summary] · /duck refine [--replace] <text> · /duck cancel",
-              "- /duck route <text> · /duck route-preview <text>",
-              "- /duck pending · /duck runs · /duck reply <id> <continue|stop|retry-later> [notes]",
-              "- /duck resume <runId> [step]",
-              "- /duck followup <text> · /duck close-run",
-              "Direct ducklings: /duck-<agent>",
-            ].join("\n"),
-            "info",
-          );
+          ctx.ui.notify(DUCK_HELP_LINES.join("\n"), "info");
           return;
         }
         case "status": {
@@ -94,7 +83,7 @@ export function registerDuckCommands(pi: ExtensionAPI, deps: RegisterDuckCommand
         case "policy": {
           const value = tokens[1];
           if (value !== "on" && value !== "off") {
-            ctx.ui.notify("Usage: /duck policy on|off", "warning");
+            ctx.ui.notify(DUCK_USAGE.policy, "warning");
             return;
           }
           state.policyEnabled = value === "on";
@@ -106,7 +95,7 @@ export function registerDuckCommands(pi: ExtensionAPI, deps: RegisterDuckCommand
         case "mode": {
           const value = tokens[1];
           if (value !== "on" && value !== "off") {
-            ctx.ui.notify("Usage: /duck mode on|off", "warning");
+            ctx.ui.notify(DUCK_USAGE.mode, "warning");
             return;
           }
           state.ambientMode = value === "on";
@@ -119,7 +108,7 @@ export function registerDuckCommands(pi: ExtensionAPI, deps: RegisterDuckCommand
           const sub = tokens[1];
           const input = tokens.slice(sub === "preview" ? 2 : 1).join(" ").trim();
           if (!input) {
-            ctx.ui.notify(sub === "preview" ? "Usage: /duck route preview <text>" : "Usage: /duck route <text>", "warning");
+            ctx.ui.notify(sub === "preview" ? DUCK_USAGE.routePreview : DUCK_USAGE.route, "warning");
             return;
           }
 
@@ -133,31 +122,6 @@ export function registerDuckCommands(pi: ExtensionAPI, deps: RegisterDuckCommand
           const metaChain = route.metaChain.join(" > ") || execChain;
           ctx.ui.notify(
             `Route: ${route.intent}\nSkill: ${route.skill}\nExec chain: ${execChain}\nMeta chain: ${metaChain}\nReason: ${route.reason}`,
-            "info",
-          );
-          return;
-        }
-        case "route-preview": {
-          const input = tokens.slice(1).join(" ").trim();
-          if (!input) {
-            ctx.ui.notify("Usage: /duck route-preview <text>", "warning");
-            return;
-          }
-          const route = await deps.previewRoute(input, ctx as CommandContext & { cwd: string });
-          if (!route) {
-            ctx.ui.notify(`Route: clarify\nQuestion: ${UNRECOGNIZED_CLARIFY_QUESTION}`, "info");
-            return;
-          }
-          ctx.ui.notify(
-            [
-              "Duck route preview",
-              `route_source=llm`,
-              `intent=${route.intent}`,
-              `skill=${route.skill}`,
-              `chain=${route.executionChain.join(" -> ")}`,
-              `reason=${route.reason}`,
-              `input=${input}`,
-            ].join("\n"),
             "info",
           );
           return;
@@ -193,7 +157,7 @@ export function registerDuckCommands(pi: ExtensionAPI, deps: RegisterDuckCommand
         case "followup": {
           const text = tokens.slice(1).join(" ").trim();
           if (!text) {
-            ctx.ui.notify("Usage: /duck followup <text>", "warning");
+            ctx.ui.notify(DUCK_USAGE.followup, "warning");
             return;
           }
           await deps.continueRunFollowup(text, ctx);
@@ -216,7 +180,7 @@ export function registerDuckCommands(pi: ExtensionAPI, deps: RegisterDuckCommand
       handler: async (args, ctx) => {
         const task = (args ?? "").trim();
         if (!task) {
-          await deps.invokeAgent(agentName, task, ctx);
+          ctx.ui.notify(`Usage: /${agentName} <task>`, "warning");
           return;
         }
         await deps.invokeSupervisorRun(agentName, task, ctx);

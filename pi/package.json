@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "description": "Pi extension for Rubber Duck routing, controls, and status UX.",
   "type": "module",
+  "scripts": {
+    "smoke": "node --experimental-strip-types ./src/duck/smoke-check.ts"
+  },
   "license": "MIT",
   "keywords": [
     "pi-package",

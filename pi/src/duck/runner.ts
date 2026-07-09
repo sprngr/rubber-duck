@@ -6,6 +6,17 @@ import type { DuckAgentConfig } from "./agents.ts";
 
 type MessageLike = { role?: string; content?: Array<{ type?: string; text?: string }> };
 
+const DEFAULT_AGENT_TIMEOUT_MS = 120_000;
+const FORCE_KILL_GRACE_MS = 2_000;
+
+function positiveIntFromEnv(name: string, fallback: number): number {
+  const raw = process.env[name];
+  if (!raw) return fallback;
+  const parsed = Number.parseInt(raw, 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
+  return parsed;
+}
+
 function getFinalOutput(messages: MessageLike[]): string {
   for (let i = messages.length - 1; i >= 0; i--) {
     const msg = messages[i];
@@ -42,6 +53,9 @@ export async function runDuckAgent(
   cwd: string,
   policyText?: string,
 ): Promise<{ output: string; exitCode: number; stderr: string }> {
+  const timeoutMs = positiveIntFromEnv("DUCK_AGENT_TIMEOUT_MS", DEFAULT_AGENT_TIMEOUT_MS);
+  const killGraceMs = positiveIntFromEnv("DUCK_AGENT_FORCE_KILL_GRACE_MS", FORCE_KILL_GRACE_MS);
+
   const args: string[] = ["--mode", "json", "-p", "--no-session", "--no-extensions"];
   if (agent.model) args.push("--model", agent.model);
   if (agent.tools?.length) args.push("--tools", agent.tools.join(","));
@@ -77,6 +91,34 @@ export async function runDuckAgent(
 
       let stderrBuf = "";
       let stdoutBuf = "";
+      let settled = false;
+      let timedOut = false;
+
+      const finish = (result: { code: number; stderr: string }) => {
+        if (settled) return;
+        settled = true;
+        resolve(result);
+      };
+
+      const timeoutId = setTimeout(() => {
+        timedOut = true;
+        stderrBuf = `${stderrBuf}${stderrBuf ? "\n" : ""}Timed out after ${timeoutMs}ms`;
+        try {
+          proc.kill("SIGTERM");
+        } catch {
+          // ignore kill failure
+        }
+
+        setTimeout(() => {
+          if (settled) return;
+          try {
+            proc.kill("SIGKILL");
+          } catch {
+            // ignore kill failure
+          }
+          finish({ code: 124, stderr: stderrBuf.trim() });
+        }, killGraceMs);
+      }, timeoutMs);
 
       const processLine = (line: string) => {
         if (!line.trim()) return;
@@ -102,12 +144,18 @@ export async function runDuckAgent(
       });
 
       proc.on("close", (exitCode) => {
+        clearTimeout(timeoutId);
         if (stdoutBuf.trim()) processLine(stdoutBuf);
-        resolve({ code: exitCode ?? 1, stderr: stderrBuf.trim() });
+        if (timedOut) {
+          finish({ code: 124, stderr: stderrBuf.trim() });
+          return;
+        }
+        finish({ code: exitCode ?? 1, stderr: stderrBuf.trim() });
       });
 
       proc.on("error", (err) => {
-        resolve({ code: 1, stderr: String(err) });
+        clearTimeout(timeoutId);
+        finish({ code: 1, stderr: String(err) });
       });
     });
 

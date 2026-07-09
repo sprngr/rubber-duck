@@ -62,6 +62,46 @@ export class DuckSupervisorStore {
   private runs = new Map<string, SupervisorRun>();
   private requests = new Map<string, SupervisorRequest>();
 
+  private static readonly DEFAULT_PENDING_LIMIT = 100;
+  private static readonly DEFAULT_RUN_LIMIT = 20;
+
+  private sortedRunsDesc(): SupervisorRun[] {
+    return Array.from(this.runs.values()).sort((a, b) => b.startedAt.localeCompare(a.startedAt));
+  }
+
+  private sortedPendingRequestsAsc(): SupervisorRequest[] {
+    return Array.from(this.requests.values())
+      .filter((req) => req.status === "pending")
+      .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  }
+
+  getPrunableRunIds(keepRecent = DuckSupervisorStore.DEFAULT_RUN_LIMIT): string[] {
+    const safeKeep = Math.max(1, keepRecent);
+    return this.sortedRunsDesc()
+      .slice(safeKeep)
+      .filter((run) => run.state === "completed" || run.state === "failed")
+      .map((run) => run.runId);
+  }
+
+  pruneTerminalRuns(keepRecent = DuckSupervisorStore.DEFAULT_RUN_LIMIT): { removedRuns: number; removedRequests: number } {
+    const removable = new Set(this.getPrunableRunIds(keepRecent));
+    if (removable.size === 0) return { removedRuns: 0, removedRequests: 0 };
+
+    let removedRuns = 0;
+    for (const runId of removable) {
+      if (this.runs.delete(runId)) removedRuns += 1;
+    }
+
+    let removedRequests = 0;
+    for (const [requestId, request] of this.requests.entries()) {
+      if (!removable.has(request.runId)) continue;
+      if (request.status === "pending") continue;
+      if (this.requests.delete(requestId)) removedRequests += 1;
+    }
+
+    return { removedRuns, removedRequests };
+  }
+
   hydrate(entries: unknown[] | undefined): void {
     if (!entries?.length) return;
 
@@ -193,16 +233,14 @@ export class DuckSupervisorStore {
     return this.requests.get(requestId) ?? null;
   }
 
-  listPendingRequests(): SupervisorRequest[] {
-    return Array.from(this.requests.values())
-      .filter((req) => req.status === "pending")
-      .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  listPendingRequests(limit = DuckSupervisorStore.DEFAULT_PENDING_LIMIT): SupervisorRequest[] {
+    const safeLimit = Math.max(1, limit);
+    return this.sortedPendingRequestsAsc().slice(0, safeLimit);
   }
 
-  listRuns(limit = 20): SupervisorRun[] {
-    return Array.from(this.runs.values())
-      .sort((a, b) => b.startedAt.localeCompare(a.startedAt))
-      .slice(0, limit);
+  listRuns(limit = DuckSupervisorStore.DEFAULT_RUN_LIMIT): SupervisorRun[] {
+    const safeLimit = Math.max(1, limit);
+    return this.sortedRunsDesc().slice(0, safeLimit);
   }
 
   private apply(op: SupervisorOp, shouldPersist: boolean, persist?: PersistFn): void {
