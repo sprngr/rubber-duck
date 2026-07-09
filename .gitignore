@@ -3,3 +3,8 @@
 
 # Local scratch workspace
 .scratch/
+
+# Excluded because testing
+.agents/
+.opencode
+skills-lock.json

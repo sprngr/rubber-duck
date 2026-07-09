@@ -3,7 +3,10 @@ import { bundledPolicyExists, bundledPolicyPath } from "./policy.ts";
 import type { DuckState } from "./state.ts";
 
 export type DuckStatusRuntime = {
+  routing?: boolean;
+  activeSkill?: string;
   runningAgent?: string;
+  awaitingProceed?: boolean;
 };
 
 function presentAgentName(name: string): string {
@@ -13,8 +16,14 @@ function presentAgentName(name: string): string {
 export function buildStatusLine(state: DuckState, runtime?: DuckStatusRuntime): string | undefined {
   if (!state.enabled) return undefined;
 
-  const core = runtime?.runningAgent
-    ? `running ${presentAgentName(runtime.runningAgent)}`
+  const runtimeParts: string[] = [];
+  if (runtime?.routing) runtimeParts.push("routing…");
+  if (runtime?.activeSkill) runtimeParts.push(`skill ${runtime.activeSkill.replace(/^duck-/, "")}`);
+  if (runtime?.runningAgent) runtimeParts.push(`running ${presentAgentName(runtime.runningAgent)}`);
+  if (runtime?.awaitingProceed) runtimeParts.push("awaiting /duck proceed");
+
+  const core = runtimeParts.length > 0
+    ? runtimeParts.join(" · ")
     : state.activeSubagent
       ? presentAgentName(state.activeSubagent)
       : "";

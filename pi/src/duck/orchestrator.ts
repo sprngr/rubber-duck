@@ -54,20 +54,23 @@ export function createInvokeAgent(deps: CreateInvokeAgentDeps) {
     deps.persistState();
     deps.refreshStatus(ctx);
 
-    ctx.ui.notify(`Running ${agent.name}...`, "info");
-    const result = await runDuckAgent(agent, task, ctx.cwd, policyText);
+    try {
+      const result = await runDuckAgent(agent, task, ctx.cwd, policyText);
 
-    if (result.exitCode !== 0) {
-      ctx.ui.notify(
-        `${agent.name} failed (exit ${result.exitCode}). ${result.stderr || "No stderr output."}`,
-        "error",
-      );
-      return { ok: false, output: result.output, exitCode: result.exitCode, stderr: result.stderr };
+      if (result.exitCode !== 0) {
+        ctx.ui.notify(
+          `${agent.name} failed (exit ${result.exitCode}). ${result.stderr || "No stderr output."}`,
+          "error",
+        );
+        return { ok: false, output: result.output, exitCode: result.exitCode, stderr: result.stderr };
+      }
+
+      const output = result.output || "(no output)";
+      return { ok: true, output: truncateOutput(output, 12000), exitCode: result.exitCode, stderr: result.stderr };
+    } finally {
+      state.activeSubagent = undefined;
+      deps.persistState();
+      deps.refreshStatus(ctx);
     }
-
-    const output = result.output || "(no output)";
-    ctx.ui.notify(`${agent.name} complete.`, "info");
-
-    return { ok: true, output: truncateOutput(output, 12000), exitCode: result.exitCode, stderr: result.stderr };
   };
 }

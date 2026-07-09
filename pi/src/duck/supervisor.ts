@@ -7,7 +7,8 @@ export type SupervisorRun = {
   route?: string;
   skill?: string;
   chain: string[];
-  task: string;
+  task: string; // original task
+  currentTask: string; // pass-through task for next step
   state: SupervisorRunState;
   nextStep: number; // 1-indexed pointer to next step to execute
   totalSteps: number;
@@ -37,6 +38,7 @@ type SupervisorOp =
   | { type: "run_started"; run: SupervisorRun }
   | { type: "run_state"; runId: string; state: SupervisorRunState; updatedAt: string; completedAt?: string }
   | { type: "run_cursor"; runId: string; nextStep: number; updatedAt: string }
+  | { type: "run_task"; runId: string; currentTask: string; updatedAt: string }
   | { type: "request_created"; request: SupervisorRequest }
   | {
       type: "request_replied";
@@ -81,6 +83,7 @@ export class DuckSupervisorStore {
       skill: input.skill,
       chain: input.chain,
       task: input.task,
+      currentTask: input.task,
       state: "running",
       nextStep: 1,
       totalSteps: input.chain.length,
@@ -117,6 +120,20 @@ export class DuckSupervisorStore {
       type: "run_cursor",
       runId,
       nextStep: bounded,
+      updatedAt: nowIso(),
+    };
+    this.apply(op, true, persist);
+    return this.runs.get(runId) ?? null;
+  }
+
+  setRunCurrentTask(runId: string, currentTask: string, persist: PersistFn): SupervisorRun | null {
+    const run = this.runs.get(runId);
+    if (!run) return null;
+
+    const op: SupervisorOp = {
+      type: "run_task",
+      runId,
+      currentTask,
       updatedAt: nowIso(),
     };
     this.apply(op, true, persist);
@@ -193,6 +210,7 @@ export class DuckSupervisorStore {
       case "run_started": {
         this.runs.set(op.run.runId, {
           ...op.run,
+          currentTask: op.run.currentTask ?? op.run.task,
           nextStep: Number.isFinite(op.run.nextStep) ? op.run.nextStep : 1,
           totalSteps: Number.isFinite(op.run.totalSteps) ? op.run.totalSteps : op.run.chain.length,
         });
@@ -211,6 +229,14 @@ export class DuckSupervisorStore {
         const run = this.runs.get(op.runId);
         if (!run) break;
         run.nextStep = op.nextStep;
+        run.updatedAt = op.updatedAt;
+        this.runs.set(run.runId, run);
+        break;
+      }
+      case "run_task": {
+        const run = this.runs.get(op.runId);
+        if (!run) break;
+        run.currentTask = op.currentTask;
         run.updatedAt = op.updatedAt;
         this.runs.set(run.runId, run);
         break;

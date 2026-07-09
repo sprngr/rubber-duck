@@ -5,7 +5,7 @@ Pi-native Rubber Duck extension package.
 This extension adds:
 - Duck status line (`🦆`) in Pi
 - Ambient routing mode (on by default) for normal non-slash prompts
-- Base command: `/duck status|reset|on|off|policy|mode|route`
+- Base command: `/duck help` (plus subcommands)
 - Manual duckling commands:
   - `/duck-reviewer`
   - `/duck-investigator`
@@ -58,6 +58,7 @@ pi -e ./pi/src/index.ts
 ### Base command
 
 ```text
+/duck help
 /duck status
 /duck on
 /duck off
@@ -67,6 +68,16 @@ pi -e ./pi/src/index.ts
 /duck mode on
 /duck mode off
 /duck route Review this diff for risky changes
+/duck route-preview Review this diff for risky changes
+
+/duck proceed [summary]
+/duck refine [--replace] <text>
+/duck cancel
+
+/duck pending
+/duck runs
+/duck reply <requestId> <continue|stop|retry-later> [notes]
+/duck resume <runId> [step]
 ```
 
 ### Invoke a duckling directly
@@ -80,6 +91,7 @@ pi -e ./pi/src/index.ts
 ### Ambient mode (default)
 
 When ambient mode is on, normal non-slash prompts are routed automatically to the best duckling.
+The routed workflow is explicit-gated: use `/duck proceed` (or refine/cancel) to continue.
 
 Examples:
 

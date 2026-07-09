@@ -20,7 +20,6 @@ SRC_AGENTS_DIR="${REPO_ROOT}/src/agents"
 POLICY_SNIPPETS_DIR="${REPO_ROOT}/src/shared/policy-snippets"
 PI_PACKAGE_AGENTS_DIR="${REPO_ROOT}/pi/agents"
 ROOT_AGENTS_MD="${REPO_ROOT}/AGENTS.md"
-RUBBER_DUCK_BODY_MD="${REPO_ROOT}/src/agents/rubber-duck/body.md"
 PI_PACKAGE_AGENTS_MD="${REPO_ROOT}/pi/AGENTS.md"
 
 render_or_check_file() {
@@ -180,51 +179,6 @@ render_pi_frontmatter() {
   } > "${out}"
 }
 
-extract_markdown_section() {
-  local file="$1"
-  local heading="$2"
-
-  awk -v start="${heading}" '
-    BEGIN {
-      level = 0
-      in_section = 0
-      if (match(start, /^#+/)) level = RLENGTH
-    }
-    {
-      if ($0 == start) {
-        in_section = 1
-        print
-        next
-      }
-
-      if (in_section) {
-        if (match($0, /^#+ /)) {
-          current_level = RLENGTH - 1
-          if (current_level <= level) exit
-        }
-        print
-      }
-    }
-  ' "${file}"
-}
-
-assemble_extension_agents_md() {
-  local out="$1"
-
-  {
-    cat "${ROOT_AGENTS_MD}"
-    printf '\n\n## Rubber Duck Extension Router Policy\n\n'
-    printf '_Assembled from src/agents/rubber-duck/body.md. Use as deterministic extension policy context._\n\n'
-
-    extract_markdown_section "${RUBBER_DUCK_BODY_MD}" "## Role"
-    printf '\n'
-    extract_markdown_section "${RUBBER_DUCK_BODY_MD}" "### Soft Preflight (before patching)"
-    printf '\n'
-    extract_markdown_section "${RUBBER_DUCK_BODY_MD}" "### Adaptive Decision Checkpoints (for mutating actions)"
-    printf '\n'
-    extract_markdown_section "${RUBBER_DUCK_BODY_MD}" "## Workflow"
-  } > "${out}"
-}
 
 mkdir -p "${PI_PACKAGE_AGENTS_DIR}"
 TMP_DIR="$(mktemp -d)"
@@ -234,18 +188,10 @@ if [[ ! -f "${ROOT_AGENTS_MD}" ]]; then
   printf 'ERROR: missing root AGENTS.md: %s\n' "${ROOT_AGENTS_MD}" >&2
   exit 1
 fi
-if [[ ! -f "${RUBBER_DUCK_BODY_MD}" ]]; then
-  printf 'ERROR: missing router body: %s\n' "${RUBBER_DUCK_BODY_MD}" >&2
-  exit 1
-fi
 
-ASSEMBLED_AGENTS_MD_RAW_TMP="${TMP_DIR}/pi-AGENTS.raw.md"
-ASSEMBLED_AGENTS_MD_TMP="${TMP_DIR}/pi-AGENTS.md"
-assemble_extension_agents_md "${ASSEMBLED_AGENTS_MD_RAW_TMP}"
-render_body_markdown "${ASSEMBLED_AGENTS_MD_RAW_TMP}" "${ASSEMBLED_AGENTS_MD_TMP}"
-render_or_check_file "${ASSEMBLED_AGENTS_MD_TMP}" "${PI_PACKAGE_AGENTS_MD}"
-
-ensure_absent "${PI_PACKAGE_AGENTS_DIR}/rubber-duck.md"
+ROOT_AGENTS_RENDERED_TMP="${TMP_DIR}/pi-AGENTS.md"
+render_body_markdown "${ROOT_AGENTS_MD}" "${ROOT_AGENTS_RENDERED_TMP}"
+render_or_check_file "${ROOT_AGENTS_RENDERED_TMP}" "${PI_PACKAGE_AGENTS_MD}"
 
 CONFIG_AGENTS=()
 if [[ -d "${SRC_AGENTS_DIR}" ]]; then
@@ -261,9 +207,6 @@ if (( ${#CONFIG_AGENTS[@]} == 0 )); then
 fi
 
 for name in "${CONFIG_AGENTS[@]}"; do
-  if [[ "${name}" == "rubber-duck" ]]; then
-    continue
-  fi
   agent_dir="${SRC_AGENTS_DIR}/${name}"
   meta="${agent_dir}/meta.json"
   body="${agent_dir}/body.md"
@@ -277,6 +220,13 @@ for name in "${CONFIG_AGENTS[@]}"; do
   rendered_agent="${TMP_DIR}/pi-${name}.md"
 
   render_body_markdown "${body}" "${rendered_body}"
+
+  if [[ "${name}" == "rubber-duck" ]]; then
+    # Router prompt copy for the Pi extension should be prompt-only (no frontmatter).
+    render_or_check_file "${rendered_body}" "${PI_PACKAGE_AGENTS_DIR}/${name}.md"
+    continue
+  fi
+
   render_pi_frontmatter "${meta}" "${rendered_agent}"
   cat "${rendered_body}" >> "${rendered_agent}"
 
