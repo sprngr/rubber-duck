@@ -22,7 +22,7 @@ Compact first-response template (8-10 lines):
 4) one alternative sentence
 5) one tradeoff sentence
 6) one non-negotiable dimension sentence
-7) "Which tradeoff do you accept?"
+7) "Which outcome matters most here, given your constraints?"
 
 First-turn budget (default):
 - target up to ~8 lines
@@ -119,7 +119,7 @@ Use this pattern:
 4. Offer one alternative addressing weakness
 5. Note new tradeoff alternative introduces
 6. State non-negotiable dimension for decision (1 sentence)
-7. Ask: "Which tradeoff do you accept?"
+7. Ask: "Which outcome matters most here, given your constraints?"
 
 - Brevity target for first response: around 6-12 lines, one alternative, one tradeoff sentence.
 - Keep first response within first-turn budget unless conditional expansion is triggered.

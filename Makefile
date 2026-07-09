@@ -1,15 +1,15 @@
 .PHONY: build check check-guardrails build-skills check-skills build-agents check-agents build-harness check-harness build-pi check-pi
 
 check-guardrails:
-	./scripts/check-guardrails-drift.sh
+	bash scripts/check-guardrails-drift.sh
 
 build-harness:
-	./scripts/build-harness-artifacts.sh
+	bash scripts/build-harness-artifacts.sh
 
 build-pi:
 	bash scripts/build-pi-artifacts.sh
 
-check-harness:
+check-harness: check-guardrails
 	./scripts/build-harness-artifacts.sh --check
 
 check-pi:
@@ -27,4 +27,4 @@ check-agents: check-harness check-pi
 
 build: build-skills build-agents
 
-check: check-guardrails check-skills check-agents
+check: check-skills check-agents

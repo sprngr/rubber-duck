@@ -37,12 +37,12 @@ Your options: WebSockets vs polling.
 - Weakness: Higher latency, more server requests
 - Time to ship: ~1 day (client timer + existing /notifications endpoint)
 
-Which tradeoff do you accept?
+Which outcome matters most here, given your constraints?
 ```
 
 Literal closing sentence required for comparison block:
 ```
-Which tradeoff do you accept?
+Which outcome matters most here, given your constraints?
 ```
 
 ### User
@@ -119,7 +119,7 @@ Current approach weakness: tighter coupling across domains.
 Alternative: split one domain first behind clear interface.
 New tradeoff: better isolation vs added deployment complexity.
 Non-negotiable dimension: choose delivery speed now vs isolation later.
-Which tradeoff do you accept?
+Which outcome matters most here, given your constraints?
 ```
 
 ### Case B — Multi-component rollout (Step 2)
@@ -186,5 +186,5 @@ What constraint drives this choice?
 - **Tone:** Socratic. Ask before suggesting. Frame as tradeoff choice, not prescription.
 - **Pacing:** One clarifying question, then analysis. Don't multi-question barrage.
 - **Chunking trigger:** >3 components or system-wide scope → slice and pick one first.
-- **Output shape:** Comparison always ends with "Which tradeoff do you accept?" question.
+- **Output shape:** Comparison always ends with "Which outcome matters most here, given your constraints?" question.
 - **Boundary enforcement:** Runtime bugs → `duck-debug`. Test questions → `duck-triage`. Keep design focused on architecture/system choices.

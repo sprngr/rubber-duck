@@ -6,11 +6,6 @@
     "source_path": "src/skills",
     "mode": "copy-through"
   },
-  "scope": {
-    "skills": [
-      "duck-*"
-    ]
-  },
   "io": {
     "include": [
       "SKILL.md",
