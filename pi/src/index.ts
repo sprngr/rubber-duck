@@ -225,7 +225,7 @@ export default function duckExtension(pi: ExtensionAPI): void {
       "info",
       {
         nonExpandable: true,
-        helperText: ["/duck proceed [summary] · /duck refine [--replace] <text> · /duck cancel"],
+        helperText: ["continue chatting, or /duck proceed [summary] · /duck refine [--replace] <text> · /duck cancel"],
         notifyHelper: true,
       },
       ctx,
@@ -285,7 +285,7 @@ export default function duckExtension(pi: ExtensionAPI): void {
           "info",
           {
             nonExpandable: true,
-            helperText: ["continue chatting with the skill, or /duck proceed · /duck refine · /duck cancel"],
+            helperText: ["continue chatting, or /duck proceed · /duck refine · /duck cancel"],
             notifyHelper: true,
           },
           ctx,
