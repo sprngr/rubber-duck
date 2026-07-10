@@ -31,6 +31,8 @@ export function buildStatusLine(state: DuckState, runtime?: DuckStatusRuntime): 
   const flags: string[] = [];
   if (!state.ambientMode) flags.push("ambient off");
   if (!state.policyEnabled) flags.push("policy off");
+  if (state.debugMode) flags.push("debug on");
+  if (state.debugVerbose) flags.push("debug verbose");
 
   const parts = ["🦆"];
   if (core) parts.push(core);
@@ -51,6 +53,9 @@ export async function statusText(state: DuckState): Promise<string> {
     `- active subagent: ${state.activeSubagent ?? "(none)"}`,
     `- ambient mode: ${state.ambientMode ? "on" : "off"}`,
     `- policy enabled: ${state.policyEnabled ? "on" : "off"}`,
+    `- policy scope: ${state.policyScope}`,
+    `- debug mode: ${state.debugMode ? "on" : "off"}`,
+    `- debug verbose: ${state.debugVerbose ? "on" : "off"}`,
     `- policy path: ${policyPath}`,
     `- policy file: ${policyAvailable ? "found" : "missing"}`,
     `- agents dir: ${discovery.agentsDir ?? "(not found)"}`,

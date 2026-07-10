@@ -20,9 +20,13 @@ type RunControlContext<Context> = {
     },
     ctx: Context,
   ): void;
+  debugEnabled(): boolean;
+  debugVerboseEnabled(): boolean;
+  sendDebug(title: string, body: string, ctx: Context): void;
   preview(text: string, maxChars?: number): string;
   buildChainedTaskPayload(originalTask: string, previousOutput: string): string;
   getPendingFollowupInteractions(): WorkflowInteraction[];
+  getPendingFollowupBaseTask(): string | undefined;
   setPendingFollowup(value: PendingFollowup): void;
   refreshStatus(ctx: Context): void;
   clearActiveSkill(): void;
@@ -37,6 +41,18 @@ export function createRunControl<Context>(deps: RunControlContext<Context>) {
       const agentName = run.chain[step - 1];
       deps.supervisor.setRunNextStep(run.runId, step, deps.persistSupervisorOp);
 
+      if (deps.debugEnabled()) {
+        const maxChars = deps.debugVerboseEnabled() ? 6000 : 1800;
+        deps.sendDebug(
+          `step ${step}/${run.chain.length} in (${agentName})`,
+          [
+            `Run ID: ${run.runId}`,
+            `Task preview: ${deps.preview(currentTask, maxChars)}`,
+          ].join("\n"),
+          ctx,
+        );
+      }
+
       let result: DuckInvokeResult;
       try {
         result = await deps.invokeAgent(agentName, currentTask, ctx);
@@ -50,6 +66,20 @@ export function createRunControl<Context>(deps: RunControlContext<Context>) {
         };
       }
       results.push({ step, agent: agentName, result });
+
+      if (deps.debugEnabled()) {
+        const maxChars = deps.debugVerboseEnabled() ? 6000 : 1800;
+        deps.sendDebug(
+          `step ${step}/${run.chain.length} out (${agentName})`,
+          [
+            `Run ID: ${run.runId}`,
+            `ok=${result.ok} exit=${result.exitCode}`,
+            `stderr: ${result.stderr || "(none)"}`,
+            `Output preview: ${deps.preview(result.output || "", maxChars)}`,
+          ].join("\n"),
+          ctx,
+        );
+      }
 
       if (!result.ok) {
         const req = deps.supervisor.createRequest(
@@ -120,7 +150,7 @@ export function createRunControl<Context>(deps: RunControlContext<Context>) {
     ];
 
     deps.sendRunBlock(
-      `Subagent response (${run.runId})`,
+      `Subagent response | Run ID: ${run.runId}`,
       responseSections.join("\n"),
       failed.length > 0 ? "warning" : "info",
       {
@@ -135,13 +165,15 @@ export function createRunControl<Context>(deps: RunControlContext<Context>) {
     );
 
     const priorFollowup = deps.getPendingFollowupInteractions();
+    const stableBaseTask = deps.getPendingFollowupBaseTask() ?? run.task;
+
     deps.setPendingFollowup(
       buildPendingFollowup({
         runId: run.runId,
         route: run.route,
         skill: run.skill,
         chain: run.chain,
-        baseTask: run.task,
+        baseTask: stableBaseTask,
         priorInteractions: priorFollowup,
         assistantText: deps.preview(finalOutput || "(no final output)", 1600),
       }),

@@ -31,6 +31,8 @@ type RegisterDuckCommandsDeps = {
   listRuns(ctx: CommandContext): Promise<void>;
   replyToRequest(args: string, ctx: CommandContext): Promise<void>;
   resumeRun(args: string, ctx: CommandContext): Promise<void>;
+  pauseRun(args: string, ctx: CommandContext): Promise<void>;
+  resumePausedRun(args: string, ctx: CommandContext): Promise<void>;
   continueRunFollowup(args: string, ctx: CommandContext): Promise<void>;
   closeRunFollowup(ctx: CommandContext): Promise<void>;
 };
@@ -92,6 +94,18 @@ export function registerDuckCommands(pi: ExtensionAPI, deps: RegisterDuckCommand
           ctx.ui.notify(`Duck AGENTS.md policy ${value}.`, "info");
           return;
         }
+        case "policy-scope": {
+          const value = tokens[1];
+          if (value !== "subagents" && value !== "session") {
+            ctx.ui.notify(DUCK_USAGE.policyScope, "warning");
+            return;
+          }
+          state.policyScope = value;
+          deps.persistState();
+          deps.refreshStatus(ctx);
+          ctx.ui.notify(`Duck policy scope set to ${value}.`, "info");
+          return;
+        }
         case "mode": {
           const value = tokens[1];
           if (value !== "on" && value !== "off") {
@@ -102,6 +116,49 @@ export function registerDuckCommands(pi: ExtensionAPI, deps: RegisterDuckCommand
           deps.persistState();
           deps.refreshStatus(ctx);
           ctx.ui.notify(`Duck ambient mode ${value}.`, "info");
+          return;
+        }
+        case "debug": {
+          const value = tokens[1];
+          if (value !== "on" && value !== "off") {
+            ctx.ui.notify(DUCK_USAGE.debug, "warning");
+            return;
+          }
+          state.debugMode = value === "on";
+          deps.persistState();
+          deps.refreshStatus(ctx);
+          ctx.ui.notify(`Duck debug mode ${value}.`, "info");
+          return;
+        }
+        case "debug-verbose": {
+          const value = tokens[1];
+          if (value !== "on" && value !== "off") {
+            ctx.ui.notify(DUCK_USAGE.debugVerbose, "warning");
+            return;
+          }
+          state.debugVerbose = value === "on";
+          deps.persistState();
+          deps.refreshStatus(ctx);
+          ctx.ui.notify(`Duck debug verbose ${value}.`, "info");
+          return;
+        }
+        case "debug-status": {
+          if (tokens[1]) {
+            ctx.ui.notify(DUCK_USAGE.debugStatus, "warning");
+            return;
+          }
+          const stepPreviewCap = state.debugVerbose ? 6000 : 1800;
+          const payloadPreviewCap = state.debugVerbose ? 10000 : 4000;
+          ctx.ui.notify(
+            [
+              "Duck debug status",
+              `- debug mode: ${state.debugMode ? "on" : "off"}`,
+              `- debug verbose: ${state.debugVerbose ? "on" : "off"}`,
+              `- step preview cap: ${stepPreviewCap}`,
+              `- payload preview cap: ${payloadPreviewCap}`,
+            ].join("\n"),
+            "info",
+          );
           return;
         }
         case "route": {
@@ -152,6 +209,14 @@ export function registerDuckCommands(pi: ExtensionAPI, deps: RegisterDuckCommand
         }
         case "resume": {
           await deps.resumeRun(tokens.slice(1).join(" ").trim(), ctx);
+          return;
+        }
+        case "pause-run": {
+          await deps.pauseRun(tokens.slice(1).join(" ").trim(), ctx);
+          return;
+        }
+        case "resume-run": {
+          await deps.resumePausedRun(tokens.slice(1).join(" ").trim(), ctx);
           return;
         }
         case "followup": {

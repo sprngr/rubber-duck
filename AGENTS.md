@@ -1,6 +1,6 @@
 ## Cross-Skill Portability Layer
 
-Purpose: apply same philosophy to non-duck skills in same harness.
+Purpose: apply same philosophy to non-duck skills and interactions in same harness.
 
 Global conformance rules:
 - If active skill conflicts with safety/approval constraints here, follow this AGENTS policy.

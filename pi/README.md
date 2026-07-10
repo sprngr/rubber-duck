@@ -90,8 +90,10 @@ pi -e ./pi/src/index.ts
 
 ### Ambient mode (default)
 
+Ambient routing is **on by default** to maintain parity with other rubber-duck implementations.
 When ambient mode is on, normal non-slash prompts are routed automatically to the best duckling.
 The routed workflow is explicit-gated: use `/duck proceed` (or refine/cancel) to continue.
+Use `/duck mode off` if you want manual-only command control.
 
 Examples:
 

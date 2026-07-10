@@ -48,6 +48,7 @@ import {
 } from "./duck/input-flow.ts";
 import { DUCK_USAGE } from "./duck/messages.ts";
 import { registerDuckCommands } from "./duck/commands.ts";
+import { loadBundledPolicyText } from "./duck/policy.ts";
 import { DuckSupervisorStore, SUPERVISOR_ENTRY_TYPE, type SupervisorRun } from "./duck/supervisor.ts";
 
 type DuckUiContext = DuckInvokeContext & UiFeedbackContext & {
@@ -80,9 +81,43 @@ function dedupeChain(chain: KnownDuckling[]): KnownDuckling[] {
   return out;
 }
 
+function deriveRunTitleFromTask(task: string, maxChars = 80): string {
+  const lines = (task || "")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  const meaningful = lines.find((line) => {
+    const lower = line.toLowerCase();
+    return lower !== "task:" && lower !== "routed task:" && lower !== "original run task:";
+  }) ?? "(untitled run)";
+
+  const cleaned = meaningful
+    .replace(/^task:\s*/i, "")
+    .replace(/^routed task:\s*/i, "")
+    .replace(/^original run task:\s*/i, "")
+    .trim();
+
+  if (cleaned.length <= maxChars) return cleaned;
+  return `${cleaned.slice(0, maxChars - 1)}…`;
+}
+
 export default function duckExtension(pi: ExtensionAPI): void {
   const supervisor = new DuckSupervisorStore();
   registerDuckMessageRenderers(pi);
+
+  const SESSION_POLICY_MARKER = "<!-- duck-session-policy -->";
+  let sessionPolicyTextCache: string | null = null;
+
+  const getSessionPolicyText = async (): Promise<string> => {
+    if (sessionPolicyTextCache !== null) return sessionPolicyTextCache;
+    try {
+      sessionPolicyTextCache = (await loadBundledPolicyText()).trim();
+    } catch {
+      sessionPolicyTextCache = "";
+    }
+    return sessionPolicyTextCache;
+  };
 
   let state: DuckState = { ...DEFAULT_STATE };
   const runtime: DuckStatusRuntime = {};
@@ -91,6 +126,7 @@ export default function duckExtension(pi: ExtensionAPI): void {
   let pendingWorkflow: PendingWorkflow = null;
   let pendingWorkflowPrompted = false;
   let pendingFollowup: PendingFollowup = null;
+  const stashedFollowups = new Map<string, NonNullable<PendingFollowup>>();
 
   const clearPendingFollowup = () => {
     pendingFollowup = null;
@@ -120,6 +156,7 @@ export default function duckExtension(pi: ExtensionAPI): void {
     pendingClarification = null;
     clearPendingWorkflow();
     clearPendingFollowup();
+    stashedFollowups.clear();
     lastRouteMeta = "route=(none) skill=(none) chain=(none)";
     persistState();
     refreshStatus(ctx);
@@ -142,14 +179,22 @@ export default function duckExtension(pi: ExtensionAPI): void {
     }
   };
 
+  const sendDebugBlock = (title: string, body: string, ctx: DuckUiContext) => {
+    sendRunBlock(pi, `debug · ${title}`, body, "info", { forceExpanded: false }, ctx);
+  };
+
   const { continueRunExecution } = createRunControl<DuckUiContext>({
     supervisor,
     persistSupervisorOp,
     invokeAgent,
     sendRunBlock: (title, body, level, options, ctx) => sendRunBlock(pi, title, body, level, options, ctx),
+    debugEnabled: () => state.debugMode,
+    debugVerboseEnabled: () => state.debugVerbose,
+    sendDebug: (title, body, ctx) => sendDebugBlock(title, body, ctx),
     preview,
     buildChainedTaskPayload,
     getPendingFollowupInteractions: () => pendingFollowup?.interactions ?? [],
+    getPendingFollowupBaseTask: () => pendingFollowup?.baseTask,
     setPendingFollowup: (value) => {
       pendingFollowup = value;
     },
@@ -184,10 +229,10 @@ export default function duckExtension(pi: ExtensionAPI): void {
 
     sendRunBlock(
       pi,
-      `Subagent chain started | Chain: ${params.chain.join(" -> ")}`,
-      `Run ID: ${run.runId}`,
+      `Subagent chain started | Run ID: ${run.runId}`,
+      `Chain: ${params.chain.join(" -> ")}`,
       "info",
-      { forceExpanded: false, helperText: ["progress updates per completed step"] },
+      { forceExpanded: true, helperText: ["progress updates per completed step"] },
       ctx,
     );
 
@@ -234,15 +279,56 @@ export default function duckExtension(pi: ExtensionAPI): void {
   };
 
   const routeInput = async (input: string, ctx: DuckUiContext): Promise<RouteDecision> => {
+    if (state.debugMode) {
+      sendDebugBlock("route input", `Input: ${input.trim() || "(empty)"}`, ctx);
+    }
+
     runtime.routing = true;
     refreshStatus(ctx);
     try {
-      return await withWorking(ctx, "Routing…", async () => llmRoute(input, ctx.cwd));
+      const route = await withWorking(ctx, "Routing…", async () => llmRoute(input, ctx.cwd));
+      if (state.debugMode) {
+        if (!route) {
+          sendDebugBlock("route decision", "(no route; clarification required)", ctx);
+        } else {
+          sendDebugBlock(
+            "route decision",
+            [
+              `intent=${route.intent}`,
+              `skill=${route.skill}`,
+              `agent=${route.agent}`,
+              `chain=${route.executionChain.join(" -> ")}`,
+              `reason=${route.reason}`,
+            ].join("\n"),
+            ctx,
+          );
+        }
+      }
+      return route;
     } finally {
       runtime.routing = false;
       refreshStatus(ctx);
     }
   };
+
+  pi.on("before_agent_start", async (event) => {
+    if (!state.policyEnabled || state.policyScope !== "session") return;
+
+    const policyText = await getSessionPolicyText();
+    if (!policyText) return;
+
+    const mutable = event as { systemPrompt?: string };
+    const basePrompt = typeof mutable.systemPrompt === "string" ? mutable.systemPrompt : "";
+    if (basePrompt.includes(SESSION_POLICY_MARKER)) return;
+
+    mutable.systemPrompt = [
+      basePrompt.trim(),
+      SESSION_POLICY_MARKER,
+      policyText,
+    ]
+      .filter(Boolean)
+      .join("\n\n");
+  });
 
   pi.on("session_start", async (_event, ctx) => {
     const entries = ctx.sessionManager?.getEntries?.();
@@ -367,6 +453,23 @@ export default function duckExtension(pi: ExtensionAPI): void {
     const followup = pendingFollowup;
     const task = buildFollowupTaskPayload(followup.baseTask, followup.interactions);
 
+    sendRunBlock(
+      pi,
+      `Run follow-up preflight (${followup.runId})`,
+      [
+        `Chain: ${followup.chain.join(" -> ")}`,
+        `Interactions: ${followup.interactions.length}`,
+        `Task preview: ${preview(task, 240)}`,
+      ].join("\n"),
+      "info",
+      { nonExpandable: true, helperText: ["continuing existing run context"] },
+      ctx,
+    );
+
+    if (state.debugMode) {
+      sendDebugBlock(`follow-up payload (${followup.runId})`, preview(task, state.debugVerbose ? 10000 : 4000), ctx);
+    }
+
     await invokeSupervisorChain(
       {
         route: followup.route,
@@ -396,6 +499,10 @@ export default function duckExtension(pi: ExtensionAPI): void {
     const extra = (args ?? "").trim();
     const flow = pendingWorkflow;
     const task = buildWorkflowTaskPayload(flow, extra);
+
+    if (state.debugMode) {
+      sendDebugBlock("workflow packed payload", preview(task, state.debugVerbose ? 10000 : 4000), ctx);
+    }
 
     sendRunBlock(
       pi,
@@ -501,10 +608,16 @@ export default function duckExtension(pi: ExtensionAPI): void {
       return;
     }
 
-    const lines = runs.map(
-      (run) =>
-        `- ${run.runId} state=${run.state} step=${run.nextStep}/${run.totalSteps} route=${run.route ?? "(none)"} chain=${run.chain.join(" -> ")} started=${run.startedAt}`,
-    );
+    const lines = runs.map((run) => {
+      const title = deriveRunTitleFromTask(run.task);
+      return [
+        `- ${run.runId}`,
+        `  title=${title}`,
+        `  state=${run.state} step=${run.nextStep}/${run.totalSteps}`,
+        `  route=${run.route ?? "(none)"} chain=${run.chain.join(" -> ")}`,
+        `  started=${run.startedAt}`,
+      ].join("\n");
+    });
     ctx.ui.notify(`Recent runs:\n${lines.join("\n")}`, "info");
   };
 
@@ -615,6 +728,84 @@ export default function duckExtension(pi: ExtensionAPI): void {
     await continueRunExecution(refreshed, ctx);
   };
 
+  const pauseRun = async (args: string, ctx: DuckUiContext) => {
+    const explicitRunId = (args ?? "").trim();
+    const inferredRunId = pendingFollowup?.runId
+      ?? supervisor.listRuns(20).find((run) => run.state === "running" || run.state === "needs_attention")?.runId;
+    const runId = explicitRunId || inferredRunId;
+
+    if (!runId) {
+      ctx.ui.notify(DUCK_USAGE.pauseRun, "warning");
+      return;
+    }
+
+    if (pendingFollowup?.runId === runId) {
+      stashedFollowups.set(runId, pendingFollowup);
+      clearPendingFollowup();
+      runtime.activeSkill = undefined;
+      refreshStatus(ctx);
+      ctx.ui.notify(`Run follow-up stashed: ${runId}. Resume with /duck resume-run ${runId}`, "info");
+      return;
+    }
+
+    const run = supervisor.getRun(runId);
+    if (!run) {
+      ctx.ui.notify(`Unknown run: ${runId}`, "error");
+      return;
+    }
+
+    if (run.state === "completed" || run.state === "failed") {
+      ctx.ui.notify(`Run ${runId} is ${run.state}; nothing to pause.`, "info");
+      return;
+    }
+
+    supervisor.setRunState(runId, "needs_attention", persistSupervisorOp);
+    runtime.activeSkill = undefined;
+    refreshStatus(ctx);
+    ctx.ui.notify(`Run paused: ${runId}. Resume with /duck resume-run ${runId}`, "info");
+  };
+
+  const resumePausedRun = async (args: string, ctx: DuckUiContext) => {
+    const runId = (args ?? "").trim();
+    if (!runId) {
+      ctx.ui.notify(DUCK_USAGE.resumePausedRun, "warning");
+      return;
+    }
+
+    const stashed = stashedFollowups.get(runId);
+    if (stashed) {
+      pendingFollowup = stashed;
+      stashedFollowups.delete(runId);
+      ctx.ui.notify(`Run follow-up restored: ${runId}`, "info");
+    }
+
+    const run = supervisor.getRun(runId);
+    if (!run) {
+      if (pendingFollowup?.runId === runId) return;
+      ctx.ui.notify(`Unknown run: ${runId}`, "error");
+      return;
+    }
+
+    if (supervisor.hasPendingForRun(runId)) {
+      ctx.ui.notify(`Run ${runId} still has pending requests. Reply first via /duck reply.`, "warning");
+      return;
+    }
+
+    if (run.state === "completed" || run.state === "failed") {
+      if (pendingFollowup?.runId === runId) {
+        ctx.ui.notify(`Run ${runId} restored in follow-up mode. Reply in chat or use /duck followup.`, "info");
+      } else {
+        ctx.ui.notify(`Run ${runId} is ${run.state}; nothing to resume.`, "info");
+      }
+      return;
+    }
+
+    supervisor.setRunState(runId, "running", persistSupervisorOp);
+    const refreshed = supervisor.getRun(runId);
+    if (!refreshed) return;
+    await continueRunExecution(refreshed, ctx);
+  };
+
   registerDuckCommands(pi, {
     getState: () => state,
     getStatusDetails: () => {
@@ -634,6 +825,7 @@ export default function duckExtension(pi: ExtensionAPI): void {
         details.push(`- run follow-up: active (${pendingFollowup.runId})`);
         details.push(`- follow-up interactions: ${pendingFollowup.interactions.length}`);
       }
+      details.push(`- stashed follow-ups: ${stashedFollowups.size}`);
 
       return details;
     },
@@ -662,6 +854,8 @@ export default function duckExtension(pi: ExtensionAPI): void {
     listRuns: async (ctx) => listRuns(ctx as DuckUiContext),
     replyToRequest: async (args, ctx) => replyToRequest(args, ctx as DuckUiContext),
     resumeRun: async (args, ctx) => resumeRun(args, ctx as DuckUiContext),
+    pauseRun: async (args, ctx) => pauseRun(args, ctx as DuckUiContext),
+    resumePausedRun: async (args, ctx) => resumePausedRun(args, ctx as DuckUiContext),
     continueRunFollowup: async (args, ctx) => continueRunFollowup(args, ctx as DuckUiContext),
     closeRunFollowup: async (ctx) => closeRunFollowup(ctx as DuckUiContext),
   });

@@ -27,7 +27,7 @@ function runSmoke(): void {
 
   // workflow kickoff contract
   const kickoff = workflowKickoffPrefix("duck-review");
-  assert(kickoff === "duck-review, then wait /duck proceed.", "expected kickoff prefix contract");
+  assert(kickoff === "load duck-review, continue chat & wait for `/duck proceed`.", "expected kickoff prefix contract");
 
   console.log("duck smoke: ok");
 }
