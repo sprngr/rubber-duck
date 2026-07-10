@@ -1,0 +1,76 @@
+import { discoverDuckAgents } from "./agents.ts";
+import { loadBundledPolicyText } from "./policy.ts";
+import { runDuckAgent, truncateOutput } from "./runner.ts";
+import type { DuckState } from "./state.ts";
+
+export type DuckInvokeContext = {
+  ui: {
+    notify(message: string, level?: "info" | "warning" | "error"): void;
+  };
+  cwd: string;
+};
+
+export type DuckInvokeResult = {
+  ok: boolean;
+  output: string;
+  exitCode: number;
+  stderr: string;
+};
+
+type CreateInvokeAgentDeps = {
+  getState(): DuckState;
+  persistState(): void;
+  refreshStatus(ctx: DuckInvokeContext): void;
+};
+
+export function createInvokeAgent(deps: CreateInvokeAgentDeps) {
+  return async (agentName: string, task: string, ctx: DuckInvokeContext): Promise<DuckInvokeResult> => {
+    const discovery = discoverDuckAgents();
+    const agent = discovery.agents.find((a) => a.name === agentName);
+
+    if (!agent) {
+      const available = discovery.agents.map((a) => a.name).join(", ") || "(none)";
+      ctx.ui.notify(`Unknown duck agent: ${agentName}. Available: ${available}`, "error");
+      return { ok: false, output: "", exitCode: 1, stderr: `Unknown duck agent: ${agentName}` };
+    }
+
+    if (!task.trim()) {
+      ctx.ui.notify(`Missing task. Usage: /${agentName} <task>`, "warning");
+      return { ok: false, output: "", exitCode: 1, stderr: "Missing task" };
+    }
+
+    let policyText = "";
+    const state = deps.getState();
+    if (state.policyEnabled) {
+      try {
+        policyText = await loadBundledPolicyText();
+      } catch {
+        ctx.ui.notify("Duck policy enabled but pi/AGENTS.md was not found.", "warning");
+      }
+    }
+
+    state.enabled = true;
+    state.activeSubagent = agent.name;
+    deps.persistState();
+    deps.refreshStatus(ctx);
+
+    try {
+      const result = await runDuckAgent(agent, task, ctx.cwd, policyText);
+
+      if (result.exitCode !== 0) {
+        ctx.ui.notify(
+          `${agent.name} failed (exit ${result.exitCode}). ${result.stderr || "No stderr output."}`,
+          "error",
+        );
+        return { ok: false, output: result.output, exitCode: result.exitCode, stderr: result.stderr };
+      }
+
+      const output = result.output || "(no output)";
+      return { ok: true, output: truncateOutput(output, 12000), exitCode: result.exitCode, stderr: result.stderr };
+    } finally {
+      state.activeSubagent = undefined;
+      deps.persistState();
+      deps.refreshStatus(ctx);
+    }
+  };
+}

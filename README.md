@@ -16,6 +16,26 @@ Use this when you only want skills built with the [Rubber Duck philosophy](#phil
 
 For raw `npx skills` usage, see [vercel-labs/skills](https://github.com/vercel-labs/skills).
 
+### Pi extension package
+
+If you want Rubber Duck behavior integrated into Pi-native extension flow (status line, `/duck` controls, duckling commands), use the package in [`pi/`](./pi/).
+
+Quick start:
+
+```bash
+make build-pi
+pi install ./pi
+```
+
+Then in Pi:
+
+```text
+/duck status
+/duck-reviewer Review current changes for risk.
+```
+
+See full setup and command details: [`pi/README.md`](./pi/README.md).
+
 ### Full Rubber Duck agent system (Installer / Updater / Uninstaller)
 
 Use the installer scripts for managed agent + policy setup. Adds all `duck-*` skills required by the router and duckling subagents.
