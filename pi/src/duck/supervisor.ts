@@ -15,6 +15,7 @@ export type SupervisorRun = {
   startedAt: string;
   updatedAt: string;
   completedAt?: string;
+  activeSubagentId?: string;
 };
 
 export type SupervisorRequest = {
@@ -39,6 +40,7 @@ type SupervisorOp =
   | { type: "run_state"; runId: string; state: SupervisorRunState; updatedAt: string; completedAt?: string }
   | { type: "run_cursor"; runId: string; nextStep: number; updatedAt: string }
   | { type: "run_task"; runId: string; currentTask: string; updatedAt: string }
+  | { type: "run_active_subagent"; runId: string; agentId?: string; updatedAt: string }
   | { type: "request_created"; request: SupervisorRequest }
   | {
       type: "request_replied";
@@ -180,6 +182,20 @@ export class DuckSupervisorStore {
     return this.runs.get(runId) ?? null;
   }
 
+  setRunActiveSubagent(runId: string, agentId: string | undefined, persist: PersistFn): SupervisorRun | null {
+    const run = this.runs.get(runId);
+    if (!run) return null;
+
+    const op: SupervisorOp = {
+      type: "run_active_subagent",
+      runId,
+      agentId,
+      updatedAt: nowIso(),
+    };
+    this.apply(op, true, persist);
+    return this.runs.get(runId) ?? null;
+  }
+
   createRequest(
     input: Omit<SupervisorRequest, "requestId" | "createdAt" | "status">,
     persist: PersistFn,
@@ -243,6 +259,12 @@ export class DuckSupervisorStore {
     return this.sortedRunsDesc().slice(0, safeLimit);
   }
 
+  getRunActiveSubagentId(runId: string): string | null {
+    const run = this.runs.get(runId);
+    if (!run) return null;
+    return run.activeSubagentId ?? null;
+  }
+
   private apply(op: SupervisorOp, shouldPersist: boolean, persist?: PersistFn): void {
     switch (op.type) {
       case "run_started": {
@@ -251,6 +273,7 @@ export class DuckSupervisorStore {
           currentTask: op.run.currentTask ?? op.run.task,
           nextStep: Number.isFinite(op.run.nextStep) ? op.run.nextStep : 1,
           totalSteps: Number.isFinite(op.run.totalSteps) ? op.run.totalSteps : op.run.chain.length,
+          activeSubagentId: op.run.activeSubagentId,
         });
         break;
       }
@@ -260,6 +283,9 @@ export class DuckSupervisorStore {
         run.state = op.state;
         run.updatedAt = op.updatedAt;
         run.completedAt = op.completedAt ?? run.completedAt;
+        if (op.state === "completed" || op.state === "failed") {
+          run.activeSubagentId = undefined;
+        }
         this.runs.set(run.runId, run);
         break;
       }
@@ -275,6 +301,14 @@ export class DuckSupervisorStore {
         const run = this.runs.get(op.runId);
         if (!run) break;
         run.currentTask = op.currentTask;
+        run.updatedAt = op.updatedAt;
+        this.runs.set(run.runId, run);
+        break;
+      }
+      case "run_active_subagent": {
+        const run = this.runs.get(op.runId);
+        if (!run) break;
+        run.activeSubagentId = op.agentId;
         run.updatedAt = op.updatedAt;
         this.runs.set(run.runId, run);
         break;

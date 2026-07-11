@@ -4,10 +4,16 @@ import type { SupervisorRun, DuckSupervisorStore } from "./supervisor.ts";
 
 type RunStepResult = { step: number; agent: string; result: DuckInvokeResult };
 
+type RunInvokeMeta = {
+  runId: string;
+  step: number;
+  agent: string;
+};
+
 type RunControlContext<Context> = {
   supervisor: DuckSupervisorStore;
   persistSupervisorOp(op: unknown): void;
-  invokeAgent(agentName: string, task: string, ctx: Context): Promise<DuckInvokeResult>;
+  invokeAgent(agentName: string, task: string, ctx: Context, meta?: RunInvokeMeta): Promise<DuckInvokeResult>;
   sendRunBlock(
     title: string,
     body: string,
@@ -33,6 +39,17 @@ type RunControlContext<Context> = {
 };
 
 export function createRunControl<Context>(deps: RunControlContext<Context>) {
+  const invokeStepSequentially = async (
+    agentName: string,
+    task: string,
+    ctx: Context,
+    meta: RunInvokeMeta,
+  ): Promise<DuckInvokeResult> => {
+    // Intentionally awaited one step at a time.
+    // Even when backend uses background subagents, chain semantics stay strict in-order.
+    return deps.invokeAgent(agentName, task, ctx, meta);
+  };
+
   const executeRun = async (run: SupervisorRun, startStep: number, ctx: Context) => {
     const results: RunStepResult[] = [];
     let currentTask = (run.currentTask || run.task || "").trim();
@@ -55,7 +72,11 @@ export function createRunControl<Context>(deps: RunControlContext<Context>) {
 
       let result: DuckInvokeResult;
       try {
-        result = await deps.invokeAgent(agentName, currentTask, ctx);
+        result = await invokeStepSequentially(agentName, currentTask, ctx, {
+          runId: run.runId,
+          step,
+          agent: agentName,
+        });
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         result = {

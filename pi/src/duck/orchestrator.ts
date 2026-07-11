@@ -1,7 +1,12 @@
 import { discoverDuckAgents } from "./agents.ts";
+import { createDuckEngine, type DuckEngine } from "./engine/index.ts";
 import { loadBundledPolicyText } from "./policy.ts";
-import { runDuckAgent, truncateOutput } from "./runner.ts";
 import type { DuckState } from "./state.ts";
+
+function truncateOutput(text: string, maxChars = 3000): string {
+  if (text.length <= maxChars) return text;
+  return `${text.slice(0, maxChars)}\n\n[truncated ${text.length - maxChars} chars]`;
+}
 
 export type DuckInvokeContext = {
   ui: {
@@ -15,16 +20,31 @@ export type DuckInvokeResult = {
   output: string;
   exitCode: number;
   stderr: string;
+  agentId?: string;
+};
+
+export type DuckInvokeMeta = {
+  runId: string;
+  step: number;
+  agent: string;
 };
 
 type CreateInvokeAgentDeps = {
   getState(): DuckState;
   persistState(): void;
   refreshStatus(ctx: DuckInvokeContext): void;
+  engine?: DuckEngine;
 };
 
 export function createInvokeAgent(deps: CreateInvokeAgentDeps) {
-  return async (agentName: string, task: string, ctx: DuckInvokeContext): Promise<DuckInvokeResult> => {
+  const engine = deps.engine ?? createDuckEngine();
+
+  return async (
+    agentName: string,
+    task: string,
+    ctx: DuckInvokeContext,
+    meta?: DuckInvokeMeta,
+  ): Promise<DuckInvokeResult> => {
     const discovery = discoverDuckAgents();
     const agent = discovery.agents.find((a) => a.name === agentName);
 
@@ -55,7 +75,14 @@ export function createInvokeAgent(deps: CreateInvokeAgentDeps) {
     deps.refreshStatus(ctx);
 
     try {
-      const result = await runDuckAgent(agent, task, ctx.cwd, policyText);
+      const result = await engine.spawn({
+        runId: meta?.runId ?? `manual_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
+        step: meta?.step ?? 1,
+        agent: meta?.agent ?? agent.name,
+        prompt: task,
+        cwd: ctx.cwd,
+        policyText,
+      });
 
       if (result.exitCode !== 0) {
         ctx.ui.notify(
@@ -66,7 +93,13 @@ export function createInvokeAgent(deps: CreateInvokeAgentDeps) {
       }
 
       const output = result.output || "(no output)";
-      return { ok: true, output: truncateOutput(output, 12000), exitCode: result.exitCode, stderr: result.stderr };
+      return {
+        ok: true,
+        output: truncateOutput(output, 12000),
+        exitCode: result.exitCode,
+        stderr: result.stderr,
+        agentId: result.agentId,
+      };
     } finally {
       state.activeSubagent = undefined;
       deps.persistState();

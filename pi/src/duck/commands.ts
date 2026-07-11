@@ -13,7 +13,7 @@ type CommandContext = {
 
 type RegisterDuckCommandsDeps = {
   getState(): DuckState;
-  getStatusDetails?(): string[];
+  getStatusDetails?(): string[] | Promise<string[]>;
   persistState(): void;
   refreshStatus(ctx: CommandContext): void;
   reset(ctx: CommandContext): void;
@@ -33,6 +33,7 @@ type RegisterDuckCommandsDeps = {
   resumeRun(args: string, ctx: CommandContext): Promise<void>;
   pauseRun(args: string, ctx: CommandContext): Promise<void>;
   resumePausedRun(args: string, ctx: CommandContext): Promise<void>;
+  steerRun(args: string, ctx: CommandContext): Promise<void>;
   continueRunFollowup(args: string, ctx: CommandContext): Promise<void>;
   closeRunFollowup(ctx: CommandContext): Promise<void>;
 };
@@ -59,7 +60,7 @@ export function registerDuckCommands(pi: ExtensionAPI, deps: RegisterDuckCommand
         }
         case "status": {
           const base = await statusText(state);
-          const extra = deps.getStatusDetails?.() ?? [];
+          const extra = deps.getStatusDetails ? await deps.getStatusDetails() : [];
           ctx.ui.notify(extra.length > 0 ? `${base}\n${extra.join("\n")}` : base, "info");
           return;
         }
@@ -217,6 +218,15 @@ export function registerDuckCommands(pi: ExtensionAPI, deps: RegisterDuckCommand
         }
         case "resume-run": {
           await deps.resumePausedRun(tokens.slice(1).join(" ").trim(), ctx);
+          return;
+        }
+        case "steer": {
+          const raw = tokens.slice(1).join(" ").trim();
+          if (!raw) {
+            ctx.ui.notify(DUCK_USAGE.steer, "warning");
+            return;
+          }
+          await deps.steerRun(raw, ctx);
           return;
         }
         case "followup": {

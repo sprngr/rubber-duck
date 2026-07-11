@@ -85,10 +85,10 @@ export function registerDuckMessageRenderers(pi: ExtensionAPI): void {
       container.addChild(new Spacer(1));
       if (showCollapsed) {
         container.addChild(
-          new Text(theme.fg("muted", `... ${bodyLines.length - collapsedLines} more lines (Ctrl+O to expand)`), 0, 0),
+          new Text(theme.fg("muted", `+${bodyLines.length - collapsedLines} more lines · Ctrl+O`), 0, 0),
         );
       } else {
-        container.addChild(new Text(theme.fg("muted", "Ctrl+O to expand"), 0, 0));
+        container.addChild(new Text(theme.fg("muted", "Ctrl+O for details"), 0, 0));
       }
     }
 
@@ -127,12 +127,13 @@ export function sendRunBlock(
   ctx?: UiFeedbackContext,
 ): void {
   const icon = level === "error" ? "🦆❌" : level === "warning" ? "🦆⚠️" : "🦆";
+  const visualTitle = title.startsWith("Duck ·") ? title : `Duck · ${title}`;
   pi.sendMessage({
     customType: "duck-subagent-run",
-    content: `${icon} ${title}${body ? "\n\n" + body : ""}`,
+    content: `${icon} ${visualTitle}${body ? "\n\n" + body : ""}`,
     display: true,
     details: {
-      title,
+      title: visualTitle,
       level,
       forceExpanded: options?.forceExpanded === true,
       nonExpandable: options?.nonExpandable === true,

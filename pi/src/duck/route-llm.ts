@@ -1,9 +1,16 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
-import type { DuckAgentConfig } from "./agents.ts";
-import { runDuckAgent } from "./runner.ts";
+import {
+  positiveIntFromEnv,
+  resolveSessionRunner,
+  sleep,
+  type DuckSessionRunner,
+} from "./engine/session-runner.ts";
 import type { KnownDuckling, RouteDecision } from "./routing.ts";
+const DEFAULT_TIMEOUT_MS = 30_000;
+const DEFAULT_POLL_MS = 120;
+const ROUTER_AGENT_TYPE = "general-purpose";
 
 function stripFrontmatter(markdown: string): string {
   if (!markdown.startsWith("---\n")) return markdown;
@@ -28,21 +35,33 @@ function readBundledRouterPrompt(): string {
   return "You are a routing model. Return strict JSON only.";
 }
 
-const LLM_ROUTE_CLASSIFIER: DuckAgentConfig = {
-  name: "duck-router-classifier",
-  description: "Route user input to duck skill and execution chain",
-  tools: [],
-  model: undefined,
-  systemPrompt: [
+const LLM_ROUTE_CLASSIFIER_PROMPT = [
     readBundledRouterPrompt(),
     "",
     "Return ONLY JSON (no prose, no markdown) with this shape:",
     '{"intent":"review|debug|explain|teach|design|triage","skill":"duck-review|duck-debug|duck-explain|duck-teach|duck-design|duck-triage","agent":"duck-reviewer|duck-investigator|duck-builder|duck-adversary|duck-dry|duck-simple","executionChain":["duck-reviewer|duck-investigator|duck-builder|duck-adversary|duck-dry|duck-simple"],"metaChain":["string"],"reason":"string"}',
     "Ensure agent is the first element of executionChain.",
-  ].join("\n"),
-  filePath: "(bundled-router-prompt)",
-  source: "extension",
-};
+  ].join("\n");
+
+async function collectClassifierOutput(
+  runner: DuckSessionRunner,
+  agentId: string,
+  timeoutMs: number,
+  pollMs: number,
+): Promise<string | null> {
+  const startedAt = Date.now();
+
+  while (Date.now() - startedAt < timeoutMs) {
+    const record = await runner.poll(agentId);
+    if (record.done) {
+      if (record.status !== "completed" && record.status !== "steered") return null;
+      return (record.result ?? "").trim() || null;
+    }
+    await sleep(pollMs);
+  }
+
+  return null;
+}
 
 function extractJsonObject(text: string): string | null {
   const trimmed = text.trim();
@@ -98,11 +117,35 @@ function coerceLlMRoute(raw: unknown): Exclude<RouteDecision, null> | null {
   };
 }
 
-export async function llmRoute(text: string, cwd: string): Promise<Exclude<RouteDecision, null> | null> {
-  const result = await runDuckAgent(LLM_ROUTE_CLASSIFIER, `User input:\n${text}`, cwd);
-  if (result.exitCode !== 0) return null;
+export async function llmRoute(text: string, _cwd: string): Promise<Exclude<RouteDecision, null> | null> {
+  const runner = await resolveSessionRunner();
 
-  const jsonText = extractJsonObject(result.output || "");
+  const prompt = [
+    LLM_ROUTE_CLASSIFIER_PROMPT,
+    "",
+    "User input:",
+    text,
+  ].join("\n");
+
+  let agentId = "";
+  try {
+    ({ agentId } = await runner.spawn({
+      agent: ROUTER_AGENT_TYPE,
+      prompt,
+      cwd: _cwd,
+      description: "Route input",
+    }));
+  } catch {
+    return null;
+  }
+
+  const timeoutMs = positiveIntFromEnv("DUCK_AGENT_TIMEOUT_MS", DEFAULT_TIMEOUT_MS);
+  const pollMs = positiveIntFromEnv("DUCK_SUBAGENT_POLL_MS", DEFAULT_POLL_MS);
+  const output = await collectClassifierOutput(runner, agentId, timeoutMs, pollMs);
+
+  if (!output) return null;
+
+  const jsonText = extractJsonObject(output || "");
   if (!jsonText) return null;
 
   try {
