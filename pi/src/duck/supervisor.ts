@@ -1,6 +1,6 @@
 export const SUPERVISOR_ENTRY_TYPE = "rubber-duck.pi-extension.supervisor.v1";
 
-export type SupervisorRunState = "running" | "needs_attention" | "completed" | "failed";
+export type SupervisorRunState = "running" | "needs_attention" | "completed" | "failed" | "stopped";
 
 export type SupervisorRun = {
   runId: string;
@@ -81,7 +81,7 @@ export class DuckSupervisorStore {
     const safeKeep = Math.max(1, keepRecent);
     return this.sortedRunsDesc()
       .slice(safeKeep)
-      .filter((run) => run.state === "completed" || run.state === "failed")
+      .filter((run) => run.state === "completed" || run.state === "failed" || run.state === "stopped")
       .map((run) => run.runId);
   }
 
@@ -147,7 +147,7 @@ export class DuckSupervisorStore {
     if (!run) return null;
 
     const updatedAt = nowIso();
-    const completedAt = state === "completed" || state === "failed" ? updatedAt : undefined;
+    const completedAt = state === "completed" || state === "failed" || state === "stopped" ? updatedAt : undefined;
     const op: SupervisorOp = { type: "run_state", runId, state, updatedAt, completedAt };
     this.apply(op, true, persist);
     return this.runs.get(runId) ?? null;
@@ -283,7 +283,7 @@ export class DuckSupervisorStore {
         run.state = op.state;
         run.updatedAt = op.updatedAt;
         run.completedAt = op.completedAt ?? run.completedAt;
-        if (op.state === "completed" || op.state === "failed") {
+        if (op.state === "completed" || op.state === "failed" || op.state === "stopped") {
           run.activeSubagentId = undefined;
         }
         this.runs.set(run.runId, run);

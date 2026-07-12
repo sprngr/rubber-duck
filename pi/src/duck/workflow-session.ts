@@ -69,6 +69,6 @@ export function buildPendingFollowup(input: {
   };
 }
 
-export function workflowKickoffPrefix(skill: string): string {
-  return `load ${skill}, continue chat & wait for \`/duck proceed\`.`;
+export function workflowKickoffPrefix(skill: string, task:string): string {
+  return `/${skill} ${task}; continue chat & wait for \`/duck proceed\`.`;
 }

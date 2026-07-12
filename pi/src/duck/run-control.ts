@@ -157,32 +157,13 @@ export function createRunControl<Context>(deps: RunControlContext<Context>) {
   const finalizeRun = (run: SupervisorRun, results: RunStepResult[], ctx: Context) => {
     const succeeded = results.filter((r) => r.result.ok);
     const failed = results.filter((r) => !r.result.ok);
+    const stopped = failed.some((r) => r.result.terminalStatus === "stopped");
     const finalOutput = succeeded.at(-1)?.result.output?.trim() || "";
 
-    deps.supervisor.setRunState(run.runId, failed.length > 0 ? "failed" : "completed", deps.persistSupervisorOp);
-
-    const failedLines = failed.map(
-      (r) => `- ❌ step ${r.step} ${r.agent} (exit ${r.result.exitCode}${r.result.stderr ? `: ${r.result.stderr}` : ""})`,
-    );
-
-    const responseSections = [
-      ...(failedLines.length > 0 ? ["Failures:", ...failedLines, ""] : []),
-      finalOutput ? finalOutput : "(no final output)",
-    ];
-
-    deps.sendRunBlock(
-      `Subagent response | Run ID: ${run.runId}`,
-      responseSections.join("\n"),
-      failed.length > 0 ? "warning" : "info",
-      {
-        forceExpanded: true,
-        helperText: [
-          failed.length > 0
-            ? "inspect failures; then choose next step"
-            : "reply to continue run context (ambient on) · /duck followup <text> · /duck close-run",
-        ],
-      },
-      ctx,
+    deps.supervisor.setRunState(
+      run.runId,
+      stopped ? "stopped" : failed.length > 0 ? "failed" : "completed",
+      deps.persistSupervisorOp,
     );
 
     const priorFollowup = deps.getPendingFollowupInteractions();

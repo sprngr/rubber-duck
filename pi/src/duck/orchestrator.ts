@@ -20,6 +20,7 @@ export type DuckInvokeResult = {
   output: string;
   exitCode: number;
   stderr: string;
+  terminalStatus?: "completed" | "failed" | "stopped";
   agentId?: string;
 };
 
@@ -89,7 +90,13 @@ export function createInvokeAgent(deps: CreateInvokeAgentDeps) {
           `${agent.name} failed (exit ${result.exitCode}). ${result.stderr || "No stderr output."}`,
           "error",
         );
-        return { ok: false, output: result.output, exitCode: result.exitCode, stderr: result.stderr };
+        return {
+          ok: false,
+          output: result.output,
+          exitCode: result.exitCode,
+          stderr: result.stderr,
+          terminalStatus: result.terminalStatus,
+        };
       }
 
       const output = result.output || "(no output)";
@@ -98,6 +105,7 @@ export function createInvokeAgent(deps: CreateInvokeAgentDeps) {
         output: truncateOutput(output, 12000),
         exitCode: result.exitCode,
         stderr: result.stderr,
+        terminalStatus: result.terminalStatus,
         agentId: result.agentId,
       };
     } finally {

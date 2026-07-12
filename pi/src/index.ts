@@ -16,12 +16,16 @@ import { buildStatusLine, type DuckStatusRuntime } from "./duck/status.ts";
 import { createInvokeAgent, type DuckInvokeContext, type DuckInvokeMeta } from "./duck/orchestrator.ts";
 import { llmRoute } from "./duck/route-llm.ts";
 import { resolveSessionRunner } from "./duck/engine/session-runner.ts";
+import { createDuckEngine } from "./duck/engine/index.ts";
 import {
   applyWorkingStyle,
+  buildDuckCompletionCard,
+  type DuckWorkingState,
   extractMessageText,
   registerDuckMessageRenderers,
   sendRunBlock,
   sendUserInline,
+  updateDuckRunsWidget,
   type UiFeedbackContext,
   withWorking,
 } from "./platform/pi/ui-feedback.ts";
@@ -114,6 +118,7 @@ function deriveRunTitleFromTask(task: string, maxChars = 80): string {
 
 export default function duckExtension(pi: ExtensionAPI): void {
   const supervisor = new DuckSupervisorStore();
+  const engine = createDuckEngine();
   registerDuckMessageRenderers(pi);
 
   const SESSION_POLICY_MARKER = "<!-- duck-session-policy -->";
@@ -137,7 +142,43 @@ export default function duckExtension(pi: ExtensionAPI): void {
   let pendingWorkflowPrompted = false;
   let pendingFollowup: PendingFollowup = null;
   const stashedFollowups = new Map<string, NonNullable<PendingFollowup>>();
+  const emittedTerminalRunCards = new Set<string>();
+  const terminalRunLinger = new Map<string, { state: "completed" | "failed" | "stopped"; until: number }>();
+  let widgetWorkingState: DuckWorkingState | undefined;
   let activeRunIdForInvoke: string | null = null;
+  let liveRefreshCtx: DuckUiContext | null = null;
+  let liveRefreshTimer: ReturnType<typeof setInterval> | null = null;
+
+  const stopLiveRefreshTicker = () => {
+    if (liveRefreshTimer) {
+      clearInterval(liveRefreshTimer);
+      liveRefreshTimer = null;
+    }
+  };
+
+  const lingerMsForState = (state: "completed" | "failed" | "stopped"): number => {
+    if (state === "completed") return 10_000;
+    return 18_000;
+  };
+
+  const pruneExpiredLinger = (): void => {
+    const now = Date.now();
+    for (const [runId, marker] of terminalRunLinger.entries()) {
+      if (marker.until <= now) terminalRunLinger.delete(runId);
+    }
+  };
+
+  const ensureLiveRefreshTicker = () => {
+    if (liveRefreshTimer) return;
+    liveRefreshTimer = setInterval(() => {
+      if (!liveRefreshCtx) return;
+      try {
+        refreshStatus(liveRefreshCtx);
+      } catch {
+        // keep ticker best-effort only
+      }
+    }, 700);
+  };
 
   const clearPendingFollowup = () => {
     pendingFollowup = null;
@@ -149,6 +190,26 @@ export default function duckExtension(pi: ExtensionAPI): void {
     runtime.awaitingProceed = false;
   };
 
+  const shouldShowInlineWorking = (): boolean => {
+    const active = supervisor
+      .listRuns(20)
+      .some((run) => run.state === "running" || run.state === "needs_attention");
+    const queued = engine.listRuns().some((run) => run.status === "queued");
+    return !(active || queued || terminalRunLinger.size > 0);
+  };
+
+  const buildWorkingWidgetHooks = (ctx: DuckUiContext) => ({
+    onFrame: (state: DuckWorkingState) => {
+      widgetWorkingState = state;
+      refreshStatus(ctx);
+    },
+    shouldShowInline: shouldShowInlineWorking,
+    onStop: () => {
+      widgetWorkingState = undefined;
+      refreshStatus(ctx);
+    },
+  });
+
   const persistState = () => {
     pi.appendEntry(STATE_ENTRY_TYPE, { ...state });
   };
@@ -158,7 +219,127 @@ export default function duckExtension(pi: ExtensionAPI): void {
   };
 
   const refreshStatus = (ctx: DuckUiContext) => {
+    liveRefreshCtx = ctx;
     applyStatus(ctx, state, runtime);
+
+    for (const run of supervisor.listRuns(20)) {
+      const engineRun = engine.getRun(run.runId);
+      const isStopped = engineRun?.status === "stopped";
+      if (run.state !== "completed" && run.state !== "failed" && !isStopped) continue;
+      if (emittedTerminalRunCards.has(run.runId)) continue;
+      emittedTerminalRunCards.add(run.runId);
+
+      const telemetry = engineRun?.telemetry;
+      const startedMs = Date.parse(run.startedAt);
+      const completedMs = run.completedAt ? Date.parse(run.completedAt) : NaN;
+      const durationMs = Number.isFinite(startedMs) && Number.isFinite(completedMs)
+        ? Math.max(0, completedMs - startedMs)
+        : undefined;
+
+      const card = buildDuckCompletionCard({
+        runId: run.runId,
+        title: deriveRunTitleFromTask(run.task),
+        status: run.state,
+        telemetry,
+        durationMs,
+        outputPreview: engineRun?.output,
+        error: engineRun?.error,
+        transcriptPath: `${ctx.cwd}/.pi/output/${run.runId}.jsonl`,
+      });
+
+      const terminalState = card.level === "info" ? "completed" : card.level === "warning" ? "stopped" : "failed";
+      terminalRunLinger.set(run.runId, {
+        state: terminalState,
+        until: Date.now() + lingerMsForState(terminalState),
+      });
+
+      sendRunBlock(
+        pi,
+        card.title,
+        card.body,
+        card.level,
+        { forceExpanded: true },
+        ctx,
+      );
+    }
+
+    const supervisorActive = supervisor
+      .listRuns(20)
+      .filter((run) => run.state === "running" || run.state === "needs_attention")
+      .map((run) => {
+        const engineRun = engine.getRun(run.runId);
+        const telemetry = engineRun?.telemetry;
+        const state = engineRun?.status === "queued" ? "queued" : run.state;
+        return {
+          runId: run.runId,
+          state,
+          nextStep: run.nextStep,
+          totalSteps: run.totalSteps,
+          startedAt: run.startedAt,
+          needsReply: supervisor.hasPendingForRun(run.runId),
+          turnCount: telemetry?.turnCount,
+          toolUses: telemetry?.toolUses,
+          tokenTotal: telemetry?.tokenTotal,
+          contextPercent: telemetry?.contextPercent,
+          compactionCount: telemetry?.compactionCount,
+          activeTools: telemetry?.activeTools,
+          activityText: telemetry?.activityText,
+        };
+      });
+
+    const queuedOnly = engine
+      .listRuns()
+      .filter((run) => run.status === "queued")
+      .filter((run) => !supervisorActive.some((item) => item.runId === run.runId))
+      .map((run) => ({
+        runId: run.runId,
+        state: "queued" as const,
+        nextStep: run.step,
+        totalSteps: run.step,
+        startedAt: run.telemetry?.timestamps.queuedAt ?? new Date().toISOString(),
+        needsReply: false,
+        turnCount: run.telemetry?.turnCount,
+        toolUses: run.telemetry?.toolUses,
+        tokenTotal: run.telemetry?.tokenTotal,
+        contextPercent: run.telemetry?.contextPercent,
+        compactionCount: run.telemetry?.compactionCount,
+        activeTools: run.telemetry?.activeTools,
+        activityText: run.telemetry?.activityText,
+      }));
+
+    const activeRuns = [...supervisorActive, ...queuedOnly];
+    pruneExpiredLinger();
+    const lingerRows = Array.from(terminalRunLinger.entries())
+      .filter(([runId]) => !activeRuns.some((row) => row.runId === runId))
+      .map(([runId, marker]) => {
+        const run = supervisor.getRun(runId);
+        const engineRun = engine.getRun(runId);
+        const telemetry = engineRun?.telemetry;
+        return {
+          runId,
+          state: marker.state,
+          nextStep: run?.nextStep ?? engineRun?.step ?? 1,
+          totalSteps: run?.totalSteps ?? engineRun?.step ?? 1,
+          startedAt: run?.startedAt ?? telemetry?.timestamps.runningAt ?? telemetry?.timestamps.queuedAt ?? new Date().toISOString(),
+          needsReply: false,
+          turnCount: telemetry?.turnCount,
+          toolUses: telemetry?.toolUses,
+          tokenTotal: telemetry?.tokenTotal,
+          contextPercent: telemetry?.contextPercent,
+          compactionCount: telemetry?.compactionCount,
+          activeTools: telemetry?.activeTools,
+          activityText: telemetry?.activityText,
+        };
+      });
+
+    const rows = [...activeRuns, ...lingerRows];
+    updateDuckRunsWidget(ctx, rows, rows.length > 0 ? widgetWorkingState : undefined);
+
+    if (rows.length > 0) {
+      ensureLiveRefreshTicker();
+    } else {
+      stopLiveRefreshTicker();
+    }
   };
 
   const reset = (ctx: DuckUiContext) => {
@@ -168,6 +349,7 @@ export default function duckExtension(pi: ExtensionAPI): void {
     clearPendingWorkflow();
     clearPendingFollowup();
     stashedFollowups.clear();
+    terminalRunLinger.clear();
     lastRouteMeta = "route: - · skill: - · chain: -";
     persistState();
     refreshStatus(ctx);
@@ -177,6 +359,7 @@ export default function duckExtension(pi: ExtensionAPI): void {
     getState: () => state,
     persistState,
     refreshStatus,
+    engine,
   });
 
   const invokeAgent = async (agentName: string, task: string, ctx: DuckUiContext, meta?: DuckInvokeMeta) => {
@@ -195,6 +378,7 @@ export default function duckExtension(pi: ExtensionAPI): void {
         ctx,
         `Running ${agentName}…`,
         async () => invokeAgentImpl(agentName, task, ctx, effectiveMeta),
+        buildWorkingWidgetHooks(ctx),
       );
       if (effectiveMeta?.runId && result.agentId) {
         supervisor.setRunActiveSubagent(effectiveMeta.runId, result.agentId, persistSupervisorOp);
@@ -206,18 +390,14 @@ export default function duckExtension(pi: ExtensionAPI): void {
     }
   };
 
-  const sendDebugBlock = (title: string, body: string, ctx: DuckUiContext) => {
-    sendRunBlock(pi, `Debug · ${title}`, body, "info", { forceExpanded: false }, ctx);
-  };
-
   const { continueRunExecution } = createRunControl<DuckUiContext>({
     supervisor,
     persistSupervisorOp,
     invokeAgent,
     sendRunBlock: (title, body, level, options, ctx) => sendRunBlock(pi, title, body, level, options, ctx),
-    debugEnabled: () => state.debugMode,
-    debugVerboseEnabled: () => state.debugVerbose,
-    sendDebug: (title, body, ctx) => sendDebugBlock(title, body, ctx),
+    debugEnabled: () => false,
+    debugVerboseEnabled: () => false,
+    sendDebug: () => {},
     preview,
     buildChainedTaskPayload,
     getPendingFollowupInteractions: () => pendingFollowup?.interactions ?? [],
@@ -292,13 +472,7 @@ export default function duckExtension(pi: ExtensionAPI): void {
     runtime.awaitingProceed = true;
     refreshStatus(ctx);
 
-    const kickoff = [
-      workflowKickoffPrefix(route.skill),
-      "",
-      task,
-    ].join("\n");
-
-    pi.sendUserMessage(kickoff);
+    pi.sendUserMessage(workflowKickoffPrefix(route.skill, task));
 
     sendRunBlock(
       pi,
@@ -316,31 +490,10 @@ export default function duckExtension(pi: ExtensionAPI): void {
   };
 
   const routeInput = async (input: string, ctx: DuckUiContext): Promise<RouteDecision> => {
-    if (state.debugMode) {
-      sendDebugBlock("route input", `Input: ${input.trim() || "(empty)"}`, ctx);
-    }
-
     runtime.routing = true;
     refreshStatus(ctx);
     try {
-      const route = await withWorking(ctx, "Routing…", async () => llmRoute(input, ctx.cwd));
-      if (state.debugMode) {
-        if (!route) {
-          sendDebugBlock("route decision", "(no route; clarification required)", ctx);
-        } else {
-          sendDebugBlock(
-            "route decision",
-            [
-              `intent=${route.intent}`,
-              `skill=${route.skill}`,
-              `agent=${route.agent}`,
-              `chain=${route.executionChain.join(" -> ")}`,
-              `reason=${route.reason}`,
-            ].join("\n"),
-            ctx,
-          );
-        }
-      }
+      const route = await withWorking(ctx, "Routing…", async () => llmRoute(input, ctx.cwd), buildWorkingWidgetHooks(ctx));
       return route;
     } finally {
       runtime.routing = false;
@@ -373,8 +526,18 @@ export default function duckExtension(pi: ExtensionAPI): void {
     if (persisted) state = persisted;
     supervisor.hydrate(entries);
     supervisor.pruneTerminalRuns(20);
+    for (const run of supervisor.listRuns(20)) {
+      if (run.state === "completed" || run.state === "failed" || run.state === "stopped") {
+        emittedTerminalRunCards.add(run.runId);
+      }
+    }
     applyWorkingStyle(ctx);
     refreshStatus(ctx);
+  });
+
+  pi.on("session_shutdown", () => {
+    stopLiveRefreshTicker();
+    liveRefreshCtx = null;
   });
 
   pi.on("message_end", async (event) => {
@@ -505,10 +668,6 @@ export default function duckExtension(pi: ExtensionAPI): void {
       ctx,
     );
 
-    if (state.debugMode) {
-      sendDebugBlock(`follow-up payload (${followup.runId})`, preview(task, state.debugVerbose ? 10000 : 4000), ctx);
-    }
-
     await invokeSupervisorChain(
       {
         route: followup.route,
@@ -567,7 +726,7 @@ export default function duckExtension(pi: ExtensionAPI): void {
       return;
     }
 
-    if (run.state === "completed" || run.state === "failed") {
+    if (run.state === "completed" || run.state === "failed" || run.state === "stopped") {
       ctx.ui.notify(`Run ${runId} is ${run.state}; cannot steer.`, "warning");
       return;
     }
@@ -606,10 +765,6 @@ export default function duckExtension(pi: ExtensionAPI): void {
     const extra = (args ?? "").trim();
     const flow = pendingWorkflow;
     const task = buildWorkflowTaskPayload(flow, extra);
-
-    if (state.debugMode) {
-      sendDebugBlock("workflow packed payload", preview(task, state.debugVerbose ? 10000 : 4000), ctx);
-    }
 
     sendRunBlock(
       pi,
@@ -868,7 +1023,7 @@ export default function duckExtension(pi: ExtensionAPI): void {
       return;
     }
 
-    if (run.state === "completed" || run.state === "failed") {
+    if (run.state === "completed" || run.state === "failed" || run.state === "stopped") {
       ctx.ui.notify(`Run ${runId} is ${run.state}; nothing to pause.`, "info");
       return;
     }
@@ -908,7 +1063,7 @@ export default function duckExtension(pi: ExtensionAPI): void {
       return;
     }
 
-    if (run.state === "completed" || run.state === "failed") {
+    if (run.state === "completed" || run.state === "failed" || run.state === "stopped") {
       if (pendingFollowup?.runId === runId) {
         ctx.ui.notify(`Run ${runId} restored in follow-up mode. Reply in chat or use /duck followup.`, "info");
       } else {
@@ -964,7 +1119,12 @@ export default function duckExtension(pi: ExtensionAPI): void {
       );
     },
     previewRoute: async (input, ctx) => {
-      return withWorking(ctx as DuckUiContext, "Routing…", async () => llmRoute(input, ctx.cwd));
+      return withWorking(
+        ctx as DuckUiContext,
+        "Routing…",
+        async () => llmRoute(input, ctx.cwd),
+        buildWorkingWidgetHooks(ctx as DuckUiContext),
+      );
     },
     proceedWorkflow: async (args, ctx) => proceedWorkflow(args, ctx as DuckUiContext),
     refineWorkflow: async (args, ctx) => refineWorkflow(args, ctx as DuckUiContext),

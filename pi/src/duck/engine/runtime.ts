@@ -51,6 +51,7 @@ export function createDuckEngineRuntime(deps: CreateDuckEngineRuntimeDeps = {}) 
           output: "",
           exitCode: 1,
           stderr: "DuckEngine spawn failed",
+          terminalStatus: "failed",
         };
       }
 
@@ -61,11 +62,27 @@ export function createDuckEngineRuntime(deps: CreateDuckEngineRuntimeDeps = {}) 
       const startedAt = Date.now();
 
       while (Date.now() - startedAt < timeoutMs) {
+        const telemetry = runner.getTelemetry(agentId);
+        if (telemetry) {
+          const current = state.getRun(input.runId);
+          const shouldQueue = telemetry.timestamps.runningAt == null && current?.status !== "running";
+          state.patchRun(input.runId, {
+            status: shouldQueue ? "queued" : current?.status,
+            telemetry,
+          });
+        }
+
         const poll = await runner.poll(agentId);
+        if (!poll.done && poll.status === "queued") {
+          state.patchRun(input.runId, { status: "queued", telemetry });
+          await sleep(pollMs);
+          continue;
+        }
         if (poll.done) {
           if (poll.status === "completed" || poll.status === "steered") {
             state.patchRun(input.runId, {
               status: "completed",
+              telemetry,
               output: poll.result ?? "",
               error: undefined,
               activeAgentId: agentId,
@@ -75,6 +92,7 @@ export function createDuckEngineRuntime(deps: CreateDuckEngineRuntimeDeps = {}) 
               output: poll.result ?? "",
               exitCode: 0,
               stderr: "",
+              terminalStatus: "completed",
               agentId,
             };
           }
@@ -83,6 +101,7 @@ export function createDuckEngineRuntime(deps: CreateDuckEngineRuntimeDeps = {}) 
           const err = poll.error ?? `Subagent terminal status: ${terminalStatus}`;
           state.patchRun(input.runId, {
             status: terminalStatus === "stopped" ? "stopped" : "failed",
+            telemetry,
             output: poll.result ?? "",
             error: err,
             activeAgentId: agentId,
@@ -92,6 +111,7 @@ export function createDuckEngineRuntime(deps: CreateDuckEngineRuntimeDeps = {}) 
             output: poll.result ?? "",
             exitCode: 1,
             stderr: err,
+            terminalStatus: terminalStatus === "stopped" ? "stopped" : "failed",
             agentId,
           };
         }
@@ -101,6 +121,7 @@ export function createDuckEngineRuntime(deps: CreateDuckEngineRuntimeDeps = {}) 
 
       state.patchRun(input.runId, {
         status: "failed",
+        telemetry: runner.getTelemetry(agentId),
         error: `Timed out after ${timeoutMs}ms waiting for duck engine run`,
         activeAgentId: agentId,
       });
@@ -109,6 +130,7 @@ export function createDuckEngineRuntime(deps: CreateDuckEngineRuntimeDeps = {}) 
         output: "",
         exitCode: 124,
         stderr: `Timed out after ${timeoutMs}ms waiting for duck engine run`,
+        terminalStatus: "failed",
         agentId,
       };
     },

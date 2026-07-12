@@ -1,12 +1,13 @@
 import type { DuckEngineRun, DuckEngineRunStatus } from "./types.ts";
 
-type RunPatch = Partial<Pick<DuckEngineRun, "status" | "output" | "error" | "activeAgentId">>;
+type RunPatch = Partial<Pick<DuckEngineRun, "status" | "output" | "error" | "activeAgentId" | "telemetry">>;
 
 function nowRun(input: {
   runId: string;
   step: number;
   agent: string;
   status?: DuckEngineRunStatus;
+  telemetry?: DuckEngineRun["telemetry"];
   output?: string;
   error?: string;
   activeAgentId?: string;
@@ -16,6 +17,7 @@ function nowRun(input: {
     step: input.step,
     agent: input.agent,
     status: input.status ?? "queued",
+    telemetry: input.telemetry,
     output: input.output,
     error: input.error,
     activeAgentId: input.activeAgentId,
@@ -30,6 +32,7 @@ export class DuckEngineState {
     step: number;
     agent: string;
     status?: DuckEngineRunStatus;
+    telemetry?: DuckEngineRun["telemetry"];
     output?: string;
     error?: string;
     activeAgentId?: string;
@@ -41,6 +44,7 @@ export class DuckEngineState {
           step: input.step,
           agent: input.agent,
           status: input.status ?? current.status,
+          telemetry: input.telemetry ?? current.telemetry,
           output: input.output ?? current.output,
           error: input.error ?? current.error,
           activeAgentId: input.activeAgentId ?? current.activeAgentId,
@@ -58,6 +62,7 @@ export class DuckEngineState {
     const next: DuckEngineRun = {
       ...current,
       status: patch.status ?? current.status,
+      telemetry: patch.telemetry ?? current.telemetry,
       output: patch.output ?? current.output,
       error: patch.error ?? current.error,
       activeAgentId: patch.activeAgentId ?? current.activeAgentId,
