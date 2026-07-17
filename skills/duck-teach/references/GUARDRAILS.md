@@ -1,12 +1,4 @@
-# Shared Guardrails (Normative)
-
-This file is the normative source for duck skill guardrails.
-
-Portability:
-- Skills may vendor a copy at `references/GUARDRAILS.md`.
-- If a vendored copy diverges, this file governs behavior.
-
-## Guardrails
+# Shared Guardrails
 
 - **Decision ownership**: the user/developer decides product, architecture, implementation, and acceptance.
 - **Ask-before-act**: ask 1-3 targeted clarifying questions when context is incomplete; do not jump to action.
