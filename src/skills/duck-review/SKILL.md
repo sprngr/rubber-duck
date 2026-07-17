@@ -1,0 +1,115 @@
+---
+name: duck-review
+description: >
+  Rubber duck code review with risk-first, terse, actionable findings.
+  One-line comments: location, problem, fix. Use when: "review this",
+  "code review", "review the diff", "/review".
+---
+
+Review 🦆. Keep terse, actionable format by default.
+
+## Purpose
+
+Review changed code with risk-first, actionable findings in paste-ready format.
+
+## Output Format
+
+One-line comment template:
+
+`<prefix> <path[:line]> — <problem>. Fix: <smallest safe change>.`
+
+Keep comments paste-ready for PR threads.
+
+Rule (schema-first, prose-flexible):
+- each finding line must start with approved prefix token
+- each finding line must include location + problem + `Fix:` field
+- only exception: Auto-Clarity for security/irreversible-risk comments; resume prefixed one-line format immediately after
+- before final response, normalize any non-compliant finding to schema using strongest matching prefix (fallback `⚠️ bug:`)
+
+Final self-check before send:
+- If any finding line does not start with approved prefix token, rewrite before sending.
+- If any finding line is missing location or `Fix:`, rewrite before sending.
+- Never emit mixed formats (`- HIGH`, `- MED`, numbered bullets for findings).
+
+{{include: skill-snippets/philosophy-guardrails.md}}
+
+Skill-specific delta:
+- Provide findings and fix directions; user decides merge/approval outcomes.
+
+## Activation / When to Use
+
+Use when user asks to review diff/code/PR for issues and fix direction.
+
+## Preflight Checks
+
+{{include: skill-snippets/clarify-first-preflight.md}}
+- Review-specific override: if review context is ambiguous, ask one targeted clarifying question first.
+- Anchor each finding in explicit diff/code evidence.
+- Provide findings and fix directions; final merge/approval decisions remain with user.
+
+## Method
+
+### Duck Ladder (complexity guard)
+
+When proposing fix direction, stop at first rung:
+{{include: skill-snippets/duck-ladder-core.md}}
+
+### Workflow
+
+1. Confirm review input exists (diff, PR text, or pasted code chunk).
+2. Scan in priority order: security → correctness → data integrity → performance → tests → docs → simplification.
+3. Emit only actionable findings. One line each: location, problem, fix direction.
+4. Use strongest matching prefix. If multiple apply, pick highest risk prefix.
+5. Enforce strict output shape: one-line prefixed comment template for every finding.
+6. For security or irreversible-risk findings, switch to full paragraph (Auto-Clarity), then resume terse comments.
+
+If prefix choice unclear or reviewer needs wording examples, load `references/review-comment-examples.md`.
+
+## Prefixes
+
+Risk and action prefixes:
+- `📝 doc:` — missing/outdated docs or annotations
+- `🧪 test:` — missing/outdated test coverage
+- `🔒 sec:` — security issue (injection, auth bypass, secrets, SSRF)
+- `⚡ perf:` — performance concern (N+1, unnecessary alloc, bad complexity)
+- `⚠️ bug:` — correctness/data-loss behavior risk
+- `🪶 yagni:` — unnecessary abstraction/config/speculative flexibility
+- `📚 stdlib:` — custom code replaceable by standard library
+- `🧱 native:` — dependency/custom layer replaceable by platform feature
+- `✂️ shrink:` — same behavior with materially fewer lines
+- `🗑️ delete:` — dead/speculative code removable without replacement
+
+## Boundaries & Handoffs
+
+- Reviews only. Don't write patch, don't approve/request-changes, don't run linters/tests.
+- Severity precedence: if simplification and correctness/security both apply, emit higher-risk prefix first; simplification becomes separate comment only when non-duplicative.
+- Auto-Clarity: drop terse mode for security findings, architectural disagreements, onboarding contexts; resume terse after.
+
+## Examples
+
+## Input → Output Examples
+
+Input:
+"review this diff"
+
+Output:
+- `🧪 test: src/auth/session.ts:88 — refresh-token expiry path untested. Fix: add test for expired refresh token returning 401.`
+- `📝 doc: api/openapi.yaml:210 — response schema omits new error_code field. Fix: document field in 401 schema.`
+
+Input:
+"review this" + SQL string concatenation with user input
+
+Output:
+- `🔒 sec: db/userRepo.ts:44 — SQL built from raw user input enables injection. Fix: parameterize query placeholders and bind values.`
+
+Formatting correction example (bad -> good):
+- bad: `- HIGH src/parseAge.ts:3 — invalid input becomes 0`
+- good: `⚠️ bug: src/parseAge.ts:3 — invalid input collapses to 0 via falsy check. Fix: use Number.isNaN(n) and throw on invalid age.`
+
+## Edge Cases
+
+- No diff or code provided: ask for concrete review target before commenting.
+- Huge refactor: report highest-impact findings first; avoid line-noise nits.
+- Uncertain finding: ask one clarifying question instead of inventing certainty.
+- Same line has multiple problems: split into separate comments when fixes differ.
+- Security finding mixed with style issues: report security first, style optional.

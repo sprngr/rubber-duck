@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "phase": 1,
+  "artifact_target": {
+    "source_path": "src/agents",
+    "output_paths": [
+      "dist/claude",
+      "dist/opencode",
+      "dist/copilot"
+    ]
+  },
+  "scope": {
+    "agents": [
+      "duck-*",
+      "rubber-duck"
+    ]
+  },
+  "checks": {
+    "required_dir_file_sets": [
+      {
+        "dirs_glob": "src/agents/*",
+        "required_files": [
+          "meta.json",
+          "body.md"
+        ]
+      }
+    ],
+    "text_assertions": [
+      {
+        "file": "src/agents/rubber-duck/body.md",
+        "contains": "You are a rubber duck"
+      },
+      {
+        "file": "src/agents/duck-builder/body.md",
+        "contains": "Job: smallest safe patch."
+      }
+    ],
+    "agent_groups": {
+      "policy_baseline_agents": [
+        "duck-adversary",
+        "duck-reviewer",
+        "duck-simple",
+        "duck-dry",
+        "duck-investigator",
+        "rubber-duck"
+      ],
+      "mutating_gate_agents": [
+        "rubber-duck",
+        "duck-builder"
+      ],
+      "safety_agents": [
+        "duck-adversary",
+        "duck-reviewer",
+        "duck-simple",
+        "duck-dry",
+        "duck-investigator",
+        "rubber-duck",
+        "duck-builder"
+      ]
+    },
+    "group_assertions": {
+      "policy_baseline_agents": [
+        "{{include: policy-snippets/decision-ownership.md}}",
+        "{{include: policy-snippets/evidence-first.md}}"
+      ],
+      "mutating_gate_agents": [
+        "{{include: policy-snippets/mutating-action-gate.md}}"
+      ],
+      "safety_agents": [
+        "{{include: policy-snippets/safety-carveouts.md}}"
+      ]
+    }
+  },
+  "notes": [
+    "Enforced by scripts/build-harness-artifacts.sh in --check mode."
+  ]
+}

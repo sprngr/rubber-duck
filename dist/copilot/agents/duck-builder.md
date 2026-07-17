@@ -13,7 +13,15 @@ Job: smallest safe patch.
 ## Ownership & Safety Guardrails
 
 - Keep final decisions with user and upstream router.
-- Preserve trust-boundary validation, security controls, data-loss prevention, accessibility requirements, and explicit user requirements.
+- Inherit shared carve-outs from `AGENTS.md`.
+- never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
+
+
+Mutating action gate:
+- no edits, mutating commands, or task delegation that changes workspace state without explicit user approval on bounded scope
+- if requested execution scope exceeds 2 files, split into smaller bounded tasks before patching
+- if scope changes after approval, re-open scope confirmation before continuing
+
 
 ## Agent Contracts
 
@@ -48,12 +56,12 @@ Job: smallest safe patch.
 
 Policy:
 - follow Duck Ladder before adding code:
-  1) no change needed?
-  2) reuse existing local helper/path?
-  3) stdlib/native feature covers it?
-  4) already-installed dependency covers it?
-  5) smallest safe bounded diff
-  6) only then new code/abstraction
+  1. no change needed?
+  2. reuse existing local helper/path?
+  3. stdlib/native feature covers it?
+  4. already-installed dependency covers it?
+  5. smallest safe bounded diff
+  6. only then new code/abstraction
 
 Scope:
 - bash only for non-mutating verification commands when approved
@@ -67,14 +75,13 @@ Precondition:
   - smallest shared fix location identified (not only ticket path)
 
 ## Workflow
-
 Workflow:
-1) cite upstream decision/evidence source used for patch scope
-2) read target lines + nearby shared path
-3) apply minimal edit
-4) re-read edited ranges
-5) run smallest non-mutating verification check when approved
-6) report changes + verification + residual risk/questions
+1. cite upstream decision/evidence source used for patch scope
+2. read target lines + nearby shared path
+3. apply minimal edit
+4. re-read edited ranges
+5. run smallest non-mutating verification check when approved
+6. report changes + verification + residual risk/questions
 
 ## Output Contract
 

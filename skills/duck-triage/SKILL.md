@@ -18,16 +18,20 @@ Classify bug severity and expose missing test coverage with smallest runnable ch
 - severity + brief rationale + specific test to add
 - include related test paths or explicit "needs test" when absent
 
+Formatting rule (deterministic):
+- when proposing tests, use explicit `needs test:` prefix lines (one per scenario)
+- default target: 1-3 `needs test:` lines based on risk/scope (use 3 only for high-risk or multi-surface changes)
+- for uncertainty cases, include one `missing evidence:` line with the minimum artifacts needed to refine severity
+
 Pre-PR: suggest what to test (`duck-triage` scope).
 In-PR: annotate missing tests inline (`duck-review` 🧪 test: prefix).
 
 ## Philosophy Guardrails (skill-local)
 
-- Decision ownership: user decides implementation/test-writing actions; this skill recommends severity and test direction.
-- Ask-before-act: ask clarifying questions when repro/spec context is incomplete.
-- Evidence-first: collect repro/failing-path/coverage evidence before severity and test recommendations.
-- Bounded approval: no implementation or test-writing actions without explicit user approval or handoff.
-- Safety carve-outs: never drop trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements from test recommendations.
+Inherit shared guardrails from `references/GUARDRAILS.md`.
+
+Skill-specific delta:
+- Recommend severity and test direction; user decides implementation/test-writing actions.
 
 ## Activation / When to Use
 
@@ -36,17 +40,21 @@ Use for test coverage planning, bug severity triage, and pre-PR test recommendat
 ## Preflight Checks
 
 If repro/spec context is missing:
-- Ask 1-3 targeted clarifying questions first.
-- State assumptions explicitly before severity/test recommendations.
+- ask 1-3 targeted clarifying questions when context is incomplete
+- state assumptions explicitly when evidence is missing
+- Triage-specific override: ask one targeted clarifying question about missing repro/spec first.
+
+If evidence is missing, include explicit marker:
+- `missing evidence:` with concise list (logs/repro steps/release window/affected scope)
 
 ## Method
 
 ### Duck Ladder (test planning context)
 
 Before asking for new tests, check:
-1) does behavior already have reliable coverage?
-2) can existing test be extended instead of new file/suite?
-3) smallest runnable check that fails on regression?
+1. does behavior already have reliable coverage?
+2. can existing test be extended instead of new file/suite?
+3. smallest runnable check that fails on regression?
 
 ### Test Coverage Analysis
 
@@ -95,12 +103,14 @@ For every input/output, check:
   - one focused test, or
   - one assert-style self-check/demo if test framework path is heavy.
 - Trivial one-liner with existing coverage may not need new test.
-- Never drop trust-boundary/security/data-loss checks for brevity.
+- Never drop core safeguards for brevity:
+- never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
+
 
 ## Bug Severity Classification
 
 | Level | Criteria | Action | Examples |
-|---|--|-|---|
+|---|---|---|---|
 | 🔴 P0 — Critical | Data loss, security breach, all users blocked | Hotfix immediate | Wrong money sent, API auth bypass |
 | 🟠 P1 — High | Major feature broken, workaround exists | Sprint priority | Search broken for one locale |
 | 🟡 P2 — Medium | Partial feature broken, degraded UX | Next iteration | Icon misaligned, slow query |
@@ -117,11 +127,11 @@ For every input/output, check:
 4. Check: does existing test coverage exist? If not, flag missing coverage as contributing factor.
 5. Output: severity + brief rationale + which test to add
 
-Triage recommends severity and test direction only; implementation/test-writing actions require explicit user approval or handoff.
+Triage recommends severity and test direction only; implementation/test-writing actions require explicit user approval on bounded scope (handoff does not replace approval).
 
 ## Boundaries & Handoffs
 
-- Triage recommends direction; implementation/test writing requires explicit approval or handoff.
+- Triage recommends direction; implementation/test writing requires explicit user approval on bounded scope (handoff does not replace approval).
 - In-PR inline review comments route through `duck-review`.
 
 ## Bug Report Format

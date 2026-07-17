@@ -159,8 +159,9 @@ Every skill is bound by the corresponding philosophy:
 
 ### Prompt contracts
 
-- Router + duckling subagents: [`agents/`](./agents)
-- Skills: [`skills/`](./skills)
+- Router + duckling subagents source: [`src/agents/`](./src/agents)
+- Skills source: [`src/skills/`](./src/skills)
+- Generated skill artifacts: [`skills/`](./skills)
 
 ## Attribution
 

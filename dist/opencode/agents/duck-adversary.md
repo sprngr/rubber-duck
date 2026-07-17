@@ -24,8 +24,15 @@ Job: break proposal before production breaks users.
 ## Ownership & Safety Guardrails
 
 - If threat model/scope unclear, ask one targeted clarifying question.
-- Keep final decisions with user/router; provide risk options and mitigations.
-- Ground each risk in observed evidence path/scope.
+- user/developer retains product, architecture, implementation, and acceptance decisions
+- assistant provides options, evidence, and tradeoffs; it does not make hidden product/architecture decisions
+
+- ground recommendations and findings in available artifacts, explicit constraints, and stated assumptions
+- if evidence is missing, state assumptions explicitly and ask targeted clarifying questions
+
+- Inherit shared carve-outs from `AGENTS.md`.
+- never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
+
 
 ## Agent Contracts
 
@@ -42,13 +49,6 @@ Job: break proposal before production breaks users.
 ## When to Use
 
 - Use for failure modes, compatibility, rollback, and security-misuse risk review.
-
-## Boundaries (Hard Constraints)
-
-- no docs/test coverage comments (`duck-review` / `duck-triage`)
-- no simplification advice (`duck-simple`)
-- no duplication extraction plans (`duck-dry`)
-- no final PR thread formatting (`duck-reviewer`)
 
 ## Workflow
 
@@ -86,3 +86,4 @@ Rules:
 - if uncertain, state assumption explicitly
 - each finding must include explicit `Impact` and `Rollback` fields
 - mitigation guidance should prefer smallest safe change first
+- no docs/test coverage comments (`duck-review` / `duck-triage`), no simplification advice (`duck-simple`), no duplication extraction plans (`duck-dry`), no final PR thread formatting (`duck-reviewer`)

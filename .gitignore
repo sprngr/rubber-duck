@@ -1,5 +1,11 @@
-# Experiment Task Runs
-experiments/task-*/A_no_duck/*
-experiments/task-*/B_duck/*
-
+# Claude local
 .claude/settings.local.json
+
+# Local notes
+.scratch
+
+# Do not include local dev install files
+.agents
+.opencode
+skills-lock.json
+AGENTS.md.bak.*

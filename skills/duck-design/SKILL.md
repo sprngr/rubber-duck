@@ -15,22 +15,31 @@ Support architecture/design choices through Socratic tradeoff analysis while pre
 
 ## Output Format
 
-Compact first-response template (8-10 lines):
+Compact first-response template (10-14 lines):
 1) one scoping question
 2) approach strength sentence
 3) approach weakness sentence
 4) one alternative sentence
 5) one tradeoff sentence
 6) one non-negotiable dimension sentence
-7) "Which tradeoff do you accept?"
+7) "Which outcome matters most here, given your constraints?"
+
+First-turn budget (default):
+- target up to ~10-14 lines
+- target up to ~140-180 words
+- default to one scoping question
+- default to one alternative
+
+Conditional expansion:
+- Expand past first-turn budget only if user asks for deeper analysis (matrix/deep dive)
+- or user provides new constraints/evidence requiring re-evaluation
 
 ## Philosophy Guardrails (skill-local)
 
-- Decision ownership: developer selects tradeoff; this skill frames options and consequences.
-- Ask-before-act: ask clarifying scoping questions before recommendations.
-- Evidence-first: ground recommendations in explicit system constraints and known behavior.
-- Bounded approval: implementation actions require explicit user approval and scoped handoff.
-- Safety carve-outs: never trade away trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements.
+Inherit shared guardrails from `references/GUARDRAILS.md`.
+
+Skill-specific delta:
+- Frame design options and tradeoffs; developer selects final tradeoff.
 
 ## Activation / When to Use
 
@@ -39,21 +48,25 @@ Trigger when user asks to compare approaches, evaluate architecture, or choose t
 ## Preflight Checks
 
 Before recommendations:
+- ask 1-3 targeted clarifying questions when context is incomplete
+- state assumptions explicitly when evidence is missing
 - ground analysis in explicit evidence/constraints from current system state
 - if implementation action requested, require explicit approval and bounded scope before handoff
-- never trade away trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements for architectural neatness
+- architectural neatness must not bypass core safeguards:
+- never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
+
 
 ## Method
 
 ### Duck Ladder (when design implies implementation)
 
 If discussion enters implementation choices, stop at first rung:
-1) no new build needed (YAGNI)
-2) reuse existing local pattern
-3) stdlib/native feature
-4) already-installed dependency
-5) smallest safe bounded change
-6) only then new abstraction/code
+1. No change needed (YAGNI)
+2. Reuse existing local helper/pattern
+3. Replace with stdlib/native
+4. Use already-installed dependency
+5. Shrink to smallest safe diff
+6. Only then add new code/abstraction
 
 Redirect to `duck-debug` if runtime bug/data issue wrapped in design language.
 
@@ -84,8 +97,6 @@ If active:
 - Defer deep per-slice analysis until user picks slice
 - Keep first turn chunked; avoid full-system deep dive before slice selection
 
-Do not attempt whole-system design review in one pass.
-
 Routing precedence:
 - If prompt asks to compare options/approaches (<=2 options), use Step 4 first.
 - Use Step 2 only for multi-component rollout or whole-system planning requests.
@@ -108,10 +119,10 @@ Use this pattern:
 4. Offer one alternative addressing weakness
 5. Note new tradeoff alternative introduces
 6. State non-negotiable dimension for decision (1 sentence)
-7. Ask: "Which tradeoff do you accept?"
+7. Ask: "Which outcome matters most here, given your constraints?"
 
-Step 7 should include equivalent explicit tradeoff-choice question.
 - Brevity target for first response: around 6-12 lines, one alternative, one tradeoff sentence.
+- Keep first response within first-turn budget unless conditional expansion is triggered.
 
 Never prescribe. Always frame as tradeoff choice.
 
@@ -129,6 +140,13 @@ Frame as question, not prescription.
 Restate chosen approach and accepted tradeoff.
 Ask: "Document this as ADR?" (if project has docs/adr/)
 
+## Edge Cases / Watch out
+
+- Edge case: user asks for whole-system redesign with no constraints. Ask one scoping question first; do not deep-dive until a constraint is confirmed.
+
+Default/Recommended:
+- Recommended default: when under-specified, ask one constraint-driving question first, then wait for user input before alternatives.
+
 ## Boundaries & Handoffs
 
 - Don't decide for developer — present options, they decide
@@ -136,7 +154,6 @@ Ask: "Document this as ADR?" (if project has docs/adr/)
 - Compare new tech to current stack before mentioning
 - If runtime bug disguised as design problem, redirect to `duck-debug`
 - Use explicit handoff phrase: "This is runtime bug signal; redirect to duck-debug for runtime investigation."
-- Add one follow-up question after redirect: "What behavior should happen when coupon missing: no discount or explicit validation error?"
 - If test coverage question, redirect to `duck-triage`
 
 ## References

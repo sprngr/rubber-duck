@@ -16,8 +16,10 @@ fi
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${0}")" && pwd)"
 REPO_ROOT="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
+RULES_FILE="${REPO_ROOT}/build/agent-assembly.rules.json"
 
-ROOT_AGENTS_DIR="${REPO_ROOT}/agents"
+SRC_AGENTS_DIR="${REPO_ROOT}/src/agents"
+POLICY_SNIPPETS_DIR="${REPO_ROOT}/src/shared/policy-snippets"
 
 CLAUDE_DIST_DIR="${REPO_ROOT}/dist/claude"
 CLAUDE_AGENT_DIR="${CLAUDE_DIST_DIR}/agents"
@@ -29,9 +31,24 @@ OPENCODE_AGENT_DIR="${OPENCODE_DIST_DIR}/agents"
 COPILOT_DIST_DIR="${REPO_ROOT}/dist/copilot"
 COPILOT_AGENT_DIR="${COPILOT_DIST_DIR}/agents"
 
-render_file() {
-  local out_path="$1"
-  local tmp_path="$2"
+enforce_rule_checks() {
+  local rules_file="$1"
+  local repo_root="$2"
+
+  python3 "${REPO_ROOT}/scripts/lib/check-rules.py" \
+    "${rules_file}" \
+    "${repo_root}" \
+    --groups-key agent_groups \
+    --group-file-template 'src/agents/{item}/body.md'
+}
+
+if (( CHECK_ONLY == 1 )); then
+  enforce_rule_checks "${RULES_FILE}" "${REPO_ROOT}" || exit 1
+fi
+
+render_or_check_file() {
+  local tmp_path="$1"
+  local out_path="$2"
 
   if (( CHECK_ONLY == 1 )); then
     if [[ ! -f "${out_path}" ]]; then
@@ -48,6 +65,56 @@ render_file() {
 
   cp -f "${tmp_path}" "${out_path}"
   printf 'Built: %s\n' "${out_path}"
+}
+
+render_body_markdown() {
+  local src="$1"
+  local out="$2"
+  local line=""
+  local include_status=0
+
+  if [[ ! -f "${src}" ]]; then
+    printf 'ERROR: missing body source file: %s\n' "${src}" >&2
+    return 1
+  fi
+
+  mkdir -p "$(dirname -- "${out}")"
+  : > "${out}"
+
+  while IFS= read -r line || [[ -n "${line}" ]]; do
+    include_status=0
+    append_policy_include_if_match "${line}" "${out}" || include_status=$?
+    if (( include_status == 0 )); then
+      continue
+    fi
+    if (( include_status == 2 )); then
+      rm -f "${out}"
+      return 1
+    fi
+
+    printf '%s\n' "${line}" >> "${out}"
+  done < "${src}"
+
+  return 0
+}
+
+append_policy_include_if_match() {
+  local line="$1"
+  local out="$2"
+
+  if [[ "${line}" =~ ^[[:space:]]*\{\{include:[[:space:]]*policy-snippets/([^[:space:]\}]+)[[:space:]]*\}\}[[:space:]]*$ ]]; then
+    local snippet_name="${BASH_REMATCH[1]}"
+    local snippet_path="${POLICY_SNIPPETS_DIR}/${snippet_name}"
+    if [[ ! -f "${snippet_path}" ]]; then
+      printf 'ERROR: missing policy snippet: %s\n' "${snippet_path}" >&2
+      return 2
+    fi
+    cat "${snippet_path}" >> "${out}"
+    printf '\n' >> "${out}"
+    return 0
+  fi
+
+  return 1
 }
 
 # Render Claude frontmatter from a meta.json into out. Field order:
@@ -104,23 +171,27 @@ render_copilot_fm() {
   } > "${out}"
 }
 
-# Discover config agents: any agents/<name>/ containing a meta.json.
+# Discover config agents from source-of-truth tree only.
 CONFIG_AGENTS=()
-for meta in "${ROOT_AGENTS_DIR}"/*/meta.json; do
-  [[ -e "${meta}" ]] || continue
-  CONFIG_AGENTS+=("$(basename "$(dirname "${meta}")")")
-done
-if (( ${#CONFIG_AGENTS[@]} == 0 )); then
-  printf 'ERROR: no agent configs found under %s\n' "${ROOT_AGENTS_DIR}" >&2
-  exit 1
+if [[ -d "${SRC_AGENTS_DIR}" ]]; then
+  for meta in "${SRC_AGENTS_DIR}"/*/meta.json; do
+    [[ -e "${meta}" ]] || continue
+    CONFIG_AGENTS+=("$(basename "$(dirname "${meta}")")")
+  done
 fi
 
 for name in "${CONFIG_AGENTS[@]}"; do
-  if [[ ! -f "${ROOT_AGENTS_DIR}/${name}/body.md" ]]; then
-    printf 'ERROR: missing agent body: %s\n' "${ROOT_AGENTS_DIR}/${name}/body.md" >&2
+  agent_dir="${SRC_AGENTS_DIR}/${name}"
+  if [[ ! -f "${agent_dir}/meta.json" || ! -f "${agent_dir}/body.md" ]]; then
+    printf 'ERROR: missing agent config files for %s under %s\n' "${name}" "${agent_dir}" >&2
     exit 1
   fi
 done
+
+if (( ${#CONFIG_AGENTS[@]} == 0 )); then
+  printf 'ERROR: no agent configs found under %s\n' "${SRC_AGENTS_DIR}" >&2
+  exit 1
+fi
 
 mkdir -p "${CLAUDE_AGENT_DIR}"
 mkdir -p "${OPENCODE_AGENT_DIR}"
@@ -134,29 +205,33 @@ CLAUDE_MD_TMP="${TMP_DIR}/CLAUDE.md"
 cat > "${CLAUDE_MD_TMP}" <<'EOF'
 @AGENTS.md
 EOF
-render_file "${CLAUDE_MD_OUT}" "${CLAUDE_MD_TMP}"
+render_or_check_file "${CLAUDE_MD_TMP}" "${CLAUDE_MD_OUT}"
 
 # Render each agent for every harness: harness frontmatter + shared body.
 for name in "${CONFIG_AGENTS[@]}"; do
-  meta="${ROOT_AGENTS_DIR}/${name}/meta.json"
-  body="${ROOT_AGENTS_DIR}/${name}/body.md"
+  agent_dir="${SRC_AGENTS_DIR}/${name}"
+  meta="${agent_dir}/meta.json"
+  body="${agent_dir}/body.md"
+  rendered_body="${TMP_DIR}/body-${name}.md"
+
+  render_body_markdown "${body}" "${rendered_body}"
 
   claude_tmp="${TMP_DIR}/claude-${name}.md"
   render_claude_fm "${meta}" "${claude_tmp}"
-  cat "${body}" >> "${claude_tmp}"
-  render_file "${CLAUDE_AGENT_DIR}/${name}.md" "${claude_tmp}"
+  cat "${rendered_body}" >> "${claude_tmp}"
+  render_or_check_file "${claude_tmp}" "${CLAUDE_AGENT_DIR}/${name}.md"
 
   opencode_tmp="${TMP_DIR}/opencode-${name}.md"
   render_opencode_fm "${meta}" "${opencode_tmp}"
-  cat "${body}" >> "${opencode_tmp}"
-  render_file "${OPENCODE_AGENT_DIR}/${name}.md" "${opencode_tmp}"
+  cat "${rendered_body}" >> "${opencode_tmp}"
+  render_or_check_file "${opencode_tmp}" "${OPENCODE_AGENT_DIR}/${name}.md"
 
   # Copilot rendering is opt-in per agent until all meta.json files include
   # a harnesses.copilot section.
   if jq -e '.harnesses.copilot? != null' "${meta}" >/dev/null; then
     copilot_tmp="${TMP_DIR}/copilot-${name}.md"
     render_copilot_fm "${meta}" "${copilot_tmp}"
-    cat "${body}" >> "${copilot_tmp}"
-    render_file "${COPILOT_AGENT_DIR}/${name}.md" "${copilot_tmp}"
+    cat "${rendered_body}" >> "${copilot_tmp}"
+    render_or_check_file "${copilot_tmp}" "${COPILOT_AGENT_DIR}/${name}.md"
   fi
 done

@@ -8,7 +8,7 @@ Global conformance rules:
 
 Mutating action gate (global):
 - No edits, mutating commands, or task delegation that changes workspace state without explicit user approval on bounded scope.
-- For scope >2 files, require splitting into smaller bounded tasks before patching.
+- For scope >2 files, require split into smaller bounded tasks before patching.
 - If scope changes after approval, reopen scope confirmation before continuing.
 
 Safety carve-outs (global, non-negotiable): never remove or weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements.
@@ -38,3 +38,10 @@ Style rules:
 - Prefer short, direct structure: `[thing] [action] [reason]. [next step].`
 
 Boundaries: code/commits/PRs written normal.
+
+### Deferred decision debt markers
+
+- When an explicit implementation/product/architecture decision is deferred, add a debt marker near the relevant artifact (code, ADR, or policy doc).
+- Use format: `TODO(decision-debt): <what deferred>; owner=<team|role>; trigger=<time|event>`
+- If an issue exists, include it: `TODO(decision-debt,#<issue>): ...`
+- Do not add decision-debt markers for generic ideas; only for concrete deferred decisions with a clear revisit trigger.

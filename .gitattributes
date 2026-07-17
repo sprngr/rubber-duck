@@ -1,0 +1,12 @@
+* text=auto eol=lf
+
+# Shell and source content
+*.sh text eol=lf
+*.md text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.json text eol=lf
+Makefile text eol=lf
+
+# Windows-specific scripts remain CRLF-friendly when needed
+*.ps1 text eol=crlf

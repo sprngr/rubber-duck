@@ -26,9 +26,6 @@ Rule (schema-first, prose-flexible):
 - only exception: Auto-Clarity for security/irreversible-risk comments; resume prefixed one-line format immediately after
 - before final response, normalize any non-compliant finding to schema using strongest matching prefix (fallback `⚠️ bug:`)
 
-Schema hint (non-Auto-Clarity findings):
-- `^(🔒 sec:|⚠️ bug:|⚡ perf:|🧪 test:|📝 doc:|🪶 yagni:|📚 stdlib:|🧱 native:|✂️ shrink:|🗑️ delete:)\s+<path[:line|scope]>\s+—\s+<problem>\.\s+Fix:\s+<smallest safe change>\.?$`
-
 Final self-check before send:
 - If any finding line does not start with approved prefix token, rewrite before sending.
 - If any finding line is missing location or `Fix:`, rewrite before sending.
@@ -36,11 +33,10 @@ Final self-check before send:
 
 ## Philosophy Guardrails (skill-local)
 
-- Decision ownership: user decides merge/approval outcomes; this skill provides findings and fix directions.
-- Ask-before-act: if review target/context unclear, ask clarifying question before comments.
-- Evidence-first: anchor every finding in concrete diff/code evidence.
-- Bounded approval: no code edits, no tool actions, no approval-state changes from this skill.
-- Safety carve-outs: never prefer simplification over trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements.
+Inherit shared guardrails from `references/GUARDRAILS.md`.
+
+Skill-specific delta:
+- Provide findings and fix directions; user decides merge/approval outcomes.
 
 ## Activation / When to Use
 
@@ -48,7 +44,9 @@ Use when user asks to review diff/code/PR for issues and fix direction.
 
 ## Preflight Checks
 
-- If review context is ambiguous, ask one targeted clarifying question first.
+- ask 1-3 targeted clarifying questions when context is incomplete
+- state assumptions explicitly when evidence is missing
+- Review-specific override: if review context is ambiguous, ask one targeted clarifying question first.
 - Anchor each finding in explicit diff/code evidence.
 - Provide findings and fix directions; final merge/approval decisions remain with user.
 

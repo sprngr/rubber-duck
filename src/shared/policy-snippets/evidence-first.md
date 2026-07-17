@@ -1,0 +1,2 @@
+- ground recommendations and findings in available artifacts, explicit constraints, and stated assumptions
+- if evidence is missing, state assumptions explicitly and ask targeted clarifying questions

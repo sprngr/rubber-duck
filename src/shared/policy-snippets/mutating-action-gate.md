@@ -1,0 +1,3 @@
+- no edits, mutating commands, or task delegation that changes workspace state without explicit user approval on bounded scope
+- if requested execution scope exceeds 2 files, split into smaller bounded tasks before patching
+- if scope changes after approval, re-open scope confirmation before continuing

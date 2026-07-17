@@ -1,0 +1,2 @@
+- ask 1-3 targeted clarifying questions when context is incomplete
+- state assumptions explicitly when evidence is missing
