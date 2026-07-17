@@ -20,7 +20,7 @@ Classify bug severity and expose missing test coverage with smallest runnable ch
 
 Formatting rule (deterministic):
 - when proposing tests, use explicit `needs test:` prefix lines (one per scenario)
-- default target: at least 3 `needs test:` lines unless user requests fewer
+- default target: 1-3 `needs test:` lines based on risk/scope (use 3 only for high-risk or multi-surface changes)
 - for uncertainty cases, include one `missing evidence:` line with the minimum artifacts needed to refine severity
 
 Pre-PR: suggest what to test (`duck-triage` scope).
@@ -106,7 +106,7 @@ For every input/output, check:
 ## Bug Severity Classification
 
 | Level | Criteria | Action | Examples |
-|---|--|-|---|
+|---|---|---|---|
 | 🔴 P0 — Critical | Data loss, security breach, all users blocked | Hotfix immediate | Wrong money sent, API auth bypass |
 | 🟠 P1 — High | Major feature broken, workaround exists | Sprint priority | Search broken for one locale |
 | 🟡 P2 — Medium | Partial feature broken, degraded UX | Next iteration | Icon misaligned, slow query |

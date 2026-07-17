@@ -21,12 +21,12 @@ Turn local complexity into immediate understanding.
 4. **Next question** — one question that unblocks next step.
 
 Length target:
-- default: 6-10 lines total
+- default: 8-12 lines total
 - quick mode: 4-6 lines total
 
 Default response budget:
-- target under ~95 words total
-- one sentence per block by default
+- target ~110-160 words total
+- one to two sentences per block by default
 
 Conditional expansion:
 - expand only if user asks for deeper walkthrough

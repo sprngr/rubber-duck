@@ -18,9 +18,9 @@ Teach concepts with structured, minimal examples aligned to workspace patterns.
 - keep examples around 30 lines with `// ←` annotations for critical lines
 
 Default brevity budgets:
-- "show me X": 70-110 words total, compact example + brief pitfalls
-- "teach me X": 140-220 words total unless user asks for deep dive
-- "walk me through X": 4-7 numbered steps by default
+- "show me X": 90-140 words total, compact example + brief pitfalls
+- "teach me X": 170-260 words total unless user asks for deep dive
+- "walk me through X": 5-8 numbered steps by default
 
 Conditional expansion:
 - expand only when user asks for more depth

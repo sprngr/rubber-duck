@@ -15,7 +15,7 @@ Support architecture/design choices through Socratic tradeoff analysis while pre
 
 ## Output Format
 
-Compact first-response template (8-10 lines):
+Compact first-response template (10-14 lines):
 1) one scoping question
 2) approach strength sentence
 3) approach weakness sentence
@@ -25,8 +25,8 @@ Compact first-response template (8-10 lines):
 7) "Which outcome matters most here, given your constraints?"
 
 First-turn budget (default):
-- target up to ~8 lines
-- target up to ~120 words
+- target up to ~10-14 lines
+- target up to ~140-180 words
 - default to one scoping question
 - default to one alternative
 
