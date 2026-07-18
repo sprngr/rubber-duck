@@ -56,7 +56,7 @@ Notes:
 
 - `scripts/rubber-duck.sh` — Bash installer/manager (local + web-compatible)
 - `scripts/rubber-duck.ps1` — PowerShell installer/manager (Windows)
-- `scripts/assemble-skills.sh` — assemble `src/skills/duck-*` into install artifacts under `skills/duck-*` (`--check` verifies drift + portability lint)
+- `scripts/assemble-skills.sh` — assemble `src/skills/*` into install artifacts under `skills/*` (`--check` verifies drift + portability lint)
 - `scripts/build-harness-artifacts.sh` — render harness artifacts into `dist/*` from `src/agents/*` config/body sources
 - `scripts/check-guardrails-drift.sh` — fail if vendored guardrails drift from canonical
 
@@ -64,7 +64,7 @@ Notes:
 
 `scripts/assemble-skills.sh` supports:
 
-- build mode (default): copy-through from `src/skills/duck-*` to `skills/duck-*`
+- build mode (default): copy-through from `src/skills/*` to `skills/*`
 - check mode (`--check`): fail on stale/missing artifacts and portability deny-token violations
 
 Examples:

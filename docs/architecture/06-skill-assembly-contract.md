@@ -14,16 +14,16 @@ Do not hand-edit generated artifacts.
 ## Generated Artifacts
 
 - Install artifacts are written to `skills/` (used by `npx skills`).
-- Per-skill `references/GUARDRAILS.md` in `skills/duck-*/` is generated from canonical shared guardrails.
+- Per-skill `references/GUARDRAILS.md` in `skills/*/` is generated from canonical shared guardrails.
 
 ## Assembly Behavior
 
 Assembler: `scripts/assemble-skills.sh`
 
 - build mode (default):
-  - copies `src/skills/duck-*/SKILL.md` to `skills/duck-*/SKILL.md`
-  - copies `src/skills/duck-*/references/**` except `GUARDRAILS.md`
-  - injects canonical guardrails into each `skills/duck-*/references/GUARDRAILS.md`
+  - copies `src/skills/*/SKILL.md` to `skills/*/SKILL.md`
+  - copies `src/skills/*/references/**` except `GUARDRAILS.md`
+  - injects canonical guardrails into each `skills/*/references/GUARDRAILS.md`
 - check mode (`--check`):
   - verifies artifact parity (`skills/**` matches expected assembly output)
   - verifies portability deny-token rules

@@ -12,9 +12,9 @@ Outcomes:
 ## Current system shape (source-first)
 
 - Agent source: `src/agents/<name>/` (`meta.json` + `body.md`)
-- Skill source: `src/skills/duck-*/SKILL.md`
+- Skill source: `src/skills/*/SKILL.md`
 - Canonical shared guardrails source: `src/shared/references/GUARDRAILS.md`
-- Generated skill artifacts: `skills/duck-*/` (for `npx skills`)
+- Generated skill artifacts: `skills/*/` (for `npx skills`)
 - Generated harness artifacts: `dist/{claude,opencode,copilot}/`
 - Global policy: `AGENTS.md`
 - Architecture docs: `docs/architecture/`

@@ -32,6 +32,7 @@ For full architecture and policy details, use the canonical docs linked below.
 
 ### Skills
 
+- [quack](../skills/quack/SKILL.md)
 - [duck-debug](../skills/duck-debug/SKILL.md)
 - [duck-review](../skills/duck-review/SKILL.md)
 - [duck-design](../skills/duck-design/SKILL.md)

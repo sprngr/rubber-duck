@@ -18,7 +18,7 @@ For raw `npx skills` usage, see [vercel-labs/skills](https://github.com/vercel-l
 
 ### Full Rubber Duck agent system (Installer / Updater / Uninstaller)
 
-Use the installer scripts for managed agent + policy setup. Adds all `duck-*` skills required by the router and duckling subagents.
+Use the installer scripts for managed agent + policy setup. Adds the full skill set (`quack` + `duck-*`) required by the router and duckling subagents.
 
 Full CLI/options are documented in: [scripts/README.md](./scripts/README.md) (canonical).
 
