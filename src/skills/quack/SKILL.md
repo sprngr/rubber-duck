@@ -1,44 +1,36 @@
 ---
 name: quack
-description: Explicit user-invoked routing workflow for rubber-duck. Presents 1-3 route options, recommends one with a brief reason, and requires user route choice before routing continues. Use when user prefixes with "quack" or asks for explicit route control.
+description: Explicit user-invoked routing for Rubber Duck. Offers 1-3 route options, recommends one, and requires route choice before continuing. Use when user says "quack" or asks for explicit route control.
 ---
 
 # Skill: quack
 
-Explicit route control 🦆. User decides route. Keep terse.
+Explicit route control 🦆. User chooses route.
 
 ## Purpose
 
-Provide explicit, user-controlled routing for workflow-like requests while preserving all existing safety and approval constraints.
+Provide explicit user-controlled routing for workflow-like requests while preserving safety and approval constraints.
 
 ## Output Format
 
 On explicit `quack`, respond in this order:
 
 0. **Heartbeat fast path (bare `quack`)**
-   - if input is exactly `quack` (ignoring surrounding whitespace), respond with:
-     - `🦆` + brief status line
-     - one-line prompt asking what to route next
-   - do not emit full route options unless user provides task intent
+   - If input is exactly `quack` (trim whitespace): output
+     - `🦆` + brief status
+     - one-line route-intent prompt
+   - Do not emit full route options without task intent.
 
 1. **Route options (1-3 max)**
-   - each option includes:
-     - `id` (A/B/C)
-     - `route` (e.g., `duck-debug`)
-     - `best_for` (when to pick it)
-     - `tradeoff` (what it deprioritizes)
-     - `chain` (expected subagent/skill sequence)
+   - Each option includes: `id` (A/B/C), `route`, `best_for`, `tradeoff`, `chain`.
 
 2. **Recommendation (exactly one)**
-   - identify recommended option id
-   - include one-line reason grounded in user text/artifacts
+   - Recommend one option id with one-line reason grounded in prompt/artifacts.
 
-3. **Explicit choice prompt**
-   - ask user to choose option id before continuing
+3. **Choice prompt**
+   - Ask user to pick option id before continuing.
 
-If choice is ambiguous/invalid:
-- ask one narrowed follow-up
-- remain in route-selection mode
+If choice is ambiguous/invalid: ask one narrowed follow-up and stay in route-selection mode.
 
 ## Philosophy Guardrails (skill-local)
 
@@ -46,71 +38,54 @@ If choice is ambiguous/invalid:
 
 ## Activation / When to Use
 
-Use only when the user explicitly invokes `quack`.
-
-Do not auto-activate from inferred intent.
+Use only when user explicitly invokes `quack`; do not auto-activate from inferred intent.
 
 ## Preflight Checks
 
 {{include: skill-snippets/clarify-first-preflight.md}}
 
 Required:
-- user request containing `quack` invocation
-- available route set (debug/review/design/explain/teach/triage)
-- active guardrails and mutating-action policy from host agent
+- explicit `quack` invocation
+- available route set (`debug`/`review`/`design`/`explain`/`teach`/`triage`)
+- active host guardrails + mutating-action policy
 
 Optional:
 - artifacts (diff/code/logs/docs)
-- constraints (deadline, risk tolerance, desired depth/format)
+- constraints (deadline, risk tolerance, depth/format)
 
 Ambiguity/confirmation:
-- route-level ambiguity only
-- user must choose a route before workflow routing continues
-- mutating actions still require approval gate after route choice
+- allow route-level ambiguity only
+- require user route choice before routing continues; mutating paths still require approval gate.
 
 ## Route option format (canonical)
 
-Use this compact shape:
+Use this schema per option:
 
-`A | route=duck-debug | best_for=runtime breakage/root-cause tracing | tradeoff=slower than quick scan | chain=duck-debug -> duck-investigator -> duck-triage? -> duck-builder(on explicit patch request)`
-
-`B | route=duck-review | best_for=diff risk scan and concrete review comments | tradeoff=less runtime diagnosis depth | chain=duck-review -> duck-reviewer + duck-adversary + duck-simple (+ duck-dry signal) (+ duck-triage test-gap)`
-
-`C | route=duck-design | best_for=approach/tradeoff decisions | tradeoff=not a runtime bug trace | chain=duck-design -> duck-simple + duck-adversary (+ duck-dry signal)`
+`<ID> | route=<skill> | best_for=<when to pick> | tradeoff=<what it deprioritizes> | chain=<expected subagent/skill sequence>`
 
 ## Method
 
-1. verify explicit `quack` invocation
-2. if bare `quack`, run heartbeat fast path and stop
-3. otherwise provide 1-3 route options with chain hints, recommend one, and require user choice
-4. hand off to chosen route flow; if mutating, enforce approval checkpoint before any mutation
+1. Verify explicit `quack` invocation.
+2. If bare `quack`, run heartbeat fast path and stop.
+3. Otherwise: provide 1-3 route options with chain hints, recommend one, and require user choice.
+4. Hand off to chosen route flow; if mutating, enforce approval checkpoint before mutation.
 
 ## Boundaries & Handoffs
 
-- this skill never auto-routes; it requires explicit invocation and user route choice
-- no forced route; user retains route decision ownership
-- do not weaken:
-  - trust-boundary validation
-  - security controls
-  - data-loss prevention
-  - accessibility requirements
-  - explicit user requirements
-- preserve core safeguards:
-{{include: policy-snippets/safety-carveouts.md}}
-- no edits/mutating commands/task delegation that changes workspace state without explicit bounded approval
+- Require explicit invocation and user route choice; no forced route.
+- Preserve user decision ownership.
+- {{include: policy-snippets/safety-carveouts.md}}
+- No edits/mutating commands/task delegation that changes workspace state without explicit bounded approval.
 
 ## Failure / fallback behavior
 
-If route confidence is materially low:
+If route confidence is low:
 - state assumptions in one line
 - ask one targeted disambiguation question
 - do not proceed until user selects a route
 
 ## Edge Cases
 
-- bare `quack` only: respond with heartbeat fast path (`🦆` + brief status + one-line prompt), no full route list
-- ambiguous route choice (`A/B/C` unclear): ask one narrowed follow-up and remain in route-selection mode
-- confidence insufficient on initial task text: ask one targeted disambiguation question before proposing routes
-- mutating path selected: route handoff still requires explicit bounded approval before any mutation
-
-Load `references/Examples.md` when user asks for concrete route output examples or when route-choice wording needs calibration.
+- Mutating path selected: route handoff still requires explicit bounded approval before mutation.
+- For regression checks, see `evals/evals.json`.
+- Load `references/Examples.md` when user asks for concrete route output examples or route-choice wording calibration.

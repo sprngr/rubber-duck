@@ -15,7 +15,7 @@ Output shape:
 
 - `A | route=duck-debug | best_for=runtime breakage/root-cause tracing | tradeoff=slower than quick scan | chain=duck-debug -> duck-investigator -> duck-triage? -> duck-builder(on explicit patch request)`
 - `B | route=duck-review | best_for=diff risk scan and concrete review comments | tradeoff=less runtime diagnosis depth | chain=duck-review -> duck-reviewer + duck-adversary + duck-simple (+ duck-dry signal) (+ duck-triage test-gap)`
-- `Recommended: A — runtime failure signal with missing-behavior gap is best handled by debug evidence flow first.`
+- `Recommended: A — Why: runtime failure signal with missing-behavior gap fits debug evidence flow first.`
 - `Pick route: A or B?`
 
 ## Example 2 — Diff review request
@@ -28,10 +28,25 @@ Output shape:
 
 - `A | route=duck-review | best_for=risk-first diff findings | tradeoff=less runtime trace depth | chain=duck-review -> duck-reviewer + duck-adversary + duck-simple (+ duck-dry signal) (+ duck-triage test-gap)`
 - `B | route=duck-debug | best_for=runtime reproduction/root-cause trace | tradeoff=slower for static diff-only checks | chain=duck-debug -> duck-investigator -> duck-triage? -> duck-builder(on explicit patch request)`
-- `Recommended: A — request is diff-centric and rollback-aware review.`
+- `Recommended: A — Why: request is diff-centric and rollback-aware review.`
 - `Pick route: A or B?`
 
-## Example 3 — Bare heartbeat
+## Example 3 — Ambiguous route choice
+
+Input:
+
+`quack review this diff`
+
+Follow-up from user:
+
+`maybe B`
+
+Output shape:
+
+- `Do you want A or B? Pick one route id so I can continue.`
+- `(remain in route-selection mode; do not hand off yet)`
+
+## Example 4 — Bare heartbeat
 
 Input:
 
@@ -40,4 +55,4 @@ Input:
 Output shape:
 
 - `🦆 Ready. Explicit routing is active.`
-- `What should I route: review, debug, design, explain, teach, or triage?`
+- `What should I route next: review, debug, design, explain, teach, or triage?`
