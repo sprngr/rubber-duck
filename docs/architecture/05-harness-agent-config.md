@@ -55,7 +55,7 @@ agents/<name>/
 - `harnesses.<harness>` holds only that harness's frontmatter fields, rendered verbatim into its format.
 - Fields that happen to coincide across harnesses (e.g. `color`) stay per-harness — coincidental overlap is not shared semantics.
 
-The router follows the same model as every other agent (`body.md` + `meta.json`).
+The governor agent (`rubber-duck`) follows the same model as every other agent (`body.md` + `meta.json`). The explicit router (`quack`) is implemented as a skill in `src/skills/quack/`.
 
 ## Build model
 

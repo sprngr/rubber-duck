@@ -5,7 +5,7 @@ This section defines the system-level architecture and operating contracts for R
 ## Documents
 
 1. [01-philosophy.md](./01-philosophy.md) — product philosophy and decision ownership model.
-2. [02-agent-skill-model.md](./02-agent-skill-model.md) — router, agent, and skill architecture.
+2. [02-agent-skill-model.md](./02-agent-skill-model.md) — governor, quack routing, and skill architecture.
 3. [03-adaptive-socratic-policy.md](./03-adaptive-socratic-policy.md) — adaptive default policy with strict checkpoints for mutating actions.
 4. [04-prompt-order-standard.md](./04-prompt-order-standard.md) — canonical prompt section order and compression rules.
 5. [05-harness-agent-config.md](./05-harness-agent-config.md) — per-agent, per-harness config model and the build-time renderer.
@@ -17,7 +17,8 @@ This section defines the system-level architecture and operating contracts for R
 
 ## How this connects to current repository artifacts
 
-- Router definition: [`src/agents/rubber-duck/`](../../src/agents/rubber-duck)
+- Governor definition: [`src/agents/rubber-duck/`](../../src/agents/rubber-duck)
+- Explicit router skill: [`src/skills/quack/`](../../src/skills/quack)
 - Subagents (each `src/agents/<name>/` with `body.md` + `meta.json` — see [05-harness-agent-config.md](./05-harness-agent-config.md)):
   - [`src/agents/duck-investigator/`](../../src/agents/duck-investigator)
   - [`src/agents/duck-reviewer/`](../../src/agents/duck-reviewer)

@@ -48,6 +48,47 @@ Subagents provide distinct, bounded perspectives:
 
 ## Skill/subagent flows (when routed)
 
+### Routing state flow (canonical)
+
+```mermaid
+flowchart TD
+  A[S0_RECEIVE] --> B[S1_CLASSIFY]
+
+  %% Explicit quack path (wins)
+  B -->|has_quack_invocation true| E[S4_QUACK_ROUTING]
+
+  %% Direct/simple path
+  B -->|is_simple_request true| D[S3_DIRECT_FLOW]
+
+  %% Convenience mode auto-route + recommendation path
+  B -->|is_ambiguous_request true| B
+  B -->|workflow_like and confidence_sufficient and no quack| G[S6_EXECUTE]
+  B -->|workflow_like and no quack and confidence_insufficient| C[S2_RECOMMEND_QUACK]
+  C -->|user reissues with quack| E
+  C -->|confidence becomes sufficient| G
+  C -->|still ambiguous| B
+  C -->|user ignores recommendation| D
+
+  %% Default direct path
+  B -->|else| D
+
+  %% Quack route-selection behavior
+  E -->|ambiguous or invalid route choice| E
+  E -->|mutating| F[S5_MUTATION_GATE]
+  E -->|non mutating| G
+
+  %% Direct behavior
+  D -->|mutating| F
+  D -->|non mutating| G
+
+  %% Mutation gate
+  F -->|approval_received false| F
+  F -->|approval_received true| G
+
+  %% Exit
+  G --> H[S7_DONE]
+```
+
 ### Review flow
 
 `duck-review` → `duck-reviewer` + `duck-adversary` + `duck-simple` (+ `duck-dry` if duplication signal) (+ `duck-triage` if test-gap signal)

@@ -48,7 +48,7 @@ Track validation outcomes across commits/releases.
 - Failed: none
 
 ### Notes
-- Overfit cleanup pass applied across router/ducklings/skills with adaptive strictness for non-mutating analysis.
+- Overfit cleanup pass applied across governor/router-era prompts (pre governor+quack split) and ducklings/skills with adaptive strictness for non-mutating analysis.
 - Preserved hard safety/approval guardrails for mutating actions.
 - V14 boundary reinforced: explicit split required for scope >2 files.
 - Review output contract hardened to schema-first format (prefix + location + problem + `Fix:`), with normalization and final self-check.

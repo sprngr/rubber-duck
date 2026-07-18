@@ -35,12 +35,10 @@ Optional:
 - artifacts (diff/code/logs/docs)
 - constraints (deadline, risk tolerance, desired depth/format)
 
-Accepted ambiguity:
+Ambiguity/confirmation:
 - route-level ambiguity only
-
-Required confirmation points:
-1. user must choose a route before workflow routing continues
-2. mutating actions still require approval gate after route choice
+- user must choose a route before workflow routing continues
+- mutating actions still require approval gate after route choice
 
 ## Output contract
 
@@ -85,16 +83,12 @@ Use this compact shape:
 
 1. verify explicit `quack` invocation
 2. if bare `quack`, run heartbeat fast path and stop
-3. derive 1-3 candidate routes from request + artifacts
-4. include chain hints for each option
-5. recommend one option with one-line rationale
-6. require user choice
-7. hand off to chosen route flow
-8. if chosen path becomes mutating, enforce approval checkpoint before any mutation
+3. otherwise provide 1-3 route options with chain hints, recommend one, and require user choice
+4. hand off to chosen route flow; if mutating, enforce approval checkpoint before any mutation
 
 ## Boundary contract
 
-- no silent auto-routing outside explicit `quack`
+- this skill never auto-routes; it requires explicit invocation and user route choice
 - no forced route; user retains route decision ownership
 - do not weaken:
   - trust-boundary validation
@@ -106,12 +100,6 @@ Use this compact shape:
 - never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
 
 - no edits/mutating commands/task delegation that changes workspace state without explicit bounded approval
-
-## Recommendation style
-
-- short and advisory
-- no repeated nagging in same thread unless user intent changes
-- if non-`quack` request appears workflow-like, host may emit a soft recommendation to use `quack`; user may ignore
 
 ## Failure / fallback behavior
 
