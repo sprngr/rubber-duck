@@ -11,33 +11,7 @@ Explicit route control 🦆. User decides route. Keep terse.
 
 Provide explicit, user-controlled routing for workflow-like requests while preserving all existing safety and approval constraints.
 
-{{include: skill-snippets/philosophy-guardrails.md}}
-
-## Activation / When to Use
-
-Use only when the user explicitly invokes `quack`.
-
-Do not auto-activate from inferred intent.
-
-## Input contract
-
-{{include: skill-snippets/clarify-first-preflight.md}}
-
-Required:
-- user request containing `quack` invocation
-- available route set (debug/review/design/explain/teach/triage)
-- active guardrails and mutating-action policy from host agent
-
-Optional:
-- artifacts (diff/code/logs/docs)
-- constraints (deadline, risk tolerance, desired depth/format)
-
-Ambiguity/confirmation:
-- route-level ambiguity only
-- user must choose a route before workflow routing continues
-- mutating actions still require approval gate after route choice
-
-## Output contract
+## Output Format
 
 On explicit `quack`, respond in this order:
 
@@ -66,6 +40,34 @@ If choice is ambiguous/invalid:
 - ask one narrowed follow-up
 - remain in route-selection mode
 
+## Philosophy Guardrails (skill-local)
+
+{{include: skill-snippets/philosophy-guardrails.md}}
+
+## Activation / When to Use
+
+Use only when the user explicitly invokes `quack`.
+
+Do not auto-activate from inferred intent.
+
+## Preflight Checks
+
+{{include: skill-snippets/clarify-first-preflight.md}}
+
+Required:
+- user request containing `quack` invocation
+- available route set (debug/review/design/explain/teach/triage)
+- active guardrails and mutating-action policy from host agent
+
+Optional:
+- artifacts (diff/code/logs/docs)
+- constraints (deadline, risk tolerance, desired depth/format)
+
+Ambiguity/confirmation:
+- route-level ambiguity only
+- user must choose a route before workflow routing continues
+- mutating actions still require approval gate after route choice
+
 ## Route option format (canonical)
 
 Use this compact shape:
@@ -83,7 +85,7 @@ Use this compact shape:
 3. otherwise provide 1-3 route options with chain hints, recommend one, and require user choice
 4. hand off to chosen route flow; if mutating, enforce approval checkpoint before any mutation
 
-## Boundary contract
+## Boundaries & Handoffs
 
 - this skill never auto-routes; it requires explicit invocation and user route choice
 - no forced route; user retains route decision ownership
@@ -103,3 +105,12 @@ If route confidence is materially low:
 - state assumptions in one line
 - ask one targeted disambiguation question
 - do not proceed until user selects a route
+
+## Edge Cases
+
+- bare `quack` only: respond with heartbeat fast path (`🦆` + brief status + one-line prompt), no full route list
+- ambiguous route choice (`A/B/C` unclear): ask one narrowed follow-up and remain in route-selection mode
+- confidence insufficient on initial task text: ask one targeted disambiguation question before proposing routes
+- mutating path selected: route handoff still requires explicit bounded approval before any mutation
+
+Load `references/Examples.md` when user asks for concrete route output examples or when route-choice wording needs calibration.

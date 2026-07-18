@@ -1,0 +1,53 @@
+{
+  "skill_name": "quack",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "quack",
+      "expected_output": "Responds with a duck heartbeat line (🦆 + brief status) and one-line prompt asking what to route next, without emitting full route options.",
+      "assertions": [
+        "Response includes duck emoji status line",
+        "Response asks what to route next",
+        "Response does not include A/B/C route option list"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "quack debug this endpoint returns 500 when userId is missing",
+      "expected_output": "Provides 1-3 route options with chain hints, recommends exactly one option with rationale, and asks explicit route choice.",
+      "assertions": [
+        "Includes at least one route option with chain hint",
+        "Includes exactly one recommended option",
+        "Ends with explicit choice prompt"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "quack review this diff for correctness and rollback risk",
+      "expected_output": "Prefers review-oriented route with tradeoff, shows chain hints, and asks user to pick an option.",
+      "assertions": [
+        "At least one option targets duck-review",
+        "Options include tradeoff text",
+        "Response asks user to pick route id"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "quack debug this issue. I choose maybe B",
+      "expected_output": "When route selection is ambiguous/invalid, asks one narrowed follow-up and stays in route-selection mode.",
+      "assertions": [
+        "Asks a narrowed clarification question for route choice",
+        "Does not proceed as if final route was selected"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "quack can you help with this thing",
+      "expected_output": "Handles ambiguous task intent by asking targeted disambiguation before proposing concrete route selection.",
+      "assertions": [
+        "Requests clarification of task intent",
+        "Avoids overconfident single-path execution"
+      ]
+    }
+  ]
+}
