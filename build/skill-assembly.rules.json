@@ -51,7 +51,7 @@
     ],
     "required_dir_file_sets": [
       {
-        "dirs_glob": "src/skills/duck-*",
+        "dirs_glob": "src/skills/*",
         "required_files": [
           "SKILL.md"
         ]
@@ -59,6 +59,7 @@
     ],
     "skill_groups": {
       "all_skills": [
+        "quack",
         "duck-debt",
         "duck-debug",
         "duck-design",
@@ -73,6 +74,7 @@
         "duck-review"
       ],
       "skills_with_safety": [
+        "quack",
         "duck-debt",
         "duck-design",
         "duck-explain",

@@ -1,6 +1,7 @@
 {
   "name": "rubber-duck",
   "skills": [
+    "./skills/quack",
     "./skills/duck-debt",
     "./skills/duck-debug",
     "./skills/duck-design",

@@ -226,16 +226,17 @@ if (( CHECK_ONLY == 1 )); then
 fi
 
 shopt -s nullglob
-SKILL_DIRS=("${SRC_ROOT}"/duck-*)
+SKILL_DIRS=("${SRC_ROOT}"/*)
 
 if (( ${#SKILL_DIRS[@]} == 0 )); then
-  printf 'ERROR: no duck-* skills found under %s\n' "${SRC_ROOT}" >&2
+  printf 'ERROR: no skills found under %s\n' "${SRC_ROOT}" >&2
   exit 1
 fi
 
 processed=0
 for src_dir in "${SKILL_DIRS[@]}"; do
   [[ -d "${src_dir}" ]] || continue
+  [[ -f "${src_dir}/SKILL.md" ]] || continue
   skill_name="$(basename -- "${src_dir}")"
   out_dir="${OUT_ROOT}/${skill_name}"
 
