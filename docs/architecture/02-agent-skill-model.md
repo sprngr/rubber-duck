@@ -6,17 +6,30 @@ Rubber Duck architecture separates orchestration, analysis lenses, and implement
 
 ## Layered model
 
-### Layer 1: Router (intent orchestration)
+### Layer 1: Governor + explicit router split
 
 Primary artifact source: [`src/agents/rubber-duck/`](../../src/agents/rubber-duck)
 
-Responsibilities:
+`rubber-duck` responsibilities (governor):
 
-- classify user intent (`debug`, `review`, `design`, `teach`, `explain`, `triage`),
-- activate the primary skill,
-- chain subagents by need,
+- provide recommendation/policy guidance,
+- handle simple requests directly,
+- ask narrowed clarifying questions for ambiguous requests,
+- recommend explicit route control via `quack` for workflow-like asks,
 - enforce preflight and strict-mode policies,
 - apply adaptive strictness: lighter Socratic flow for non-mutating analysis, mandatory checkpoints for mutating actions.
+
+`quack` responsibilities (explicit routing):
+
+- present 1–3 route candidates,
+- recommend one route with brief reason,
+- require user route choice before route-driven workflow continues,
+- hand off to selected skill/chain.
+
+Convenience mode behavior:
+
+- harness auto-routing may occur for non-simple, non-ambiguous workflow asks,
+- explicit `quack` invocation always takes precedence over non-`quack` routing.
 
 ### Layer 2: Lens subagents (specialized analysis)
 
@@ -33,7 +46,7 @@ Subagents provide distinct, bounded perspectives:
 
 - **duck-builder** performs surgical edits only after explicit user approval and bounded scope confirmation.
 
-## Routing flows
+## Skill/subagent flows (when routed)
 
 ### Review flow
 

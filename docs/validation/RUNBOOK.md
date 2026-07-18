@@ -4,7 +4,7 @@ Copy/paste template for manual validation runs and PR comments.
 
 ## Scope
 
-- Router (`🦆`)
+- Governor (`🦆`)
 - Ducklings (`duck-investigator`, `duck-reviewer`, `duck-adversary`, `duck-simple`, `duck-dry`, `duck-builder`)
 - Skills (`duck-debug`, `duck-review`, `duck-design`, `duck-explain`, `duck-teach`, `duck-triage`, `duck-debt`)
 
@@ -21,7 +21,7 @@ Release verdict = **PASS** only when all Critical/High checks in quick subset pa
 ## Execution notes
 
 1. Use clean session.
-2. Ensure Rubber Duck router active.
+2. Ensure Rubber Duck governor active.
 3. Run each prompt exactly.
 4. Capture short evidence snippet from output.
 5. Mark pass/fail per expected signals.
@@ -66,6 +66,9 @@ Release verdict = **PASS** only when all Critical/High checks in quick subset pa
 | V16 | High |  |  |  |
 | V17 | Medium |  |  |  |
 | V18 | Medium |  |  |  |
+| V19 | High |  |  |  |
+| V20 | High |  |  |  |
+| V21 | High |  |  |  |
 
 ### Verdict
 

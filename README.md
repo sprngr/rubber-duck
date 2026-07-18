@@ -2,7 +2,7 @@
 
 Socratic assistant operating system for developers who want **better quality decisions**, not blind automation.
 
-Rubber Duck helps you debug, review, design, and triage with structured questioning, evidence-first routing, and explicit safety guardrails.
+Rubber Duck helps you debug, review, design, and triage with structured questioning, evidence-first governance, and explicit safety guardrails.
 
 ## Quick start
 
@@ -18,7 +18,7 @@ For raw `npx skills` usage, see [vercel-labs/skills](https://github.com/vercel-l
 
 ### Full Rubber Duck agent system (Installer / Updater / Uninstaller)
 
-Use the installer scripts for managed agent + policy setup. Adds the full skill set (`quack` + `duck-*`) required by the router and duckling subagents.
+Use the installer scripts for managed agent + policy setup. Adds the full skill set (`quack` + `duck-*`) required by the governor and duckling subagents.
 
 Full CLI/options are documented in: [scripts/README.md](./scripts/README.md) (canonical).
 
@@ -50,8 +50,8 @@ Use this to quickly validate behavior and fit in your own workflow.
 
 Rubber Duck can run two ways:
 
-- **As the main agent (whole session):** the duck *is* the session and routes from the first turn.
-  - **Claude Code**: `claude --agent rubber-duck`, or set `"agent": "rubber-duck"` in `.claude/settings.json` (project) or `~/.claude/settings.json` (global). The startup header shows `@rubber-duck` to confirm, and the router greeting (`initialPrompt`) auto-runs on the first turn. The `--agent` flag overrides the setting when both are present.
+- **As the main agent (whole session):** the duck *is* the session and governs from the first turn.
+  - **Claude Code**: `claude --agent rubber-duck`, or set `"agent": "rubber-duck"` in `.claude/settings.json` (project) or `~/.claude/settings.json` (global). The startup header shows `@rubber-duck` to confirm, and the governor greeting (`initialPrompt`) auto-runs on the first turn. The `--agent` flag overrides the setting when both are present.
   - **Copilot CLI**: `copilot --agent rubber-duck`, or select `rubber-duck` through the `/agent` menu - it will appear in the status bar as `🦆`. This is to avoid confusion with the built in [rubber-duck agent](https://docs.github.com/en/copilot/concepts/agents/copilot-cli/rubber-duck).
   - **Copilot VS Code**: select `🦆` from the agent menu, the argument hint should display 'Quack.' to show it's ready.
   - **OpenCode**: `opencode --agent 🦆` (recommended to assign to alias) or select `🦆` as the primary agent (its `mode: all` allows primary use) through the `/agents` menu or keyboard shortcut (default: tab).
@@ -75,7 +75,7 @@ quack
 ```
 
 Expected:
-- duck status response (router active).
+- duck status response (governor active).
 
 ### Step 2: review behavior check
 

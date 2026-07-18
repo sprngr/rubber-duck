@@ -43,6 +43,12 @@ Required confirmation points:
 
 On explicit `quack`, respond in this order:
 
+0. **Heartbeat fast path (bare `quack`)**
+   - if input is exactly `quack` (ignoring surrounding whitespace), respond with:
+     - `🦆` + brief status line
+     - one-line prompt asking what to route next
+   - do not emit full route options unless user provides task intent
+
 1. **Route options (1-3 max)**
    - each option includes:
      - `id` (A/B/C)
@@ -75,12 +81,13 @@ Use this compact shape:
 ## Method
 
 1. verify explicit `quack` invocation
-2. derive 1-3 candidate routes from request + artifacts
-3. include chain hints for each option
-4. recommend one option with one-line rationale
-5. require user choice
-6. hand off to chosen route flow
-7. if chosen path becomes mutating, enforce approval checkpoint before any mutation
+2. if bare `quack`, run heartbeat fast path and stop
+3. derive 1-3 candidate routes from request + artifacts
+4. include chain hints for each option
+5. recommend one option with one-line rationale
+6. require user choice
+7. hand off to chosen route flow
+8. if chosen path becomes mutating, enforce approval checkpoint before any mutation
 
 ## Boundary contract
 

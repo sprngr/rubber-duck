@@ -1,6 +1,6 @@
 # Rubber Duck 🦆 Operator Start Here
 
-Practical operator guide for router behavior, handoff flow, and validation entrypoints.
+Practical operator guide for governor behavior, handoff flow, and validation entrypoints.
 
 For full architecture and policy details, use the canonical docs linked below.
 
@@ -17,9 +17,13 @@ For full architecture and policy details, use the canonical docs linked below.
 
 ## System map
 
-### Router
+### Governor
 
 - [rubber-duck](../agents/rubber-duck)
+
+### Explicit router skill
+
+- [quack](../skills/quack/SKILL.md)
 
 ### Duckling subagents
 
@@ -32,7 +36,6 @@ For full architecture and policy details, use the canonical docs linked below.
 
 ### Skills
 
-- [quack](../skills/quack/SKILL.md)
 - [duck-debug](../skills/duck-debug/SKILL.md)
 - [duck-review](../skills/duck-review/SKILL.md)
 - [duck-design](../skills/duck-design/SKILL.md)
