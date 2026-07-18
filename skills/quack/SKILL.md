@@ -83,7 +83,7 @@ Use only when user explicitly invokes `quack`; do not auto-activate from inferre
 
 Required:
 - explicit `quack` invocation
-- available route set (`debug`/`review`/`design`/`explain`/`teach`/`triage`)
+- available route set (`debug`/`review`/`design`/`explain`/`teach`/`triage`/`trace`/`risk`/`simplify`/`dry-review`/`patch`)
 - readable alias registry at `references/route-aliases.json`
 - available subagent set for override validation
 - active host guardrails + mutating-action policy

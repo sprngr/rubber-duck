@@ -61,6 +61,63 @@
         "prioritize",
         "test gaps"
       ]
+    },
+    "duck-trace": {
+      "preferred_subagent": "duck-investigator",
+      "aliases": [
+        "trace",
+        "/trace",
+        "investigate",
+        "call chain",
+        "where used"
+      ]
+    },
+    "duck-risk": {
+      "preferred_subagent": "duck-adversary",
+      "aliases": [
+        "risk",
+        "/risk",
+        "failure modes",
+        "rollback",
+        "compat"
+      ]
+    },
+    "duck-simplify": {
+      "preferred_subagent": "duck-simple",
+      "aliases": [
+        "simplify",
+        "/simplify",
+        "overengineered",
+        "reduce complexity",
+        "make simpler"
+      ]
+    },
+    "duck-dry-review": {
+      "preferred_subagent": "duck-dry",
+      "aliases": [
+        "dry",
+        "/dry",
+        "duplication",
+        "dedupe",
+        "divergence"
+      ]
+    },
+    "duck-patch": {
+      "preferred_subagent": "duck-builder",
+      "aliases": [
+        "fix",
+        "/fix",
+        "bug fix",
+        "small fix",
+        "targeted fix",
+        "quick fix",
+        "edit",
+        "/edit",
+        "small edit",
+        "targeted edit",
+        "patch",
+        "/patch"
+      ]
     }
   }
 }
