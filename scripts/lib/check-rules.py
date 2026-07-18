@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -60,6 +61,103 @@ def assert_file_contains_substrings(
     return errors
 
 
+def iter_files_for_glob(repo_root: Path, pattern: str) -> list[Path]:
+    return sorted(p for p in repo_root.glob(pattern) if p.is_file())
+
+
+def check_duplicate_markdown_headings(file_path: Path, min_level: int = 2) -> int:
+    heading_re = re.compile(r"^(#{1,6})\s+(.+?)\s*$")
+    seen: dict[tuple[int, str], int] = {}
+    errors = 0
+
+    for line_no, line in enumerate(file_path.read_text(encoding="utf-8").splitlines(), start=1):
+        m = heading_re.match(line)
+        if not m:
+            continue
+
+        level = len(m.group(1))
+        if level < min_level:
+            continue
+
+        # normalize trailing markdown heading markers + whitespace/case
+        heading_text = re.sub(r"\s+#+\s*$", "", m.group(2)).strip().lower()
+        key = (level, heading_text)
+        if key in seen:
+            first_line = seen[key]
+            print(
+                (
+                    "RULES: duplicate markdown heading: "
+                    f"{file_path} lines {first_line} and {line_no}"
+                ),
+                file=sys.stderr,
+            )
+            errors += 1
+        else:
+            seen[key] = line_no
+
+    return errors
+
+
+def is_asset_like_ref(target: str) -> bool:
+    if "/" not in target:
+        return False
+
+    # Limit to local artifact-relative refs to avoid false positives
+    # for repo-level path mentions in prose.
+    if target.startswith(("./", "../", "references/", "evals/")):
+        return True
+
+    return False
+
+
+def normalize_link_target(raw: str) -> str:
+    token = raw.strip().strip("<>")
+    if not token:
+        return ""
+
+    # markdown links can include optional title after a space
+    token = token.split()[0]
+    return token
+
+
+def check_markdown_asset_refs(file_path: Path, repo_root: Path) -> int:
+    content = file_path.read_text(encoding="utf-8")
+    errors = 0
+
+    refs: list[str] = []
+
+    refs.extend(m.group(1) for m in re.finditer(r"\[[^\]]*\]\(([^)]+)\)", content))
+    refs.extend(m.group(1) for m in re.finditer(r"`([^`]+)`", content))
+
+    checked: set[str] = set()
+    for raw in refs:
+        target = normalize_link_target(raw)
+        if not target or target in checked:
+            continue
+        checked.add(target)
+
+        if target.startswith(("http://", "https://", "mailto:", "#", "/")):
+            continue
+        if "|" in target:
+            continue
+        if not is_asset_like_ref(target):
+            continue
+
+        resolved = (file_path.parent / target).resolve()
+        if not resolved.exists():
+            rel_path = file_path.relative_to(repo_root)
+            print(
+                (
+                    "RULES: dangling markdown asset reference: "
+                    f"{rel_path} -> {target}"
+                ),
+                file=sys.stderr,
+            )
+            errors += 1
+
+    return errors
+
+
 def main() -> int:
     args = parse_args()
     rules_path = args.rules_file
@@ -76,6 +174,8 @@ def main() -> int:
     required_files = checks.get("required_files", [])
     required_dir_file_sets = checks.get("required_dir_file_sets", [])
     text_assertions = checks.get("text_assertions", [])
+    markdown_duplicate_heading_checks = checks.get("markdown_duplicate_heading_checks", [])
+    markdown_asset_ref_checks = checks.get("markdown_asset_ref_checks", [])
 
     errors = 0
 
@@ -167,6 +267,82 @@ def main() -> int:
             missing_prefix="RULES: text_assertion file missing",
             failed_prefix="RULES: text_assertion failed",
         )
+
+    if not isinstance(markdown_duplicate_heading_checks, list):
+        print("RULES: markdown_duplicate_heading_checks must be a list", file=sys.stderr)
+        errors += 1
+    else:
+        for idx, check in enumerate(markdown_duplicate_heading_checks, start=1):
+            if not isinstance(check, dict):
+                print(
+                    f"RULES: malformed markdown_duplicate_heading_checks entry #{idx}",
+                    file=sys.stderr,
+                )
+                errors += 1
+                continue
+
+            files_glob = check.get("files_glob")
+            min_level = check.get("min_level", 2)
+            if not isinstance(files_glob, str) or not files_glob:
+                print(
+                    f"RULES: markdown_duplicate_heading_checks entry #{idx} missing files_glob",
+                    file=sys.stderr,
+                )
+                errors += 1
+                continue
+            if not isinstance(min_level, int) or min_level < 1 or min_level > 6:
+                print(
+                    f"RULES: markdown_duplicate_heading_checks entry #{idx} has invalid min_level",
+                    file=sys.stderr,
+                )
+                errors += 1
+                continue
+
+            files = iter_files_for_glob(repo_root, files_glob)
+            if not files:
+                print(
+                    f"RULES: markdown_duplicate_heading_checks no files matched: {files_glob}",
+                    file=sys.stderr,
+                )
+                errors += 1
+                continue
+
+            for file_path in files:
+                errors += check_duplicate_markdown_headings(file_path, min_level=min_level)
+
+    if not isinstance(markdown_asset_ref_checks, list):
+        print("RULES: markdown_asset_ref_checks must be a list", file=sys.stderr)
+        errors += 1
+    else:
+        for idx, check in enumerate(markdown_asset_ref_checks, start=1):
+            if not isinstance(check, dict):
+                print(
+                    f"RULES: malformed markdown_asset_ref_checks entry #{idx}",
+                    file=sys.stderr,
+                )
+                errors += 1
+                continue
+
+            files_glob = check.get("files_glob")
+            if not isinstance(files_glob, str) or not files_glob:
+                print(
+                    f"RULES: markdown_asset_ref_checks entry #{idx} missing files_glob",
+                    file=sys.stderr,
+                )
+                errors += 1
+                continue
+
+            files = iter_files_for_glob(repo_root, files_glob)
+            if not files:
+                print(
+                    f"RULES: markdown_asset_ref_checks no files matched: {files_glob}",
+                    file=sys.stderr,
+                )
+                errors += 1
+                continue
+
+            for file_path in files:
+                errors += check_markdown_asset_refs(file_path, repo_root)
 
     # Optional grouped assertions
     if args.groups_key and args.group_file_template:

@@ -34,8 +34,6 @@ If choice is ambiguous/invalid: ask one narrowed follow-up and stay in route-sel
 
 ## Philosophy Guardrails (skill-local)
 
-## Philosophy Guardrails (skill-local)
-
 Inherit shared guardrails from `references/GUARDRAILS.md`.
 
 ## Activation / When to Use
@@ -90,5 +88,4 @@ If route confidence is low:
 ## Edge Cases
 
 - Mutating path selected: route handoff still requires explicit bounded approval before mutation.
-- For regression checks, see `evals/evals.json`.
 - Load `references/Examples.md` when user asks for concrete route output examples or route-choice wording calibration.

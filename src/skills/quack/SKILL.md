@@ -32,8 +32,6 @@ On explicit `quack`, respond in this order:
 
 If choice is ambiguous/invalid: ask one narrowed follow-up and stay in route-selection mode.
 
-## Philosophy Guardrails (skill-local)
-
 {{include: skill-snippets/philosophy-guardrails.md}}
 
 ## Activation / When to Use
@@ -87,5 +85,4 @@ If route confidence is low:
 ## Edge Cases
 
 - Mutating path selected: route handoff still requires explicit bounded approval before mutation.
-- For regression checks, see `evals/evals.json`.
 - Load `references/Examples.md` when user asks for concrete route output examples or route-choice wording calibration.

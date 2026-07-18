@@ -99,7 +99,18 @@
       "skills_with_mutating_gate": [
         "{{include: policy-snippets/mutating-action-gate.md}}"
       ]
-    }
+    },
+    "markdown_duplicate_heading_checks": [
+      {
+        "files_glob": "skills/*/SKILL.md",
+        "min_level": 2
+      }
+    ],
+    "markdown_asset_ref_checks": [
+      {
+        "files_glob": "skills/*/SKILL.md"
+      }
+    ]
   },
   "notes": [
     "Enforced by scripts/assemble-skills.sh in --check mode (including grouped assertions)."
