@@ -2,60 +2,65 @@
   "version": 1,
   "notes": "Case-insensitive alias registry for explicit quack routing. Normalize by lowercasing and collapsing internal whitespace before matching.",
   "routes": {
-    "duck-debug": [
-      "debug",
-      "/debug",
-      "dbg",
-      "trace",
-      "diagnose",
-      "bug",
-      "fix bug",
-      "why broken"
-    ],
-    "duck-review": [
-      "review",
-      "/review",
-      "code review",
-      "cr",
-      "pr review",
-      "review diff",
-      "audit code"
-    ],
-    "duck-design": [
-      "design",
-      "/design",
-      "architecture",
-      "arch",
-      "tradeoff",
-      "choose approach",
-      "design review"
-    ],
-    "duck-explain": [
-      "explain",
-      "/explain",
-      "what does this do",
-      "walkthrough",
-      "wtf is this",
-      "read this",
-      "decode"
-    ],
-    "duck-teach": [
-      "teach",
-      "/teach",
-      "show me",
-      "how to",
-      "tutorial",
-      "learn",
-      "walk me through"
-    ],
-    "duck-triage": [
-      "triage",
-      "/triage",
-      "severity",
-      "prioritize",
-      "test gaps",
-      "what should we test",
-      "classify bug"
-    ]
+    "duck-debug": {
+      "preferred_subagent": "duck-investigator",
+      "aliases": [
+        "debug",
+        "/debug",
+        "dbg",
+        "trace",
+        "diagnose"
+      ]
+    },
+    "duck-review": {
+      "preferred_subagent": "duck-reviewer",
+      "aliases": [
+        "review",
+        "/review",
+        "code review",
+        "cr",
+        "pr review"
+      ]
+    },
+    "duck-design": {
+      "preferred_subagent": "duck-simple",
+      "aliases": [
+        "design",
+        "/design",
+        "architecture",
+        "arch",
+        "tradeoff"
+      ]
+    },
+    "duck-explain": {
+      "preferred_subagent": "duck-investigator",
+      "aliases": [
+        "explain",
+        "/explain",
+        "what does this do",
+        "walkthrough",
+        "decode"
+      ]
+    },
+    "duck-teach": {
+      "preferred_subagent": "general",
+      "aliases": [
+        "teach",
+        "/teach",
+        "show me",
+        "how to",
+        "tutorial"
+      ]
+    },
+    "duck-triage": {
+      "preferred_subagent": "duck-adversary",
+      "aliases": [
+        "triage",
+        "/triage",
+        "severity",
+        "prioritize",
+        "test gaps"
+      ]
+    }
   }
 }

@@ -23,6 +23,7 @@ On explicit `quack`, respond in this order:
 
 1. **Alias-first fast path (`quack <intent>`)**
    - Load `references/route-aliases.json`.
+   - Resolve both route and default `preferred_subagent` from the matched route entry.
    - Normalize for matching using this contract:
      - lowercase
      - trim leading/trailing whitespace
@@ -32,9 +33,9 @@ On explicit `quack`, respond in this order:
      - treat punctuation separators inside phrase as spaces (for example `code-review` -> `code review`)
    - Accept common variants (for example `/review`, `code review`, `cr`).
    - If alias matches, auto-route immediately:
-     - one-line acknowledgement of resolved route
-     - invoke mapped route skill
-     - continue in mapped route flow (do not emit picker)
+      - one-line acknowledgement of resolved route
+      - invoke mapped route skill with `preferred_subagent`
+      - continue in mapped route flow (do not emit picker)
    - If multiple aliases match after normalization:
      - prefer exact normalized alias match
      - else prefer longest normalized alias
@@ -55,11 +56,17 @@ On follow-up selection turn (fallback picker path only):
 - accept concise choice forms: `A`/`B`/`C`, `pick A`, `choose B`, `quack A`
 - if choice is valid:
   - acknowledge selected option in one line
-  - hand off by invoking selected route skill (for example, `A -> duck-debug`, `B -> duck-review`)
+  - hand off by invoking selected route skill with mapped `preferred_subagent` (for example, `A -> duck-debug + duck-investigator`, `B -> duck-review + duck-reviewer`)
   - continue in selected route flow (do not re-list route options)
 - if choice is ambiguous/invalid:
   - ask one narrowed follow-up
   - remain in route-selection mode
+
+User override (optional):
+- allow explicit override in prompt suffix: `use <subagent>` (for example `quack review use general`)
+- validate override against available subagents
+- if valid, pass override as `preferred_subagent` instead of mapped default
+- if invalid, ask one correction question and stay in current route flow
 
 {{include: skill-snippets/philosophy-guardrails.md}}
 
@@ -75,6 +82,7 @@ Required:
 - explicit `quack` invocation
 - available route set (`debug`/`review`/`design`/`explain`/`teach`/`triage`)
 - readable alias registry at `references/route-aliases.json`
+- available subagent set for override validation
 - active host guardrails + mutating-action policy
 
 Optional:
@@ -98,12 +106,17 @@ Use this schema per option:
 2. If bare `quack`, run heartbeat fast path and stop.
 3. For non-bare input, load `references/route-aliases.json` and attempt case-insensitive alias match.
 4. Normalize user intent and aliases using the alias normalization contract before matching.
-5. If alias matched, auto-route to mapped skill and continue there.
-6. If multiple aliases matched, apply tie-break rules (exact match > longest alias > ask one disambiguation question).
-7. If alias not matched, provide 1-3 route options with chain hints, recommend one, and require user choice.
-8. Persist route context in response footer for next-turn continuity (single-line, machine-friendly) when using picker path:
+5. Parse optional override token `use <subagent>` from the same input.
+6. Validate override (if present) against available subagents.
+7. Determine effective `preferred_subagent`: override if valid, else mapped default from route entry.
+8. If multiple aliases matched, apply tie-break rules (exact match > longest alias > ask one disambiguation question).
+9. If alias matched, auto-route to mapped skill and continue there, passing effective `preferred_subagent`.
+10. If alias not matched, provide 1-3 route options with chain hints, recommend one, and require user choice.
+11. On valid picker selection, hand off to selected route with effective `preferred_subagent`.
+12. Persist route context in response footer for next-turn continuity (single-line, machine-friendly) when using picker path:
    - `ROUTE_CTX: A=<route>;B=<route>[;C=<route>]`
-9. On valid next-turn route selection, hand off to chosen route flow; if mutating, enforce approval checkpoint before mutation.
+13. On invalid override, ask one correction question and remain in current route flow.
+14. If mutating, enforce approval checkpoint before mutation.
 
 ## Boundaries & Handoffs
 
