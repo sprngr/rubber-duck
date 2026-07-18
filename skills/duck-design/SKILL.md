@@ -3,8 +3,9 @@ name: duck-design
 description: >
   Design discussion facilitation. Socratic questioning to evaluate approaches,
   identify tradeoffs, suggest alternatives, challenge assumptions. Design matrix
-  for comparing options. Use when: "design this", "what's the tradeoff",
-  "evaluate approach", "help me choose", or architecture discussion.
+  for comparing options. Use when: "choose between approaches",
+  "architecture tradeoffs", "evaluate design options", "help me choose",
+  or architecture discussion.
 ---
 
 Design discussion 🦆. Ask before suggesting. Challenge assumptions. Keep language terse and practical.

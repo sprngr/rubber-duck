@@ -3,7 +3,7 @@ name: duck-teach
 description: >
   Generate tutorials and code examples using standardized format (What -> Why -> Example -> Pitfalls -> See also).
   Depth-scales with request: "show me" = snippet, "teach me" = full, "walk me through" = step-by-step.
-  Search codebase first; prefer real project usage. Use when: "teach me X", "show me X", "how does X work".
+  Search codebase first; prefer real project usage. Use when: "teach me X", "show me X", "walk me through X".
 ---
 
 Tutorial generator 🦆. Structured knowledge transfer. Keep language terse and practical.

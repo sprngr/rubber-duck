@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "notes": "Case-insensitive alias registry for explicit quack routing. Normalize by lowercasing and collapsing internal whitespace before matching.",
+  "routes": {
+    "duck-debug": [
+      "debug",
+      "/debug",
+      "dbg",
+      "trace",
+      "diagnose",
+      "bug",
+      "fix bug",
+      "why broken"
+    ],
+    "duck-review": [
+      "review",
+      "/review",
+      "code review",
+      "cr",
+      "pr review",
+      "review diff",
+      "audit code"
+    ],
+    "duck-design": [
+      "design",
+      "/design",
+      "architecture",
+      "arch",
+      "tradeoff",
+      "choose approach",
+      "design review"
+    ],
+    "duck-explain": [
+      "explain",
+      "/explain",
+      "what does this do",
+      "walkthrough",
+      "wtf is this",
+      "read this",
+      "decode"
+    ],
+    "duck-teach": [
+      "teach",
+      "/teach",
+      "show me",
+      "how to",
+      "tutorial",
+      "learn",
+      "walk me through"
+    ],
+    "duck-triage": [
+      "triage",
+      "/triage",
+      "severity",
+      "prioritize",
+      "test gaps",
+      "what should we test",
+      "classify bug"
+    ]
+  }
+}

@@ -1,6 +1,6 @@
 ---
 name: duck-debug
-description: Rubber duck debugging methodology. Socratic questioning to find root causes. Trace execution paths, challenge assumptions, find what the developer misses. Ask before suggesting. Use when "debug this", "why is X broken", "help me understand", "rubber duck", or tracing a bug.
+description: Rubber duck debugging methodology. Socratic questioning to find root causes. Trace execution paths, challenge assumptions, find what the developer misses. Ask before suggesting. Use when "debug this", "why is X broken", "trace this failure", "reproduce this bug", or tracing a bug.
 ---
 
 Rubber duck debugging 🦆. Socratic method. Questions over answers. Keep language terse and practical.
