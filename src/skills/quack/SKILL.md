@@ -1,11 +1,11 @@
 ---
 name: quack
-description: Explicit user-invoked routing for Rubber Duck. Resolves known intent aliases to route skills first, else offers 1-3 route options with recommendation and user choice. Use when user says "quack" or asks for explicit route control.
+description: Explicit user-invoked routing for Rubber Duck. Resolves known intent aliases to route skills first; on alias miss, asks one targeted disambiguation question and waits. Use when user says "quack" or asks for explicit route control.
 ---
 
 # Skill: quack
 
-Explicit route control 🦆. Alias-first auto-route, else user chooses route.
+Explicit route control 🦆. Alias-first auto-route, else one targeted disambiguation question.
 
 ## Purpose
 
@@ -41,26 +41,10 @@ On explicit `quack`, respond in this order:
      - else prefer longest normalized alias
      - else ask one disambiguation question
 
-2. **Route options (1-3 max, fallback)**
-   - Each option includes: `id` (A/B/C), `route`, `best_for`, `tradeoff`, `chain`.
-
-3. **Recommendation (exactly one)**
-   - Recommend one option id with one-line reason grounded in prompt/artifacts.
-
-4. **Choice prompt**
-   - Ask user to pick option id before continuing.
-
-If choice is ambiguous/invalid: ask one narrowed follow-up and stay in route-selection mode.
-
-On follow-up selection turn (fallback picker path only):
-- accept concise choice forms: `A`/`B`/`C`, `pick A`, `choose B`, `quack A`
-- if choice is valid:
-  - acknowledge selected option in one line
-  - hand off by invoking selected route skill with mapped `preferred_subagent` (for example, `A -> duck-debug + duck-investigator`, `B -> duck-review + duck-reviewer`)
-  - continue in selected route flow (do not re-list route options)
-- if choice is ambiguous/invalid:
-  - ask one narrowed follow-up
-  - remain in route-selection mode
+2. **Alias-miss disambiguation (fallback)**
+   - Do not emit route pick-list options or recommendations.
+   - Ask one targeted disambiguation question based on detected intent fragment.
+   - Wait for user clarification before routing.
 
 User override (optional):
 - allow explicit override in prompt suffix: `use <subagent>` (for example `quack review use general`)
@@ -91,14 +75,8 @@ Optional:
 
 Ambiguity/confirmation:
 - if alias hit: auto-route without picker
-- if alias miss: allow route-level ambiguity only and require user route choice before routing continues
+- if alias miss: ask one targeted disambiguation question and wait for clarification before routing
 - mutating paths still require approval gate.
-
-## Route option format (canonical)
-
-Use this schema per option:
-
-`<ID> | route=<skill> | best_for=<when to pick> | tradeoff=<what it deprioritizes> | chain=<expected subagent/skill sequence>`
 
 ## Method
 
@@ -111,16 +89,14 @@ Use this schema per option:
 7. Determine effective `preferred_subagent`: override if valid, else mapped default from route entry.
 8. If multiple aliases matched, apply tie-break rules (exact match > longest alias > ask one disambiguation question).
 9. If alias matched, auto-route to mapped skill and continue there, passing effective `preferred_subagent`.
-10. If alias not matched, provide 1-3 route options with chain hints, recommend one, and require user choice.
-11. On valid picker selection, hand off to selected route with effective `preferred_subagent`.
-12. Persist route context in response footer for next-turn continuity (single-line, machine-friendly) when using picker path:
-   - `ROUTE_CTX: A=<route>;B=<route>[;C=<route>]`
-13. On invalid override, ask one correction question and remain in current route flow.
-14. If mutating, enforce approval checkpoint before mutation.
+10. If alias not matched, ask one targeted disambiguation question derived from detected intent fragment.
+11. Wait for user clarification; then retry alias resolution on clarified intent.
+12. On invalid override, ask one correction question and remain in current route flow.
+13. If mutating, enforce approval checkpoint before mutation.
 
 ## Boundaries & Handoffs
 
-- Require explicit invocation; alias-hit path may auto-route, otherwise require user route choice.
+- Require explicit invocation; alias-hit path may auto-route, otherwise require clarification before routing.
 - Preserve user decision ownership.
 - {{include: policy-snippets/safety-carveouts.md}}
 - No edits/mutating commands/task delegation that changes workspace state without explicit bounded approval.
@@ -130,9 +106,9 @@ Use this schema per option:
 If route confidence is low:
 - state assumptions in one line
 - ask one targeted disambiguation question
-- if alias miss and picker path is active, do not proceed until user selects a route
+- if alias miss, do not proceed until user clarifies intent
 
 ## Edge Cases
 
 - Mutating path selected: route handoff still requires explicit bounded approval before mutation.
-- Load `references/Examples.md` when user asks for concrete route output examples or route-choice wording calibration.
+- Load `references/Examples.md` when user asks for concrete route output examples or disambiguation wording calibration.
