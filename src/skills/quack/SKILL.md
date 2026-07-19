@@ -47,9 +47,9 @@ On explicit `quack`, respond in this order:
    - Wait for user clarification before routing.
 
 User override (optional):
-- allow explicit override in prompt suffix: `use <subagent>` (for example `quack review use general`)
-- validate override against available subagents
-- if valid, pass override as `preferred_subagent` instead of mapped default
+- allow explicit override in prompt suffix: `use <subagent>` or `with <subagent>` or `via <subagent>` (for example `quack review with general`)
+- validate override against platform-listed subagent names (static known set if runtime discovery unavailable)
+- if valid, pass override as `preferred_subagent` instead of default `duckling`
 - if invalid, ask one correction question and stay in current route flow
 
 {{include: skill-snippets/philosophy-guardrails.md}}
@@ -66,7 +66,7 @@ Required:
 - explicit `quack` invocation
 - available route set (`debug`/`review`/`design`/`explain`/`teach`/`triage`/`trace`/`risk`/`simplify`/`dry-review`/`patch`)
 - readable alias registry at `references/route-aliases.json`
-- available subagent set for override validation
+- platform-listed subagent set for override validation
 - active host guardrails + mutating-action policy
 
 Optional:
@@ -84,9 +84,9 @@ Ambiguity/confirmation:
 2. If bare `quack`, run heartbeat fast path and stop.
 3. For non-bare input, load `references/route-aliases.json` and attempt case-insensitive alias match.
 4. Normalize user intent and aliases using the alias normalization contract before matching.
-5. Parse optional override token `use <subagent>` from the same input.
-6. Validate override (if present) against available subagents.
-7. Determine effective `preferred_subagent`: override if valid, else mapped default from route entry.
+5. Parse optional override token from same input: `use <subagent>` or `with <subagent>` or `via <subagent>`.
+6. Validate override (if present) against platform-listed subagent names (static known set if runtime discovery unavailable).
+7. Determine effective `preferred_subagent`: override if valid, else default to `duckling`.
 8. If multiple aliases matched, apply tie-break rules (exact match > longest alias > ask one disambiguation question).
 9. If alias matched, auto-route to mapped skill and continue there, passing effective `preferred_subagent`.
 10. If alias not matched, ask one targeted disambiguation question derived from detected intent fragment.
