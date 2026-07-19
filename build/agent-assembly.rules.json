@@ -12,6 +12,7 @@
   "scope": {
     "agents": [
       "duck-*",
+      "duckling",
       "rubber-duck"
     ]
   },
