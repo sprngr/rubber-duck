@@ -21,12 +21,14 @@ On explicit `quack`, respond in this order:
 0. **Heartbeat fast path (bare `quack`)**
    - If input is exactly `quack` (trim whitespace): output
      - `🦆` + brief status
-      - If no status is available, providde a funny duck nonsequiter.
-   - Provide brief help information as to routes available and usage instructions.
+       - If no status is available, give a funny duck nonsequiter.
+      - static quick-help from `references/quick-help.md`
+      - one-line route-intent prompt
+   - For bare `quack`, prefer emitting the static quick-help asset instead of dynamic route lists.
 
 1. **Alias-first fast path (`quack <intent>`)**
    - Load `references/route-aliases.json`.
-   - Resolve both route and default `preferred_subagent` from the matched route entry.
+   - Resolve route from the matched route entry; default `preferred_subagent` is `duckling` unless user override is provided.
    - Normalize for matching using this contract:
      - lowercase
      - trim leading/trailing whitespace

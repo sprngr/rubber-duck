@@ -3,7 +3,7 @@
 Purpose: preserve legacy duck-* behaviors as role instructions appended inline by `quack` when invoking a subagent.
 
 Usage rule:
-- `quack` resolves `route` + `preferred_subagent`.
+- `quack` resolves `route`, then determines effective `preferred_subagent` (user override or default `duckling`).
 - `quack` selects the matching role section below.
 - `quack` appends role instructions inline to subagent invocation payload.
 

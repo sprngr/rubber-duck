@@ -3,7 +3,6 @@
   "notes": "Case-insensitive alias registry for explicit quack routing. Normalize by lowercasing and collapsing internal whitespace before matching.",
   "routes": {
     "duck-debug": {
-      "preferred_subagent": "duck-investigator",
       "aliases": [
         "debug",
         "/debug",
@@ -13,7 +12,6 @@
       ]
     },
     "duck-review": {
-      "preferred_subagent": "duck-reviewer",
       "aliases": [
         "review",
         "/review",
@@ -23,7 +21,6 @@
       ]
     },
     "duck-design": {
-      "preferred_subagent": "duck-simple",
       "aliases": [
         "design",
         "/design",
@@ -33,7 +30,6 @@
       ]
     },
     "duck-explain": {
-      "preferred_subagent": "duck-investigator",
       "aliases": [
         "explain",
         "/explain",
@@ -43,7 +39,6 @@
       ]
     },
     "duck-teach": {
-      "preferred_subagent": "general",
       "aliases": [
         "teach",
         "/teach",
@@ -53,7 +48,6 @@
       ]
     },
     "duck-triage": {
-      "preferred_subagent": "duck-adversary",
       "aliases": [
         "triage",
         "/triage",
@@ -63,7 +57,6 @@
       ]
     },
     "duck-trace": {
-      "preferred_subagent": "duck-investigator",
       "aliases": [
         "trace",
         "/trace",
@@ -73,7 +66,6 @@
       ]
     },
     "duck-risk": {
-      "preferred_subagent": "duck-adversary",
       "aliases": [
         "risk",
         "/risk",
@@ -83,7 +75,6 @@
       ]
     },
     "duck-simplify": {
-      "preferred_subagent": "duck-simple",
       "aliases": [
         "simplify",
         "/simplify",
@@ -93,7 +84,6 @@
       ]
     },
     "duck-dry-review": {
-      "preferred_subagent": "duck-dry",
       "aliases": [
         "dry",
         "/dry",
@@ -103,7 +93,6 @@
       ]
     },
     "duck-patch": {
-      "preferred_subagent": "duck-builder",
       "aliases": [
         "fix",
         "/fix",
