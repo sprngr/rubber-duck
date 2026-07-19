@@ -33,6 +33,30 @@
       {
         "file": "src/agents/duck-builder/body.md",
         "contains": "Job: smallest safe patch."
+      },
+      {
+        "file": "src/agents/duck-builder/body.md",
+        "contains": "{{include: skill-snippets/duckling-general-contract.md}}"
+      },
+      {
+        "file": "src/agents/duck-investigator/body.md",
+        "contains": "{{include: skill-snippets/duckling-general-contract.md}}"
+      },
+      {
+        "file": "src/agents/duck-adversary/body.md",
+        "contains": "{{include: skill-snippets/duckling-general-contract.md}}"
+      },
+      {
+        "file": "src/agents/duck-simple/body.md",
+        "contains": "{{include: skill-snippets/duckling-general-contract.md}}"
+      },
+      {
+        "file": "src/agents/duck-dry/body.md",
+        "contains": "{{include: skill-snippets/duckling-general-contract.md}}"
+      },
+      {
+        "file": "src/agents/duck-reviewer/body.md",
+        "contains": "{{include: skill-snippets/duckling-general-contract.md}}"
       }
     ],
     "agent_groups": {
