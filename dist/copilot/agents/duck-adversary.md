@@ -1,5 +1,5 @@
 ---
-description: Use for adversarial review of risks, failure modes, compatibility, and rollback safety.
+description: DEPRECATED shim: routes via duckling to duck-risk. Prefer quack/duckling directly. Use for adversarial review of risks, failure modes, compatibility, and rollback safety.
 tools: read,search
 ---
 

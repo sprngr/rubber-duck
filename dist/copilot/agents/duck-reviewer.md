@@ -1,5 +1,5 @@
 ---
-description: Use for focused diff/file review with severity-tagged findings and concrete fixes.
+description: DEPRECATED shim: routes via duckling to duck-review. Prefer quack/duckling directly. Use for focused diff/file review with severity-tagged findings and concrete fixes.
 tools: read,search
 ---
 

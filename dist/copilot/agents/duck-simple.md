@@ -1,5 +1,5 @@
 ---
-description: Use for simplicity review to reduce overengineering, indirection, and unnecessary abstractions.
+description: DEPRECATED shim: routes via duckling to duck-simplify. Prefer quack/duckling directly. Use for simplicity review to reduce overengineering, indirection, and unnecessary abstractions.
 tools: read,search
 ---
 

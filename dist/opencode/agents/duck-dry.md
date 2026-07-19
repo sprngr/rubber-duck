@@ -1,6 +1,6 @@
 ---
 name: duck-dry
-description: Use for DRY review to find meaningful duplication and divergence risk with safe extraction boundaries.
+description: DEPRECATED shim: routes via duckling to duck-dry-review. Prefer quack/duckling directly. Use for DRY review to find meaningful duplication and divergence risk with safe extraction boundaries.
 mode: subagent
 permission:
   read: allow

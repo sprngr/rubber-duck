@@ -1,6 +1,9 @@
 ---
 name: quack
-description: Explicit user-invoked routing for Rubber Duck. Resolves known intent aliases to route skills first; on alias miss, asks one targeted disambiguation question and waits. Use when user says "quack" or asks for explicit route control.
+description: >
+   Explicit user-invoked routing for Rubber Duck. Resolves known intent aliases to route skills first;
+   on alias miss, asks one targeted disambiguation question and waits. Use when user says "quack" or
+   asks for explicit route control.
 ---
 
 # Skill: quack
@@ -18,8 +21,8 @@ On explicit `quack`, respond in this order:
 0. **Heartbeat fast path (bare `quack`)**
    - If input is exactly `quack` (trim whitespace): output
      - `🦆` + brief status
-     - one-line route-intent prompt
-   - Do not emit full route options without task intent.
+      - If no status is available, providde a funny duck nonsequiter.
+   - Provide brief help information as to routes available and usage instructions.
 
 1. **Alias-first fast path (`quack <intent>`)**
    - Load `references/route-aliases.json`.

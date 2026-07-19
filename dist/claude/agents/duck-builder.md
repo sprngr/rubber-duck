@@ -1,6 +1,6 @@
 ---
 name: duck-builder
-description: Use for surgical implementation edits (1-2 files) after duck diagnosis/review confirms bounded scope.
+description: DEPRECATED shim: routes via duckling to duck-patch. Prefer quack/duckling directly. Use for surgical implementation edits (1-2 files) after duck diagnosis/review confirms bounded scope.
 tools: Read, Glob, Grep, Edit, Write, Bash, Skill
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: duck-investigator
-description: Use for read-only code location, reference mapping, and call-chain tracing before debug/review/design.
+description: DEPRECATED shim: routes via duckling to duck-trace. Prefer quack/duckling directly. Use for read-only code location, reference mapping, and call-chain tracing before debug/review/design.
 tools: Read, Glob, Grep, Skill
 ---
 
