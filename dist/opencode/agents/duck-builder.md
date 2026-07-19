@@ -67,6 +67,7 @@ Workflow:
 ## Output Contract
 
 Output:
+- `ℹ️ note: deprecated shim; routed via duckling. Prefer quack/duckling directly.`
 - primary: use delegated `duck-patch` output contract exactly
 - fallback (if skill unavailable):
   - `❓ question: duckling/duck-patch delegation unavailable. Fix: retry with duckling and valid skill mapping or route via quack patch.`
