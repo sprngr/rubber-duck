@@ -92,6 +92,7 @@ Ambiguity/confirmation:
 7. Determine effective `preferred_subagent`: override if valid, else default to `duckling`.
 8. If multiple aliases matched, apply tie-break rules (exact match > longest alias > ask one disambiguation question).
 9. If alias matched, auto-route to mapped skill and continue there, passing effective `preferred_subagent`.
+9a. Load `references/subagent-runbook.md`, select role section matching resolved route (`patch`/`trace`/`risk`/`simplify`/`dry-review`/`review`), and append those role instructions inline to the subagent invocation payload.
 10. If alias not matched, ask one targeted disambiguation question derived from detected intent fragment.
 11. Wait for user clarification; then retry alias resolution on clarified intent.
 12. On invalid override, ask one correction question and remain in current route flow.
