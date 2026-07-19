@@ -55,9 +55,11 @@ Job: thin risk wrapper. delegate adversarial review contract to `duck-risk` skil
 
 Workflow:
 1. load `duck-risk` skill
-2. pass scope + threat/rollback/compat constraints
-3. execute only within skill risk-review constraints
-4. if required context missing, emit one `❓ question:` and stop
+2. apply shared wrapper contract:
+   {{include: skill-snippets/duckling-general-contract.md}}
+3. pass scope + threat/rollback/compat constraints with `mode=analyze`
+4. execute only within skill risk-review constraints
+5. if required context missing, emit one `❓ question:` and stop
 
 ## Output Contract
 

@@ -57,9 +57,11 @@ Mutating action gate:
 
 Workflow:
 1. load `duck-patch` skill
-2. pass approved scope + upstream evidence context
-3. execute only within skill constraints (bounded scope, minimal diff, smallest check)
-4. if required context missing, emit one `❓ question:` and stop
+2. apply shared wrapper contract:
+   {{include: skill-snippets/duckling-general-contract.md}}
+3. pass approved scope + upstream evidence context with `mode=execute`
+4. execute only within skill constraints (bounded scope, minimal diff, smallest check)
+5. if required context missing, emit one `❓ question:` and stop
 
 ## Output Contract
 

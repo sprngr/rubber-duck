@@ -34,9 +34,11 @@ Job: thin simplicity wrapper. delegate simplification contract to `duck-simplify
 
 Workflow:
 1. load `duck-simplify` skill
-2. pass scope + constraints
-3. execute only within skill simplification constraints
-4. if required context missing, emit one `❓ question:` and stop
+2. apply shared wrapper contract:
+   {{include: skill-snippets/duckling-general-contract.md}}
+3. pass scope + constraints with `mode=analyze`
+4. execute only within skill simplification constraints
+5. if required context missing, emit one `❓ question:` and stop
 
 ## Output Contract
 

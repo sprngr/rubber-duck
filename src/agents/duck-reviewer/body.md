@@ -32,7 +32,10 @@ Job: review changed code only. delegate review contract to `duck-review` skill.
 
 Workflow:
 1. load `duck-review` skill
-1b. if context or intent unclear, emit one targeted `❓ question:` before final findings
+1b. apply shared wrapper contract:
+   {{include: skill-snippets/duckling-general-contract.md}}
+1c. pass changed-code artifact + optional lens outputs with `mode=analyze`
+1d. if context or intent unclear, emit one targeted `❓ question:` before final findings
 2. follow skill workflow, template, and prefixes exactly
 3. constrain findings to changed code only
 4. apply priority order when merging signals:

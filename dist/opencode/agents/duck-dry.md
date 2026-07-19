@@ -55,9 +55,11 @@ Job: thin DRY wrapper. delegate duplication review contract to `duck-dry-review`
 
 Workflow:
 1. load `duck-dry-review` skill
-2. pass candidate scopes + drift/extraction context
-3. execute only within skill duplication-review constraints
-4. if required context missing, emit one `❓ question:` and stop
+2. apply shared wrapper contract:
+   {{include: skill-snippets/duckling-general-contract.md}}
+3. pass candidate scopes + drift/extraction context with `mode=analyze`
+4. execute only within skill duplication-review constraints
+5. if required context missing, emit one `❓ question:` and stop
 
 ## Output Contract
 
