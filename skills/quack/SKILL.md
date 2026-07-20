@@ -112,7 +112,7 @@ Ambiguity/confirmation:
 9. Normalize user intent and aliases using the alias normalization contract before matching.
 10. If multiple aliases matched, apply tie-break rules (exact match > longest alias > ask one disambiguation question).
 11. If alias matched, auto-route to mapped skill and continue there, passing effective `preferred_subagent`.
-11a. Load `references/subagent-runbook.md`, select role section matching resolved route (`patch`/`risk`/`simplify`/`review`), and append those role instructions inline to the subagent invocation payload.
+11a. Load `references/subagent-runbook.md`, select role section matching resolved route (`patch`/`debug`/`design`/`risk`/`simplify`/`teach`/`triage`/`debt`/`review`), and append those role instructions inline to the subagent invocation payload.
 11b. Resolve route policy for mapped skill.
 11c. If policy is inline-default and no explicit subagent override was provided:
    - execute routed skill inline
