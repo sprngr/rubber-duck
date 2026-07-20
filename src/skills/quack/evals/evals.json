@@ -9,7 +9,8 @@
         "includes '🦆 Ready.'",
         "includes 'Tell me your route intent'",
         "includes '## Options for skills routing'",
-        "includes '## Optional Subagent override'"
+        "includes '## Optional Subagent override'",
+        "includes 'What should I route next?'"
       ]
     },
     {
@@ -100,7 +101,8 @@
       "assertions": [
         "includes '🦆 Ready.'",
         "includes 'Output style:'",
-        "includes '## Optional Subagent override'"
+        "includes '## Optional Subagent override'",
+        "includes 'What should I route next?'"
       ]
     }
   ]
