@@ -8,7 +8,8 @@
       "assertions": [
         "includes '🦆 Ready.'",
         "includes 'Tell me your route intent'",
-        "includes '## Options for skills routing'"
+        "includes '## Options for skills routing'",
+        "includes '## Optional Subagent override'"
       ]
     },
     {
@@ -17,7 +18,7 @@
       "expected_output": "Normalizes punctuation/prefix and routes directly with minimal confirmation to duck-review.",
       "assertions": [
         "includes 'Routing: duck-review.'",
-        "includes 'review'"
+        "includes 'duck-review'"
       ]
     },
     {
@@ -26,7 +27,7 @@
       "expected_output": "Normalizes quotes and routes trace intent directly to duck-trace.",
       "assertions": [
         "includes 'Routing: duck-trace.'",
-        "includes 'trace'"
+        "includes 'duck-trace'"
       ]
     },
     {
@@ -44,7 +45,7 @@
       "expected_output": "Asks one targeted disambiguation question using 'Need one detail:' format before routing.",
       "assertions": [
         "includes 'Need one detail:'",
-        "includes '?'"
+        "includes 'which route fits—review, debug, design, explain, teach, triage, trace, risk, simplify, or dry-review?'"
       ]
     }
   ]
