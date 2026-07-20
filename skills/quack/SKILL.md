@@ -20,7 +20,8 @@ On explicit `quack`, respond in this order:
 
 0. **Heartbeat fast path (bare `quack`)**
    - If input is exactly `quack` (trim whitespace): output
-     - one selected heartbeat line from `references/heartbeat.md` (deterministic rotation over file order)
+     - one selected heartbeat line from `references/heartbeat.md`
+       - selection rule: stateless deterministic selector = hash(`session_or_conversation_id` + `turn_index`) mod heartbeat-line-count
      - static quick-help from `references/quick-help.md`
      - one-line route-intent prompt
    - For bare `quack`, prefer static quick-help over dynamic route lists.
