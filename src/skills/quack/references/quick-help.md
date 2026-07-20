@@ -1,5 +1,10 @@
 # quack quick help
 
+Output style:
+  - success: `Routing: <skill>.`
+  - override success: `Routing: <skill> via <subagent>.`
+  - clarification: `Need one detail: <question>`
+
 Tell me your route intent: `quack <route> <intent>`.
 
 Example:

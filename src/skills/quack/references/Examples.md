@@ -10,11 +10,13 @@ Goal: make `quack` feel like intent routing, not command syntax.
 
 2. Resolvable intent
 - emit one-line confirmation
-  - `Routing: <skill> via <subagent> (source=<alias|explicit>).`
+  - `Routing: <skill>.`
+  - include `via <subagent>` only when user explicitly overrides subagent
 - execute immediately (inline or delegated per policy)
 
 3. Unresolvable intent
 - ask one targeted disambiguation question
+- use compact prompt form: `Need one detail: <question>`
 - no A/B/C menu
 
 4. Subagent override
@@ -25,13 +27,16 @@ Goal: make `quack` feel like intent routing, not command syntax.
 ## Response Patterns
 
 Success (alias):
-- `Routing: duck-review via duckling (source=alias).`
+- `Routing: duck-review.`
 
 Success (explicit skill):
-- `Routing: duck-review via general (source=explicit).`
+- `Routing: duck-review.`
+
+Success (override):
+- `Routing: duck-review via general.`
 
 Miss:
-- `I couldn’t map that intent yet. Did you mean review, risk, or trace?`
+- `Need one detail: did you mean review, risk, or trace?`
 
 Invalid override:
 - `I don’t recognize that subagent. Use one of the platform-listed subagents (for example: duckling, general, explore).`
