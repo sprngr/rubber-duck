@@ -110,6 +110,38 @@ flowchart TD
 - Removed old "confidence_sufficient" ambiguity (replaced with classification criteria)
 - "Mutating" terminology replaced with "workspace-changing"
 
+### Skill composition patterns
+
+Common multi-skill workflows for comprehensive analysis:
+
+**Debug → Patch** (investigation → implementation):
+- `duck-debug` trace mode: locate evidence (defs, refs, callers, tests)
+- `duck-debug` root-cause mode: identify failure cause
+- `duck-patch`: apply bounded fix after scope is clear
+- Pattern: "Debug this endpoint failure then patch it"
+
+**Review → Risk → Simplify** (comprehensive review):
+- `duck-review`: correctness, data integrity, performance findings
+- `duck-risk`: rollback safety, compatibility, failure modes
+- `duck-simplify`: complexity reduction, duplication, overengineering
+- Pattern: "Review this refactor for correctness, risk, and complexity"
+
+**Design → Triage** (architecture → testing):
+- `duck-design`: evaluate options, tradeoffs, architecture decisions
+- `duck-triage`: test scenarios, coverage gaps for chosen design
+- Pattern: "Design this migration and suggest test scenarios"
+
+**Teach → Debug** (understand → investigate):
+- `duck-teach`: explain code/concept/pattern first
+- `duck-debug`: if issue persists after understanding, trace execution
+- Pattern: "Explain this authentication flow, then help debug the token expiry issue"
+
+**Notes:**
+- Composition is user-driven (not enforced)
+- Skills can be invoked sequentially or combined in single request
+- Quack routing supports explicit chaining via natural language
+- Each skill maintains independence (no hidden coupling)
+
 ### Review flow
 
 `duck-review` (+ `duck-risk` when rollback/compatibility risk is central) (+ `duck-simplify` for complexity/duplication signals) (+ `duck-triage` for test-gap signals)
