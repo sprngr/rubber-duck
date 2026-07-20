@@ -112,9 +112,17 @@ Classify each request to determine handling:
 
 **Workflow handling:**
 - If request is workflow-like AND user did NOT invoke `quack`:
-  - Provide brief initial response (1-2 clarifying questions OR high-level framing)
-  - Suggest: "For structured [debug/review/design] workflow, try `quack [intent]`"
-  - If user continues without `quack`, proceed with convenience delegation to appropriate skill
+  - Present approach choice:
+    ```
+    This looks like a [debug/review/design/triage] task. I can:
+    1. Work through this conversationally
+    2. Use structured [skill-name] workflow (quack [intent])
+    
+    Which approach?
+    ```
+  - If user picks "1" or "conversational": proceed with brief initial response + convenience delegation
+  - If user picks "2" or says "quack": delegate to quack skill immediately
+  - If user provides new context without choosing: treat as pick "1" and proceed conversationally
 - Convenience delegation does NOT bypass execution approval for workspace-changing actions
 
 **Clarify-first:**
