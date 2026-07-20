@@ -20,7 +20,8 @@ On explicit `quack`, respond in this order:
 
 0. **Heartbeat fast path (bare `quack`)**
    - If input is exactly `quack` (trim whitespace): output
-     - static heartbeat lines from `references/heartbeat.md` (short status + funny duck quip)
+     - one selected heartbeat line from static options in `references/heartbeat.md`
+       - selection rule: deterministic rotation over file order (next line each invocation; wrap at end)
      - static quick-help from `references/quick-help.md`
      - one-line route-intent prompt
    - For bare `quack`, prefer emitting the static quick-help asset instead of dynamic route lists.
