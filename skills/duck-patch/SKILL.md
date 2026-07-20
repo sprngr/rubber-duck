@@ -13,13 +13,6 @@ Patch execution 🦆. Smallest safe diff first.
 
 Execute a narrowly scoped code change once the fix direction is known.
 
-## Output Format
-
-- one-line execution plan (file(s) + expected behavior)
-- minimal patch summary (what changed, not a full essay)
-- one smallest verification check and result
-- if blocked: one-line blocker + next required input
-
 ## Philosophy Guardrails (skill-local)
 
 Inherit shared guardrails from `references/GUARDRAILS.md`.
@@ -27,11 +20,13 @@ Inherit shared guardrails from `references/GUARDRAILS.md`.
 Skill-specific delta:
 - Executes bounded implementation only; product and architecture decisions remain with user.
 
-## Activation / When to Use
+## Activation
 
 Use when user asks for a targeted code edit and scope is clear (or can be clarified quickly).
 
-## Preflight Checks
+## Method
+
+### 1. Clarify scope (if incomplete)
 
 - ask 1-3 targeted clarifying questions when context is incomplete
 - state assumptions explicitly when evidence is missing
@@ -43,16 +38,13 @@ Required before edit:
 
 If any required item is missing, ask one targeted clarifying question first.
 
-### Mutating Action Gate
-
+**Mutating action gate:**
 - no edits, mutating commands, or task delegation that changes workspace state without explicit user approval on bounded scope
 - if requested execution scope exceeds 2 files, split into smaller bounded tasks before patching
 - if scope changes after approval, re-open scope confirmation before continuing
 
 
-## Method
-
-### Duck Ladder (execution discipline)
+### 2. Apply Duck Ladder
 
 Before introducing new constructs, stop at first rung that holds:
 1. No change needed (YAGNI)
@@ -62,7 +54,7 @@ Before introducing new constructs, stop at first rung that holds:
 5. Shrink to smallest safe diff
 6. Only then add new code/abstraction
 
-### Workflow
+### 3. Execute patch
 
 1. Restate bounded scope and expected behavior.
 2. Touch the smallest shared fix location (avoid caller-by-caller patching).
@@ -71,13 +63,16 @@ Before introducing new constructs, stop at first rung that holds:
 5. Run smallest agreed check.
 6. Report exactly: changed files, behavior delta, verification result.
 
-## Boundaries & Handoffs
+Output:
+- one-line execution plan (file(s) + expected behavior)
+- minimal patch summary (what changed, not a full essay)
+- one smallest verification check and result
+- if blocked: one-line blocker + next required input
+
+## Boundaries
 
 - Do not broaden scope silently. If scope expands, pause and request renewed approval.
 - Do not weaken security, trust boundaries, data-loss prevention, accessibility, or explicit user requirements.
 - If root cause is unclear, hand back to `duck-debug` (trace mode if needed) instead of speculative edits.
-
-## Edge Cases
-
 - If change requires >2 files, split into sequential bounded steps and request approval per step.
 - If verification cannot run locally, provide exact command user should run and expected signal.

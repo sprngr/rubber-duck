@@ -18,46 +18,73 @@ Build a read-only ledger of deferred-work entries from common comment convention
 Skill-specific delta:
 - Read/report only debt ledger; user decides cleanup actions.
 
-## Activation / When to Use
+## Activation
 
 Use when users ask for deferred-work inventory (for example: `duck debt`, `what did we defer`, `/duck-debt`).
 
-Strict branch trigger:
-- use strict mode when users ask for “issue-linked only” or “strict”
+Strict mode trigger: use strict mode when users ask for "issue-linked only" or "strict".
 
-## Preflight Checks
+## Method
+
+### 1. Clarify scope (if ambiguous)
 
 {{include: skill-snippets/clarify-first-preflight.md}}
-- Debt-specific override: if repository/module scope is ambiguous, ask exactly one clarifying question before scanning
-- inherit shared guardrails from `references/GUARDRAILS.md`
+- If repository/module scope is ambiguous, ask exactly one clarifying question before scanning
+- Example ambiguous prompt: "Show me all deferred simplification debt."
+- Stop after clarification question until user answers
 
-Mode default rule (hard):
-- default to broad mode unless users explicitly ask for strict mode
+Mode default: broad mode unless user explicitly asks for strict mode.
 
-Ambiguous scope rule (hard):
-- if prompt does not specify repository/path scope, ask exactly one concise clarifying question first
-- example ambiguous prompt: "Show me all deferred simplification debt."
-- do not claim completed extraction before scope is confirmed
-- stop after the clarification question until user answers
+### 2. Scan for signals
 
-## Output Contract
+Search repo for deferred-work comment signals: `TODO|FIXME|HACK|XXX`
+
+Ignore generated/vendor paths (`node_modules`, `.git`, build outputs).
+
+Signal conventions:
+- `TODO` — general deferred work
+- `FIXME` — known issue
+- `HACK` — temporary workaround
+- `XXX` — needs attention
+
+Issue-link detection:
+- `#<number>` (e.g., `#123`)
+- `<PROJECT>-<number>` (e.g., `ENG-42`)
+- issue URL
+
+### 3. Classify entries
+
+Count only active deferred-work comment signals with concrete deferred work content:
+- Count signals in code and docs artifacts (including ADR/policy/runbooks) as active by default
+- Treat only obvious teaching/reference samples as non-active (fenced examples labeled "example", "template", or "sample")
+- If scope contains only mentions/examples and no active entries, report scoped zero findings
+
+Tier classification:
+- `explicit` — signal includes issue link
+- `likely` — `FIXME` or `HACK` without issue link
+- `weak` — `TODO` or `XXX` without issue link
+
+In strict mode, include only `explicit` entries.
+
+For borderline matches, validate:
+1. Context: code comment vs docs/examples/templates/meta-text
+2. Actionability: concrete deferred work exists (not informational note only)
+3. Reference signal: issue-linked or not
+4. Assign tier or drop if non-active
+
+If uncertainty remains, classify conservatively (`weak`) and add one short uncertainty note.
+
+### 4. Output ledger
 
 Group by file. One line per entry:
 
 `<file>:<line> [<tier>] — <note>. ref: <issue|none>.`
 
-Tiers:
-- `explicit` — debt signal with issue ref
-- `likely` — `FIXME` or `HACK` without issue ref
-- `weak` — `TODO` or `XXX` without issue ref
-
-Issue refs include patterns like `#123`, `ABC-123`, or URL.
-
-Final line:
+Final line (broad mode):
 
 `totals: <N> entries (explicit: <E>, likely: <L>, weak: <W>).`
 
-Strict mode (`strict`):
+Final line (strict mode):
 
 `totals: <N> entries (strict: issue-linked only).`
 
@@ -65,74 +92,15 @@ No entries:
 
 `No deferred-work entries. Clean ledger.`
 
-Scoped no-entries format:
+Scoped no-entries:
 
 `No deferred-work entries in <scope>. Clean ledger.`
 
-## Method
+Dual-reporting (when user asks for every occurrence):
+1. `active deferred-work entries`
+2. `reference occurrences` (explicitly labeled non-active)
 
-### Signal Conventions (Broad Default)
-
-Primary deferred-work signals in comments:
-
-- `TODO`
-- `FIXME`
-- `HACK`
-- `XXX`
-
-Issue-link detection:
-- `#<number>`
-- `<PROJECT>-<number>` (for example `ENG-42`)
-- issue URL
-
-### Counting + Classification Rules (hard)
-
-- count only active deferred-work comment signals with concrete deferred work content
-- count deferred-work signals in code and docs artifacts (including ADR/policy/runbooks) as active entries by default
-- treat only obvious teaching/reference samples as non-active (for example fenced examples labeled "example", "template", or "sample")
-- if scope contains only mentions/examples and no active entries, report scoped zero findings
-- classify tiers as:
-  - `explicit` — signal includes issue link
-  - `likely` — `FIXME` or `HACK` without issue link
-  - `weak` — `TODO` or `XXX` without issue link
-- in strict mode, include only `explicit` entries
-
-### Scan
-
-Search repo for deferred-work comment signals:
-- `TODO|FIXME|HACK|XXX`
-
-Ignore generated/vendor paths (`node_modules`, `.git`, build outputs).
-
-Scoped reporting rule:
-- when user supplies scope (example: `docs/`), explicitly echo scope in output header or no-entries line
-
-### Classification Validation Loop (for ambiguous entries)
-
-For borderline matches, run this loop before final classification:
-1) Confirm context: code comment vs docs/examples/templates/meta-text.
-2) Confirm actionability: concrete deferred work exists (not informational note only).
-3) Confirm reference signal: issue-linked or not.
-4) Assign tier: `explicit` if issue-linked, else `likely` for `FIXME/HACK`, else `weak` for `TODO/XXX`; drop non-active references.
-
-If uncertainty remains after loop, classify conservatively (`weak`) and add one short uncertainty note.
-
-### Dual-reporting Rule
-
-- when user asks to list every `TODO/FIXME/HACK/XXX` occurrence, report two labeled groups:
-  1) `active deferred-work entries`
-  2) `reference occurrences`
-- keep reference occurrences explicitly labeled non-active
-- for scoped zero findings, use: `No deferred-work entries in <scope>. Clean ledger.`
-
-## Edge Cases
-
-- missing issue ref in broad mode: keep entry and tier as `likely`/`weak`
-- strict mode with no issue-linked entries: output clean-ledger line only
-- deferred-work markers in docs/ADR/policy are active entries by default
-- only explicit examples/templates/samples are non-active reference occurrences unless user asks for all occurrences
-
-## Boundaries & Handoffs
+## Boundaries
 
 - Read/report only. No edits.
 - No debt-priority roadmap unless user asks.
@@ -140,9 +108,3 @@ If uncertainty remains after loop, classify conservatively (`weak`) and add one 
 - Do not recommend debt cleanup paths that weaken core safeguards:
   {{include: policy-snippets/safety-carveouts.md}}
 - If user asks for cleanup planning, prefer smallest safe follow-up path first.
-
-## Examples
-
-- `// TODO: simplify parser once telemetry confirms final format`
-- `# FIXME: retry policy duplicates client defaults (#123)`
-- `// HACK: temporary bypass for legacy payload, remove after ENG-42`

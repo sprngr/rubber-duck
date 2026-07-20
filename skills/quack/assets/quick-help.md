@@ -1,35 +1,31 @@
 # quack quick help
 
-Tell me your route intent: `quack <route> <intent>`.
+Usage: `quack <intent>`
 
-Example:
-  - `quack review this diff: <your diff here>`
-
-Output style:
-  - success: `Routing: <skill>.`
-  - override success: `Routing: <skill> via <subagent>.`
-  - clarification: `Need one detail: <question>`
-
-How to use quack:
+Examples:
   - `quack review this diff`
-  - `quack trace this failure`
-  - `quack risk this rollout plan`
+  - `quack trace where this is used`
+  - `quack what could break in this rollout`
   - `quack simplify this module`
-  - `quack patch this bug with general`
+  - `quack fix this bug`
 
-## Options for skills routing
+Output:
+  - `Routing: <skill>.` — matched and routing
+  - `Need one detail: <question>` — needs clarification
 
-- `duck-review` — changed-code risk review. aliases: `code review`, `pr review`
-- `duck-debug` — Socratic root-cause loop + read-only trace mode. aliases: `diagnose`, `trace`, `investigate`, `where used`
-- `duck-risk` — failure/rollback/compat stress-test. aliases: `failure modes`, `rollback`
-- `duck-simplify` — reduce complexity safely + semantic duplication/divergence review. aliases: `overengineered`, `reduce complexity`, `dry`, `duplication`, `dedupe`, `divergence`
-- `duck-patch` — smallest safe bounded implementation. aliases: `fix`, `targeted edit`
-- `duck-design` — approach/tradeoff comparison. aliases: `architecture`, `tradeoff`
-- `duck-triage` — severity + test-gap prioritization. aliases: `severity`, `prioritize`
-- `duck-teach` — concise explain mode + tutorial-style guidance/examples. aliases: `explain`, `what does this do`, `walkthrough`, `decode`, `show me`, `how to`
+## Available routes
 
-## Optional Subagent override
+- **debug** — root-cause questions + trace evidence (`trace`, `investigate`, `where is this used`, `map callers`)
+- **review** — code/diff risk review (`code review`, `review the diff`)
+- **design** — tradeoff comparison (`architecture`, `tradeoffs`, `help me choose`)
+- **teach** — explain + tutorials (`explain`, `show me`, `walk me through`)
+- **triage** — test gaps + bug severity (`test gaps`, `what should we test`, `bug severity`)
+- **risk** — failure modes + rollback safety (`stress test`, `what could break`, `rollback risk`)
+- **simplify** — complexity reduction + deduplication (`dedupe`, `dry`, `overengineered`, `reduce complexity`)
+- **patch** — small bounded edits (`fix`, `apply this fix`, `targeted edit`)
 
-- Default subagent: `duckling`
-- Override syntax:
-  - `quack <intent> use|with|via <subagent> <intent>`
+## Advanced: subagent override
+
+Force a specific subagent: `quack <intent> via <subagent>`
+
+Example: `quack fix this bug via general`
