@@ -47,6 +47,24 @@
         "includes 'Need one detail:'",
         "includes 'which route fits—review, debug, design, explain, teach, triage, trace, risk, simplify, or dry-review?'"
       ]
+    },
+    {
+      "id": 6,
+      "prompt": "quack duck-risk this rollout across versions",
+      "expected_output": "Detects explicit full skill-name and routes directly without alias menu/disambiguation.",
+      "assertions": [
+        "includes 'Routing: duck-risk.'",
+        "includes 'duck-risk'"
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "quack review this diff with general",
+      "expected_output": "Uses explicit subagent override and confirms route with override in minimal response.",
+      "assertions": [
+        "includes 'Routing: duck-review via general.'",
+        "includes 'via general'"
+      ]
     }
   ]
 }
