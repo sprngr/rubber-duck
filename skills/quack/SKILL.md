@@ -130,9 +130,9 @@ Ambiguity/confirmation:
      - `ROUTE_EXEC: skill=<resolved_skill>; subagent=<effective_subagent>; source=alias; status=blocked; reason=<dispatch_failure_or_missing_task_id>`
    - On blocked dispatch, ask one corrective question and stop.
 12. If alias not matched, ask one targeted disambiguation question derived from detected intent fragment.
-     - Use deterministic templates:
-       - debug-ish fragment (error/fail/trace/stack/broken): `Need one detail: is this debug, trace, or review?`
-       - rollout/risk fragment (rollout/migration/compat/rollback): `Need one detail: is this risk review or design tradeoff?`
+    - Use deterministic templates:
+      - debug-ish fragment (error/fail/trace/stack/broken): `Need one detail: is this debug, trace, or review?`
+      - rollout/risk fragment (rollout/migration/compat/rollback): `Need one detail: is this risk review or design tradeoff?`
       - code-change fragment (fix/change/refactor/clean up): `Need one detail: do you want review, patch, or simplify?`
       - unknown fragment: `Need one detail: which route fits—review, debug, design, explain, teach, triage, trace, risk, simplify, or dry-review?`
 13. Wait for user clarification; then retry alias resolution on clarified intent.
