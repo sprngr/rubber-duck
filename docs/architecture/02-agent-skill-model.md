@@ -95,7 +95,7 @@ flowchart TD
   CHECK_MUTATE_G -->|yes| F
   CHECK_MUTATE_G -->|no| EXEC
 
-  %% Checkpoint-3 gate (applies to ALL workspace-changing actions)
+  %% Checkpoint 3: Execution approval gate (applies to ALL workspace-changing actions)
   F -->|approval_received false| F
   F -->|approval_received true| EXEC
 
@@ -106,7 +106,7 @@ flowchart TD
 **Key updates from previous flow:**
 - Simple vs workflow classification explicit at S1_CLASSIFY
 - S2_SUGGEST_QUACK shows governor suggests but allows continuation
-- Checkpoint-3 gate (S5) applies regardless of routing path (direct, quack, convenience)
+- Checkpoint 3: Execution approval gate (S5) applies regardless of routing path (direct, quack, convenience)
 - Removed old "confidence_sufficient" ambiguity (replaced with classification criteria)
 - "Mutating" terminology replaced with "workspace-changing"
 

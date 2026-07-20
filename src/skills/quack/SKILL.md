@@ -40,17 +40,26 @@ Use only when user explicitly invokes `quack`; do not auto-activate from inferre
    - user override forces delegation regardless of default policy
 8. If explicit full skill name in input, resolve that skill and execute route (see step 11).
 9. Otherwise, load `assets/route-aliases.json` and attempt case-insensitive match.
-10. If multiple aliases match, apply tie-break: exact match > longest alias > ask one disambiguation question.
-11. **Route execution** (explicit skill name or alias match):
-    - Load role instructions from `assets/subagent-runbook.md` for resolved skill
-    - If inline-default policy AND no user override:
-      - execute skill inline
-      - emit `Routing: <skill>.` only
-    - Otherwise (delegated-default OR user override):
-      - launch `task` with `subagent_type=<effective_subagent>` and `skill_name=<resolved_skill>`
-      - emit `Routing: <skill> via <subagent>.` if override supplied, else `Routing: <skill>.`
-      - if dispatch fails, ask one corrective question and stop
-12. **Alias miss (disambiguation):**
+10. **Apply keyword-based precedence** (when multiple skills match):
+    - Scan intent for precedence keywords:
+      - **Risk signals** (`rollback`, `breaking`, `compatibility`, `compat`, `failure`, `impact`) → prioritize `duck-risk`
+      - **Complexity signals** (`overengineered`, `complexity`, `simpler`, `too many`, `bloated`) → prioritize `duck-simplify`
+      - **Learning signals** (`why`, `how`, `what does`, `explain`, `teach me`) → prioritize `duck-teach` over `duck-debug`
+      - **Test signals** (`test`, `coverage`, `should I test`, `before PR`) → prioritize `duck-triage`
+      - **Design signals** (`choose`, `tradeoff`, `approach`, `option`) → prioritize `duck-design`
+    - Reorder matched skills with precedence-matched skill first
+    - Still present alternatives (precedence aids ranking, doesn't eliminate choice)
+11. If multiple aliases match after precedence, apply tie-break: exact match > longest alias > ask one disambiguation question.
+12. **Route execution** (explicit skill name or alias match):
+     - Load role instructions from `assets/subagent-runbook.md` for resolved skill
+     - If inline-default policy AND no user override:
+       - execute skill inline
+       - emit `Routing: <skill>.` only
+     - Otherwise (delegated-default OR user override):
+       - launch `task` with `subagent_type=<effective_subagent>` and `skill_name=<resolved_skill>`
+       - emit `Routing: <skill> via <subagent>.` if override supplied, else `Routing: <skill>.`
+       - if dispatch fails, ask one corrective question and stop
+13. **Alias miss (disambiguation):**
     - Detect intent fragment and ask one targeted question:
       - debug-ish (error/fail/trace/stack/broken): `Need one detail: is this debug, trace, or review?`
       - rollout/risk (rollout/migration/compat/rollback): `Need one detail: is this risk review or design tradeoff?`

@@ -1,9 +1,16 @@
 {
-  "version": 1,
+  "version": 2,
   "asset-type": "runtime-data",
   "loading": "always (on intent match)",
   "last-updated": "2026-07-20",
-  "notes": "High-signal alias registry for explicit quack routing. Normalize by lowercasing and collapsing internal whitespace before matching. On miss, quack asks one targeted disambiguation question.",
+  "notes": "High-signal alias registry for explicit quack routing. Normalize by lowercasing and collapsing internal whitespace before matching. On miss, quack asks one targeted disambiguation question. Precedence keywords help rank skills when multiple match.",
+  "precedence_keywords": {
+    "duck-risk": ["rollback", "breaking", "compatibility", "compat", "failure", "impact", "regression"],
+    "duck-simplify": ["overengineered", "complexity", "simpler", "too many", "bloated", "redundant"],
+    "duck-teach": ["why", "how", "what does", "explain", "teach me", "show me how"],
+    "duck-triage": ["test", "coverage", "should i test", "before pr", "test gaps"],
+    "duck-design": ["choose", "tradeoff", "approach", "option", "decision", "which"]
+  },
   "routes": {
     "duck-debug": {
       "aliases": [

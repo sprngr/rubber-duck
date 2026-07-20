@@ -160,7 +160,7 @@ Final line:
 6. Only then add new code/abstraction
 
 **Mutating action gate:**
-**Workspace-changing actions** (all require checkpoint-3 approval):
+**Workspace-changing actions** (all require execution approval):
 - File edits (code, docs, config, any text file)
 - File creation, deletion, or moves
 - Commands that modify workspace (git commit, install, build, deploy)
