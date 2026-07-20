@@ -56,6 +56,38 @@ copy_or_check() {
   printf 'Built: %s\n' "${out}"
 }
 
+prune_legacy_reference_assets() {
+  local src_dir="$1"
+  local out_dir="$2"
+  local legacy_name=""
+  local asset_path=""
+  local legacy_out_path=""
+  local stale=0
+
+  for legacy_name in "heartbeat.md" "quick-help.md"; do
+    asset_path="${src_dir}/assets/${legacy_name}"
+    legacy_out_path="${out_dir}/references/${legacy_name}"
+
+    [[ -f "${asset_path}" ]] || continue
+    [[ -f "${legacy_out_path}" ]] || continue
+
+    if (( CHECK_ONLY == 1 )); then
+      printf 'STALE: %s (migrated to assets/)\n' "${legacy_out_path}" >&2
+      stale=1
+      continue
+    fi
+
+    rm -f "${legacy_out_path}"
+    printf 'Pruned: %s\n' "${legacy_out_path}"
+  done
+
+  if (( stale != 0 )); then
+    return 1
+  fi
+
+  return 0
+}
+
 render_skill_markdown() {
   local src="$1"
   local out="$2"
@@ -271,6 +303,8 @@ for src_dir in "${SKILL_DIRS[@]}"; do
     done
     shopt -u globstar
   fi
+
+  prune_legacy_reference_assets "${src_dir}" "${out_dir}" || failed=1
 
   if (( CHECK_ONLY == 1 )); then
     check_portability "${CANONICAL_GUARDRAILS}" || failed=1

@@ -47,7 +47,7 @@ Invalid override:
 - stack trace / call path / “where used” → bias `duck-trace`
 - rollout / migration / compatibility / rollback → bias `duck-risk`
 - “overengineered” / “too complex” → bias `duck-simplify`
-- “duplicate” / “drift” → bias `duck-dry-review`
+- “duplicate” / “drift” → bias `duck-simplify`
 - “fix/edit/patch” → bias `duck-patch`
 
 ## UX Guardrails

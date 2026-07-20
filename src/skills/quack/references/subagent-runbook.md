@@ -81,25 +81,7 @@ Output shape:
 - estimated net reduction line
 
 Handoff cues:
-- if duplication-specific, route to `dry-review`.
-
----
-
-## role: dry-review
-
-Intent:
-- Identify meaningful semantic duplication likely to diverge.
-
-Constraints:
-- require concrete divergence trigger
-- avoid forcing abstraction for low-risk repetition
-
-Output shape:
-- findings with `Diverges when`, `Extract start`, and `Fix`
-- semantic-dup coverage line
-
-Handoff cues:
-- route accepted extraction to `patch`.
+- if duplication-specific, stay in `simplify` dry mode.
 
 ---
 

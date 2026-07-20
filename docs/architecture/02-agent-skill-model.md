@@ -103,7 +103,7 @@ flowchart TD
 
 ### Explain / teach flow
 
-- `duck-explain` and `duck-teach` are front-door understanding modes.
+- `duck-teach` is the front-door understanding mode (includes concise explain mode and tutorial modes).
 - Escalate to debug/review/design when issue type becomes clear.
 
 ## Agent contracts

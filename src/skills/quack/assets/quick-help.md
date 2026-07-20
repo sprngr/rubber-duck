@@ -22,14 +22,12 @@ How to use quack:
 - `duck-review` — changed-code risk review. aliases: `code review`, `pr review`
 - `duck-trace` — read-only defs/refs/callers/tests/imports. aliases: `investigate`, `where used`
 - `duck-risk` — failure/rollback/compat stress-test. aliases: `failure modes`, `rollback`
-- `duck-simplify` — reduce complexity safely. aliases: `overengineered`, `reduce complexity`
-- `duck-dry-review` — semantic duplication/divergence. aliases: `duplication`, `dedupe`
+- `duck-simplify` — reduce complexity safely + semantic duplication/divergence review. aliases: `overengineered`, `reduce complexity`, `dry`, `duplication`, `dedupe`, `divergence`
 - `duck-patch` — smallest safe bounded implementation. aliases: `fix`, `targeted edit`
 - `duck-debug` — Socratic root-cause loop. aliases: `diagnose`, `trace`
 - `duck-design` — approach/tradeoff comparison. aliases: `architecture`, `tradeoff`
 - `duck-triage` — severity + test-gap prioritization. aliases: `severity`, `prioritize`
-- `duck-explain` — concise behavior walkthrough. aliases: `walkthrough`, `decode`
-- `duck-teach` — tutorial-style guidance/examples. aliases: `show me`, `how to`
+- `duck-teach` — concise explain mode + tutorial-style guidance/examples. aliases: `explain`, `what does this do`, `walkthrough`, `decode`, `show me`, `how to`
 
 ## Optional Subagent override
 

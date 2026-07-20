@@ -28,17 +28,13 @@
         "tradeoff"
       ]
     },
-    "duck-explain": {
+    "duck-teach": {
       "aliases": [
         "explain",
         "/explain",
         "what does this do",
         "walkthrough",
-        "decode"
-      ]
-    },
-    "duck-teach": {
-      "aliases": [
+        "decode",
         "teach",
         "/teach",
         "show me",
@@ -75,20 +71,16 @@
     },
     "duck-simplify": {
       "aliases": [
+        "dry",
+        "/dry",
+        "duplication",
+        "dedupe",
+        "divergence",
         "simplify",
         "/simplify",
         "overengineered",
         "reduce complexity",
         "make simpler"
-      ]
-    },
-    "duck-dry-review": {
-      "aliases": [
-        "dry",
-        "/dry",
-        "duplication",
-        "dedupe",
-        "divergence"
       ]
     },
     "duck-patch": {

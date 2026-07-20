@@ -1,9 +1,10 @@
 ---
 name: duck-teach
 description: >
-  Generate tutorials and code examples using standardized format (What -> Why -> Example -> Pitfalls -> See also).
-  Depth-scales with request: "show me" = snippet, "teach me" = full, "walk me through" = step-by-step.
-  Search codebase first; prefer real project usage. Use when: "teach me X", "show me X", "walk me through X".
+  Canonical teaching/explaining skill for code, logs, queries, and config.
+  Uses explicit depth modes: "explain this" = fast 4-block summary, "show me" = compact tutorial,
+  "teach me" = full tutorial, "walk me through" = step-by-step.
+  Search codebase first; prefer real project usage.
 ---
 
 Tutorial generator 🦆. Structured knowledge transfer. Keep language terse and practical.
@@ -33,7 +34,7 @@ Skill-specific delta:
 
 ## Activation / When to Use
 
-Use for "teach me", "show me", or "walk me through" requests.
+Use for "explain this", "what does this do", "teach me", "show me", or "walk me through" requests.
 
 ## Preflight Checks
 
@@ -62,10 +63,24 @@ All tutorials follow this skeleton:
 4. **Pitfalls** — common mistakes. Bulleted. Short and direct.
 5. **See also** — workspace files or related patterns (links/paths)
 
+### Explain-This Quick Mode
+
+For "explain this" / "what does this do" requests, use this 4-block shape:
+
+1. **What** — literal behavior now.
+2. **Why** — likely intent in system.
+3. **Watch out** — 1-2 concrete risks/footguns.
+4. **Next question** — one question that unblocks next step.
+
+Length target:
+- default: 8-12 lines total
+- quick mode: 4-6 lines total
+
 ### Depth Scaling
 
 | Trigger             | Output                    |
 |---------------------|--------------------|
+| "explain this" / "what does this do" | Fast 4-block explanation (What/Why/Watch out/Next question) |
 | "show me X"         | Compact 5-block tutorial (one-line What/Why + short Example/Pitfalls/See also) |
 | "teach me X"        | Full 5-section tutorial   |
 | "walk me through X" | Step-by-step numbered     |

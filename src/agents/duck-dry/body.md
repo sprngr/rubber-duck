@@ -3,7 +3,7 @@ Job: compatibility wrapper. route DRY review via `duckling`.
 
 ## Role
 
-- Route semantic duplication/divergence review via `duckling` with `skill_name=duck-dry-review`.
+- Route semantic duplication/divergence review via `duckling` with `skill_name=duck-simplify` (dry mode).
 
 ## Ownership & Safety Guardrails
 
@@ -36,7 +36,7 @@ Workflow:
 1. load `duckling`
 2. apply shared wrapper contract:
    {{include: skill-snippets/duckling-general-contract.md}}
-3. delegate with `skill_name=duck-dry-review` and `mode=analyze`
+3. delegate with `skill_name=duck-simplify` and `mode=dry-review`
 4. pass candidate scopes + drift/extraction context to delegated skill
 5. execute only within delegated skill duplication-review constraints
 6. if required context missing, emit one `❓ question:` and stop
@@ -45,6 +45,6 @@ Workflow:
 
 Output:
 - `ℹ️ note: deprecated shim; routed via duckling. Prefer quack/duckling directly.`
-- primary: use delegated `duck-dry-review` output contract exactly
+- primary: use delegated `duck-simplify` dry-mode output contract exactly
 - fallback (if skill unavailable):
-  - `❓ question: duckling/duck-dry-review delegation unavailable. Fix: retry with duckling and valid skill mapping or route via quack dry-review.`
+  - `❓ question: duckling/duck-simplify delegation unavailable. Fix: retry with duckling and valid skill mapping or route via quack simplify.`

@@ -39,7 +39,6 @@ For full architecture and policy details, use the canonical docs linked below.
 - [duck-debug](../skills/duck-debug/SKILL.md)
 - [duck-review](../skills/duck-review/SKILL.md)
 - [duck-design](../skills/duck-design/SKILL.md)
-- [duck-explain](../skills/duck-explain/SKILL.md)
 - [duck-teach](../skills/duck-teach/SKILL.md)
 - [duck-triage](../skills/duck-triage/SKILL.md)
 - [duck-debt](../skills/duck-debt/SKILL.md)
@@ -51,7 +50,7 @@ For full architecture and policy details, use the canonical docs linked below.
 | “review this” + diff/code | `duck-review` | `duck-reviewer` + `duck-adversary` + `duck-simple` (+ `duck-dry` on duplication, + `duck-triage` on test-gap) |
 | “debug this” + complaint | `duck-debug` | `duck-investigator` first, then `duck-triage` if repro weak, then `duck-builder` only on explicit bounded patch request |
 | “design/tradeoffs” | `duck-design` | `duck-simple` + `duck-adversary` (+ `duck-dry` on shared-rule duplication) |
-| “explain this” | `duck-explain` | escalate to debug/review if issue type shifts |
+| “explain this” | `duck-teach` | use explain mode; escalate to debug/review if issue type shifts |
 | “teach me/how works” | `duck-teach` | escalate to debug/review if issue emerges |
 | “what to test/test coverage” | `duck-triage` | review handoff when inline PR comments are needed |
 | “what did we defer/duck debt” | `duck-debt` | read-only debt ledger |

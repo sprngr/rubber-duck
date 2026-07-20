@@ -6,7 +6,7 @@ Copy/paste template for manual validation runs and PR comments.
 
 - Governor (`🦆`)
 - Ducklings (`duck-investigator`, `duck-reviewer`, `duck-adversary`, `duck-simple`, `duck-dry`, `duck-builder`)
-- Skills (`duck-debug`, `duck-review`, `duck-design`, `duck-explain`, `duck-teach`, `duck-triage`, `duck-debt`)
+- Skills (`duck-debug`, `duck-review`, `duck-design`, `duck-teach`, `duck-triage`, `duck-debt`)
 
 Source prompt suite: [README.md](./README.md)
 

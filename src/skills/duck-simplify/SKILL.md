@@ -1,13 +1,14 @@
 ---
 name: duck-simplify
 description: >
-  Simplicity review skill to reduce overengineering and complexity tax safely.
-  Focuses on unnecessary abstractions, oversized config/state surfaces, and
-  directness opportunities. Use when: "simplify this", "is this overengineered",
-  "reduce complexity", or "make this smaller".
+  Canonical complexity-reduction skill covering simplification and semantic
+  duplication/divergence review. Focuses on unnecessary abstractions, oversized
+  config/state surfaces, directness opportunities, and safe extraction
+  boundaries. Use when: "simplify this", "is this overengineered", "reduce
+  complexity", "make this smaller", "DRY this", "dedupe", or "divergence review".
 ---
 
-Simplify 🦆. Smaller shape, same behavior.
+Simplify 🦆. Smaller shape, same behavior. Prevent divergence, not just repetition.
 
 ## Purpose
 
@@ -28,14 +29,25 @@ Find highest-value simplifications without weakening security, correctness, or e
   `totals: <n> findings, <n> questions.`
   `net: -<N> lines possible.`
 
+Dry-mode finding shape (use when request is DRY/dedupe/divergence-focused):
+- one line per finding:
+  `<prefix> <path[:line|scopeA<->scopeB]> — <duplicated behavior + drift risk>. Diverges when: <future change trigger>. Extract start: <path:line>. Fix: <extraction boundary>.`
+- dry-mode prefixes:
+  - `🟡 risk:` meaningful duplication likely to diverge
+  - `🔵 nit:` minor duplication worth cleanup
+  - `❓ question:` missing context blocks extraction choice
+- dry-mode final line:
+  `totals: <n> findings, <n> questions.`
+  `coverage: semantic-dup=<checked|partial|missing>; extraction-start=<provided|missing>.`
+
 {{include: skill-snippets/philosophy-guardrails.md}}
 
 Skill-specific delta:
-- Simplicity guidance only; final implementation decisions remain with user.
+- Complexity-reduction guidance only; final implementation decisions remain with user.
 
 ## Activation / When to Use
 
-Use for complexity-minimization lens in review/design/debug contexts.
+Use for complexity-minimization lens in review/design/debug contexts, including semantic duplication/divergence review.
 
 ## Preflight Checks
 
@@ -43,6 +55,9 @@ Use for complexity-minimization lens in review/design/debug contexts.
 
 Required:
 - code/proposal scope
+
+Dry-mode required:
+- two or more candidate scopes with suspected semantic duplication
 
 Optional:
 - constraints (deadline, readability norms, team preference)
@@ -55,13 +70,15 @@ If constraints unclear, ask one targeted clarifying question.
 2. Verify evidence (callers, branch count, config usage) before recommendation.
 3. Emit max 3 highest-impact simplifications.
 4. Prefer deletion/reuse/stdlib/native before new abstraction.
+5. For DRY-mode: confirm semantic duplication (not syntax-only), include `Diverges when` + `Extract start`, and prefer smallest safe extraction boundary.
 
 ## Boundaries & Handoffs
 
 - No security/rollback severity ownership (`duck-risk`/`duck-review`).
 - No test-gap ownership (`duck-triage`).
-- No duplication extraction ownership (`duck-dry-review`).
+- No final PR-thread formatting ownership (`duck-review`).
 
 ## Edge Cases
 
 - If simplification would weaken trust boundaries/accessibility/explicit requirements, refuse and suggest safe alternative.
+- Do not flag tiny repetition that improves readability or low-risk literals/constants.

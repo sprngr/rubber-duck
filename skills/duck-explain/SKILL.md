@@ -1,77 +1,20 @@
 ---
 name: duck-explain
 description: >
-  Explain code, logs, queries, or config quickly in plain terms using a short
-  4-block format (What/Why/Watch out/Next question). Use when: "explain this",
-  "what does this do", "explain this function", "explain this file", or
-  "walk me through this snippet".
+  RETIRED. Replaced by duck-teach as canonical explain/teach skill.
+  Use duck-teach for explain-this quick mode and full tutorial modes.
 ---
 
-Explain mode 🦆. Fast interpretation, low ceremony. Keep language terse and practical.
+Retired skill 🦆.
 
-## Purpose
+## Status
 
-Turn local complexity into immediate understanding.
+`duck-explain` is retired.
 
-## Output Format
+Use `duck-teach` instead:
+- "explain this" / "what does this do" → fast 4-block explanation mode
+- "show me" → compact tutorial mode
+- "teach me" → full tutorial mode
+- "walk me through" → step-by-step mode
 
-1. **What** — literal behavior now.
-2. **Why** — likely intent in system.
-3. **Watch out** — 1-2 concrete risks/footguns.
-4. **Next question** — one question that unblocks next step.
-
-Length target:
-- default: 8-12 lines total
-- quick mode: 4-6 lines total
-
-Default response budget:
-- target ~110-160 words total
-- one to two sentences per block by default
-
-Conditional expansion:
-- expand only if user asks for deeper walkthrough
-- or provided artifact spans multiple coupled concerns needing disambiguation
-
-## Philosophy Guardrails (skill-local)
-
-Inherit shared guardrails from `references/GUARDRAILS.md`.
-
-Skill-specific delta:
-- Explain behavior and risks; user decides next action.
-
-## Activation / When to Use
-
-Use when user asks to explain code, logs, queries, config, function/file behavior, or snippet flow.
-
-## Preflight Checks
-
-- if no concrete artifact, ask one targeted question to get exact target
-- ask 1-3 targeted clarifying questions when context is incomplete
-- state assumptions explicitly when evidence is missing
-- preserve core safeguards during explanations that imply change direction:
-- never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
-
-
-## Method
-
-1. Identify execution role (entry point, transformer, validator, side effect, orchestrator).
-2. Explain data shape in/out (or state before/after).
-3. Name one invariant/assumption.
-4. Name sharp edges (ordering, nullability, retries, hidden coupling).
-5. If user asks "how to change this", prefer ladder recommendation first: reuse local → stdlib/native → installed dep → custom.
-6. If suggestion implies implementation, keep recommendation minimal and preserve core safeguards.
-
-Default depth: short.
-If user asks "quickly explain" or "tl;dr", compress further.
-Do not exceed default response budget unless conditional expansion is triggered.
-
-## Boundaries & Handoffs
-
-- Root-cause hunt or flaky behavior → `duck-debug`
-- Architecture/tradeoff decisions → `duck-design`
-- PR/diff findings and inline comments → `duck-review`
-- Coverage gaps, severity, test plans → `duck-triage`
-- Full tutorial/examples and progressive teaching → `duck-teach`
-- Explain mode does not edit code or run tool actions; require explicit user approval and reroute before implementation.
-
-Explain first. Escalate only when user asks or explanation reveals need.
+No additional behavior is defined in this file.

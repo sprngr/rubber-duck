@@ -46,7 +46,7 @@
       "expected_output": "Asks one targeted disambiguation question using 'Need one detail:' format before routing.",
       "assertions": [
         "includes 'Need one detail:'",
-        "includes 'which route fits—review, debug, design, explain, teach, triage, trace, risk, simplify, or dry-review?'"
+        "includes 'which route fits—review, debug, design, teach, triage, trace, risk, or simplify?'"
       ]
     },
     {
@@ -91,7 +91,7 @@
       "expected_output": "Unknown explicit skill token falls back to one targeted disambiguation question.",
       "assertions": [
         "includes 'Need one detail:'",
-        "includes 'which route fits—review, debug, design, explain, teach, triage, trace, risk, simplify, or dry-review?'"
+        "includes 'which route fits—review, debug, design, teach, triage, trace, risk, or simplify?'"
       ]
     },
     {
@@ -103,6 +103,42 @@
         "includes 'Output style:'",
         "includes '## Optional Subagent override'",
         "includes 'What should I route next?'"
+      ]
+    },
+    {
+      "id": 12,
+      "prompt": "quack duck-explain this function",
+      "expected_output": "Explicit retired skill token soft-redirects to canonical duck-teach route.",
+      "assertions": [
+        "includes 'Routing: duck-teach.'",
+        "includes 'duck-teach'"
+      ]
+    },
+    {
+      "id": 13,
+      "prompt": "quack explain this snippet",
+      "expected_output": "Explain alias now resolves to duck-teach and routes directly.",
+      "assertions": [
+        "includes 'Routing: duck-teach.'",
+        "includes 'duck-teach'"
+      ]
+    },
+    {
+      "id": 14,
+      "prompt": "quack duck-dry-review this duplicated logic",
+      "expected_output": "Explicit retired skill token soft-redirects to canonical duck-simplify route.",
+      "assertions": [
+        "includes 'Routing: duck-simplify.'",
+        "includes 'duck-simplify'"
+      ]
+    },
+    {
+      "id": 15,
+      "prompt": "quack dedupe this transform pipeline",
+      "expected_output": "DRY alias now resolves to duck-simplify and routes directly.",
+      "assertions": [
+        "includes 'Routing: duck-simplify.'",
+        "includes 'duck-simplify'"
       ]
     }
   ]

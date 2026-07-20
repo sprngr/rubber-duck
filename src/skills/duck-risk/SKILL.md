@@ -58,7 +58,7 @@ If threat model/scope is missing, ask one targeted clarifying question.
 ## Boundaries & Handoffs
 
 - No style/naming nits.
-- No simplification/duplication ownership (`duck-simplify`/`duck-dry-review`).
+- No simplification/duplication ownership (`duck-simplify`).
 - No final PR-thread formatting ownership (`duck-review`).
 
 ## Edge Cases
