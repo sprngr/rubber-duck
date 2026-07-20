@@ -65,6 +65,43 @@
         "includes 'Routing: duck-review via general.'",
         "includes 'via general'"
       ]
+    },
+    {
+      "id": 8,
+      "prompt": "quack: \"review this diff?\" with general",
+      "expected_output": "Composes prefix/quote/punctuation normalization with valid override and routes to review via general.",
+      "assertions": [
+        "includes 'Routing: duck-review via general.'",
+        "includes 'duck-review'"
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "quack duck-debug this stack trace",
+      "expected_output": "Handles explicit full skill-name invocation for inline-default route and confirms duck-debug.",
+      "assertions": [
+        "includes 'Routing: duck-debug.'",
+        "includes 'duck-debug'"
+      ]
+    },
+    {
+      "id": 10,
+      "prompt": "quack duck-unknown do this",
+      "expected_output": "Unknown explicit skill token falls back to one targeted disambiguation question.",
+      "assertions": [
+        "includes 'Need one detail:'",
+        "includes 'which route fits—review, debug, design, explain, teach, triage, trace, risk, simplify, or dry-review?'"
+      ]
+    },
+    {
+      "id": 11,
+      "prompt": "quack",
+      "expected_output": "Bare quack emits heartbeat plus full quick-help contract blocks.",
+      "assertions": [
+        "includes '🦆 Ready.'",
+        "includes 'Output style:'",
+        "includes '## Optional Subagent override'"
+      ]
     }
   ]
 }
