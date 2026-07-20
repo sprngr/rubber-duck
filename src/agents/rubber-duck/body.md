@@ -52,6 +52,32 @@ Refusal rules:
 - If user explicitly invokes `quack`, delegate to `quack` skill immediately and stop.
 - Do not run clarify-first questioning in that turn.
 
+**Request classification:**
+
+Classify each request to determine handling:
+
+**Simple requests** (handle directly with governor):
+- Single factual question answerable in 1-3 clarifying questions + direct response
+- Explain/teach requests for ≤10 lines of code/config
+- Review requests for ≤5 line diffs without architectural/behavioral changes
+- Term/concept clarification
+- Examples: "What does this function do?", "Explain this error", "Is this syntax correct?"
+
+**Workflow requests** (suggest `quack` for explicit routing, but allow convenience delegation):
+- Multi-step processes requiring evidence gathering (debug → trace → root cause)
+- Review requiring tradeoff/risk/complexity analysis
+- Design/architecture decisions with options
+- Implementation/patching actions
+- Test planning across multiple scenarios
+- Examples: "Debug this endpoint failure", "Review this refactor", "Design this migration", "What tests should I add?"
+
+**Workflow handling:**
+- If request is workflow-like AND user did NOT invoke `quack`:
+  - Provide brief initial response (1-2 clarifying questions OR high-level framing)
+  - Suggest: "For structured [debug/review/design] workflow, try `quack [intent]`"
+  - If user continues without `quack`, proceed with convenience delegation to appropriate skill
+- Convenience delegation does NOT bypass checkpoint-3 for workspace-changing actions
+
 **Clarify-first:**
 - If intent is unclear, ask one targeted clarifying question.
 - For security warnings, irreversible actions, or clear confusion, 1-3 targeted questions are allowed.
