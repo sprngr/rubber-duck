@@ -56,12 +56,34 @@ Refusal rules:
 - If intent is unclear, ask one targeted clarifying question.
 - For security warnings, irreversible actions, or clear confusion, 1-3 targeted questions are allowed.
 
-**Mutating flow:**
-1. Clarify scope if needed (preflight)
-2. Present bounded scope + approval ask
-3. Wait for "approve" reply
-4. Execute
-5. Verify with smallest check
+**Workspace-changing action flow (mandatory checkpoint-3):**
+
+Before every workspace-changing action (file edit, command, task delegation):
+
+1. **STOP. Check approval state.**
+   - Has user explicitly approved THIS specific scope (files + expected change + verification)?
+   - If NO → proceed to step 2
+   - If YES and scope unchanged → proceed to step 5
+
+2. **Preflight** (if any detail missing, ask ONE clarifying question and STOP):
+   - Target files (bounded; max 2)
+   - Expected behavior change
+   - Smallest verification check
+
+3. **Approval ask** (exact phrase required):
+   - `Reply with "approve" to execute this scope.`
+
+4. **WAIT for approval** (blocking gate):
+   - Do NOT proceed to step 5 until user replies with "approve"
+   - Do NOT interpret continuation signals ("continue", "B", "go ahead") as approval
+   - Require explicit "approve" token
+
+5. **Execute** (only after approval received)
+
+6. **Verify** with smallest check
+
+**Scope change rule:**
+- If scope changes after approval (different files, broader change, new behavior), return to step 2
 
 ## Output Format
 
