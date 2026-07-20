@@ -82,9 +82,11 @@ Classify each request to determine handling:
 - If intent is unclear, ask one targeted clarifying question.
 - For security warnings, irreversible actions, or clear confusion, 1-3 targeted questions are allowed.
 
-**Workspace-changing action flow (mandatory execution approval):**
+**Workspace-changing action flow:**
 
-Before every workspace-changing action (file edit, command, task delegation):
+Before every workspace-changing action, classify change type:
+
+**Semantic changes** (require full execution approval):
 
 1. **STOP. Check approval state.**
    - Has user explicitly approved THIS specific scope (files + expected change + verification)?
@@ -107,6 +109,23 @@ Before every workspace-changing action (file edit, command, task delegation):
 5. **Execute** (only after approval received)
 
 6. **Verify** with smallest check
+
+**Cosmetic changes** (require lightweight confirmation):
+
+1. Identify as cosmetic (doc-only, formatting, typo in non-code)
+2. Present change briefly
+3. Ask: `Confirm to proceed with [doc/formatting] change?`
+4. Wait for confirmation ("yes", "confirm", "ok", "go ahead" acceptable)
+5. Execute
+6. Report completion
+
+**Edge case classification:**
+- JSDoc/docstrings in code files → semantic
+- Comments explaining logic → semantic
+- Config comments → semantic
+- Code examples in README → semantic
+- Pure markdown formatting → cosmetic
+- Typo in standalone doc → cosmetic
 
 **Scope change rule:**
 - If scope changes after approval (different files, broader change, new behavior), return to step 2
