@@ -40,10 +40,11 @@ On explicit `quack`, respond in this order:
      - remove surrounding punctuation wrappers (for example quotes/brackets)
      - treat punctuation separators inside phrase as spaces (for example `code-review` -> `code review`)
    - Accept common variants (for example `/review`, `code review`, `cr`).
-   - If alias matches, auto-route immediately:
-      - one-line acknowledgement of resolved route
-      - invoke mapped route skill with `preferred_subagent`
-      - continue in mapped route flow (do not emit picker)
+    - If alias matches, auto-route immediately:
+       - one-line acknowledgement of resolved route
+       - invoke mapped route skill with `preferred_subagent`
+       - continue in mapped route flow (do not emit picker)
+       - keep output minimal; do not emit `ROUTE_EXEC` on success unless debug/compliance trace is explicitly requested
    - If multiple aliases match after normalization:
      - prefer exact normalized alias match
      - else prefer longest normalized alias
@@ -105,12 +106,15 @@ Ambiguity/confirmation:
 7. If explicit full skill-name token is present, resolve route policy for that skill and continue there.
    - If policy is inline-default and no explicit subagent override was provided:
      - execute routed skill inline
-     - emit footer: `ROUTE_EXEC: skill=<resolved_skill>; subagent=inline; source=explicit; status=ok`
+     - capture execution proof internally
+     - emit footer only when debug/compliance trace is explicitly requested:
+       - `ROUTE_EXEC: skill=<resolved_skill>; subagent=inline; source=explicit; status=ok`
    - Otherwise (delegated-default or user override provided):
      - MUST launch `task` with `subagent_type=<effective_subagent>`
      - MUST include `skill_name=<resolved_skill>` in task prompt
      - Dispatch proof required: `task` response must include `task_id`
-     - After successful dispatch, emit footer:
+     - After successful dispatch, capture execution proof internally
+     - emit footer only when debug/compliance trace is explicitly requested:
        - `ROUTE_EXEC: skill=<resolved_skill>; subagent=<effective_subagent>; source=explicit; task_id=<task_id>; status=ok`
      - If dispatch fails or `task_id` is missing, emit:
        - `ROUTE_EXEC: skill=<resolved_skill>; subagent=<effective_subagent>; source=explicit; status=blocked; reason=<dispatch_failure_or_missing_task_id>`
@@ -124,12 +128,15 @@ Ambiguity/confirmation:
 11b. Resolve route policy for mapped skill.
 11c. If policy is inline-default and no explicit subagent override was provided:
    - execute routed skill inline
-   - emit footer: `ROUTE_EXEC: skill=<resolved_skill>; subagent=inline; source=alias; status=ok`
+   - capture execution proof internally
+   - emit footer only when debug/compliance trace is explicitly requested:
+     - `ROUTE_EXEC: skill=<resolved_skill>; subagent=inline; source=alias; status=ok`
 11d. Otherwise (delegated-default or user override provided):
    - MUST launch `task` with `subagent_type=<effective_subagent>`
    - MUST include `skill_name=<resolved_skill>` in task prompt
    - Dispatch proof required: `task` response must include `task_id`
-   - After successful dispatch, emit footer:
+   - After successful dispatch, capture execution proof internally
+   - emit footer only when debug/compliance trace is explicitly requested:
      - `ROUTE_EXEC: skill=<resolved_skill>; subagent=<effective_subagent>; source=alias; task_id=<task_id>; status=ok`
    - If dispatch fails or `task_id` is missing, emit:
      - `ROUTE_EXEC: skill=<resolved_skill>; subagent=<effective_subagent>; source=alias; status=blocked; reason=<dispatch_failure_or_missing_task_id>`
@@ -163,9 +170,11 @@ If dispatch tooling is unavailable or dispatch proof is missing:
 ## Compliance check (before send)
 
 - If route was resolved, response is non-compliant unless it includes:
-  - delegated path: `ROUTE_EXEC ... status=ok ... task_id=<task_id>`
-  - inline path: `ROUTE_EXEC ... subagent=inline ... status=ok`
-  - or blocked path: `ROUTE_EXEC ... status=blocked ... reason=<...>` plus one corrective question.
+  - delegated success path: dispatch proof captured with `task_id` evidence (footer optional by default)
+  - inline success path: route execution proof captured (footer optional by default)
+  - blocked path: `ROUTE_EXEC ... status=blocked ... reason=<...>` plus one corrective question.
+
+- On successful route execution, emit `ROUTE_EXEC` footer only when user explicitly asks for debug/compliance trace.
 
 ## Edge Cases
 
