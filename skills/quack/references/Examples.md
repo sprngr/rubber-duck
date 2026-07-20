@@ -39,7 +39,7 @@ Miss:
 - `Need one detail: did you mean review, risk, or trace?`
 
 Invalid override:
-- `I don’t recognize that subagent. Use one of the platform-listed subagents (for example: duckling, general, explore).`
+- `Need one detail: unknown subagent "<x>". Use duckling or general?`
 
 ## Route Priority Hints
 
