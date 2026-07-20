@@ -20,10 +20,10 @@ Mutating action gate:
 ### Input contract
 
 - required: `skill_name`
-- required: `mode` (`analyze` or `execute`)
+- optional: `mode` (`analyze` or `execute`)
 - required: user intent or task goal
 - optional: artifacts, constraints, upstream evidence references
-- ambiguity: if any required field missing, emit one `❓ question:` and stop
+- ambiguity: if required fields are missing, emit one `❓ question:` and stop
 
 ### Boundary contract
 
@@ -37,7 +37,11 @@ Mutating action gate:
 ## Workflow
 
 Workflow:
-1. validate required inputs (`skill_name`, `mode`, intent)
+1. validate required inputs (`skill_name`, intent)
+1a. determine effective mode:
+   - use provided `mode` when present
+   - else infer from intent (mutating/apply/edit/fix => `execute`; otherwise `analyze`)
+   - if still unclear, default to `analyze`
 2. apply shared wrapper contract:
    {{include: skill-snippets/duckling-general-contract.md}}
 3. load and execute delegated skill with provided inputs
