@@ -3,7 +3,14 @@
 Tell me your route intent: `quack <route> <intent>`.
 
 Example:
-  - `quack review this diff: <your diff here?`
+  - `quack review this diff: <your diff here>`
+
+How to use quack:
+  - `quack review this diff`
+  - `quack trace this failure`
+  - `quack risk this rollout plan`
+  - `quack simplify this module`
+  - `quack patch this bug with general`
 
 ## Options for skills routing
 
@@ -24,4 +31,3 @@ Example:
 - Default subagent: `duckling`
 - Override syntax:
   - `quack <intent> use|with|via <subagent> <intent>`
-

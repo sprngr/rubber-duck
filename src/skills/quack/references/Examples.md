@@ -1,58 +1,53 @@
-# Quack Route Examples
+# Quack UX Micro-Spec
 
-Use this file when:
-- user asks for example route outputs
-- route choice is unclear and concrete option shape helps
-- operator wants chain hint wording consistency checks
+Goal: make `quack` feel like intent routing, not command syntax.
 
-## Example 1 — Runtime bug request
+## Interaction Contract
 
-Input:
+1. Bare `quack`
+- show compact quick-help only
+- no clarifying question unless user adds task text
 
-`quack endpoint returns 500 when userId missing`
+2. Resolvable intent
+- emit one-line confirmation
+  - `Routing: <skill> via <subagent> (source=<alias|explicit>).`
+- execute immediately (inline or delegated per policy)
 
-Output shape:
+3. Unresolvable intent
+- ask one targeted disambiguation question
+- no A/B/C menu
 
-- `A | route=duck-debug | best_for=runtime breakage/root-cause tracing | tradeoff=slower than quick scan | chain=duck-debug -> duck-investigator -> duck-triage? -> duck-builder(on explicit patch request)`
-- `B | route=duck-review | best_for=diff risk scan and concrete review comments | tradeoff=less runtime diagnosis depth | chain=duck-review -> duck-reviewer + duck-adversary + duck-simple (+ duck-dry signal) (+ duck-triage test-gap)`
-- `Recommended: A — Why: runtime failure signal with missing-behavior gap fits debug evidence flow first.`
-- `Pick route: A or B?`
+4. Subagent override
+- accept `use|with|via <subagent>`
+- if valid, override default routing
+- if invalid, ask one correction question
 
-## Example 2 — Diff review request
+## Response Patterns
 
-Input:
+Success (alias):
+- `Routing: duck-review via duckling (source=alias).`
 
-`quack review this diff for correctness and rollback risk`
+Success (explicit skill):
+- `Routing: duck-review via general (source=explicit).`
 
-Output shape:
+Miss:
+- `I couldn’t map that intent yet. Did you mean review, risk, or trace?`
 
-- `A | route=duck-review | best_for=risk-first diff findings | tradeoff=less runtime trace depth | chain=duck-review -> duck-reviewer + duck-adversary + duck-simple (+ duck-dry signal) (+ duck-triage test-gap)`
-- `B | route=duck-debug | best_for=runtime reproduction/root-cause trace | tradeoff=slower for static diff-only checks | chain=duck-debug -> duck-investigator -> duck-triage? -> duck-builder(on explicit patch request)`
-- `Recommended: A — Why: request is diff-centric and rollback-aware review.`
-- `Pick route: A or B?`
+Invalid override:
+- `I don’t recognize that subagent. Use one of the platform-listed subagents (for example: duckling, general, explore).`
 
-## Example 3 — Ambiguous route choice
+## Route Priority Hints
 
-Input:
+- diff / PR / changed files → bias `duck-review`
+- stack trace / call path / “where used” → bias `duck-trace`
+- rollout / migration / compatibility / rollback → bias `duck-risk`
+- “overengineered” / “too complex” → bias `duck-simplify`
+- “duplicate” / “drift” → bias `duck-dry-review`
+- “fix/edit/patch” → bias `duck-patch`
 
-`quack review this diff`
+## UX Guardrails
 
-Follow-up from user:
-
-`maybe B`
-
-Output shape:
-
-- `Do you want A or B? Pick one route id so I can continue.`
-- `(remain in route-selection mode; do not hand off yet)`
-
-## Example 4 — Bare heartbeat
-
-Input:
-
-`quack`
-
-Output shape:
-
-- `🦆 Ready. Explicit routing is active.`
-- `What should I route next: review, debug, design, explain, teach, or triage?`
+- don’t restate policy unless needed
+- don’t explain routing internals unless asked
+- don’t ask more than one question on alias miss
+- don’t block execution after successful route resolution
