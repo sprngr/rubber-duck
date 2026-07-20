@@ -1,5 +1,12 @@
 # Subagent Runbook (quack inline-injection)
 
+<!-- 
+asset-type: runtime-data
+loading: always (on route execution)
+format: role instructions by skill
+last-updated: 2026-07-20
+-->
+
 Purpose: preserve legacy duck-* behaviors as role instructions appended inline by `quack` when invoking a subagent.
 
 Usage rule:

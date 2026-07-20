@@ -1,5 +1,12 @@
 # Example: Design Session Walkthrough
 
+<!-- 
+asset-type: reference
+loading: conditional (informational, not typically loaded)
+format: end-to-end conversation examples
+last-updated: 2026-07-20
+-->
+
 End-to-end examples showing expected `duck-design` behavior.
 
 ## Core Scenario: Notifications for an Existing REST API

@@ -1,5 +1,12 @@
 # Design Patterns and Decision Prompts
 
+<!-- 
+asset-type: reference
+loading: conditional (when symptom matches known pattern)
+format: pattern catalog with decision prompts
+last-updated: 2026-07-20
+-->
+
 Common architectural symptoms and corresponding decision prompts.
 
 ## Pattern Catalog

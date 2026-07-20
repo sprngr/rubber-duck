@@ -39,10 +39,10 @@ Use only when user explicitly invokes `quack`; do not auto-activate from inferre
    - delegated-default: `duck-patch`, `duck-risk`, `duck-review`, `duck-triage`, `duck-simplify`
    - user override forces delegation regardless of default policy
 8. If explicit full skill name in input, resolve that skill and execute route (see step 11).
-9. Otherwise, load `references/route-aliases.json` and attempt case-insensitive match.
+9. Otherwise, load `assets/route-aliases.json` and attempt case-insensitive match.
 10. If multiple aliases match, apply tie-break: exact match > longest alias > ask one disambiguation question.
 11. **Route execution** (explicit skill name or alias match):
-    - Load role instructions from `references/subagent-runbook.md` for resolved skill
+    - Load role instructions from `assets/subagent-runbook.md` for resolved skill
     - If inline-default policy AND no user override:
       - execute skill inline
       - emit `Routing: <skill>.` only

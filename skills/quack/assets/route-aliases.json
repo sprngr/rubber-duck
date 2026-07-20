@@ -1,5 +1,8 @@
 {
   "version": 1,
+  "asset-type": "runtime-data",
+  "loading": "always (on intent match)",
+  "last-updated": "2026-07-20",
   "notes": "High-signal alias registry for explicit quack routing. Normalize by lowercasing and collapsing internal whitespace before matching. On miss, quack asks one targeted disambiguation question.",
   "routes": {
     "duck-debug": {

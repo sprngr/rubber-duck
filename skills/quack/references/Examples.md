@@ -1,5 +1,12 @@
 # Quack UX Micro-Spec
 
+<!-- 
+asset-type: reference
+loading: conditional (on request for examples or disambiguation calibration)
+format: usage examples and expected output
+last-updated: 2026-07-20
+-->
+
 Goal: make `quack` feel like intent routing, not command syntax.
 
 ## Interaction Contract

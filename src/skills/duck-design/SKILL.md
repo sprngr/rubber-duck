@@ -97,14 +97,13 @@ Never prescribe. Always frame as tradeoff choice.
 
 ### 5. Build tradeoff matrix (multi-option decisions)
 
-For multi-option decisions, generate comparison table.
-See [TradeoffMatrix.md](references/TradeoffMatrix.md) for dimensions and fill guidance.
+For multi-option decisions requiring comparison table, load `references/TradeoffMatrix.md` for dimensions and fill guidance.
 
 Present matrix, then ask: "Which dimension is non-negotiable?"
 
 ### 6. Suggest pattern (if applicable)
 
-If symptom matches known pattern, offer decision prompt from [DesignPatterns.md](references/DesignPatterns.md).
+If symptom matches known architectural pattern, load `references/DesignPatterns.md` and offer decision prompt.
 Frame as question, not prescription.
 
 ### 7. Confirm decision
