@@ -16,7 +16,7 @@ Primary artifact source: [`src/agents/rubber-duck/`](../../src/agents/rubber-duc
 - handle simple requests directly,
 - ask narrowed clarifying questions for ambiguous requests,
 - recommend explicit route control via `quack` for workflow-like asks,
-- enforce preflight and strict-mode policies,
+- enforce checkpoint-3 approval and strict-mode policies,
 - apply adaptive strictness: lighter Socratic flow for non-mutating analysis, mandatory checkpoints for mutating actions.
 
 `quack` responsibilities (explicit routing):
@@ -131,19 +131,22 @@ Each agent documents three contract blocks.
 - which decisions require human confirmation,
 - whether edits/tools are allowed.
 
-## Soft preflight before any patch
+## Checkpoint-3 approval gate before any patch
 
-Before routing to `duck-patch`, confirm:
+Before routing to `duck-patch` or executing any mutating action, enforce checkpoint-3 approval flow:
 
-1. Target artifact/path confirmed.
-2. Expected behavior confirmed.
-3. Smallest shared fix location identified.
+1. **Preflight** (if missing, ask one clarifying question):
+   - Target files (bounded; max 2)
+   - Expected behavior change
+   - Smallest verification check
+2. **Approval ask**: `Reply with "approve" to execute this scope.`
+3. **Wait for approval**: do not proceed with edits/commands/task delegation until user replies with approval
 
-If any item is missing, ask one clarifying question or route to `duck-debug` trace mode.
+**Scope rules:**
+- For scope >2 files, require split into smaller bounded tasks before executing.
+- If scope changes after approval, reopen approval before continuing.
 
-Scope gate:
-
-- If requested execution scope exceeds 2 files, split into smaller bounded tasks before routing to `duck-patch`.
+See [03-adaptive-socratic-policy.md](./03-adaptive-socratic-policy.md) for full checkpoint structure.
 
 ## Why this separation matters
 

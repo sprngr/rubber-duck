@@ -40,13 +40,22 @@ For strict sessions and all mutating actions, use these checkpoints in order.
 
 **Required user confirmation:** explicit option selection.
 
-### Checkpoint 3: Execution scope
+### Checkpoint 3: Execution scope (mutating action gate)
 
-- Exact files/paths to touch.
-- Expected behavior after change.
-- Verification plan (minimum runnable check for non-trivial logic).
+This checkpoint enforces the checkpoint-3 approval flow before any mutating action:
 
-**Required user confirmation:** “Proceed with this bounded scope.”
+1. **Preflight** (if missing, ask one clarifying question):
+   - Target files (bounded; max 2)
+   - Expected behavior change
+   - Smallest verification check
+2. **Approval ask**: `Reply with "approve" to execute this scope.`
+3. **Wait for approval**: do not proceed with edits/commands/task delegation until user replies with approval
+
+**Scope rules:**
+- For scope >2 files, require split into smaller bounded tasks before executing.
+- If scope changes after approval, reopen this checkpoint before continuing.
+
+**Required user confirmation:** "approve" (explicit blocking gate)
 
 ### Checkpoint 4: Acceptance
 
