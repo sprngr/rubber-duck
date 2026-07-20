@@ -148,22 +148,15 @@ Ambiguity/confirmation:
 
 ## Failure / fallback behavior
 
-If route confidence is low:
-- state assumptions in one line
-- ask one targeted disambiguation question using `Need one detail: <question>` and Method step 12 templates
-- if alias miss, do not proceed until user clarifies intent
-
-If dispatch tooling is unavailable or dispatch proof is missing:
-- emit blocked `ROUTE_EXEC` footer with reason
-- ask one corrective question (for example permission/tooling/target subagent issue)
-- stop without inline routed-skill execution
+- Low confidence: follow Method step 12 (one targeted disambiguation question) and do not proceed until user clarifies intent.
+- Dispatch unavailable or proof missing: follow Method steps 7/11 blocked-path handling (`ROUTE_EXEC ... status=blocked ... reason=<...>` + one corrective question), then stop.
 
 ## Compliance check (before send)
 
-- Apply Method execution-proof rules:
-  - success proof is captured internally (footer optional by default)
-  - blocked dispatch must emit `ROUTE_EXEC ... status=blocked ... reason=<...>` plus one corrective question
-  - success `ROUTE_EXEC` footer is emitted only when explicitly requested for debug/compliance trace
+- Apply Method execution-proof rules only (steps 7 and 11):
+  - success proof captured internally; success footer optional by default
+  - blocked dispatch requires blocked `ROUTE_EXEC` + one corrective question
+  - success `ROUTE_EXEC` footer only on explicit debug/compliance request
 
 ## Edge Cases
 
