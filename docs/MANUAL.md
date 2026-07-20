@@ -25,14 +25,9 @@ For full architecture and policy details, use the canonical docs linked below.
 
 - [quack](../skills/quack/SKILL.md)
 
-### Duckling subagents
+### Duckling subagent
 
-- [duck-investigator](../agents/duck-investigator)
-- [duck-reviewer](../agents/duck-reviewer)
-- [duck-adversary](../agents/duck-adversary)
-- [duck-simple](../agents/duck-simple)
-- [duck-dry](../agents/duck-dry)
-- [duck-builder](../agents/duck-builder)
+- [duckling](../agents/duckling)
 
 ### Skills
 
@@ -47,9 +42,9 @@ For full architecture and policy details, use the canonical docs linked below.
 
 | User signal | Start skill | Typical chain |
 |---|---|---|
-| “review this” + diff/code | `duck-review` | `duck-reviewer` + `duck-adversary` + `duck-simple` (+ `duck-dry` on duplication, + `duck-triage` on test-gap) |
-| “debug this” + complaint | `duck-debug` | `duck-investigator` first, then `duck-triage` if repro weak, then `duck-builder` only on explicit bounded patch request |
-| “design/tradeoffs” | `duck-design` | `duck-simple` + `duck-adversary` (+ `duck-dry` on shared-rule duplication) |
+| “review this” + diff/code | `duck-review` | `duck-review` (+ `duck-triage` on test-gap) |
+| “debug this” + complaint | `duck-debug` | `duck-debug` trace mode first, then `duck-triage` if repro weak, then `duck-patch` only on explicit bounded patch request |
+| “design/tradeoffs” | `duck-design` | `duck-design` (+ `duck-risk` when rollback/compat risk is central) |
 | “explain this” | `duck-teach` | use explain mode; escalate to debug/review if issue type shifts |
 | “teach me/how works” | `duck-teach` | escalate to debug/review if issue emerges |
 | “what to test/test coverage” | `duck-triage` | review handoff when inline PR comments are needed |
@@ -61,13 +56,13 @@ For full architecture and policy details, use the canonical docs linked below.
 
 ```text
 Review this diff with duck-review. Prioritize security/correctness first.
-If duplication appears, include duck-dry. If tests are missing, include duck-triage.
+If duplication appears, include duck-simplify dry mode. If tests are missing, include duck-triage.
 ```
 
 ### Debug
 
 ```text
-Debug this issue. Start with duck-investigator evidence map (defs/refs/callers/tests),
+Debug this issue. Start with duck-debug trace mode evidence map (defs/refs/callers/tests),
 then run duck-debug root-cause questioning. Suggest patch target only after caller map.
 ```
 
@@ -75,7 +70,7 @@ then run duck-debug root-cause questioning. Suggest patch target only after call
 
 ```text
 Evaluate this design with duck-design. Challenge constraints and tradeoffs.
-Include duck-simple and duck-adversary lenses.
+Include duck-risk when rollback/compatibility risk is central.
 ```
 
 ### Triage
@@ -87,13 +82,13 @@ and propose one minimum runnable check for non-trivial logic changes.
 
 ## Common failure modes
 
-- Duplicate findings across ducklings.
+- Duplicate findings across delegated analyses.
   - Fix: merge by highest-risk priority into one final comment stream.
-- Builder starts before evidence map.
-  - Fix: run investigator/soft preflight first.
+- Patch starts before evidence map.
+  - Fix: run debug trace-mode/soft preflight first.
 - Simplification suggestion hides a security/correctness issue.
   - Fix: surface risk-first finding first; simplification second if still needed.
-- Scope exceeds builder boundary.
+- Scope exceeds patch boundary.
   - Fix: split into smaller bounded tasks before patching (`>2` files).
 
 ## Maintenance

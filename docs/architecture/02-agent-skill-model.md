@@ -31,20 +31,21 @@ Convenience mode behavior:
 - harness auto-routing may occur for non-simple, non-ambiguous workflow asks,
 - explicit `quack` invocation always takes precedence over non-`quack` routing.
 
-### Layer 2: Lens subagents (specialized analysis)
+### Layer 2: Delegated execution via duckling
 
-Subagents provide distinct, bounded perspectives:
+`duckling` is the single delegated subagent execution surface.
 
-- **duck-investigator**: evidence mapping only.
-- **duck-reviewer**: final review stream consolidation.
-- **duck-adversary**: failure, compatibility, rollback, misuse risks.
-- **duck-simple**: complexity minimization lens.
-- **duck-dry**: duplication/divergence risk lens.
-- **duck-triage** (skill-led): test gap and severity analysis.
+It routes to active skills using explicit role/mode constraints from `quack`:
 
-### Layer 3: Executor (bounded implementation)
-
-- **duck-builder** performs surgical edits only after explicit user approval and bounded scope confirmation.
+- **duck-debug** (debug + trace mode)
+- **duck-review**
+- **duck-risk**
+- **duck-simplify** (including dry mode)
+- **duck-design**
+- **duck-teach**
+- **duck-triage**
+- **duck-debt**
+- **duck-patch** (bounded implementation)
 
 ## Skill/subagent flows (when routed)
 
@@ -91,15 +92,15 @@ flowchart TD
 
 ### Review flow
 
-`duck-review` → `duck-reviewer` + `duck-adversary` + `duck-simple` (+ `duck-dry` if duplication signal) (+ `duck-triage` if test-gap signal)
+`duck-review` (+ `duck-risk` when rollback/compatibility risk is central) (+ `duck-simplify` for complexity/duplication signals) (+ `duck-triage` for test-gap signals)
 
 ### Debug flow
 
-`duck-debug` + `duck-investigator` (preferred first) → `duck-triage` if repro weak → `duck-builder` only on explicit bounded patch request
+`duck-debug` trace mode first → `duck-debug` root-cause mode → `duck-triage` if repro weak → `duck-patch` only on explicit bounded patch request
 
 ### Design flow
 
-`duck-design` + `duck-simple` + `duck-adversary` (+ `duck-dry` when shared-rule duplication signal)
+`duck-design` (+ `duck-risk` for failure/rollback/compat analysis) (+ `duck-simplify` when complexity/duplication reduction is needed)
 
 ### Explain / teach flow
 
@@ -132,17 +133,17 @@ Each agent documents three contract blocks.
 
 ## Soft preflight before any patch
 
-Before routing to `duck-builder`, confirm:
+Before routing to `duck-patch`, confirm:
 
 1. Target artifact/path confirmed.
 2. Expected behavior confirmed.
 3. Smallest shared fix location identified.
 
-If any item is missing, ask one clarifying question or route to `duck-investigator`.
+If any item is missing, ask one clarifying question or route to `duck-debug` trace mode.
 
 Scope gate:
 
-- If requested execution scope exceeds 2 files, split into smaller bounded tasks before routing to `duck-builder`.
+- If requested execution scope exceeds 2 files, split into smaller bounded tasks before routing to `duck-patch`.
 
 ## Why this separation matters
 

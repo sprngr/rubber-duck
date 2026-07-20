@@ -18,7 +18,7 @@ For raw `npx skills` usage, see [vercel-labs/skills](https://github.com/vercel-l
 
 ### Full Rubber Duck agent system (Installer / Updater / Uninstaller)
 
-Use the installer scripts for managed agent + policy setup. Adds the full skill set (`quack` + `duck-*`) required by the governor and duckling subagents.
+Use the installer scripts for managed agent + policy setup. Adds the full skill set (`quack` + active `duck-*`) required by the governor and delegated `duckling` flow.
 
 Full CLI/options are documented in: [scripts/README.md](./scripts/README.md) (canonical).
 
@@ -57,7 +57,7 @@ Rubber Duck can run two ways:
   - **OpenCode**: `opencode --agent 🦆` (recommended to assign to alias) or select `🦆` as the primary agent (its `mode: all` allows primary use) through the `/agents` menu or keyboard shortcut (default: tab).
 
 > [!NOTE]
-> All duckling subagents (ex: `duck-reviewer`, `duck-adversary`) can be invoked in the same manner outlined below.
+> Delegation runs through `duckling`, which applies role/mode constraints and routes to active skills.
 
 - **As a subagent (on demand):** invoke it from inside an existing session —
   - **Claude Code**: `@agent-rubber-duck <prompt>`.

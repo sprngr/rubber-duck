@@ -69,21 +69,16 @@ $ManagedEnd = "<!-- RUBBER_DUCK_MANAGED_BLOCK END -->"
 # Built agent filenames are identical across harnesses (<name>.md).
 $AgentFiles = @(
   "rubber-duck.md",
-  "duck-simple.md",
-  "duck-reviewer.md",
-  "duck-investigator.md",
-  "duck-dry.md",
-  "duck-builder.md",
-  "duck-adversary.md"
+  "duckling.md"
 )
 
 $RequiredSkills = @(
   "duck-debt",
   "duck-debug",
   "duck-design",
-  "duck-explain",
   "duck-review",
   "duck-teach",
+  "duck-simplify",
   "duck-triage"
 )
 

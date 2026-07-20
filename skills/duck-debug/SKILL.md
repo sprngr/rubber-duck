@@ -148,7 +148,7 @@ Follow the call path:
 
 - Fix shared cause once, not symptom at each caller.
 - Before patch target suggestion, map direct callers of touched function/path (expand scope only if evidence indicates wider impact).
-- If caller map missing, ask for it or route `duck-investigator`.
+- If caller map missing, ask for it or switch to `duck-debug` trace mode.
 - Prefer shared path guard/fix over ticket-only branch patch unless evidence disproves.
 
 ### Stack Trace Review

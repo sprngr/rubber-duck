@@ -58,7 +58,7 @@ Outcomes:
 
 ## Review output contract (important)
 
-`duck-review`/`duck-reviewer` findings are prefixed one-liners:
+`duck-review` findings are prefixed one-liners:
 - prefix + location + problem + `Fix:`
 - Auto-Clarity exception only for security/irreversible-risk comments
 - normalize non-compliant finding lines before final output

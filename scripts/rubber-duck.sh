@@ -49,21 +49,16 @@ CLAUDE_PROJECT_POLICY_MD="CLAUDE.md"
 
 AGENT_FILES=(
   "rubber-duck.md"
-  "duck-simple.md"
-  "duck-reviewer.md"
-  "duck-investigator.md"
-  "duck-dry.md"
-  "duck-builder.md"
-  "duck-adversary.md"
+  "duckling.md"
 )
 
 REQUIRED_SKILLS=(
   "duck-debt"
   "duck-debug"
   "duck-design"
-  "duck-explain"
   "duck-review"
   "duck-teach"
+  "duck-simplify"
   "duck-triage"
 )
 

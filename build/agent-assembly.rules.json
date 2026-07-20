@@ -30,57 +30,17 @@
       {
         "file": "src/agents/rubber-duck/body.md",
         "contains": "You are a rubber duck"
-      },
-      {
-        "file": "src/agents/duck-builder/body.md",
-        "contains": "Job: smallest safe patch."
-      },
-      {
-        "file": "src/agents/duck-builder/body.md",
-        "contains": "{{include: skill-snippets/duckling-general-contract.md}}"
-      },
-      {
-        "file": "src/agents/duck-investigator/body.md",
-        "contains": "{{include: skill-snippets/duckling-general-contract.md}}"
-      },
-      {
-        "file": "src/agents/duck-adversary/body.md",
-        "contains": "{{include: skill-snippets/duckling-general-contract.md}}"
-      },
-      {
-        "file": "src/agents/duck-simple/body.md",
-        "contains": "{{include: skill-snippets/duckling-general-contract.md}}"
-      },
-      {
-        "file": "src/agents/duck-dry/body.md",
-        "contains": "{{include: skill-snippets/duckling-general-contract.md}}"
-      },
-      {
-        "file": "src/agents/duck-reviewer/body.md",
-        "contains": "{{include: skill-snippets/duckling-general-contract.md}}"
       }
     ],
     "agent_groups": {
       "policy_baseline_agents": [
-        "duck-adversary",
-        "duck-reviewer",
-        "duck-simple",
-        "duck-dry",
-        "duck-investigator",
         "rubber-duck"
       ],
       "mutating_gate_agents": [
-        "rubber-duck",
-        "duck-builder"
+        "rubber-duck"
       ],
       "safety_agents": [
-        "duck-adversary",
-        "duck-reviewer",
-        "duck-simple",
-        "duck-dry",
-        "duck-investigator",
-        "rubber-duck",
-        "duck-builder"
+        "rubber-duck"
       ]
     },
     "group_assertions": {

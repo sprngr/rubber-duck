@@ -19,13 +19,8 @@ This section defines the system-level architecture and operating contracts for R
 
 - Governor definition: [`src/agents/rubber-duck/`](../../src/agents/rubber-duck)
 - Explicit router skill: [`src/skills/quack/`](../../src/skills/quack)
-- Subagents (each `src/agents/<name>/` with `body.md` + `meta.json` — see [05-harness-agent-config.md](./05-harness-agent-config.md)):
-  - [`src/agents/duck-investigator/`](../../src/agents/duck-investigator)
-  - [`src/agents/duck-reviewer/`](../../src/agents/duck-reviewer)
-  - [`src/agents/duck-adversary/`](../../src/agents/duck-adversary)
-  - [`src/agents/duck-simple/`](../../src/agents/duck-simple)
-  - [`src/agents/duck-dry/`](../../src/agents/duck-dry)
-  - [`src/agents/duck-builder/`](../../src/agents/duck-builder)
+- Delegation subagent (see [05-harness-agent-config.md](./05-harness-agent-config.md)):
+  - [`src/agents/duckling/`](../../src/agents/duckling)
 - Skills source: [`src/skills/`](../../src/skills)
 - Skills install artifacts: [`skills/`](../../skills)
 - Global operating policy: [`AGENTS.md`](../../AGENTS.md)
