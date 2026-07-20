@@ -1,6 +1,6 @@
 ---
 name: duck-investigator
-description: DEPRECATED shim: routes via duckling to duck-trace. Prefer quack/duckling directly. Use for read-only code location, reference mapping, and call-chain tracing before debug/review/design.
+description: DEPRECATED shim: routes via duckling to duck-debug (trace mode). Prefer quack/duckling directly. Use for read-only code location, reference mapping, and call-chain tracing before debug/review/design.
 mode: subagent
 permission:
   read: allow
