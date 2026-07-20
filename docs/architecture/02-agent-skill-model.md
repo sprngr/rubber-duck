@@ -13,11 +13,11 @@ Primary artifact source: [`src/agents/rubber-duck/`](../../src/agents/rubber-duc
 `rubber-duck` responsibilities (governor):
 
 - provide recommendation/policy guidance,
-- handle simple requests directly,
-- ask narrowed clarifying questions for ambiguous requests,
-- recommend explicit route control via `quack` for workflow-like asks,
-- enforce checkpoint-3 approval and strict-mode policies,
-- apply adaptive strictness: lighter Socratic flow for non-mutating analysis, mandatory checkpoints for mutating actions.
+- handle simple requests directly (single factual questions, explain ≤10 lines, review ≤5 line diffs without architectural changes),
+- classify requests into simple vs workflow categories,
+- suggest `quack` for workflow-like asks but allow convenience delegation if user continues,
+- enforce checkpoint-3 approval for all workspace-changing actions regardless of routing path,
+- apply adaptive strictness: lighter Socratic flow for non-mutating analysis, mandatory checkpoints for workspace-changing actions.
 
 `quack` responsibilities (explicit routing):
 
@@ -28,8 +28,15 @@ Primary artifact source: [`src/agents/rubber-duck/`](../../src/agents/rubber-duc
 
 Convenience mode behavior:
 
-- harness auto-routing may occur for non-simple, non-ambiguous workflow asks,
-- explicit `quack` invocation always takes precedence over non-`quack` routing.
+**Classification:**
+- **Simple requests** (governor handles): single factual questions, explain ≤10 lines, review ≤5 line diffs, term clarification
+- **Workflow requests** (suggest quack): multi-step processes, tradeoff analysis, design decisions, implementation, test planning
+
+**Routing flow:**
+- Explicit `quack` invocation always takes precedence
+- For workflow requests without `quack`: governor suggests `quack [intent]` but proceeds with convenience delegation if user continues
+- Convenience delegation does NOT bypass checkpoint-3 for workspace-changing actions
+- Harness auto-routing may occur for non-ambiguous workflow requests (harness-specific behavior)
 
 ### Layer 2: Delegated execution via duckling
 
@@ -58,37 +65,50 @@ flowchart TD
   %% Explicit quack path (wins)
   B -->|has_quack_invocation true| E[S4_QUACK_ROUTING]
 
-  %% Direct/simple path
+  %% Simple request path
   B -->|is_simple_request true| D[S3_DIRECT_FLOW]
 
-  %% Convenience mode auto-route + recommendation path
-  B -->|is_ambiguous_request true| B
-  B -->|workflow_like and confidence_sufficient and no quack| G[S6_EXECUTE]
-  B -->|workflow_like and no quack and confidence_insufficient| C[S2_RECOMMEND_QUACK]
-  C -->|user reissues with quack| E
-  C -->|confidence becomes sufficient| G
-  C -->|still ambiguous| B
-  C -->|user ignores recommendation| D
+  %% Workflow request path
+  B -->|is_workflow_request true| C[S2_SUGGEST_QUACK]
+  C -->|provides brief response + suggests quack| WAIT[WAIT_USER]
+  WAIT -->|user says quack intent| E
+  WAIT -->|user continues without quack| G[S6_CONVENIENCE_DELEGATE]
+
+  %% Ambiguous request path
+  B -->|is_ambiguous_request true| CLARIFY[ASK_CLARIFY]
+  CLARIFY --> B
 
   %% Default direct path
   B -->|else| D
 
   %% Quack route-selection behavior
   E -->|ambiguous or invalid route choice| E
-  E -->|mutating| F[S5_MUTATION_GATE]
-  E -->|non mutating| G
+  E -->|route selected| G
 
-  %% Direct behavior
-  D -->|mutating| F
-  D -->|non mutating| G
+  %% Direct behavior (simple requests)
+  D --> CHECK_MUTATE_D[Check workspace-changing?]
+  CHECK_MUTATE_D -->|yes| F[S5_CHECKPOINT3_GATE]
+  CHECK_MUTATE_D -->|no| EXEC[S7_EXECUTE]
 
-  %% Mutation gate
+  %% Convenience delegation (workflow requests without quack)
+  G --> CHECK_MUTATE_G[Check workspace-changing?]
+  CHECK_MUTATE_G -->|yes| F
+  CHECK_MUTATE_G -->|no| EXEC
+
+  %% Checkpoint-3 gate (applies to ALL workspace-changing actions)
   F -->|approval_received false| F
-  F -->|approval_received true| G
+  F -->|approval_received true| EXEC
 
   %% Exit
-  G --> H[S7_DONE]
+  EXEC --> H[S8_DONE]
 ```
+
+**Key updates from previous flow:**
+- Simple vs workflow classification explicit at S1_CLASSIFY
+- S2_SUGGEST_QUACK shows governor suggests but allows continuation
+- Checkpoint-3 gate (S5) applies regardless of routing path (direct, quack, convenience)
+- Removed old "confidence_sufficient" ambiguity (replaced with classification criteria)
+- "Mutating" terminology replaced with "workspace-changing"
 
 ### Review flow
 
