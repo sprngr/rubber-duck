@@ -20,11 +20,11 @@ On explicit `quack`, respond in this order:
 
 0. **Heartbeat fast path (bare `quack`)**
    - If input is exactly `quack` (trim whitespace): output
-     - `🦆` + brief status
-       - If no status is available, give a funny duck nonsequiter.
-      - static quick-help from `references/quick-help.md`
-      - one-line route-intent prompt
+     - static heartbeat lines from `references/heartbeat.md` (short status + funny duck quip)
+     - static quick-help from `references/quick-help.md`
+     - one-line route-intent prompt
    - For bare `quack`, prefer emitting the static quick-help asset instead of dynamic route lists.
+   - Do not generate ad-hoc/random quips in heartbeat path.
 
 1. **Alias-first fast path (`quack <intent>`)**
    - Before alias matching, detect explicit full skill-name token in input.
