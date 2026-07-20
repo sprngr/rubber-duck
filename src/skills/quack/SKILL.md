@@ -89,9 +89,6 @@ Ambiguity/confirmation:
    - if user provided explicit subagent override, delegation is allowed regardless of default policy.
 6. Detect explicit full skill-name token in input (any explicit skill name).
 7. If explicit full skill-name token is present, resolve route policy for that skill and continue there.
-   - canonicalization rule: explicit `duck-explain` remaps to `duck-teach` (soft redirect)
-   - canonicalization rule: explicit `duck-dry-review` remaps to `duck-simplify` (soft redirect)
-   - canonicalization rule: explicit `duck-trace` remaps to `duck-debug` (soft redirect)
    - If policy is inline-default and no explicit subagent override was provided:
      - execute routed skill inline
      - capture execution proof internally

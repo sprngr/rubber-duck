@@ -107,8 +107,8 @@
     },
     {
       "id": 12,
-      "prompt": "quack duck-explain this function",
-      "expected_output": "Explicit retired skill token soft-redirects to canonical duck-teach route.",
+      "prompt": "quack explain this function",
+      "expected_output": "Explain alias resolves to duck-teach and routes directly.",
       "assertions": [
         "includes 'Routing: duck-teach.'",
         "includes 'duck-teach'"
@@ -125,8 +125,8 @@
     },
     {
       "id": 14,
-      "prompt": "quack duck-dry-review this duplicated logic",
-      "expected_output": "Explicit retired skill token soft-redirects to canonical duck-simplify route.",
+      "prompt": "quack dry this duplicated logic",
+      "expected_output": "Dry alias resolves to duck-simplify and routes directly.",
       "assertions": [
         "includes 'Routing: duck-simplify.'",
         "includes 'duck-simplify'"
@@ -143,8 +143,8 @@
     },
     {
       "id": 16,
-      "prompt": "quack duck-trace map callers for Foo",
-      "expected_output": "Explicit retired skill token soft-redirects to canonical duck-debug route.",
+      "prompt": "quack trace map callers for Foo",
+      "expected_output": "Trace alias resolves to duck-debug and routes directly.",
       "assertions": [
         "includes 'Routing: duck-debug.'",
         "includes 'duck-debug'"
