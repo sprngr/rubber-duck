@@ -17,7 +17,7 @@ Goal: make `quack` feel like intent routing, not command syntax.
 3. Unresolvable intent
 - ask one targeted disambiguation question
 - use compact prompt form: `Need one detail: <question>`
-- no A/B/C menu
+- no route menu
 
 4. Subagent override
 - accept `use|with|via <subagent>`
