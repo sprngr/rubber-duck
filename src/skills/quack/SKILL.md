@@ -41,7 +41,8 @@ On explicit `quack`, respond in this order:
      - treat punctuation separators inside phrase as spaces (for example `code-review` -> `code review`)
    - Accept common variants (for example `/review`, `code review`, `cr`).
     - If alias matches, auto-route immediately:
-       - one-line acknowledgement of resolved route
+       - one-line acknowledgement: `Routing: <skill>.`
+       - include `via <subagent>` only when user supplied explicit override
        - invoke mapped route skill with `preferred_subagent`
        - continue in mapped route flow (do not emit picker)
        - keep output minimal; do not emit `ROUTE_EXEC` on success unless debug/compliance trace is explicitly requested
@@ -51,9 +52,10 @@ On explicit `quack`, respond in this order:
      - else ask one disambiguation question
 
 2. **Alias-miss disambiguation (fallback)**
-   - Do not emit route pick-list options or recommendations.
-   - Ask one targeted disambiguation question based on detected intent fragment.
-   - Wait for user clarification before routing.
+    - Do not emit route pick-list options or recommendations.
+    - Ask one targeted disambiguation question based on detected intent fragment.
+    - Use compact prompt form: `Need one detail: <question>`.
+    - Wait for user clarification before routing.
 
 User override (optional):
 - allow explicit override in prompt suffix: `use <subagent>` or `with <subagent>` or `via <subagent>` (for example `quack review with general`)
@@ -156,7 +158,7 @@ Ambiguity/confirmation:
 
 If route confidence is low:
 - state assumptions in one line
-- ask one targeted disambiguation question
+- ask one targeted disambiguation question using `Need one detail: <question>`
 - if alias miss, do not proceed until user clarifies intent
 
 If dispatch tooling is unavailable or dispatch proof is missing:
