@@ -4,49 +4,47 @@
     {
       "id": 1,
       "prompt": "quack",
-      "expected_output": "Responds with a duck heartbeat line (🦆 + brief status) and one-line prompt asking what to route next, without emitting full route options.",
+      "expected_output": "Responds with one heartbeat line, then emits full quick-help text verbatim, then asks what to route next.",
       "assertions": [
-        "Response includes duck emoji status line",
-        "Response asks what to route next",
-        "Response does not include A/B/C route option list"
+        "includes '🦆 Ready.'",
+        "includes 'Tell me your route intent'",
+        "includes '## Options for skills routing'"
       ]
     },
     {
       "id": 2,
-      "prompt": "quack debug this endpoint returns 500 when userId is missing",
-      "expected_output": "Provides 1-3 route options with chain hints, recommends exactly one option with rationale, and asks explicit route choice.",
+      "prompt": "quack: review this diff?",
+      "expected_output": "Normalizes punctuation/prefix and routes directly with minimal confirmation to duck-review.",
       "assertions": [
-        "Includes at least one route option with chain hint",
-        "Includes exactly one recommended option",
-        "Ends with explicit choice prompt"
+        "includes 'Routing: duck-review.'",
+        "includes 'review'"
       ]
     },
     {
       "id": 3,
-      "prompt": "quack review this diff for correctness and rollback risk",
-      "expected_output": "Prefers review-oriented route with tradeoff, shows chain hints, and asks user to pick an option.",
+      "prompt": "quack \"trace this failure\"",
+      "expected_output": "Normalizes quotes and routes trace intent directly to duck-trace.",
       "assertions": [
-        "At least one option targets duck-review",
-        "Options include tradeoff text",
-        "Response asks user to pick route id"
+        "includes 'Routing: duck-trace.'",
+        "includes 'trace'"
       ]
     },
     {
       "id": 4,
-      "prompt": "quack debug this issue. I choose maybe B",
-      "expected_output": "When route selection is ambiguous/invalid, asks one narrowed follow-up and stays in route-selection mode.",
+      "prompt": "quack review with badagent",
+      "expected_output": "Rejects unknown subagent and asks one corrective question in minimal format.",
       "assertions": [
-        "Asks a narrowed clarification question for route choice",
-        "Does not proceed as if final route was selected"
+        "includes 'Need one detail: unknown subagent \"badagent\". Use duckling or general?'",
+        "includes 'duckling or general'"
       ]
     },
     {
       "id": 5,
       "prompt": "quack can you help with this thing",
-      "expected_output": "Handles ambiguous task intent by asking targeted disambiguation before proposing concrete route selection.",
+      "expected_output": "Asks one targeted disambiguation question using 'Need one detail:' format before routing.",
       "assertions": [
-        "Requests clarification of task intent",
-        "Avoids overconfident single-path execution"
+        "includes 'Need one detail:'",
+        "includes '?'"
       ]
     }
   ]
