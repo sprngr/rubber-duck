@@ -20,9 +20,9 @@ On explicit `quack`, respond in this order:
 
 0. **Heartbeat fast path (bare `quack`)**
    - If input is exactly `quack` (trim whitespace): output
-     - one selected heartbeat line from `references/heartbeat.md`
-       - selection rule: stateless deterministic selector = hash(`session_or_conversation_id` + `turn_index`) mod heartbeat-line-count
-     - full static quick-help from `references/quick-help.md` (emit verbatim)
+     - one selected heartbeat line from `assets/heartbeat.md`
+        - selection rule: stateless deterministic selector = hash(`session_or_conversation_id` + `turn_index`) mod heartbeat-line-count
+     - full static quick-help from `assets/quick-help.md` (emit verbatim)
      - one-line route-intent prompt
    - For bare `quack`, emit the full quick-help asset verbatim instead of dynamic route lists or condensed summaries.
    - Do not generate ad-hoc/random quips in heartbeat path.
