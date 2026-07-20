@@ -1,14 +1,14 @@
 # quack quick help
 
-Output style:
-  - success: `Routing: <skill>.`
-  - override success: `Routing: <skill> via <subagent>.`
-  - clarification: `Need one detail: <question>`
-
 Tell me your route intent: `quack <route> <intent>`.
 
 Example:
   - `quack review this diff: <your diff here>`
+
+Output style:
+  - success: `Routing: <skill>.`
+  - override success: `Routing: <skill> via <subagent>.`
+  - clarification: `Need one detail: <question>`
 
 How to use quack:
   - `quack review this diff`
