@@ -20,61 +20,31 @@ On explicit `quack`, respond in this order:
 
 0. **Heartbeat fast path (bare `quack`)**
    - If input is exactly `quack` (trim whitespace): output
-     - one selected heartbeat line from static options in `references/heartbeat.md`
-       - selection rule: deterministic rotation over file order (next line each invocation; wrap at end)
+     - one selected heartbeat line from `references/heartbeat.md` (deterministic rotation over file order)
      - static quick-help from `references/quick-help.md`
      - one-line route-intent prompt
-   - For bare `quack`, prefer emitting the static quick-help asset instead of dynamic route lists.
+   - For bare `quack`, prefer static quick-help over dynamic route lists.
    - Do not generate ad-hoc/random quips in heartbeat path.
 
 1. **Alias-first fast path (`quack <intent>`)**
-   - Treat `quack: <intent>`, `quack - <intent>`, and `quack — <intent>` as equivalent to `quack <intent>`.
-   - Ignore separator punctuation immediately after `quack` before alias resolution.
-   - If intent is wrapped in matching single or double quotes, strip the outer quote pair before alias resolution.
-   - Examples: `quack "review this diff"`, `quack: "risk this rollout"`, `quack 'trace this failure'`.
-   - Strip trailing terminal punctuation from intent before alias resolution (`?`, `!`, `.`, `;`, `:`), including repeated runs.
-   - Examples: `quack review this diff?`, `quack risk this rollout!!!`.
-   - Before alias matching, detect explicit full skill-name token in input.
-   - If present, invoke that skill directly (any explicit skill name) with effective `preferred_subagent`.
-   - Skip alias/disambiguation flow when direct skill-name invocation succeeds.
-   - Load `references/route-aliases.json`.
-   - Resolve route from the matched route entry; default `preferred_subagent` is `duckling` unless user override is provided.
-   - Normalize for matching using this contract:
-     - lowercase
-     - trim leading/trailing whitespace
-     - collapse internal whitespace runs to single spaces
-     - strip leading `/`
-     - remove surrounding punctuation wrappers (for example quotes/brackets)
-     - treat punctuation separators inside phrase as spaces (for example `code-review` -> `code review`)
-   - Accept common variants (for example `/review`, `code review`, `cr`).
-    - If alias matches, auto-route immediately:
-       - one-line acknowledgement: `Routing: <skill>.`
-       - include `via <subagent>` only when user supplied explicit override
-       - invoke mapped route skill with `preferred_subagent`
-       - continue in mapped route flow (do not emit picker)
-       - keep output minimal; do not emit `ROUTE_EXEC` on success unless debug/compliance trace is explicitly requested
-   - If multiple aliases match after normalization:
-     - prefer exact normalized alias match
-     - else prefer longest normalized alias
-     - else ask one disambiguation question
+   - Normalize invocation and intent, resolve route alias/direct skill, then auto-route.
+   - Success response:
+     - `Routing: <skill>.`
+     - include `via <subagent>` only when user supplied explicit override.
+   - Keep output minimal; do not emit success `ROUTE_EXEC` unless debug/compliance trace is explicitly requested.
 
 2. **Alias-miss disambiguation (fallback)**
-    - Do not emit route pick-list options or recommendations.
-    - Ask one targeted disambiguation question based on detected intent fragment.
-    - Use compact prompt form: `Need one detail: <question>`.
-    - Use deterministic question templates:
-      - debug-ish fragment (error/fail/trace/stack/broken): `Need one detail: is this debug, trace, or review?`
-      - rollout/risk fragment (rollout/migration/compat/rollback): `Need one detail: is this risk review or design tradeoff?`
-      - code-change fragment (fix/change/refactor/clean up): `Need one detail: do you want review, patch, or simplify?`
-      - unknown fragment: `Need one detail: which route fits—review, debug, design, explain, teach, triage, trace, risk, simplify, or dry-review?`
-    - Wait for user clarification before routing.
+   - Do not emit a route menu.
+   - Ask one targeted disambiguation question: `Need one detail: <question>`.
+   - Wait for user clarification before routing.
 
 User override (optional):
-- allow explicit override in prompt suffix: `use <subagent>` or `with <subagent>` or `via <subagent>` (for example `quack review with general`)
-- validate override against platform-listed subagent names (static known set if runtime discovery unavailable)
-- if valid, pass override as `preferred_subagent` instead of default `duckling`
-- if invalid, ask one correction question and stay in current route flow
-- invalid-override question template: `Need one detail: unknown subagent "<x>". Use duckling or general?`
+- allow explicit override: `use <subagent>` or `with <subagent>` or `via <subagent>`
+- if valid, route with override instead of default `duckling`
+- if invalid, ask one correction question and stay in current flow:
+  - `Need one detail: unknown subagent "<x>". Use duckling or general?`
+
+- Execution mechanics (normalization, tie-breaks, dispatch policy, and proof rules) are defined in **Method**.
 
 ## Philosophy Guardrails (skill-local)
 
@@ -91,7 +61,6 @@ Use only when user explicitly invokes `quack`; do not auto-activate from inferre
 
 Required:
 - explicit `quack` invocation
-- available route set (`debug`/`review`/`design`/`explain`/`teach`/`triage`/`trace`/`risk`/`simplify`/`dry-review`/`patch`)
 - readable alias registry at `references/route-aliases.json`
 - platform-listed subagent set for override validation
 - active host guardrails + mutating-action policy
@@ -101,7 +70,7 @@ Optional:
 - constraints (deadline, risk tolerance, depth/format)
 
 Ambiguity/confirmation:
-- if alias hit: auto-route without picker
+- if alias hit: auto-route without route menu
 - if alias miss: ask one targeted disambiguation question and wait for clarification before routing
 - mutating paths still require approval gate.
 
@@ -160,9 +129,9 @@ Ambiguity/confirmation:
      - `ROUTE_EXEC: skill=<resolved_skill>; subagent=<effective_subagent>; source=alias; status=blocked; reason=<dispatch_failure_or_missing_task_id>`
    - On blocked dispatch, ask one corrective question and stop.
 12. If alias not matched, ask one targeted disambiguation question derived from detected intent fragment.
-    - Use deterministic templates:
-      - debug-ish fragment (error/fail/trace/stack/broken): `Need one detail: is this debug, trace, or review?`
-      - rollout/risk fragment (rollout/migration/compat/rollback): `Need one detail: is this risk review or design tradeoff?`
+     - Use deterministic templates:
+       - debug-ish fragment (error/fail/trace/stack/broken): `Need one detail: is this debug, trace, or review?`
+       - rollout/risk fragment (rollout/migration/compat/rollback): `Need one detail: is this risk review or design tradeoff?`
       - code-change fragment (fix/change/refactor/clean up): `Need one detail: do you want review, patch, or simplify?`
       - unknown fragment: `Need one detail: which route fits—review, debug, design, explain, teach, triage, trace, risk, simplify, or dry-review?`
 13. Wait for user clarification; then retry alias resolution on clarified intent.
@@ -183,7 +152,7 @@ Ambiguity/confirmation:
 
 If route confidence is low:
 - state assumptions in one line
-- ask one targeted disambiguation question using `Need one detail: <question>` and the deterministic alias-miss templates
+- ask one targeted disambiguation question using `Need one detail: <question>` and Method step 12 templates
 - if alias miss, do not proceed until user clarifies intent
 
 If dispatch tooling is unavailable or dispatch proof is missing:
@@ -193,12 +162,10 @@ If dispatch tooling is unavailable or dispatch proof is missing:
 
 ## Compliance check (before send)
 
-- If route was resolved, response is non-compliant unless it includes:
-  - delegated success path: dispatch proof captured with `task_id` evidence (footer optional by default)
-  - inline success path: route execution proof captured (footer optional by default)
-  - blocked path: `ROUTE_EXEC ... status=blocked ... reason=<...>` plus one corrective question.
-
-- On successful route execution, emit `ROUTE_EXEC` footer only when user explicitly asks for debug/compliance trace.
+- Apply Method execution-proof rules:
+  - success proof is captured internally (footer optional by default)
+  - blocked dispatch must emit `ROUTE_EXEC ... status=blocked ... reason=<...>` plus one corrective question
+  - success `ROUTE_EXEC` footer is emitted only when explicitly requested for debug/compliance trace
 
 ## Edge Cases
 
