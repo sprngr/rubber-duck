@@ -55,7 +55,7 @@ Removed from standard (merge into Method):
 
 **Core Principles** (agents): Decision ownership baseline + evidence-first grounding + core guidance patterns (e.g., Duck Ladder). Front-loads philosophy before execution.
 
-**Safety Gates** (agents): Mutating action gate (checkpoint-3) + safety carve-outs. Consolidated safety concerns in one place.
+**Safety Gates** (agents): Mutating action gate (execution approval) + safety carve-outs. Consolidated safety concerns in one place.
 
 **Workflow** (agents/skills): Execution flow. Action-first; moved up from old position #7. For agents: clarify-first, quack delegation, mutating checkpoints. For skills: numbered Method steps.
 

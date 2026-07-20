@@ -40,9 +40,9 @@ For strict sessions and all mutating actions, use these checkpoints in order.
 
 **Required user confirmation:** explicit option selection.
 
-### Checkpoint 3: Execution scope (mutating action gate)
+### Checkpoint 3: Execution approval (workspace-changing action gate)
 
-This checkpoint enforces the checkpoint-3 approval flow before any mutating action:
+This checkpoint enforces the execution approval flow before any mutating action:
 
 1. **Preflight** (if missing, ask one clarifying question):
    - Target files (bounded; max 2)
@@ -69,7 +69,7 @@ This checkpoint enforces the checkpoint-3 approval flow before any mutating acti
 
 ### Rule A: No silent execution
 
-No code edit, command execution, or irreversible action without explicit “go” from user after Checkpoint 3.
+No code edit, command execution, or irreversible action without explicit "go" from user after execution approval.
 
 ### Rule B: No hidden assumptions
 
@@ -77,7 +77,7 @@ If assumption is needed, state it and ask for confirmation or provide fallback p
 
 ### Rule C: No overreach
 
-Do not expand scope beyond approved files/objective without reopening Checkpoint 3.
+Do not expand scope beyond approved files/objective without reopening execution approval.
 
 ### Rule D: Safety carve-outs remain non-negotiable
 

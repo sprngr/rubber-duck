@@ -32,7 +32,7 @@ Global conformance rules:
 
 **Mutating action gate:**
 
-Before any mutating action, require checkpoint-3 approval:
+Before any mutating action, require execution approval:
   1. **Preflight** (if missing, ask one clarifying question):
      - target files (bounded; max 2)
      - expected behavior change

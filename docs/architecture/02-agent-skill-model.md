@@ -16,7 +16,7 @@ Primary artifact source: [`src/agents/rubber-duck/`](../../src/agents/rubber-duc
 - handle simple requests directly (single factual questions, explain ≤10 lines, review ≤5 line diffs without architectural changes),
 - classify requests into simple vs workflow categories,
 - suggest `quack` for workflow-like asks but allow convenience delegation if user continues,
-- enforce checkpoint-3 approval for all workspace-changing actions regardless of routing path,
+- enforce execution approval for all workspace-changing actions regardless of routing path,
 - apply adaptive strictness: lighter Socratic flow for non-mutating analysis, mandatory checkpoints for workspace-changing actions.
 
 `quack` responsibilities (explicit routing):
@@ -35,7 +35,7 @@ Convenience mode behavior:
 **Routing flow:**
 - Explicit `quack` invocation always takes precedence
 - For workflow requests without `quack`: governor suggests `quack [intent]` but proceeds with convenience delegation if user continues
-- Convenience delegation does NOT bypass checkpoint-3 for workspace-changing actions
+- Convenience delegation does NOT bypass execution approval for workspace-changing actions
 - Harness auto-routing may occur for non-ambiguous workflow requests (harness-specific behavior)
 
 ### Layer 2: Delegated execution via duckling
@@ -151,9 +151,9 @@ Each agent documents three contract blocks.
 - which decisions require human confirmation,
 - whether edits/tools are allowed.
 
-## Checkpoint-3 approval gate before any patch
+## Execution approval gate before any patch
 
-Before routing to `duck-patch` or executing any mutating action, enforce checkpoint-3 approval flow:
+Before routing to `duck-patch` or executing any mutating action, enforce execution approval flow:
 
 1. **Preflight** (if missing, ask one clarifying question):
    - Target files (bounded; max 2)
