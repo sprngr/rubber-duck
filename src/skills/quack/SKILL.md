@@ -29,6 +29,8 @@ On explicit `quack`, respond in this order:
 1. **Alias-first fast path (`quack <intent>`)**
    - Treat `quack: <intent>`, `quack - <intent>`, and `quack — <intent>` as equivalent to `quack <intent>`.
    - Ignore separator punctuation immediately after `quack` before alias resolution.
+   - If intent is wrapped in matching single or double quotes, strip the outer quote pair before alias resolution.
+   - Examples: `quack "review this diff"`, `quack: "risk this rollout"`, `quack 'trace this failure'`.
    - Before alias matching, detect explicit full skill-name token in input.
    - If present, invoke that skill directly (any explicit skill name) with effective `preferred_subagent`.
    - Skip alias/disambiguation flow when direct skill-name invocation succeeds.
@@ -101,6 +103,7 @@ Ambiguity/confirmation:
 
 1. Verify explicit `quack` invocation.
 1a. Normalize invocation prefix: strip one separator token immediately after `quack` (`:`, `-`, or `—`) before parsing intent.
+1b. Normalize intent wrapper: if intent starts and ends with the same quote (`'` or `"`), strip that outer pair.
 2. If bare `quack`, run heartbeat fast path and stop.
 3. Parse optional override token from same input: `use <subagent>` or `with <subagent>` or `via <subagent>`.
 4. Validate override (if present) against platform-listed subagent names (static known set if runtime discovery unavailable).
