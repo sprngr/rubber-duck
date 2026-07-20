@@ -55,6 +55,11 @@ On explicit `quack`, respond in this order:
     - Do not emit route pick-list options or recommendations.
     - Ask one targeted disambiguation question based on detected intent fragment.
     - Use compact prompt form: `Need one detail: <question>`.
+    - Use deterministic question templates:
+      - debug-ish fragment (error/fail/trace/stack/broken): `Need one detail: is this debug, trace, or review?`
+      - rollout/risk fragment (rollout/migration/compat/rollback): `Need one detail: is this risk review or design tradeoff?`
+      - code-change fragment (fix/change/refactor/clean up): `Need one detail: do you want review, patch, or simplify?`
+      - unknown fragment: `Need one detail: which route fits—review, debug, design, explain, teach, triage, trace, risk, simplify, or dry-review?`
     - Wait for user clarification before routing.
 
 User override (optional):
@@ -144,6 +149,11 @@ Ambiguity/confirmation:
      - `ROUTE_EXEC: skill=<resolved_skill>; subagent=<effective_subagent>; source=alias; status=blocked; reason=<dispatch_failure_or_missing_task_id>`
    - On blocked dispatch, ask one corrective question and stop.
 12. If alias not matched, ask one targeted disambiguation question derived from detected intent fragment.
+    - Use deterministic templates:
+      - debug-ish fragment (error/fail/trace/stack/broken): `Need one detail: is this debug, trace, or review?`
+      - rollout/risk fragment (rollout/migration/compat/rollback): `Need one detail: is this risk review or design tradeoff?`
+      - code-change fragment (fix/change/refactor/clean up): `Need one detail: do you want review, patch, or simplify?`
+      - unknown fragment: `Need one detail: which route fits—review, debug, design, explain, teach, triage, trace, risk, simplify, or dry-review?`
 13. Wait for user clarification; then retry alias resolution on clarified intent.
 14. On invalid override, ask one correction question and remain in current route flow.
 15. If mutating, enforce approval checkpoint before mutation.
@@ -161,7 +171,7 @@ Ambiguity/confirmation:
 
 If route confidence is low:
 - state assumptions in one line
-- ask one targeted disambiguation question using `Need one detail: <question>`
+- ask one targeted disambiguation question using `Need one detail: <question>` and the deterministic alias-miss templates
 - if alias miss, do not proceed until user clarifies intent
 
 If dispatch tooling is unavailable or dispatch proof is missing:
