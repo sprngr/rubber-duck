@@ -67,6 +67,7 @@ User override (optional):
 - validate override against platform-listed subagent names (static known set if runtime discovery unavailable)
 - if valid, pass override as `preferred_subagent` instead of default `duckling`
 - if invalid, ask one correction question and stay in current route flow
+- invalid-override question template: `Need one detail: unknown subagent "<x>". Use duckling or general?`
 
 {{include: skill-snippets/philosophy-guardrails.md}}
 
@@ -153,6 +154,7 @@ Ambiguity/confirmation:
       - unknown fragment: `Need one detail: which route fits—review, debug, design, explain, teach, triage, trace, risk, simplify, or dry-review?`
 13. Wait for user clarification; then retry alias resolution on clarified intent.
 14. On invalid override, ask one correction question and remain in current route flow.
+    - Use template: `Need one detail: unknown subagent "<x>". Use duckling or general?`
 15. If mutating, enforce approval checkpoint before mutation.
 
 ## Boundaries & Handoffs
