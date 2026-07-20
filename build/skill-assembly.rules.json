@@ -9,7 +9,8 @@
   "io": {
     "include": [
       "SKILL.md",
-      "references/**"
+      "references/**",
+      "assets/**"
     ],
     "source_template": "src/skills/{skill}/",
     "output_template": "skills/{skill}/"

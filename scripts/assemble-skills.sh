@@ -259,6 +259,19 @@ for src_dir in "${SKILL_DIRS[@]}"; do
     shopt -u globstar
   fi
 
+  if [[ -d "${src_dir}/assets" ]]; then
+    shopt -s globstar
+    for asset in "${src_dir}"/assets/**; do
+      [[ -f "${asset}" ]] || continue
+      rel="${asset#${src_dir}/}"
+      if (( CHECK_ONLY == 1 )); then
+        check_portability "${asset}" || failed=1
+      fi
+      copy_or_check "${asset}" "${out_dir}/${rel}" || failed=1
+    done
+    shopt -u globstar
+  fi
+
   if (( CHECK_ONLY == 1 )); then
     check_portability "${CANONICAL_GUARDRAILS}" || failed=1
   fi
