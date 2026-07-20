@@ -27,6 +27,9 @@ On explicit `quack`, respond in this order:
    - For bare `quack`, prefer emitting the static quick-help asset instead of dynamic route lists.
 
 1. **Alias-first fast path (`quack <intent>`)**
+   - Before alias matching, detect explicit full skill-name token in input.
+   - If present, invoke that skill directly (any explicit skill name) with effective `preferred_subagent`.
+   - Skip alias/disambiguation flow when direct skill-name invocation succeeds.
    - Load `references/route-aliases.json`.
    - Resolve route from the matched route entry; default `preferred_subagent` is `duckling` unless user override is provided.
    - Normalize for matching using this contract:
@@ -87,18 +90,51 @@ Ambiguity/confirmation:
 
 1. Verify explicit `quack` invocation.
 2. If bare `quack`, run heartbeat fast path and stop.
-3. For non-bare input, load `references/route-aliases.json` and attempt case-insensitive alias match.
-4. Normalize user intent and aliases using the alias normalization contract before matching.
-5. Parse optional override token from same input: `use <subagent>` or `with <subagent>` or `via <subagent>`.
-6. Validate override (if present) against platform-listed subagent names (static known set if runtime discovery unavailable).
-7. Determine effective `preferred_subagent`: override if valid, else default to `duckling`.
-8. If multiple aliases matched, apply tie-break rules (exact match > longest alias > ask one disambiguation question).
-9. If alias matched, auto-route to mapped skill and continue there, passing effective `preferred_subagent`.
-9a. Load `references/subagent-runbook.md`, select role section matching resolved route (`patch`/`trace`/`risk`/`simplify`/`dry-review`/`review`), and append those role instructions inline to the subagent invocation payload.
-10. If alias not matched, ask one targeted disambiguation question derived from detected intent fragment.
-11. Wait for user clarification; then retry alias resolution on clarified intent.
-12. On invalid override, ask one correction question and remain in current route flow.
-13. If mutating, enforce approval checkpoint before mutation.
+3. Parse optional override token from same input: `use <subagent>` or `with <subagent>` or `via <subagent>`.
+4. Validate override (if present) against platform-listed subagent names (static known set if runtime discovery unavailable).
+5. Determine effective `preferred_subagent`: override if valid, else default to `duckling`.
+   - This value is authoritative for this turn. Do not replace or infer a different subagent later.
+5a. Determine route execution policy:
+   - inline-default routes: `duck-design`, `duck-explain`, `duck-teach`, `duck-debug`
+   - delegated-default routes: `duck-patch`, `duck-trace`, `duck-risk`, `duck-dry-review`, `duck-review`, `duck-triage`, `duck-simplify`
+   - if user provided explicit subagent override, delegation is allowed regardless of default policy.
+6. Detect explicit full skill-name token in input (any explicit skill name).
+7. If explicit full skill-name token is present, resolve route policy for that skill and continue there.
+   - If policy is inline-default and no explicit subagent override was provided:
+     - execute routed skill inline
+     - emit footer: `ROUTE_EXEC: skill=<resolved_skill>; subagent=inline; source=explicit; status=ok`
+   - Otherwise (delegated-default or user override provided):
+     - MUST launch `task` with `subagent_type=<effective_subagent>`
+     - MUST include `skill_name=<resolved_skill>` in task prompt
+     - Dispatch proof required: `task` response must include `task_id`
+     - After successful dispatch, emit footer:
+       - `ROUTE_EXEC: skill=<resolved_skill>; subagent=<effective_subagent>; source=explicit; task_id=<task_id>; status=ok`
+     - If dispatch fails or `task_id` is missing, emit:
+       - `ROUTE_EXEC: skill=<resolved_skill>; subagent=<effective_subagent>; source=explicit; status=blocked; reason=<dispatch_failure_or_missing_task_id>`
+     - On blocked dispatch, ask one corrective question and stop.
+   - Do not continue alias/disambiguation flow after successful route execution.
+8. Otherwise, load `references/route-aliases.json` and attempt case-insensitive alias match.
+9. Normalize user intent and aliases using the alias normalization contract before matching.
+10. If multiple aliases matched, apply tie-break rules (exact match > longest alias > ask one disambiguation question).
+11. If alias matched, auto-route to mapped skill and continue there, passing effective `preferred_subagent`.
+11a. Load `references/subagent-runbook.md`, select role section matching resolved route (`patch`/`trace`/`risk`/`simplify`/`dry-review`/`review`), and append those role instructions inline to the subagent invocation payload.
+11b. Resolve route policy for mapped skill.
+11c. If policy is inline-default and no explicit subagent override was provided:
+   - execute routed skill inline
+   - emit footer: `ROUTE_EXEC: skill=<resolved_skill>; subagent=inline; source=alias; status=ok`
+11d. Otherwise (delegated-default or user override provided):
+   - MUST launch `task` with `subagent_type=<effective_subagent>`
+   - MUST include `skill_name=<resolved_skill>` in task prompt
+   - Dispatch proof required: `task` response must include `task_id`
+   - After successful dispatch, emit footer:
+     - `ROUTE_EXEC: skill=<resolved_skill>; subagent=<effective_subagent>; source=alias; task_id=<task_id>; status=ok`
+   - If dispatch fails or `task_id` is missing, emit:
+     - `ROUTE_EXEC: skill=<resolved_skill>; subagent=<effective_subagent>; source=alias; status=blocked; reason=<dispatch_failure_or_missing_task_id>`
+   - On blocked dispatch, ask one corrective question and stop.
+12. If alias not matched, ask one targeted disambiguation question derived from detected intent fragment.
+13. Wait for user clarification; then retry alias resolution on clarified intent.
+14. On invalid override, ask one correction question and remain in current route flow.
+15. If mutating, enforce approval checkpoint before mutation.
 
 ## Boundaries & Handoffs
 
@@ -106,6 +142,8 @@ Ambiguity/confirmation:
 - Preserve user decision ownership.
 - {{include: policy-snippets/safety-carveouts.md}}
 - No edits/mutating commands/task delegation that changes workspace state without explicit bounded approval.
+- Invocation integrity rule: apply route policy deterministically (inline-default vs delegated-default), with user override allowed to force delegation.
+- Delegated proof rule: when route execution is delegated, no success claim without `task_id` evidence.
 
 ## Failure / fallback behavior
 
@@ -113,6 +151,18 @@ If route confidence is low:
 - state assumptions in one line
 - ask one targeted disambiguation question
 - if alias miss, do not proceed until user clarifies intent
+
+If dispatch tooling is unavailable or dispatch proof is missing:
+- emit blocked `ROUTE_EXEC` footer with reason
+- ask one corrective question (for example permission/tooling/target subagent issue)
+- stop without inline routed-skill execution
+
+## Compliance check (before send)
+
+- If route was resolved, response is non-compliant unless it includes:
+  - delegated path: `ROUTE_EXEC ... status=ok ... task_id=<task_id>`
+  - inline path: `ROUTE_EXEC ... subagent=inline ... status=ok`
+  - or blocked path: `ROUTE_EXEC ... status=blocked ... reason=<...>` plus one corrective question.
 
 ## Edge Cases
 
