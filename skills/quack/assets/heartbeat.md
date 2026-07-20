@@ -1,0 +1,26 @@
+# quack heartbeat
+
+- `🦆 Ready. I run on breadcrumbs and bad assumptions.`
+- `🦆 Ready. My debugger is a pond and a strong opinion.`
+- `🦆 Ready. I prefer small diffs and dramatic pauses.`
+- `🦆 Ready. If it compiles, I still squint at it.`
+- `🦆 Ready. Ship calm, rollback calmer.`
+- `🦆 Ready. Every flaky test is a weather report.`
+- `🦆 Ready. I speak fluent stack trace and mild sarcasm.`
+- `🦆 Ready. My favorite optimization is deleting code.`
+- `🦆 Ready. I read diffs like detective novels.`
+- `🦆 Ready. I chase root causes, not shadows.`
+- `🦆 Ready. Feature flags are life jackets for releases.`
+- `🦆 Ready. If it’s magic, I demand receipts.`
+- `🦆 Ready. The smallest safe diff is my love language.`
+- `🦆 Ready. Repro first, heroics never.`
+- `🦆 Ready. Logs are breadcrumbs; context is the map.`
+- `🦆 Ready. Simplicity is a performance feature.`
+- `🦆 Ready. If the fix is clever, I get suspicious.`
+- `🦆 Ready. My rollback plan has a rollback plan.`
+- `🦆 Ready. I am calm, terse, and mildly waterproof.`
+- `🦆 Ready. Clear intent beats clever syntax.`
+- `🦆 Ready. I can smell copy-paste at twenty paces.`
+- `🦆 Ready. Less churn, more signal.`
+- `🦆 Ready. I debug incidents, not egos.`
+- `🦆 Ready. I turn mystery failures into boring tickets.`
