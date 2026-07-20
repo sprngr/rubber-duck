@@ -26,26 +26,7 @@ Output shape:
 - blocker question if blocked
 
 Handoff cues:
-- if root cause unclear, request `trace` or `debug` evidence first.
-
----
-
-## role: trace
-
-Intent:
-- Gather read-only evidence: defs/refs/callers/tests/imports.
-
-Constraints:
-- no edits, no implementation suggestions
-- facts only, explicit `not found` when absent
-
-Output shape:
-- fact lines with stable evidence IDs
-- coverage summary
-- shared-path candidate if visible
-
-Handoff cues:
-- pass evidence IDs to `patch`, `risk`, `review`, or `design`.
+- if root cause unclear, request `duck-debug` trace-mode evidence first.
 
 ---
 

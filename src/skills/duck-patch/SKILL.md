@@ -64,7 +64,7 @@ Before introducing new constructs, stop at first rung that holds:
 
 - Do not broaden scope silently. If scope expands, pause and request renewed approval.
 - Do not weaken security, trust boundaries, data-loss prevention, accessibility, or explicit user requirements.
-- If root cause is unclear, hand back to `duck-debug` or `duck-trace` instead of speculative edits.
+- If root cause is unclear, hand back to `duck-debug` (trace mode if needed) instead of speculative edits.
 
 ## Edge Cases
 

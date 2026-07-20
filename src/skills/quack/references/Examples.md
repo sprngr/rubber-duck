@@ -44,7 +44,7 @@ Invalid override:
 ## Route Priority Hints
 
 - diff / PR / changed files → bias `duck-review`
-- stack trace / call path / “where used” → bias `duck-trace`
+- stack trace / call path / “where used” → bias `duck-debug` (trace mode)
 - rollout / migration / compatibility / rollback → bias `duck-risk`
 - “overengineered” / “too complex” → bias `duck-simplify`
 - “duplicate” / “drift” → bias `duck-simplify`

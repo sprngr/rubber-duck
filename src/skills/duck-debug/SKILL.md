@@ -1,6 +1,6 @@
 ---
 name: duck-debug
-description: Rubber duck debugging methodology. Socratic questioning to find root causes. Trace execution paths, challenge assumptions, find what the developer misses. Ask before suggesting. Use when "debug this", "why is X broken", "trace this failure", "reproduce this bug", or tracing a bug.
+description: Rubber duck debugging methodology. Canonical debug + trace skill with explicit modes. Socratic questioning to find root causes, plus read-only trace evidence mode for defs/refs/callers/tests/imports. Ask before suggesting. Use when "debug this", "why is X broken", "trace this failure", "reproduce this bug", "where is this used", or "map callers".
 ---
 
 Rubber duck debugging 🦆. Socratic method. Questions over answers. Keep language terse and practical.
@@ -8,6 +8,7 @@ Rubber duck debugging 🦆. Socratic method. Questions over answers. Keep langua
 ## Purpose
 
 Help developer find root cause through Socratic questioning, evidence tracing, and minimal safe fix direction.
+Also provide strict read-only trace mode when user asks for codebase evidence only.
 
 ## Output Format
 
@@ -16,6 +17,19 @@ Help developer find root cause through Socratic questioning, evidence tracing, a
 - minimal fix direction only after caller/evidence map
 - when evidence is incomplete: state assumptions/unknowns in one line
 - when uncertainty is material: include confidence (low/med/high + why)
+
+Trace mode output shape (for explicit trace/evidence requests):
+- one line per finding:
+  `<prefix> [E<n>] <path[:line]> — <fact>. Fix: <next step or N/A>.`
+- prefixes:
+  - `ℹ️ fact:` definition/reference/caller/test/import mapping
+  - `❓ question:` missing symbol/path/context
+- optional grouped headers:
+  `Defs:` `Refs:` `Callers:` `Tests:` `Imports:` `Sites:`
+- final line:
+  `totals: <n> facts, <n> questions.`
+  `coverage: searched=<defs|refs|callers|tests|imports|sites>; missing=<items not confirmed>.`
+  `shared-path: <candidate shared fix path or N/A>.`
 
 First-turn budget (default):
 - target up to ~8-12 lines
@@ -40,10 +54,11 @@ No premature fix rule:
 
 Skill-specific delta:
 - Provide questions, evidence framing, and fix options; developer makes final debugging choices.
+- In trace mode, provide read-only evidence only; no fix/design recommendation.
 
 ## Activation / When to Use
 
-Use when user asks to debug, trace breakage, or understand why behavior is wrong.
+Use when user asks to debug, trace breakage, map defs/refs/callers/tests/imports, or understand why behavior is wrong.
 
 ## Preflight Checks
 
@@ -79,6 +94,17 @@ For time/scheduling bugs, first response should include:
 
 ## Method
 
+### Mode Selection
+
+Select one mode from request intent:
+- `debug mode` (default): Socratic root-cause workflow.
+- `trace mode`: read-only codebase evidence workflow when user asks `trace`, `where used`, `map callers`, or `locate evidence`.
+
+Trace mode hard rules:
+- facts only; include stable evidence IDs (`E1`, `E2`, ...)
+- no edits, no fix suggestions, no design recommendations
+- if evidence is absent, state `not found` explicitly
+
 ### Duck Ladder (for fix direction)
 
 Before suggesting implementation, stop at first rung that holds:
@@ -98,6 +124,14 @@ Follow the call path:
 3. State transitions → where does state change unexpectedly?
 4. Side effects → what runs as a consequence?
 5. Timing → race conditions, async order, event loop
+
+### Trace Mode Method (read-only)
+
+1. Confirm target symbol/path/scope.
+2. Gather in order: defs → refs → callers → tests → imports.
+3. Prefer shared-path evidence before leaf ticket site when both exist.
+4. Emit only facts with stable evidence IDs (`E1`, `E2`, ...).
+5. If evidence absent, state `not found` explicitly.
 
 ### Root Cause Locality (bug fix discipline)
 
@@ -154,6 +188,7 @@ If they can't, they haven't found the right question yet. Ask another.
 - Don't debug what doesn't need debugging — check if it's a spec issue
 - Don't suggest a framework/tool change — that's a `duck-design` problem
 - Follow Reproduction Prompts triage rule.
+- In trace mode: no fixes, no design recommendation; hand implementation requests to `duck-patch`.
 
 ## Edge Cases
 

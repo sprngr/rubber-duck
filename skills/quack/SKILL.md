@@ -88,12 +88,13 @@ Ambiguity/confirmation:
    - This value is authoritative for this turn. Do not replace or infer a different subagent later.
 5a. Determine route execution policy:
    - inline-default routes: `duck-design`, `duck-teach`, `duck-debug`
-   - delegated-default routes: `duck-patch`, `duck-trace`, `duck-risk`, `duck-review`, `duck-triage`, `duck-simplify`
+   - delegated-default routes: `duck-patch`, `duck-risk`, `duck-review`, `duck-triage`, `duck-simplify`
    - if user provided explicit subagent override, delegation is allowed regardless of default policy.
 6. Detect explicit full skill-name token in input (any explicit skill name).
 7. If explicit full skill-name token is present, resolve route policy for that skill and continue there.
    - canonicalization rule: explicit `duck-explain` remaps to `duck-teach` (soft redirect)
    - canonicalization rule: explicit `duck-dry-review` remaps to `duck-simplify` (soft redirect)
+   - canonicalization rule: explicit `duck-trace` remaps to `duck-debug` (soft redirect)
    - If policy is inline-default and no explicit subagent override was provided:
      - execute routed skill inline
      - capture execution proof internally
@@ -114,7 +115,7 @@ Ambiguity/confirmation:
 9. Normalize user intent and aliases using the alias normalization contract before matching.
 10. If multiple aliases matched, apply tie-break rules (exact match > longest alias > ask one disambiguation question).
 11. If alias matched, auto-route to mapped skill and continue there, passing effective `preferred_subagent`.
-11a. Load `references/subagent-runbook.md`, select role section matching resolved route (`patch`/`trace`/`risk`/`simplify`/`review`), and append those role instructions inline to the subagent invocation payload.
+11a. Load `references/subagent-runbook.md`, select role section matching resolved route (`patch`/`risk`/`simplify`/`review`), and append those role instructions inline to the subagent invocation payload.
 11b. Resolve route policy for mapped skill.
 11c. If policy is inline-default and no explicit subagent override was provided:
    - execute routed skill inline
@@ -136,7 +137,7 @@ Ambiguity/confirmation:
       - debug-ish fragment (error/fail/trace/stack/broken): `Need one detail: is this debug, trace, or review?`
       - rollout/risk fragment (rollout/migration/compat/rollback): `Need one detail: is this risk review or design tradeoff?`
       - code-change fragment (fix/change/refactor/clean up): `Need one detail: do you want review, patch, or simplify?`
-      - unknown fragment: `Need one detail: which route fits—review, debug, design, teach, triage, trace, risk, or simplify?`
+      - unknown fragment: `Need one detail: which route fits—review, debug, design, teach, triage, risk, or simplify?`
 13. Wait for user clarification; then retry alias resolution on clarified intent.
 14. On invalid override, ask one correction question and remain in current route flow.
     - Use template: `Need one detail: unknown subagent "<x>". Use duckling or general?`

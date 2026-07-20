@@ -25,10 +25,10 @@
     {
       "id": 3,
       "prompt": "quack \"trace this failure\"",
-      "expected_output": "Normalizes quotes and routes trace intent directly to duck-trace.",
+      "expected_output": "Normalizes quotes and routes trace intent directly to duck-debug.",
       "assertions": [
-        "includes 'Routing: duck-trace.'",
-        "includes 'duck-trace'"
+        "includes 'Routing: duck-debug.'",
+        "includes 'duck-debug'"
       ]
     },
     {
@@ -46,7 +46,7 @@
       "expected_output": "Asks one targeted disambiguation question using 'Need one detail:' format before routing.",
       "assertions": [
         "includes 'Need one detail:'",
-        "includes 'which route fits—review, debug, design, teach, triage, trace, risk, or simplify?'"
+        "includes 'which route fits—review, debug, design, teach, triage, risk, or simplify?'"
       ]
     },
     {
@@ -91,7 +91,7 @@
       "expected_output": "Unknown explicit skill token falls back to one targeted disambiguation question.",
       "assertions": [
         "includes 'Need one detail:'",
-        "includes 'which route fits—review, debug, design, teach, triage, trace, risk, or simplify?'"
+        "includes 'which route fits—review, debug, design, teach, triage, risk, or simplify?'"
       ]
     },
     {
@@ -139,6 +139,24 @@
       "assertions": [
         "includes 'Routing: duck-simplify.'",
         "includes 'duck-simplify'"
+      ]
+    },
+    {
+      "id": 16,
+      "prompt": "quack duck-trace map callers for Foo",
+      "expected_output": "Explicit retired skill token soft-redirects to canonical duck-debug route.",
+      "assertions": [
+        "includes 'Routing: duck-debug.'",
+        "includes 'duck-debug'"
+      ]
+    },
+    {
+      "id": 17,
+      "prompt": "quack where used calculateTotal",
+      "expected_output": "Trace-style alias now resolves to duck-debug and routes directly.",
+      "assertions": [
+        "includes 'Routing: duck-debug.'",
+        "includes 'duck-debug'"
       ]
     }
   ]
