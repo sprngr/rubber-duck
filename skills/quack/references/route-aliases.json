@@ -1,98 +1,70 @@
 {
   "version": 1,
-  "notes": "Case-insensitive alias registry for explicit quack routing. Normalize by lowercasing and collapsing internal whitespace before matching.",
+  "notes": "High-signal alias registry for explicit quack routing. Normalize by lowercasing and collapsing internal whitespace before matching. On miss, quack asks one targeted disambiguation question.",
   "routes": {
     "duck-debug": {
       "aliases": [
-        "trace",
-        "/trace",
-        "investigate",
-        "call chain",
-        "where used",
         "debug",
-        "/debug",
-        "dbg",
-        "diagnose"
+        "trace",
+        "investigate",
+        "where is this used",
+        "map callers"
       ]
     },
     "duck-review": {
       "aliases": [
         "review",
-        "/review",
         "code review",
-        "cr",
-        "pr review"
+        "review the diff"
       ]
     },
     "duck-design": {
       "aliases": [
         "design",
-        "/design",
         "architecture",
-        "arch",
-        "tradeoff"
+        "tradeoffs",
+        "help me choose"
       ]
     },
     "duck-teach": {
       "aliases": [
         "explain",
-        "/explain",
-        "what does this do",
-        "walkthrough",
-        "decode",
         "teach",
-        "/teach",
         "show me",
-        "how to",
-        "tutorial"
+        "walk me through"
       ]
     },
     "duck-triage": {
       "aliases": [
         "triage",
-        "/triage",
-        "severity",
-        "prioritize",
-        "test gaps"
+        "test gaps",
+        "what should we test",
+        "bug severity"
       ]
     },
     "duck-risk": {
       "aliases": [
         "risk",
-        "/risk",
-        "failure modes",
-        "rollback",
-        "compat"
+        "stress test",
+        "what could break",
+        "rollback risk"
       ]
     },
     "duck-simplify": {
       "aliases": [
-        "dry",
-        "/dry",
-        "duplication",
-        "dedupe",
-        "divergence",
         "simplify",
-        "/simplify",
+        "dedupe",
+        "dry",
         "overengineered",
-        "reduce complexity",
-        "make simpler"
+        "reduce complexity"
       ]
     },
     "duck-patch": {
       "aliases": [
-        "fix",
-        "/fix",
-        "bug fix",
-        "small fix",
-        "targeted fix",
-        "quick fix",
-        "edit",
-        "/edit",
-        "small edit",
-        "targeted edit",
         "patch",
-        "/patch"
+        "fix",
+        "apply this fix",
+        "targeted edit"
       ]
     }
   }
