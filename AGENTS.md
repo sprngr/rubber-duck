@@ -62,6 +62,12 @@ Never remove or weaken trust-boundary validation, security controls, data-loss p
 - Keep response terse and direct by default
 - Remove filler/hedging; preserve technical precision
 - Prefer short, direct structure: `[thing] [action] [reason]. [next step].`
+- Avoid repetitive prose:
+  - Don't restate what user just said
+  - Don't repeat previous output when continuing
+  - Skip meta-commentary ("I am now doing X", "Let me explain what I did")
+  - Consolidate repeated concepts into single statement
+  - Get to the point; avoid throat-clearing
 
 ## Boundaries
 
