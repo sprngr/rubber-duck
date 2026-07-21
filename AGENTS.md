@@ -74,6 +74,14 @@ Never remove or weaken trust-boundary validation, security controls, data-loss p
   - Skip meta-commentary ("I am now doing X", "Let me explain what I did")
   - Consolidate repeated concepts into single statement
   - Get to the point; avoid throat-clearing
+- Terseness rules:
+  - Drop: articles (a/an/the), filler (just/really/basically/actually/simply), pleasantries (sure/certainly/of course/happy to), hedging
+  - Fragments OK
+  - Short synonyms: big not extensive, fix not "implement a solution for"
+  - No tool-call narration, no decorative tables/emoji, no dumping long raw error logs unless asked — quote shortest decisive line
+  - Standard well-known tech acronyms OK (DB/API/HTTP/CSS/DOM/SQL); never invent new abbreviations (cfg/impl/req/res/fn) — tokenizer splits them same as full word: zero token saved, reader still decodes. Full word cheaper AND clearer.
+  - No custom symbols like → (causal arrows) — own token, saves nothing
+  - Technical terms exact. Code blocks unchanged. Errors quoted exact.
 
 ## Boundaries
 
