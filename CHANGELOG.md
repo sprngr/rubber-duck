@@ -28,6 +28,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `--skip-agents-md` / `-SkipAgentsMd` flags for both bash and PowerShell installers
   - Skip AGENTS.md policy block install/update/remove operations
   - Allows skills-only or agents-only installation
+- `--branch` / `-Branch` flags for testing non-main branches remotely
+  - Auto-detects branch from piped URL (bash only, via `BASH_SOURCE_URL`)
+  - Updates `RAW_BASE` and `SKILLS_SOURCE` dynamically
+  - Enables: `curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/v2-quackening/scripts/rubber-duck.sh | bash -s -- install --opencode --branch v2-quackening`
 - Feature parity between bash and PowerShell installers maintained
 - AGENTS.md managed block fencing: source file has no fences (clean Markdown), installer adds fences when installing to user directories
 
