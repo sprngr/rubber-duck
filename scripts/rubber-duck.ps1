@@ -9,6 +9,7 @@ param(
   [switch]$ClaudeProject,
   [string]$ClaudeMd,
   [switch]$SkipSkills,
+  [switch]$SkipAgentsMd,
   [switch]$ProjectSkills,
   [string]$SkillsSource = "https://github.com/sprngr/rubber-duck",
   [ValidateSet("auto","local","web")]
@@ -289,6 +290,7 @@ function Backup-Md([string]$Target) {
 }
 
 function Upsert-ManagedBlock([string]$Target, [string]$ContentFile) {
+  if ($SkipAgentsMd) { return }
   $parent = Split-Path -Parent $Target
   if (-not [string]::IsNullOrWhiteSpace($parent)) {
     New-Item -ItemType Directory -Force -Path $parent | Out-Null
@@ -302,6 +304,7 @@ function Upsert-ManagedBlock([string]$Target, [string]$ContentFile) {
 }
 
 function Remove-ManagedBlock([string]$Target) {
+  if ($SkipAgentsMd) { return }
   if (-not (Test-Path $Target)) { return }
   $current = Get-Content -Raw $Target
   $stripped = Strip-ManagedBlockText $current
@@ -309,6 +312,7 @@ function Remove-ManagedBlock([string]$Target) {
 }
 
 function Install-PolicyFile {
+  if ($SkipAgentsMd) { return }
   # Claude targets keep a two-file layout (CLAUDE.md -> @AGENTS.md include,
   # AGENTS.md -> policy). Upsert managed blocks into both so user-authored
   # content in either file is preserved instead of clobbered.
@@ -319,6 +323,7 @@ function Install-PolicyFile {
 }
 
 function Remove-PolicyFile {
+  if ($SkipAgentsMd) { return }
   # Strip only our managed blocks; user content in these files is left intact.
   Remove-ManagedBlock $DestPolicyMd
   Remove-ManagedBlock $DestClaudeAgentsMd
@@ -414,6 +419,7 @@ function Has-ManagedBlock([string]$Target) {
 }
 
 function Report-PolicyBlock([string]$Target) {
+  if ($SkipAgentsMd) { Log "AGENTS policy block ($(Split-Path -Leaf $Target)): skipped (-SkipAgentsMd)"; return }
   $state = if (Has-ManagedBlock $Target) { "present" } else { "missing" }
   Log "AGENTS policy block ($(Split-Path -Leaf $Target)): $state"
 }
@@ -457,12 +463,14 @@ try {
       Doctor
       Download-Sources
       Install-Agents
-      Backup-Md $DestPolicyMd
-      if ($PolicyMode -eq "managed_block") {
-        Upsert-ManagedBlock $DestPolicyMd (Join-Path $script:TmpDir "AGENTS.md")
-      } else {
-        Backup-Md $DestClaudeAgentsMd
-        Install-PolicyFile
+      if (-not $SkipAgentsMd) {
+        Backup-Md $DestPolicyMd
+        if ($PolicyMode -eq "managed_block") {
+          Upsert-ManagedBlock $DestPolicyMd (Join-Path $script:TmpDir "AGENTS.md")
+        } else {
+          Backup-Md $DestClaudeAgentsMd
+          Install-PolicyFile
+        }
       }
       Skills-Install
       Status
@@ -471,12 +479,14 @@ try {
       Doctor
       Download-Sources
       Uninstall-Agents
-      Backup-Md $DestPolicyMd
-      if ($PolicyMode -eq "managed_block") {
-        Remove-ManagedBlock $DestPolicyMd
-      } else {
-        Backup-Md $DestClaudeAgentsMd
-        Remove-PolicyFile
+      if (-not $SkipAgentsMd) {
+        Backup-Md $DestPolicyMd
+        if ($PolicyMode -eq "managed_block") {
+          Remove-ManagedBlock $DestPolicyMd
+        } else {
+          Backup-Md $DestClaudeAgentsMd
+          Remove-PolicyFile
+        }
       }
       Skills-Uninstall
       Status
