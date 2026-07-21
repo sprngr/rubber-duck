@@ -1,5 +1,5 @@
 ---
-name: grill-with-ducks
+name: duck-grill
 description: >
   Batched grilling interview (up to 3 questions at a time) to pressure-test plans against repo docs,
   domain language, and decision guardrails. Deep assumption/risk interrogation mode.
@@ -176,7 +176,7 @@ If conversation shifts into one of these tasks, propose explicit handoff.
 
 **Relationship to duck-design:**
 - `duck-design`: Option comparison with tradeoff matrix, compact analysis (~10-14 lines), stays in options space, lighter questioning (2-3 assumptions)
-- `grill-with-ducks`: Multi-turn deep interrogation, pressure calibration, context threading, forces decision closure with assumption ledger
+- `duck-grill`: Multi-turn deep interrogation, pressure calibration, context threading, forces decision closure with assumption ledger
 
 ## References
 

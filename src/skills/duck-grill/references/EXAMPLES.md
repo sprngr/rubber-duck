@@ -29,7 +29,7 @@ Use these prompts to trigger this skill and keep routing crisp.
 
 ## vs duck-design
 
-| Dimension | duck-design | grill-with-ducks |
+| Dimension | duck-design | duck-grill |
 |-----------|-------------|------------------|
 | **Mode** | Option comparison | Multi-turn deep interrogation |
 | **Output** | Tradeoff matrix, 2-4 options | Batched questions (up to 3), assumption ledger |
