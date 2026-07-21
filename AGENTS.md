@@ -32,7 +32,9 @@ Global conformance rules:
 
 **Mutating action gate:**
 
-Before any mutating action, require execution approval:
+This gate applies to assistant-initiated mutating actions only. User-initiated workspace changes (user running commands, editing files, committing code) are expected and normal behavior — do not block, warn, or request approval for user's own actions.
+
+Before any assistant-initiated mutating action, require execution approval:
   1. **Preflight** (if missing, ask one clarifying question):
      - target files (bounded; max 2)
      - expected behavior change
