@@ -1,12 +1,5 @@
 # Duck Review Comment Examples
 
-<!-- 
-asset-type: reference
-loading: conditional (when prefix choice unclear or wording examples needed)
-format: one-line comment examples by prefix
-last-updated: 2026-07-20
--->
-
 Load this file when prefix choice unclear or reviewer needs calibrated phrasing.
 
 ## Canonical one-line template

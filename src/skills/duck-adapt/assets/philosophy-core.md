@@ -1,13 +1,5 @@
 # Duck Philosophy Core Principles
 
-<!-- 
-asset-type: runtime-data
-loading: always (foundation for all adaptations)
-format: comprehensive philosophy reference
-last-updated: 2026-07-21
-source: docs/architecture/01-philosophy.md
--->
-
 Complete rubber-duck philosophy for skill adaptation and validation.
 
 ## Purpose Statement

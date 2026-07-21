@@ -1,12 +1,5 @@
 # Duck-Adapt Examples
 
-<!-- 
-asset-type: reference
-loading: conditional (when user requests examples or guidance)
-format: before/after adaptation examples
-last-updated: 2026-07-21
--->
-
 Real-world examples of skill adaptation with philosophy transformation details.
 
 ---

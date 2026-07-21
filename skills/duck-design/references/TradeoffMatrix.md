@@ -1,12 +1,5 @@
 # Tradeoff Matrix Guide
 
-<!-- 
-asset-type: reference
-loading: conditional (multi-option decisions requiring comparison table)
-format: matrix dimensions and fill guidance
-last-updated: 2026-07-20
--->
-
 Comparison framework for multi-option design decisions.
 
 ## Standard Dimensions

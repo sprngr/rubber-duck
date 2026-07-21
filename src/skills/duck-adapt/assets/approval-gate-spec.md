@@ -1,13 +1,5 @@
 # Execution Approval Gate Pattern
 
-<!-- 
-asset-type: runtime-data
-loading: always (for mutating action detection and gate insertion)
-format: canonical approval gate specification
-last-updated: 2026-07-21
-source: docs/architecture/03-adaptive-socratic-policy.md (Checkpoint 3)
--->
-
 Complete specification for execution approval gates in rubber-duck skills.
 
 ---

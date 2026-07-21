@@ -1,12 +1,5 @@
 # Duck Philosophy Adaptation Checklist
 
-<!-- 
-asset-type: runtime-data
-loading: always (during adaptation step 3)
-format: transformation checklist
-last-updated: 2026-07-21
--->
-
 Use this checklist to ensure complete philosophy integration during skill adaptation.
 
 ## Decision Ownership

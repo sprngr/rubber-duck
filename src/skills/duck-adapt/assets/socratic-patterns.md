@@ -1,12 +1,5 @@
 # Socratic Transformation Patterns
 
-<!-- 
-asset-type: runtime-data
-loading: always (during philosophy mapping step 3)
-format: before/after transformation patterns
-last-updated: 2026-07-21
--->
-
 Practical patterns for converting imperative/autopilot steps into Socratic questioning flows.
 
 ---

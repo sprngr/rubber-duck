@@ -1,12 +1,5 @@
 # quack heartbeat
 
-<!-- 
-asset-type: runtime-data
-loading: always (bare quack invocation)
-format: list of ready-status quips
-last-updated: 2026-07-20
--->
-
 - `🦆 Ready. I run on breadcrumbs and bad assumptions.`
 - `🦆 Ready. I prefer small diffs and dramatic pauses.`
 - `🦆 Ready. If it compiles, I still squint at it.`

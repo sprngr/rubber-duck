@@ -1,12 +1,5 @@
 # quack quick help
 
-<!-- 
-asset-type: runtime-data
-loading: always (bare quack invocation)
-format: usage guide with current route aliases
-last-updated: 2026-07-20
--->
-
 Usage: `quack <intent>`
 
 Examples:

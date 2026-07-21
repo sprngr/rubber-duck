@@ -1,12 +1,5 @@
 # Overlap Detection Patterns
 
-<!-- 
-asset-type: runtime-data
-loading: always (during overlap analysis step 5)
-format: pattern matching rules
-last-updated: 2026-07-21
--->
-
 Patterns for detecting semantic overlap between skill concepts and existing duck-* skills.
 
 ## Current Skill Intent Map
