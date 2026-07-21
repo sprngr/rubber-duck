@@ -41,6 +41,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Skill count: 11 → 13 active skills (duck-adapt, duck-grill added)
 - Agent architecture: consolidated 6 specialized duckling subagents → single `duckling` delegator with skill-based routing
+  - duck-adversary → duck-risk | duck-builder → duck-patch | duck-dry → duck-teach
+  - duck-investigator → duck-debug | duck-reviewer → duck-review | duck-simple → duck-simplify
+  - duck-explain (v1.0.0 skill) → merged into duck-teach
 - Decision-debt marker format simplified: `TODO(decision-debt): <date> <what deferred>` (removed owner/trigger fields)
 - Validation terminology: "checkpoint 3 approval gate" → "execution approval gate" (consistent naming)
 
