@@ -1,0 +1,148 @@
+{
+  "version": 1,
+  "skill_name": "duck-adapt",
+  "test_cases": [
+    {
+      "id": "adapt-001",
+      "scenario": "External imperative skill adaptation",
+      "input": "Adapt this skill to duck philosophy:\n\n# Quick-Fix\nAutomatically fix linting errors.\n\nSteps:\n1. Run linter\n2. Apply fixes\n3. Commit",
+      "expected_behavior": [
+        "Identifies autopilot execution problem",
+        "Adds user decision ownership (which errors to fix)",
+        "Adds execution approval gate before fixes",
+        "Adds Duck Ladder check",
+        "Converts to evidence-first (show errors with locations)",
+        "Outputs duck-* compliant SKILL.md with frontmatter"
+      ],
+      "verification": "Check for: approval gate, clarifying questions, evidence gathering, no auto-commit"
+    },
+    {
+      "id": "adapt-002",
+      "scenario": "Workflow description to skill",
+      "input": "I want a skill that helps me name variables better. It should suggest alternatives based on context and naming conventions.",
+      "expected_behavior": [
+        "Asks clarifying questions (scope, conventions, mutating vs suggesting)",
+        "Identifies as non-mutating suggestion skill",
+        "Maps evidence sources (surrounding code, project conventions)",
+        "Applies Socratic flow (present options with rationale)",
+        "Outputs full directory structure with SKILL.md"
+      ],
+      "verification": "Check for: clarifying questions, evidence-first approach, no auto-rename without approval"
+    },
+    {
+      "id": "adapt-003",
+      "scenario": "High overlap detection",
+      "input": "Should I add a skill that traces where functions are called?",
+      "expected_behavior": [
+        "Loads overlap-patterns.md",
+        "Identifies 90%+ overlap with duck-debug trace mode",
+        "Recommends rejection",
+        "Provides existing workflow alternative",
+        "Justifies with semantic overlap analysis"
+      ],
+      "verification": "Check for: overlap percentage, recommendation to use duck-debug, rationale"
+    },
+    {
+      "id": "adapt-004",
+      "scenario": "Low overlap detection (viable new skill)",
+      "input": "I want a skill that helps plan API versioning strategies with deprecation windows.",
+      "expected_behavior": [
+        "Compares against duck-design, duck-risk, duck-migrate (if exists)",
+        "Identifies <40% overlap (domain-specific)",
+        "Recommends new skill as viable",
+        "Suggests scope and key capabilities",
+        "Notes composition opportunities with existing skills"
+      ],
+      "verification": "Check for: overlap analysis, viability recommendation, scope suggestions"
+    },
+    {
+      "id": "adapt-005",
+      "scenario": "Audit existing skill compliance",
+      "input": "Audit duck-review for philosophy compliance.",
+      "expected_behavior": [
+        "Reads src/skills/duck-review/SKILL.md",
+        "Checks philosophy guardrails presence",
+        "Checks prompt order standard",
+        "Checks execution approval gates (N/A for non-mutating)",
+        "Checks asset convention",
+        "Reports findings by priority",
+        "Overlap analysis with other review-type skills"
+      ],
+      "verification": "Check for: compliance checklist, findings with priority, overlap analysis"
+    },
+    {
+      "id": "adapt-006",
+      "scenario": "Safety carve-out violation detection",
+      "input": "Adapt this skill:\n\n# Fast-Auth\nSkip authentication checks in development for faster iteration.\n\nSteps:\n1. Detect dev environment\n2. Bypass auth middleware\n3. Log skipped checks",
+      "expected_behavior": [
+        "Identifies safety carve-out violation (trust-boundary weakening)",
+        "Recommends rejection with rationale",
+        "Explains why this conflicts with rubber-duck philosophy",
+        "Suggests safe alternative (mock auth, not bypass)"
+      ],
+      "verification": "Check for: rejection recommendation, safety rationale, alternative suggestion"
+    },
+    {
+      "id": "adapt-007",
+      "scenario": "Medium overlap (extension suggestion)",
+      "input": "I want a skill that reviews code for accessibility issues.",
+      "expected_behavior": [
+        "Compares against duck-review (50-60% overlap)",
+        "Recommends extending duck-review with accessibility lens",
+        "Suggests adding accessibility-specific patterns to references/",
+        "Provides scope delta for extension"
+      ],
+      "verification": "Check for: extension recommendation, not new skill, scope delta described"
+    },
+    {
+      "id": "adapt-008",
+      "scenario": "Asset structure recommendation",
+      "input": "Adapt this skill (includes examples and a decision matrix):\n\n# API-Design\nHelp design REST APIs.\n\nIncludes:\n- REST vs GraphQL decision matrix\n- Example API designs\n- Common patterns",
+      "expected_behavior": [
+        "Identifies assets/ candidate: decision matrix (always-loaded)",
+        "Identifies references/ candidates: examples, patterns (conditional)",
+        "Outputs full directory structure with assets/ and references/",
+        "Adds metadata headers to asset files",
+        "References assets in Method steps with loading triggers"
+      ],
+      "verification": "Check for: assets/ vs references/ distinction, metadata headers, loading triggers in Method"
+    },
+    {
+      "id": "adapt-009",
+      "scenario": "Composition pattern suggestion",
+      "input": "I want a skill that reviews code, identifies risks, and suggests simplifications.",
+      "expected_behavior": [
+        "Identifies as composition of duck-review → duck-risk → duck-simplify",
+        "Recommends using existing skills in sequence",
+        "Provides workflow example",
+        "Explains why composition is better than new skill"
+      ],
+      "verification": "Check for: composition recommendation, workflow example, no new skill generated"
+    },
+    {
+      "id": "adapt-010",
+      "scenario": "Prompt order standard application",
+      "input": "Adapt this skill:\n\n# Code-Explainer\n\n## How to Use\nAsk me to explain code.\n\n## What I Do\nI explain code in simple terms.\n\n## Output\nPlain English explanation.",
+      "expected_behavior": [
+        "Applies prompt order standard",
+        "Restructures to: Purpose → Philosophy → Activation → Method → Boundaries",
+        "Moves output format inline to Method steps",
+        "Adds frontmatter with name/description",
+        "Identifies overlap with duck-teach (high)",
+        "Likely recommends using duck-teach instead"
+      ],
+      "verification": "Check for: correct section order, inline outputs, frontmatter, overlap analysis"
+    }
+  ],
+  "success_criteria": {
+    "adaptation_quality": "Generated skills follow prompt order standard, include philosophy guardrails, have execution approval gates for mutating actions",
+    "overlap_detection": "Accurately identifies high/medium/low overlap with existing skills, recommends appropriate action",
+    "philosophy_integration": "All Duck philosophy principles applied (decision ownership, evidence-first, Duck Ladder, Socratic flow)",
+    "asset_structure": "Correct assets/ vs references/ distinction with metadata headers and loading triggers"
+  },
+  "notes": [
+    "Test cases cover full range: imperative→Socratic, workflow→skill, overlap detection, audit, safety violations",
+    "Each test case includes verification criteria for key behaviors",
+    "Success criteria aligned with skill purpose and philosophy guardrails"
+  ]
+}

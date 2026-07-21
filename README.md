@@ -38,10 +38,10 @@ $p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.co
 
 Replace `<target>` / `<Target>` with: `claude`, `copilot`, or `opencode`.
 
-Project-scoped skills (instead of global):
+Project-scoped (instead of global):
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh | bash -s -- install --opencode --project-skills
+curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh | bash -s -- install --<target>-project --project-skills
 ```
 
 ```powershell

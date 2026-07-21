@@ -48,6 +48,7 @@ For full architecture and policy details, use the canonical docs linked below.
 
 ### Skills (governor-invoked, main session)
 
+- [duck-adapt](../.agents/skills/duck-adapt/SKILL.md)
 - [duck-grill](../.agents/skills/duck-grill/SKILL.md)
 
 
@@ -68,6 +69,7 @@ Use `quack <intent>` for explicit routing with keyword-based precedence (risk/co
 | "simplify/dedupe/overengineered" | `duck-simplify` | complexity reduction; dry mode (read-only) available |
 | "what to test/test coverage" | `duck-triage` | test gaps, bug severity; review handoff for inline PR comments |
 | "what did we defer/duck debt" | `duck-debt` | read-only deferred-work ledger (TODO/FIXME/HACK) |
+| "adapt this skill/audit skill" | `duck-adapt` | meta-skill: external skill adaptation, philosophy compliance audit, overlap detection; stays in main session (not quack-routed) |
 | "grill me/grill this plan" | `duck-grill` | one-question-at-a-time assumption/risk interrogation; stays in main session (not quack-routed) |
 
 ## Operator playbooks (copy/paste)
