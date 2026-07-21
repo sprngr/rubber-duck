@@ -42,10 +42,51 @@ Checklist-style prompts for verifying governor behavior, delegated routing, and 
 | V18 | Unknown intent handling | `Can you handle this?` | Asks one clarifying question then routes appropriately. | Medium |
 | V19 | `quack` precedence | `quack review this diff:` + small diff | Explicit `quack` route-selection workflow takes precedence over convenience auto-routing. | High |
 | V20 | Ambiguous non-`quack` gate | `Can you handle this broken thing?` | Asks narrowed clarifying question first; does not auto-route while request remains ambiguous. | High |
-| V21 | `quack` chain hints + handoff | `quack debug this endpoint failure` | Route options include explicit `chain=` hints; selected route proceeds with the declared flow shape. | High |
+| V21 | Approach choice presentation | `Debug this endpoint failure` | Presents choice between conversational and structured workflow modes. | High |
 
 ## Quick regression subset (fast CI-style manual run)
 
 Run: V02, V03, V04, V11, V12, V13, V14.
 
 Pass rule: all Critical + High in subset must pass.
+
+## Automated testing
+
+### Machine-readable test format
+
+Validation tests are also available in JSON format for automated testing:
+- [test-prompts.json](./test-prompts.json) — machine-readable test cases with expected signals
+
+### Test runner script
+
+Run automated validation tests:
+
+```bash
+# Run all tests
+bash scripts/run-validation-tests.sh
+
+# Run specific tests
+bash scripts/run-validation-tests.sh --filter=V02,V03,V11
+
+# Run by severity
+bash scripts/run-validation-tests.sh --severity=Critical
+
+# Interactive mode (pause after each test)
+bash scripts/run-validation-tests.sh --interactive
+```
+
+**Note:** Test execution skeleton is implemented but requires harness-specific integration to invoke rubber-duck agent programmatically. Current implementation documents structure and can be extended for CI/CD integration.
+
+### Expected signals format
+
+Each test defines expected signals as substrings or patterns to match in agent response:
+- Signals are case-insensitive
+- Multiple signals = all must be present
+- Used to verify behavior without full response comparison
+
+### Future enhancements
+
+- LLM-as-judge for semantic response validation
+- Response baseline storage for regression comparison
+- CI/CD integration (pre-commit hook or GitHub Actions)
+- Per-harness test execution (Claude, Copilot, OpenCode)
