@@ -9,8 +9,15 @@ Outcomes:
 - evidence + questioning improve reasoning
 - bounded change reduces rework
 
-## Recent work (2026-07-20)
+## Recent work
 
+**2026-07-21:**
+- New skill: duck-adapt (meta-skill for external skill adaptation, philosophy compliance auditing, overlap detection)
+- Skill rename: grill-with-ducks → duck-grill (pattern consistency, 8 chars shorter)
+- Enhanced duck-grill: batched questions (up to 3), context threading, pressure calibration, assumption ledger
+- Documentation: added development workflow section to CONTEXT.md
+
+**2026-07-20:**
 Comprehensive optimization pass completed:
 - UX standardization: prompt-order standard, Duck Ladder 6-rung format, execution approval terminology
 - Routing improvements: keyword-based precedence in quack (risk/simplify/teach/triage/design), 76→33 aliases (-57%)
@@ -25,7 +32,7 @@ Comprehensive optimization pass completed:
 
 - Agent source: `src/agents/<name>/` (`meta.json` + `body.md`)
 - Skill source: `src/skills/*/SKILL.md`
-  - 11 active skills: duck-debug, duck-design, duck-dry-review, duck-explain, duck-patch, duck-refactor, duck-review, duck-risk, duck-simplify, duck-teach, duck-trace, duck-triage, quack
+  - 13 active skills: duck-adapt, duck-debug, duck-debt, duck-design, duck-grill, duck-patch, duck-refactor, duck-review, duck-risk, duck-simplify, duck-teach, duck-triage, quack
   - Asset structure: `assets/` (runtime, always loaded) vs `references/` (conditional docs)
 - Canonical shared guardrails source: `src/shared/references/GUARDRAILS.md`
 - Policy snippets: `src/shared/policy-snippets/` (atomic policy fragments for consistency)
