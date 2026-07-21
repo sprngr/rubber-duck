@@ -8,6 +8,7 @@ CLAUDE_MODE_SET=0
 OPENCODE_MODE_SET=0
 COPILOT_MODE_SET=0
 SKIP_SKILLS=0
+SKIP_AGENTS_MD=0
 PROJECT_SKILLS=0
 SKILLS_SOURCE="https://github.com/sprngr/rubber-duck"
 SKILLS_CLI="skills@^1.5.14"  # pinned npx CLI package spec
@@ -80,6 +81,7 @@ Options:
   --claude-project                  Use project Claude paths (.claude/agents + CLAUDE.md)
   --claude-md <path>                Claude target memory file path override
   --skip-skills                     Skip npx skills add/remove/list
+  --skip-agents-md                  Skip AGENTS.md policy block install/remove
   --project-skills                  Install skills to project scope (default is global via -g)
   --skills-source <url-or-path>     Skills package source
   --source <auto|local|web>         Artifact source (default: auto)
@@ -174,6 +176,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --skip-skills)
       SKIP_SKILLS=1
+      shift
+      ;;
+    --skip-agents-md)
+      SKIP_AGENTS_MD=1
       shift
       ;;
     --project-skills)
@@ -414,6 +420,7 @@ backup_md() {
 }
 
 upsert_managed_block() {
+  (( SKIP_AGENTS_MD == 1 )) && return 0
   local target="${1:-${DEST_POLICY_MD}}"
   local content_file="${2:-${TMP_DIR}/AGENTS.md}"
   if (( DRY_RUN == 1 )); then
@@ -431,6 +438,7 @@ upsert_managed_block() {
 }
 
 remove_managed_block() {
+  (( SKIP_AGENTS_MD == 1 )) && return 0
   local target="${1:-${DEST_POLICY_MD}}"
   if (( DRY_RUN == 1 )); then
     log "[dry-run] remove managed block from ${target}"
@@ -441,6 +449,7 @@ remove_managed_block() {
 }
 
 install_policy_file() {
+  (( SKIP_AGENTS_MD == 1 )) && return 0
   # Claude targets keep a two-file layout (CLAUDE.md -> @AGENTS.md include,
   # AGENTS.md -> policy). Upsert managed blocks into both so user-authored
   # content in either file is preserved instead of clobbered.
@@ -453,6 +462,7 @@ install_policy_file() {
 }
 
 remove_policy_file() {
+  (( SKIP_AGENTS_MD == 1 )) && return 0
   # Strip only our managed blocks; user content in these files is left intact.
   remove_managed_block "${DEST_POLICY_MD}"
   remove_managed_block "${DEST_CLAUDE_AGENTS_MD}"
@@ -563,6 +573,7 @@ has_managed_block() {
 
 report_policy_block() {
   local target="$1" state="missing"
+  (( SKIP_AGENTS_MD == 1 )) && { log "AGENTS policy block (${target##*/}): skipped (--skip-agents-md)"; return 0; }
   has_managed_block "${target}" && state="present"
   log "AGENTS policy block (${target##*/}): ${state}"
 }
@@ -609,12 +620,14 @@ case "${ACTION}" in
     doctor
     prepare_sources
     install_agents
-    backup_md "${DEST_POLICY_MD}"
-    if [[ "${POLICY_MODE}" == "managed_block" ]]; then
-      upsert_managed_block
-    else
-      backup_md "${DEST_CLAUDE_AGENTS_MD}"
-      install_policy_file
+    if (( SKIP_AGENTS_MD == 0 )); then
+      backup_md "${DEST_POLICY_MD}"
+      if [[ "${POLICY_MODE}" == "managed_block" ]]; then
+        upsert_managed_block
+      else
+        backup_md "${DEST_CLAUDE_AGENTS_MD}"
+        install_policy_file
+      fi
     fi
     skills_install
     status
@@ -623,12 +636,14 @@ case "${ACTION}" in
     doctor
     prepare_sources
     uninstall_agents
-    backup_md "${DEST_POLICY_MD}"
-    if [[ "${POLICY_MODE}" == "managed_block" ]]; then
-      remove_managed_block
-    else
-      backup_md "${DEST_CLAUDE_AGENTS_MD}"
-      remove_policy_file
+    if (( SKIP_AGENTS_MD == 0 )); then
+      backup_md "${DEST_POLICY_MD}"
+      if [[ "${POLICY_MODE}" == "managed_block" ]]; then
+        remove_managed_block
+      else
+        backup_md "${DEST_CLAUDE_AGENTS_MD}"
+        remove_policy_file
+      fi
     fi
     skills_uninstall
     status
