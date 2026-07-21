@@ -6,7 +6,7 @@ Copy/paste template for manual validation runs and PR comments.
 
 - Governor (`🦆`)
 - Delegation (`duckling`)
-- Skills (`duck-debug`, `duck-review`, `duck-design`, `duck-risk`, `duck-simplify`, `duck-patch`, `duck-teach`, `duck-triage`, `duck-debt`, `quack`)
+- Skills (`duck-adapt`, `duck-debt`, `duck-debug`, `duck-design`, `duck-grill`, `duck-patch`, `duck-refactor`, `duck-review`, `duck-risk`, `duck-simplify`, `duck-teach`, `duck-triage`, `quack`)
 
 Source prompt suite: [README.md](./README.md)
 

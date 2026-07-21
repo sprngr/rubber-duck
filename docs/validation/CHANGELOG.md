@@ -33,6 +33,28 @@ Track validation outcomes across commits/releases.
 
 ---
 
+## 2026-07-21 — v2-quackening
+
+- Commit: 1f42876 (docs drift fixes), ddbdd47 (context updates), 46ae62c (AGENTS.md gate clarification)
+- Runner: sprngr
+- Suite version: docs/validation/README.md
+- Verdict: not run (development session)
+
+### Quick subset
+- Passed: not run
+- Failed: not run
+
+### Extended failures (optional)
+- Failed: not run
+
+### Notes
+- Session work: AGENTS.md style guide completion (anti-repetition, Auto-Clarity, terseness rules), mutating action gate scope clarification (assistant-initiated only), installer feature parity (--skip-agents-md / -SkipAgentsMd flags), duck-adapt meta-skill (5 philosophy assets, 2,196 lines), duck-grill rename and enhancements, skill routing model documentation (inline/delegated/governor-invoked), CONTEXT.md session summary updates
+- Documentation drift fixes: README.md skip flags, validation terminology (checkpoint 3 → execution approval gate)
+- 13 active skills: duck-adapt, duck-debt, duck-debug, duck-design, duck-grill, duck-patch, duck-refactor, duck-review, duck-risk, duck-simplify, duck-teach, duck-triage, quack
+- No validation run performed; changes primarily documentation and installer tooling
+
+---
+
 ## 2026-06-29 — overfit-cleanup-pass
 
 - Commit: uncommitted-working-tree
