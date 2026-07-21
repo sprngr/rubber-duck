@@ -40,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Skill count: 11 → 13 active skills (duck-adapt, duck-grill added)
+- Agent architecture: consolidated 6 specialized duckling subagents → single `duckling` delegator with skill-based routing
 - Decision-debt marker format simplified: `TODO(decision-debt): <date> <what deferred>` (removed owner/trigger fields)
 - Validation terminology: "checkpoint 3 approval gate" → "execution approval gate" (consistent naming)
 
@@ -65,6 +66,7 @@ Major optimization pass with validation framework and UX standardization.
 - Routing improvements: keyword-based precedence in quack (risk/simplify/teach/triage/design)
 - Alias reduction: 76→33 aliases (-57%)
 - Formatting consistency: include directives, asset structure (assets/ vs references/)
+- Agent consolidation: pruned 6 specialized duckling subagents (duck-adversary, duck-builder, duck-dry, duck-investigator, duck-reviewer, duck-simple) → unified `duckling` delegator (-1,797 lines)
 
 ### Fixed
 - Gap closure: 6-step blocking approval workflow enforced
