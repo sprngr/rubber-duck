@@ -11,7 +11,6 @@ This section defines the system-level architecture and operating contracts for R
 5. [05-harness-agent-config.md](./05-harness-agent-config.md) — per-agent, per-harness config model and the build-time renderer.
 6. [06-skill-assembly-contract.md](./06-skill-assembly-contract.md) — source-to-artifact contract for skills (`src/skills` → `skills`) and drift controls.
 7. [07-skill-asset-convention.md](./07-skill-asset-convention.md) — skill asset structure (`assets/` vs `references/`), metadata headers, and loading conventions.
-8. [08-harness-best-practices.md](./08-harness-best-practices.md) — harness-specific UX tuning recommendations (Claude, Copilot, OpenCode).
 
 ## Validation
 

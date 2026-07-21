@@ -133,4 +133,4 @@ Report: "Refactoring complete. Verification: [test results]. [N] files changed."
 - If refactoring requires design decisions, pause and route to duck-design first
 - If refactoring reveals complexity issues, note for duck-simplify follow-up
 
-{{include: policy-snippets/safety-carveouts.md}}
+  {{include: policy-snippets/safety-carveouts.md}}
