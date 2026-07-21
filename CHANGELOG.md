@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 5 philosophy assets (2,196 lines): philosophy-core.md, socratic-patterns.md, approval-gate-spec.md, adaptation-checklist.md, overlap-patterns.md
 - **duck-grill** — Deep interrogation with batched questions (up to 3), context threading, pressure calibration, assumption ledger
   - Governor-invoked skill for adversarial design/plan stress-testing
-  - Renamed from grill-with-ducks for pattern consistency
+  - Renamed from grill-with-ducks for pattern consistency - inspired by grill-with-docs by [mattpocock](https://github.com/mattpocock/skills/blob/main/skills/engineering/grill-with-docs/SKILL.md)
 
 #### AGENTS.md Policy
 - Complete style guide: anti-repetition rules, Auto-Clarity definition, terseness rules
@@ -50,6 +50,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [v2-optimization-pass] - 2026-07-20
 
+Major optimization pass with validation framework and UX standardization.
+
 ### Added
 - duck-refactor skill: multi-file restructuring (extract/rename/move/inline/pattern-convert; max 5 files)
 - Validation framework: 21 tests in docs/validation/test-prompts.json, run-validation-tests.sh script
@@ -68,6 +70,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Gap closure: 6-step blocking approval workflow enforced
 - Review output contract hardened to schema-first format (prefix + location + problem + `Fix:`)
 
+## [v1.1.0] - 2024-07-17
+
+Released v1.1 with optimizations & tweaks ([#8](https://github.com/sprngr/rubber-duck/pull/8))
+
+### Added
+- Build system to share reused strings between skills and agents
+- Deferred marker inclusion rule to core AGENTS.md
+
+### Changed
+- Compacted prose for token usage, removed redundant rules
+- Reorganized skills and agents for rules loading order
+
+### Fixed
+- duck-debt to be deferred marker agnostic (TODO/FIXME/HACK/XXX)
+
+**Full Changelog**: [v1.0.0...v1.1.0](https://github.com/sprngr/rubber-duck/compare/v1.0.0...v1.1.0)
+
+## [v1.0.0] - 2024-07-03
+
+Initial stable release.
+
+### Added
+- Initial installer version (bash & PowerShell) + harness artifact build system
+- Basic harness support: Claude Code, Copilot CLI & VS Code, OpenCode
+- Agents: rubber-duck (main/router)
+- Duckling subagents: duck-adversary, duck-builder, duck-dry, duck-investigator, duck-reviewer, duck-simple
+- Skills: duck-debt, duck-debug, duck-design, duck-explain, duck-review, duck-teach, duck-triage
+- Core Rubber Duck philosophy documentation
+
+**Full Changelog**: [https://github.com/sprngr/rubber-duck/commits/v1.0.0](https://github.com/sprngr/rubber-duck/commits/v1.0.0)
+
+---
+
 ## Notes
 
 ### Validation Status
@@ -82,12 +117,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Breaking Changes
 - None expected; additive changes only
 - AGENTS.md policy block uses managed fencing (backward compatible)
-
-## v1.1.0
-
-### Added
-- Converted agents and skills to be composed from shared policy files for consistency
-
-## v1.0.0
-
-Initial release - provides base set of agents and skills + support for Claude Code, Copilot, and OpenCode harnesses.
