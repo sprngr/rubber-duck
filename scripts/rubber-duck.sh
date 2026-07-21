@@ -54,9 +54,11 @@ AGENT_FILES=(
 )
 
 REQUIRED_SKILLS=(
+  "duck-adapt"
   "duck-debt"
   "duck-debug"
   "duck-design"
+  "duck-grill"
   "duck-patch"
   "duck-refactor"
   "duck-review"

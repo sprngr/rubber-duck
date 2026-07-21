@@ -2,9 +2,11 @@
   "name": "rubber-duck",
   "skills": [
     "./skills/quack",
+    "./skills/duck-adapt",
     "./skills/duck-debt",
     "./skills/duck-debug",
     "./skills/duck-design",
+    "./skills/duck-grill",
     "./skills/duck-patch",
     "./skills/duck-refactor",
     "./skills/duck-review",

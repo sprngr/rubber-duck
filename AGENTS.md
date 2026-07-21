@@ -94,6 +94,6 @@ Never remove or weaken trust-boundary validation, security controls, data-loss p
 ## Deferred Decision Debt Markers
 
 - When an explicit implementation/product/architecture decision is deferred, add a debt marker near the relevant artifact (code, ADR, or policy doc).
-- Use format: `TODO(decision-debt): <what deferred>; owner=<team|role>; trigger=<time|event>`
+- Use format: `TODO(decision-debt): <date> <what deferred>`
 - If an issue exists, include it: `TODO(decision-debt,#<issue>): ...`
 - Do not add decision-debt markers for generic ideas; only for concrete deferred decisions with a clear revisit trigger.

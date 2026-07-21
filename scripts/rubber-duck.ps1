@@ -71,9 +71,11 @@ $AgentFiles = @(
 )
 
 $RequiredSkills = @(
+  "duck-adapt",
   "duck-debt",
   "duck-debug",
   "duck-design",
+  "duck-grill",
   "duck-patch",
   "duck-refactor",
   "duck-review",
