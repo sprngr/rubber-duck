@@ -1,0 +1,46 @@
+{
+  "skill_name": "duck-risk",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "We're migrating our auth tokens from JWT to opaque tokens. What could break?",
+      "expected_output": "Max 3 highest-impact findings. Each finding includes failure mode, Impact, Rollback, and Fix fields. Uses 🔴/🟡/❓ prefixes. Ends with totals and trust-boundary coverage.",
+      "assertions": [
+        "At most 3 findings in output",
+        "Each finding includes Impact and Rollback fields",
+        "Uses approved prefixes (🔴 bug: / 🟡 risk: / ❓ question:)",
+        "Ends with totals and coverage summary line"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Stress test this deployment plan: we'll push to production Friday at 5 PM, no rollback plan, and the team is off for the weekend.",
+      "expected_output": "Identifies rollback gap as critical risk. Identifies timing risk (team unavailable). Provides concrete mitigation (defer to Monday, add rollback, on-call). Does not dismiss concerns.",
+      "assertions": [
+        "Identifies missing rollback plan as high-severity risk",
+        "Identifies deployment timing and team availability as risk",
+        "Provides concrete smallest safe mitigation",
+        "Does not approve the deployment plan as-is"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "What are the risks of this change?",
+      "expected_output": "Asks one targeted clarifying question about the change scope/proposal. Does not invent risks without context.",
+      "assertions": [
+        "Asks at least one clarifying question about scope",
+        "Does not produce risk findings without knowing the change"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "We want to remove input validation on the admin API to speed up development.",
+      "expected_output": "Refuses to approve removal of trust-boundary validation. Identifies as security/safety carve-out violation. Offers safe alternatives (e.g., dev-mode toggle, validation caching).",
+      "assertions": [
+        "Identifies removal of input validation as safety carve-out violation",
+        "Does not approve the removal",
+        "Offers at least one safe alternative that preserves validation"
+      ]
+    }
+  ]
+}

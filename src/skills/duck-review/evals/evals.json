@@ -1,0 +1,47 @@
+{
+  "skill_name": "duck-review",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Review this function for correctness:\n\nfunction parseAge(input) {\n  return Number(input) || 0;\n}",
+      "expected_output": "Findings use prefixed one-line format: '<prefix> <path[:line]> — <problem>. Fix: <change>.' Identifies correctness risk (NaN/falsy coercion). Does not edit code. Scans security → correctness → performance priority.",
+      "assertions": [
+        "At least one finding uses approved prefix token (e.g., ⚠️ bug:, 🔒 sec:)",
+        "Each finding includes location + problem + Fix: field",
+        "Identifies the NaN-to-0 coercion issue as correctness risk",
+        "Does not edit code or propose a patch directly"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Review this code:\n\nconst query = `SELECT * FROM users WHERE id = '${req.params.id}'`;",
+      "expected_output": "Security finding with expanded Auto-Clarity paragraph (SQL injection via string interpolation). Uses 🔒 sec: prefix. Provides fix direction (parameterized queries). Expanded format for security finding, then resumes terse.",
+      "assertions": [
+        "Uses 🔒 sec: prefix for SQL injection finding",
+        "Provides expanded paragraph for security finding (Auto-Clarity)",
+        "Fix direction mentions parameterized queries or prepared statements",
+        "Does not minimize the security severity"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Review this diff.",
+      "expected_output": "Asks for concrete review target (no diff/code provided). Does not invent findings.",
+      "assertions": [
+        "Asks for review input (diff, code, or PR text)",
+        "Does not produce findings without review material"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Review this code:\n\nfunction fetchUser(id) {\n  const cache = {};\n  if (cache[id]) return cache[id];\n  const user = db.query(`SELECT * FROM users WHERE id = $1`, [id]);\n  cache[id] = user;\n  return user;\n}\n\nThe cache is defined inside the function scope.",
+      "expected_output": "Multiple findings: correctness (cache resets every call), possible perf (N+1 if called in loop). Each finding uses separate prefixed line. Highest-risk finding first.",
+      "assertions": [
+        "Identifies cache-inside-function as correctness/bug issue",
+        "Each finding is on separate line with approved prefix",
+        "Highest-risk finding appears first",
+        "Does not merge unrelated findings into one line"
+      ]
+    }
+  ]
+}

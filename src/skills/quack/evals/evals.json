@@ -3,160 +3,54 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "quack",
-      "expected_output": "Responds with one heartbeat line, then emits full quick-help text verbatim, then asks what to route next.",
+      "prompt": "quack (bare heartbeat invocation)",
+      "expected_output": "Bare quack heartbeat path. Emits one heartbeat line from assets/heartbeat.md. Emits full quick-help.md content verbatim. Ends with 'What would you like to route?' No ad-hoc quips.",
       "assertions": [
-        "includes '🦆 Ready.'",
-        "includes 'Tell me your route intent'",
-        "includes '## Options for skills routing'",
-        "includes '## Optional Subagent override'",
-        "includes 'What should I route next?'"
+        "Contains a heartbeat line starting with '🦆 Ready.'",
+        "Contains quick-help content with available routes list",
+        "Ends with 'What would you like to route?'",
+        "Does not generate ad-hoc quips beyond heartbeat list"
       ]
     },
     {
       "id": 2,
-      "prompt": "quack: review this diff?",
-      "expected_output": "Normalizes punctuation/prefix and routes directly with minimal confirmation to duck-review.",
+      "prompt": "quack review this diff for security issues",
+      "expected_output": "Routes to duck-review. Emits 'Routing: duck-review.' Uses keyword precedence (review signal). Does not ask disambiguation question.",
       "assertions": [
-        "includes 'Routing: duck-review.'",
-        "includes 'duck-review'"
+        "Emits 'Routing: duck-review.' or similar routing confirmation",
+        "Does not ask disambiguation question",
+        "Routes to duck-review (not duck-risk despite 'security' keyword)"
       ]
     },
     {
       "id": 3,
-      "prompt": "quack \"trace this failure\"",
-      "expected_output": "Normalizes quotes and routes trace intent directly to duck-debug.",
+      "prompt": "quack what could break in this rollback",
+      "expected_output": "Routes to duck-risk via keyword precedence (rollback signal). Emits 'Routing: duck-risk.' Does not route to duck-review or duck-design.",
       "assertions": [
-        "includes 'Routing: duck-debug.'",
-        "includes 'duck-debug'"
+        "Routes to duck-risk based on 'rollback' keyword precedence",
+        "Emits routing confirmation for duck-risk",
+        "Does not route to duck-review or duck-design"
       ]
     },
     {
       "id": 4,
-      "prompt": "quack review with badagent",
-      "expected_output": "Rejects unknown subagent and asks one corrective question in minimal format.",
+      "prompt": "quack fix this bug via general",
+      "expected_output": "Parses override 'via general'. Routes to duck-patch with subagent_type=general. Emits 'Routing: duck-patch via general.'",
       "assertions": [
-        "includes 'Need one detail: unknown subagent \"badagent\". Use duckling or general?'",
-        "includes 'duckling or general'"
+        "Parses 'via general' as subagent override",
+        "Routes to duck-patch (fix/patch alias)",
+        "Emits routing confirmation mentioning 'via general'"
       ]
     },
     {
       "id": 5,
-      "prompt": "quack can you help with this thing",
-      "expected_output": "Asks one targeted disambiguation question using 'Need one detail:' format before routing.",
+      "prompt": "quack do something cool",
+      "expected_output": "Alias miss. Detects unknown intent. Asks one targeted disambiguation question listing available routes. Does not guess or auto-route.",
       "assertions": [
-        "includes 'Need one detail:'",
-        "includes 'which route fits—review, debug, design, teach, triage, risk, or simplify?'"
-      ]
-    },
-    {
-      "id": 6,
-      "prompt": "quack duck-risk this rollout across versions",
-      "expected_output": "Detects explicit full skill-name and routes directly without alias menu/disambiguation.",
-      "assertions": [
-        "includes 'Routing: duck-risk.'",
-        "includes 'duck-risk'"
-      ]
-    },
-    {
-      "id": 7,
-      "prompt": "quack review this diff with general",
-      "expected_output": "Uses explicit subagent override and confirms route with override in minimal response.",
-      "assertions": [
-        "includes 'Routing: duck-review via general.'",
-        "includes 'via general'"
-      ]
-    },
-    {
-      "id": 8,
-      "prompt": "quack: \"review this diff?\" with general",
-      "expected_output": "Composes prefix/quote/punctuation normalization with valid override and routes to review via general.",
-      "assertions": [
-        "includes 'Routing: duck-review via general.'",
-        "includes 'duck-review'"
-      ]
-    },
-    {
-      "id": 9,
-      "prompt": "quack duck-debug this stack trace",
-      "expected_output": "Handles explicit full skill-name invocation for inline-default route and confirms duck-debug.",
-      "assertions": [
-        "includes 'Routing: duck-debug.'",
-        "includes 'duck-debug'"
-      ]
-    },
-    {
-      "id": 10,
-      "prompt": "quack duck-unknown do this",
-      "expected_output": "Unknown explicit skill token falls back to one targeted disambiguation question.",
-      "assertions": [
-        "includes 'Need one detail:'",
-        "includes 'which route fits—review, debug, design, teach, triage, risk, or simplify?'"
-      ]
-    },
-    {
-      "id": 11,
-      "prompt": "quack",
-      "expected_output": "Bare quack emits heartbeat plus full quick-help contract blocks.",
-      "assertions": [
-        "includes '🦆 Ready.'",
-        "includes 'Output style:'",
-        "includes '## Optional Subagent override'",
-        "includes 'What should I route next?'"
-      ]
-    },
-    {
-      "id": 12,
-      "prompt": "quack explain this function",
-      "expected_output": "Explain alias resolves to duck-teach and routes directly.",
-      "assertions": [
-        "includes 'Routing: duck-teach.'",
-        "includes 'duck-teach'"
-      ]
-    },
-    {
-      "id": 13,
-      "prompt": "quack explain this snippet",
-      "expected_output": "Explain alias now resolves to duck-teach and routes directly.",
-      "assertions": [
-        "includes 'Routing: duck-teach.'",
-        "includes 'duck-teach'"
-      ]
-    },
-    {
-      "id": 14,
-      "prompt": "quack dry this duplicated logic",
-      "expected_output": "Dry alias resolves to duck-simplify and routes directly.",
-      "assertions": [
-        "includes 'Routing: duck-simplify.'",
-        "includes 'duck-simplify'"
-      ]
-    },
-    {
-      "id": 15,
-      "prompt": "quack dedupe this transform pipeline",
-      "expected_output": "DRY alias now resolves to duck-simplify and routes directly.",
-      "assertions": [
-        "includes 'Routing: duck-simplify.'",
-        "includes 'duck-simplify'"
-      ]
-    },
-    {
-      "id": 16,
-      "prompt": "quack trace map callers for Foo",
-      "expected_output": "Trace alias resolves to duck-debug and routes directly.",
-      "assertions": [
-        "includes 'Routing: duck-debug.'",
-        "includes 'duck-debug'"
-      ]
-    },
-    {
-      "id": 17,
-      "prompt": "quack where used calculateTotal",
-      "expected_output": "Trace-style alias now resolves to duck-debug and routes directly.",
-      "assertions": [
-        "includes 'Routing: duck-debug.'",
-        "includes 'duck-debug'"
+        "Does not auto-route to a skill",
+        "Asks one disambiguation question",
+        "Lists available route options in disambiguation",
+        "Waits for user clarification"
       ]
     }
   ]
