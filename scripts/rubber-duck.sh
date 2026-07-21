@@ -13,6 +13,7 @@ PROJECT_SKILLS=0
 SKILLS_SOURCE="https://github.com/sprngr/rubber-duck"
 SKILLS_CLI="skills@^1.5.14"  # pinned npx CLI package spec
 SOURCE_MODE="auto"  # auto|local|web
+BRANCH="main"  # default branch
 RAW_BASE="https://raw.githubusercontent.com/sprngr/rubber-duck/main"
 DRY_RUN=0
 
@@ -82,6 +83,7 @@ Options:
   --claude                          Use global Claude paths (~/.claude/agents + ~/.claude/CLAUDE.md)
   --claude-project                  Use project Claude paths (.claude/agents + CLAUDE.md)
   --claude-md <path>                Claude target memory file path override
+  --branch <name>                   Branch to install from (default: main, auto-detects from URL)
   --skip-skills                     Skip npx skills add/remove/list
   --skip-agents-md                  Skip AGENTS.md policy block install/remove
   --project-skills                  Install skills to project scope (default is global via -g)
@@ -99,6 +101,7 @@ Examples:
   scripts/rubber-duck.sh install --claude
   scripts/rubber-duck.sh install --claude-project
   curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh | bash -s -- install --opencode
+  curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/v2-quackening/scripts/rubber-duck.sh | bash -s -- install --opencode --branch v2-quackening
 EOF
 }
 
@@ -196,6 +199,10 @@ while [[ $# -gt 0 ]]; do
       SOURCE_MODE="${2:-}"
       shift 2
       ;;
+    --branch)
+      BRANCH="${2:-}"
+      shift 2
+      ;;
     --raw-base)
       RAW_BASE="${2:-}"
       shift 2
@@ -215,6 +222,26 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+# Auto-detect branch from piped URL if not explicitly set
+if [[ "${BRANCH}" == "main" ]]; then
+  # Try to detect from common environment variables or process cmdline
+  if [[ -n "${BASH_SOURCE_URL:-}" ]] && [[ "${BASH_SOURCE_URL}" =~ githubusercontent\.com/[^/]+/[^/]+/([^/]+)/ ]]; then
+    DETECTED_BRANCH="${BASH_REMATCH[1]}"
+    if [[ "${DETECTED_BRANCH}" != "main" ]]; then
+      BRANCH="${DETECTED_BRANCH}"
+      log "Auto-detected branch: ${BRANCH}"
+    fi
+  fi
+fi
+
+# Update RAW_BASE and SKILLS_SOURCE based on branch
+RAW_BASE="https://raw.githubusercontent.com/sprngr/rubber-duck/${BRANCH}"
+if [[ "${BRANCH}" != "main" ]]; then
+  SKILLS_SOURCE="https://github.com/sprngr/rubber-duck#${BRANCH}"
+  log "Using branch: ${BRANCH}"
+  log "Skills source: ${SKILLS_SOURCE}"
+fi
 
 if [[ -n "${CLAUDE_MD}" && "${TARGET}" != "claude" && "${TARGET}" != "claude-project" ]]; then
   err "--claude-md requires --claude or --claude-project"

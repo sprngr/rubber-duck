@@ -8,13 +8,14 @@ param(
   [switch]$Claude,
   [switch]$ClaudeProject,
   [string]$ClaudeMd,
+  [string]$Branch = "main",
   [switch]$SkipSkills,
   [switch]$SkipAgentsMd,
   [switch]$ProjectSkills,
   [string]$SkillsSource = "https://github.com/sprngr/rubber-duck",
   [ValidateSet("auto","local","web")]
   [string]$Source = "auto",
-  [string]$RawBase = "https://raw.githubusercontent.com/sprngr/rubber-duck/main"
+  [string]$RawBase = ""
 )
 
 function rubber-duck {
@@ -38,6 +39,16 @@ if ($Copilot -and $CopilotProject) {
 
 if (-not $Claude -and -not $ClaudeProject -and -not [string]::IsNullOrWhiteSpace($ClaudeMd)) {
   throw "-ClaudeMd requires -Claude or -ClaudeProject."
+}
+
+# Update RawBase and SkillsSource based on branch
+if ([string]::IsNullOrWhiteSpace($RawBase)) {
+  $RawBase = "https://raw.githubusercontent.com/sprngr/rubber-duck/$Branch"
+}
+if ($Branch -ne "main") {
+  $SkillsSource = "https://github.com/sprngr/rubber-duck#$Branch"
+  Write-Host "Using branch: $Branch"
+  Write-Host "Skills source: $SkillsSource"
 }
 
 # When run via `iwr | iex` there is no backing script file, so $MyInvocation.MyCommand.Path

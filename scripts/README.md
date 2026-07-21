@@ -96,6 +96,7 @@ Use Bash CLI for Linux/macOS and shell-based CI.
 | `--opencode` | switch | Use preconfigured opencode paths |
 | `--opencode-project` | switch | Use project opencode paths (`.opencode/agents` + project-root `AGENTS.md`) |
 | `--claude-md <path>` | value | Claude target `CLAUDE.md` path override (global default for `--claude`, project default for `--claude-project`) |
+| `--branch <name>` | value | Branch to install from (default: `main`, auto-detects from URL when piped) |
 | `--skip-skills` | switch | Skip `npx skills add/remove/list` |
 | `--skip-agents-md` | switch | Skip AGENTS.md policy block install/remove |
 | `--project-skills` | switch | Install skills in project scope (default uses global `npx -g`) |
@@ -119,6 +120,7 @@ Use PowerShell CLI for Windows-native environments.
 | `-OpenCode` | switch | Use preconfigured opencode paths |
 | `-OpenCodeProject` | switch | Use project opencode paths (`.opencode/agents` + project-root `AGENTS.md`) |
 | `-ClaudeMd <path>` | value | Claude target `CLAUDE.md` path override (global default for `-Claude`, project default for `-ClaudeProject`) |
+| `-Branch <name>` | value | Branch to install from (default: `main`) |
 | `-SkipSkills` | switch | Skip `npx skills add/remove/list` |
 | `-SkipAgentsMd` | switch | Skip AGENTS.md policy block install/remove |
 | `-ProjectSkills` | switch | Install skills in project scope (default uses global `npx -g`) |
