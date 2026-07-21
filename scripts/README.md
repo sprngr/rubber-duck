@@ -97,6 +97,7 @@ Use Bash CLI for Linux/macOS and shell-based CI.
 | `--opencode-project` | switch | Use project opencode paths (`.opencode/agents` + project-root `AGENTS.md`) |
 | `--claude-md <path>` | value | Claude target `CLAUDE.md` path override (global default for `--claude`, project default for `--claude-project`) |
 | `--skip-skills` | switch | Skip `npx skills add/remove/list` |
+| `--skip-agents-md` | switch | Skip AGENTS.md policy block install/remove |
 | `--project-skills` | switch | Install skills in project scope (default uses global `npx -g`) |
 | `--skills-source <url-or-path>` | value | Override skills package source |
 | `--source <auto\|local\|web>` | value | Artifact source selection (`auto` default) |
@@ -119,6 +120,7 @@ Use PowerShell CLI for Windows-native environments.
 | `-OpenCodeProject` | switch | Use project opencode paths (`.opencode/agents` + project-root `AGENTS.md`) |
 | `-ClaudeMd <path>` | value | Claude target `CLAUDE.md` path override (global default for `-Claude`, project default for `-ClaudeProject`) |
 | `-SkipSkills` | switch | Skip `npx skills add/remove/list` |
+| `-SkipAgentsMd` | switch | Skip AGENTS.md policy block install/remove |
 | `-ProjectSkills` | switch | Install skills in project scope (default uses global `npx -g`) |
 | `-SkillsSource <url-or-path>` | value | Override skills package source |
 | `-Source auto\|local\|web` | value | Artifact source selection (`auto` default) |

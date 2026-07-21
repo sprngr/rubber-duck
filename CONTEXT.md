@@ -109,6 +109,11 @@ When editing skills or agents:
 - PowerShell installer: `scripts/rubber-duck.ps1`
 - CLI flags reference: `scripts/README.md`
 
+**Installer maintenance:**
+- Keep bash and PowerShell scripts in sync when adding features/flags
+- Update `scripts/README.md` CLI reference tables when flags change
+- Test both installers with new flags before committing
+
 Skills install behavior:
 - default global install: `npx skills add <source> -y -g`
 - project scope only when explicitly requested (`--project-skills` / `-ProjectSkills`)
