@@ -18,7 +18,7 @@ For raw `npx skills` usage, see [vercel-labs/skills](https://github.com/vercel-l
 
 ### Full Rubber Duck agent system (Installer / Updater / Uninstaller)
 
-Use the installer scripts for managed agent + policy setup. Adds the full skill set (`quack` + active `duck-*`) required by the governor and delegated `duckling` flow.
+Use the installer scripts for managed agent + policy setup. Adds the full skill set (`quack` + active `duck-*`) required by the governor and delegated `duckling` flow. See [Skills](#skills) for the complete list and routing model.
 
 Full CLI/options are documented in: [scripts/README.md](./scripts/README.md) (canonical).
 
@@ -158,20 +158,27 @@ Every skill is bound by the corresponding philosophy:
 
 Rubber Duck provides 13 specialized skills organized by routing model:
 
-### Quack-routed skills (via duckling subagent)
+### Quack-routed skills
 
-These skills are invoked through `quack <intent>` and run in a delegated subagent context:
+These skills are invoked through `quack <intent>` and have different execution defaults:
+
+#### Inline-default (run in main session for simple cases)
 
 - **duck-debug** — Socratic debugging with trace (defs/refs/callers/tests) and root-cause modes
 - **duck-debt** — Read-only deferred-work ledger (TODO/FIXME/HACK/XXX comments)
 - **duck-design** — Design option evaluation with tradeoff analysis and constraint challenges
+- **duck-teach** — Explain/tutorial with depth modes (explain/show/teach/walk-through)
+
+#### Delegated-default (run via duckling subagent)
+
 - **duck-patch** — Bounded implementation (max 2 files) with execution approval
 - **duck-refactor** — Multi-file restructuring (max 5 files): extract/rename/move/inline/pattern-convert
 - **duck-review** — Risk-first code review with paste-ready one-line comments
 - **duck-risk** — Adversarial failure mode analysis: rollback safety, compatibility, trust boundaries
 - **duck-simplify** — Complexity reduction and semantic duplication/divergence review
-- **duck-teach** — Explain/tutorial with depth modes (explain/show/teach/walk-through)
 - **duck-triage** — Test coverage analysis, bug severity assessment, test scenario planning
+
+> **Note:** User override (explicit delegation request) forces duckling delegation regardless of default policy.
 
 ### Governor-invoked skills (main session)
 
