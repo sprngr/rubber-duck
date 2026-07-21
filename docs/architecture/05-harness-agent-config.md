@@ -33,7 +33,7 @@ agents/<name>/
   meta.json    # shared identity + per-harness frontmatter
 ```
 
-`meta.json` schema:
+`meta.json` schema (illustrative example):
 
 ```json
 {

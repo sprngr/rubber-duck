@@ -109,32 +109,36 @@ flowchart TD
 - S2_SUGGEST_QUACK shows governor suggests but allows continuation
 - Checkpoint 3: Execution approval gate (S5) applies regardless of routing path (direct, quack, convenience)
 - Removed old "confidence_sufficient" ambiguity (replaced with classification criteria)
-- "Mutating" terminology replaced with "workspace-changing"
+- "Mutating" and "workspace-changing" are equivalent terms; both used throughout the project
 
 ### Skill composition patterns
 
 Common multi-skill workflows for comprehensive analysis:
 
-**Debug → Patch** (investigation → implementation):
-- `duck-debug` trace mode: locate evidence (defs, refs, callers, tests)
-- `duck-debug` root-cause mode: identify failure cause
-- `duck-patch`: apply bounded fix after scope is clear
-- Pattern: "Debug this endpoint failure then patch it"
-
-**Review → Risk → Simplify** (comprehensive review):
+**Review flow:**
 - `duck-review`: correctness, data integrity, performance findings
-- `duck-risk`: rollback safety, compatibility, failure modes
-- `duck-simplify`: complexity reduction, duplication, overengineering
+- Add `duck-risk` when rollback/compatibility risk is central
+- Add `duck-simplify` for complexity/duplication signals
+- Add `duck-triage` for test-gap signals
 - Pattern: "Review this refactor for correctness, risk, and complexity"
 
-**Design → Triage** (architecture → testing):
+**Debug flow:**
+- `duck-debug` trace mode: locate evidence (defs, refs, callers, tests)
+- `duck-debug` root-cause mode: identify failure cause
+- Add `duck-triage` if repro weak
+- `duck-patch`: apply bounded fix only on explicit request after scope is clear
+- Pattern: "Debug this endpoint failure then patch it"
+
+**Design flow:**
 - `duck-design`: evaluate options, tradeoffs, architecture decisions
-- `duck-triage`: test scenarios, coverage gaps for chosen design
+- Add `duck-risk` for failure/rollback/compat analysis
+- Add `duck-simplify` when complexity reduction is needed
+- Add `duck-triage` for test scenarios and coverage gaps
 - Pattern: "Design this migration and suggest test scenarios"
 
-**Teach → Debug** (understand → investigate):
-- `duck-teach`: explain code/concept/pattern first
-- `duck-debug`: if issue persists after understanding, trace execution
+**Teach flow:**
+- `duck-teach`: explain code/concept/pattern (includes concise explain mode and tutorial modes)
+- Escalate to `duck-debug`/`duck-review`/`duck-design` when issue type becomes clear
 - Pattern: "Explain this authentication flow, then help debug the token expiry issue"
 
 **Notes:**
@@ -143,69 +147,36 @@ Common multi-skill workflows for comprehensive analysis:
 - Quack routing supports explicit chaining via natural language
 - Each skill maintains independence (no hidden coupling)
 
-### Review flow
+## Agent prompt structure
 
-`duck-review` (+ `duck-risk` when rollback/compatibility risk is central) (+ `duck-simplify` for complexity/duplication signals) (+ `duck-triage` for test-gap signals)
+Agent prompts follow a standard section order for predictable precedence (see [04-prompt-order-standard.md](./04-prompt-order-standard.md)):
 
-### Debug flow
+1. **Role** — agent purpose and positioning
+2. **Core Principles** — decision ownership, evidence-first, duck ladder
+3. **Safety Gates** — workspace-changing action gate, safety carve-outs
+4. **Workflow** — execution flow, clarify-first, checkpoints
+5. **Output Format** — terse/direct guidelines, approval requirements
 
-`duck-debug` trace mode first → `duck-debug` root-cause mode → `duck-triage` if repro weak → `duck-patch` only on explicit bounded patch request
+Optional: **Inputs** (for delegator agents like duckling), **Boundaries** (hard constraints)
 
-### Design flow
+This structure ensures safety constraints appear before method details and action-oriented flow is preserved.
 
-`duck-design` (+ `duck-risk` for failure/rollback/compat analysis) (+ `duck-simplify` when complexity/duplication reduction is needed)
+## Execution approval gate
 
-### Explain / teach flow
+Before routing to `duck-patch` or executing any workspace-changing action, enforce execution approval flow.
 
-- `duck-teach` is the front-door understanding mode (includes concise explain mode and tutorial modes).
-- Escalate to debug/review/design when issue type becomes clear.
+See [Checkpoint 3: Execution approval](./03-adaptive-socratic-policy.md#checkpoint-3-execution-approval-workspace-changing-action-gate) in 03-adaptive-socratic-policy.md for full details.
 
-## Agent contracts
+**Key requirements:**
+- Preflight: target files (max 2), expected behavior change, smallest verification check
+- Approval ask: `Reply with "approve" to execute this scope.`
+- Wait for explicit "approve" before proceeding
+- For scope >2 files, split into smaller bounded tasks
+- If scope changes after approval, reopen approval
 
-Each agent documents three contract blocks.
+## Why this model matters
 
-### 1) Input contract
-
-- required context,
-- optional context,
-- accepted ambiguity level,
-- required confirmation points.
-
-### 2) Output contract
-
-- output format,
-- confidence level and uncertainty,
-- explicit assumptions,
-- concrete next action options.
-
-### 3) Boundary contract
-
-- what the agent must not do,
-- which decisions require human confirmation,
-- whether edits/tools are allowed.
-
-## Execution approval gate before any patch
-
-Before routing to `duck-patch` or executing any mutating action, enforce execution approval flow:
-
-1. **Preflight** (if missing, ask one clarifying question):
-   - Target files (bounded; max 2)
-   - Expected behavior change
-   - Smallest verification check
-2. **Approval ask**: `Reply with "approve" to execute this scope.`
-3. **Wait for approval**: do not proceed with edits/commands/task delegation until user replies with approval
-
-**Scope rules:**
-- For scope >2 files, require split into smaller bounded tasks before executing.
-- If scope changes after approval, reopen approval before continuing.
-
-See [03-adaptive-socratic-policy.md](./03-adaptive-socratic-policy.md) for full checkpoint structure.
-
-## Why this separation matters
-
-This model provides:
-
-- **traceability**: evidence and judgments are separable,
-- **auditability**: user can inspect why a recommendation exists,
-- **control**: implementation is gated by explicit user approval,
-- **portability**: skills can be reused in other assistants without changing decision policy.
+- **Traceability**: evidence and judgments are separable
+- **Auditability**: user can inspect why a recommendation exists
+- **Control**: implementation is gated by explicit user approval
+- **Portability**: skills reusable in other assistants without changing decision policy

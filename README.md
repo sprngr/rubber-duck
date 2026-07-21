@@ -24,11 +24,19 @@ Full CLI/options are documented in: [scripts/README.md](./scripts/README.md) (ca
 
 #### Minimal install examples
 
-| Target | Bash (macOS/Linux) | PowerShell (Windows) |
-|---|---|---|
-| Claude (global) | `curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh \| bash -s -- install --claude` | `$p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.ps1 -OutFile $p; & $p -Action install -Claude` |
-| Copilot (global) | `curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh \| bash -s -- install --copilot` | `$p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.ps1 -OutFile $p; & $p -Action install -Copilot` |
-| OpenCode (global) | `curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh \| bash -s -- install --opencode` | `$p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.ps1 -OutFile $p; & $p -Action install -OpenCode` |
+**Bash (macOS/Linux):**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh | bash -s -- install --<target>
+```
+
+**PowerShell (Windows):**
+
+```powershell
+$p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.ps1 -OutFile $p; & $p -Action install -<Target>
+```
+
+Replace `<target>` / `<Target>` with: `claude`, `copilot`, or `opencode`.
 
 Project-scoped skills (instead of global):
 
@@ -52,12 +60,12 @@ Rubber Duck can run two ways:
 
 - **As the main agent (whole session):** the duck *is* the session and governs from the first turn.
   - **Claude Code**: `claude --agent rubber-duck`, or set `"agent": "rubber-duck"` in `.claude/settings.json` (project) or `~/.claude/settings.json` (global). The startup header shows `@rubber-duck` to confirm, and the governor greeting (`initialPrompt`) auto-runs on the first turn. The `--agent` flag overrides the setting when both are present.
-  - **Copilot CLI**: `copilot --agent rubber-duck`, or select `rubber-duck` through the `/agent` menu - it will appear in the status bar as `🦆`. This is to avoid confusion with the built in [rubber-duck agent](https://docs.github.com/en/copilot/concepts/agents/copilot-cli/rubber-duck).
+  - **Copilot CLI**: select `rubber-duck` through the `/agent` menu (appears in the status bar as `🦆`). Use the menu to avoid confusion with GitHub's built-in [rubber-duck agent](https://docs.github.com/en/copilot/concepts/agents/copilot-cli/rubber-duck).
   - **Copilot VS Code**: select `🦆` from the agent menu, the argument hint should display 'Quack.' to show it's ready.
   - **OpenCode**: `opencode --agent 🦆` (recommended to assign to alias) or select `🦆` as the primary agent (its `mode: all` allows primary use) through the `/agents` menu or keyboard shortcut (default: tab).
 
 > [!NOTE]
-> Delegation runs through `duckling`, which applies role/mode constraints and routes to active skills.
+> Delegation runs through `duckling` (the specialized subagent that enforces role/mode constraints and routes to active skills).
 
 - **As a subagent (on demand):** invoke it from inside an existing session —
   - **Claude Code**: `@agent-rubber-duck <prompt>`.
@@ -90,7 +98,7 @@ function parseAge(input) {
 ```
 
 Expected:
-- risk-aware findings first,
+- risk-aware findings first (e.g., NaN-to-0 coercion loses invalid input signal),
 - concrete fix direction,
 - no silent code edits.
 
@@ -159,9 +167,9 @@ Every skill is bound by the corresponding philosophy:
 
 ### Prompt contracts
 
-- Router + duckling subagents source: [`src/agents/`](./src/agents)
-- Skills source: [`src/skills/`](./src/skills)
-- Generated skill artifacts: [`skills/`](./skills)
+- Router + duckling subagents (source markdown): [`src/agents/`](./src/agents)
+- Skills (source markdown): [`src/skills/`](./src/skills)
+- Skills (bundled artifacts for install): [`skills/`](./skills)
 
 ## Attribution
 

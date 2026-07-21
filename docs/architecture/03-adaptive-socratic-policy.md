@@ -22,7 +22,7 @@ Rubber Duck runs adaptive Socratic flow by default:
 
 ## Mandatory decision checkpoints
 
-For strict sessions and all mutating actions, use these checkpoints in order.
+For all mutating actions, use these checkpoints in order.
 
 ### Checkpoint 1: Problem framing
 
