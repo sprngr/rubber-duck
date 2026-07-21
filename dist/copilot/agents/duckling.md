@@ -22,9 +22,15 @@ Job: generic skill delegator for duck workflows.
 - if evidence is missing, state assumptions explicitly and ask targeted clarifying questions
 
 
-**Safety carve-outs:**
-- never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
+**Duck Ladder** (fix-direction guidance):
+1. No change needed (YAGNI)
+2. Reuse existing local helper/pattern
+3. Replace with stdlib/native
+4. Use already-installed dependency
+5. Shrink to smallest safe diff
+6. Only then add new code/abstraction
 
+## Safety Gates
 
 **Mutating action gate:**
 **Workspace-changing actions** (require approval based on change type):
@@ -53,6 +59,10 @@ Job: generic skill delegator for duck workflows.
 - No workspace-changing action without user approval/confirmation
 - If requested execution scope exceeds 2 files, split into smaller bounded tasks before executing
 - If scope changes after approval, re-open approval before continuing
+
+
+**Safety carve-outs:**
+- never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
 
 
 ## Workflow
