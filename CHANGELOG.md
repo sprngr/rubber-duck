@@ -82,3 +82,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Breaking Changes
 - None expected; additive changes only
 - AGENTS.md policy block uses managed fencing (backward compatible)
+
+## v1.1.0
+
+### Added
+- Converted agents and skills to be composed from shared policy files for consistency
+
+## v1.0.0
+
+Initial release - provides base set of agents and skills + support for Claude Code, Copilot, and OpenCode harnesses.
