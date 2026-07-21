@@ -33,7 +33,7 @@ For full architecture and policy details, use the canonical docs linked below.
 
 - [duckling](../.agents/agents/duckling)
 
-### Skills
+### Skills (duck-* suite, quack-routed)
 
 - [duck-debug](../.agents/skills/duck-debug/SKILL.md)
 - [duck-debt](../.agents/skills/duck-debt/SKILL.md)
@@ -45,6 +45,10 @@ For full architecture and policy details, use the canonical docs linked below.
 - [duck-simplify](../.agents/skills/duck-simplify/SKILL.md)
 - [duck-teach](../.agents/skills/duck-teach/SKILL.md)
 - [duck-triage](../.agents/skills/duck-triage/SKILL.md)
+
+### Skills (governor-invoked, main session)
+
+- [grill-with-ducks](../.agents/skills/grill-with-ducks/SKILL.md)
 
 
 ## Routing cheat sheet
@@ -64,6 +68,7 @@ Use `quack <intent>` for explicit routing with keyword-based precedence (risk/co
 | "simplify/dedupe/overengineered" | `duck-simplify` | complexity reduction; dry mode (read-only) available |
 | "what to test/test coverage" | `duck-triage` | test gaps, bug severity; review handoff for inline PR comments |
 | "what did we defer/duck debt" | `duck-debt` | read-only deferred-work ledger (TODO/FIXME/HACK) |
+| "grill me/grill this plan" | `grill-with-ducks` | one-question-at-a-time assumption/risk interrogation; stays in main session (not quack-routed) |
 
 ## Operator playbooks (copy/paste)
 
@@ -120,6 +125,13 @@ Simplify with duck-simplify. Start with dry mode (read-only), then wet mode for 
 ```text
 Triage this bug and test coverage. Classify severity, list missing tests,
 and propose one minimum runnable check for non-trivial logic changes.
+```
+
+#### Grill (assumption/risk interrogation)
+
+```text
+Grill this plan before implementation. Challenge assumptions, validate against docs/code,
+force explicit decision closure with evidence and rollback path.
 ```
 
 ### Composition patterns (multi-skill workflows)
