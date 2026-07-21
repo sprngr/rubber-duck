@@ -35,6 +35,18 @@ Comprehensive optimization pass completed:
 - Architecture docs: `docs/architecture/`
 - Validation suite: `docs/validation/` (test-prompts.json + run-validation-tests.sh)
 
+## Development workflow
+
+When editing skills or agents:
+1. Edit source files in `src/skills/*/` or `src/agents/*/`
+2. Rebuild generated artifacts:
+   - `make build-skills` → regenerate `skills/*/` from `src/skills/*/`
+   - `make build-agents` → regenerate `dist/` from `src/agents/*/`
+   - `make build` → rebuild both
+3. Verify before commit: `make check`
+   - checks guardrails drift, skills assembly, agent artifacts
+   - CI requires clean regenerated output
+
 ## Build + check contract
 
 - Skills assembly/check: `scripts/assemble-skills.sh`
