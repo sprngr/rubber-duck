@@ -1,25 +1,29 @@
 ---
 name: grill-with-ducks
 description: >
-  One-question-at-a-time grilling interview to pressure-test plans against repo docs,
+  Batched grilling interview (up to 3 questions at a time) to pressure-test plans against repo docs,
   domain language, and decision guardrails. Deep assumption/risk interrogation mode.
   Use when: "grill me", "grill this plan", "stress-test decision", "challenge assumptions".
 ---
 
-Grilling interview 🦆. One question at a time. Challenge assumptions. Ground in evidence.
+Grilling interview 🦆. Batch up to 3 questions per turn. Challenge assumptions. Ground in evidence.
 
 ## Purpose
 
-Pressure-test plans through one-question-at-a-time interview until decision is explicit, evidence-backed, and risk-aware.
+Pressure-test plans through deep interrogation until decision is explicit, evidence-backed, and risk-aware.
 
 ## Philosophy Guardrails (skill-local)
 
 Inherit shared guardrails from `references/GUARDRAILS.md`.
 
 Skill-specific delta:
-- Socratic interrogation mode; user answers each question before next question
+- Socratic interrogation mode; batch up to 3 related questions per turn to reduce question fatigue
 - Ground challenges in repo evidence (CONTEXT.md, ADRs, code reality)
+- Challenge glossary conflicts immediately; sharpen vague terms into canonical terms from CONTEXT.md
 - Document updates (ADRs, CONTEXT.md) require execution approval as semantic changes
+
+Safety carve-outs:
+- Never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
 
 ## Activation
 
@@ -44,9 +48,16 @@ Always anchor challenges in:
 - Code reality (definitions, callers, tests, runtime behavior)
 - Domain language consistency (challenge glossary conflicts immediately)
 
+Cross-check user statements against code and docs; stress-test with concrete scenarios and edge cases.
+
 If sources conflict, surface conflict explicitly and ask user to choose authoritative source.
 
 If evidence can answer a question, inspect code/docs before asking user.
+
+**Evidence gap signaling:**
+- When evidence exists: "Code shows X, but you're claiming Y—explain the gap"
+- When evidence missing: "No ADR/code/docs for this decision—flagging as evidence gap"
+- Track evidence gaps for potential documentation needs at close-out
 
 ### 3. Interview loop (hybrid checkpoint + deep-dive)
 
@@ -67,12 +78,38 @@ Use adaptive questioning:
 
 **Return to checkpoint flow** after deep-dive dependencies resolved.
 
+**Context threading across turns:**
+- Reference previous answers when surfacing contradictions or dependencies
+- Connect current question to prior responses explicitly ("You said X earlier, but...")
+- Track unresolved tensions and surface them when relevant to current question
+
+**Pressure calibration:**
+- Low stakes + clear evidence → lighter touch, faster progression through checkpoints
+- High stakes OR weak evidence → increase challenge depth, require concrete justification
+- User hedging ("probably", "I think", "maybe") → press for concrete evidence or explicit uncertainty acknowledgment
+
+**Pivot detection:**
+- If answers reveal problem statement mismatch, surface explicitly: "Your answers suggest the real problem is X, not Y. Should we redirect?"
+- Wait for explicit confirmation before continuing with reframed problem
+- Document original vs reframed problem in close-out
+
+**Steel man challenges (use sparingly):**
+- After user defends choice, occasionally present strongest counter-argument
+- "The best case for alternative X is [reason]. Why is your choice still stronger?"
+- Use only for high-impact irreversible decisions; avoid overuse (creates fatigue)
+
 ### 4. Per-turn output format (terse)
 
-Output exactly:
-1. **Question** — one targeted question
-2. **Why this matters** — one sentence grounding (optional if obvious)
+1. **Questions** — 1-3 targeted questions
+2. **Why this matters** — one sentence grounding per question (optional if obvious)
 3. **Wait** — pause for user response before continuing
+
+Batching guidelines:
+- Batch questions from same checkpoint pass (e.g., all problem-definition questions together)
+- Deep-dive questions ask one at a time; wait for answer before next deep-dive question
+- If only 1 question needed, ask 1; if 2-3 related checkpoint questions exist, batch them
+- When batching, mark independent questions: "These can be answered in any order"
+- If questions within batch depend on each other, mark dependency: "Question 2 builds on Question 1"
 
 Omit:
 - Recommended answers (unless binary tradeoff where both paths are valid)
@@ -101,7 +138,8 @@ End when all exit criteria met:
 Close-out format:
 - **Decision**: chosen option (1 sentence)
 - **Evidence used**: sources anchoring decision
-- **Open risks**: unvalidated assumptions or known gaps
+- **Assumptions ledger**: all assumptions surfaced during session, each marked validated / deferred / invalidated with evidence or validation plan
+- **Open risks**: unvalidated assumptions (see ledger), known gaps, unresolved evidence gaps
 - **Next approved step**: smallest safe action
 
 ### 7. Documentation updates (require approval)
@@ -132,20 +170,8 @@ Do not edit docs by default during grilling session.
 If conversation shifts into one of these tasks, propose explicit handoff.
 
 **Relationship to duck-design:**
-- `duck-design`: option comparison with tradeoff matrix, lighter Socratic touch, stays in options space
-- `grill-with-ducks`: deep assumption/risk interrogation, one question at a time, forces explicit decision closure
-
-## Domain language behavior
-
-- Challenge glossary conflicts immediately
-- Sharpen vague terms into canonical terms from CONTEXT.md
-- Stress-test with concrete scenarios and edge cases
-- Cross-check user statements against code and docs
-
-## Safety carve-outs
-
-- never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
-
+- `duck-design`: Option comparison with tradeoff matrix, compact analysis (~10-14 lines), stays in options space, lighter questioning (2-3 assumptions)
+- `grill-with-ducks`: Multi-turn deep interrogation, pressure calibration, context threading, forces decision closure with assumption ledger
 
 ## References
 
