@@ -38,6 +38,7 @@ Use when user explicitly requests deep plan grilling, assumption validation, or 
 
 If grilling target is unclear, ask one scoping question:
 - "What decision needs grilling?" (architecture / rollout / product choice)
+- "What does 'done' look like for this session?" (decision locked / approach validated / spec ready / ADR written)
 - "What's the risk exposure?" (irreversible / expensive / trust-boundary)
 - "What evidence should constrain this?" (code / docs / domain model)
 
@@ -47,6 +48,8 @@ Always anchor challenges in:
 - `CONTEXT.md` / `CONTEXT-MAP.md` and `docs/adr/` (if present)
 - Code reality (definitions, callers, tests, runtime behavior)
 - Domain language consistency (challenge glossary conflicts immediately)
+
+When referencing evidence, use meaningful names not bare numbers: "ADR-003: Database choice" not just "#42"
 
 Cross-check user statements against code and docs; stress-test with concrete scenarios and edge cases.
 
@@ -116,15 +119,16 @@ Omit:
 - Alternatives (save for checkpoint 2 when listing options)
 - Filler explanations
 
-### 5. Duck Ladder (if implementation emerges)
+### 5. Implementation boundary
 
-If discussion shifts to implementation choices, stop at first rung:
-1. No change needed (YAGNI)
-2. Reuse existing local helper/pattern
-3. Replace with stdlib/native
-4. Use already-installed dependency
-5. Shrink to smallest safe diff
-6. Only then add new code/abstraction
+**Grilling resolves decisions, not deliverables.**
+
+If discussion reaches "let's just build it," that's the signal to hand off to duck-patch or close-out. Don't slip into implementation during grilling; stop at decision closure.
+
+If implementation choices must be evaluated to make the decision:
+- Use Duck Ladder to guide minimal-change thinking
+- Stop at first rung: YAGNI → reuse existing → stdlib → installed dependency → smallest diff → new abstraction
+- Close out the decision before any patching begins
 
 ### 6. Session close-out
 
@@ -140,6 +144,7 @@ Close-out format:
 - **Evidence used**: sources anchoring decision
 - **Assumptions ledger**: all assumptions surfaced during session, each marked validated / deferred / invalidated with evidence or validation plan
 - **Open risks**: unvalidated assumptions (see ledger), known gaps, unresolved evidence gaps
+- **Out of scope**: concerns surfaced but ruled beyond this decision (with rationale)
 - **Next approved step**: smallest safe action
 
 ### 7. Documentation updates (require approval)

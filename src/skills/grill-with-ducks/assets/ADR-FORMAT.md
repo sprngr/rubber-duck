@@ -35,6 +35,12 @@ What option did we choose? (One sentence.)
 
 - **Option A**: [Brief description + why rejected]
 - **Option B**: [Brief description + why rejected]
+
+## Assumptions (if from grilling session)
+
+If this ADR follows a grilling session, include the assumptions ledger:
+
+1. [Assumption] — validated/deferred/invalidated ([evidence or validation plan])
 ```
 
 ## Naming convention
