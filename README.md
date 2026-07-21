@@ -12,15 +12,19 @@ Rubber Duck helps you debug, review, design, and triage with structured question
 npx skills add https://github.com/sprngr/rubber-duck
 ```
 
-Use this when you only want skills built with the [Rubber Duck philosophy](#philosophy-guardrails).
+Use this when you want just the [skills](#skills) built with the [Rubber Duck philosophy](#philosophy-guardrails).
 
 For raw `npx skills` usage, see [vercel-labs/skills](https://github.com/vercel-labs/skills).
 
 ### Full Rubber Duck agent system (Installer / Updater / Uninstaller)
 
-Use the installer scripts for managed agent + policy setup. Adds the full skill set (`quack` + active `duck-*`) required by the governor and delegated `duckling` flow. See [Skills](#skills) for the complete list and routing model.
+Use the installer scripts for managed agent + policy setup. Adds the full skill set (`quack` + `duck-*`) required by the governor and delegated `duckling` flow, plus optional AGENTS.md policy block installation. See [Skills](#skills) for the complete list and routing model.
 
 Full CLI/options are documented in: [scripts/README.md](./scripts/README.md) (canonical).
+
+**Skip flags:**
+- `--skip-skills` / `-SkipSkills` — skip skills package operations
+- `--skip-agents-md` / `-SkipAgentsMd` — skip AGENTS.md policy block operations
 
 #### Minimal install examples
 
