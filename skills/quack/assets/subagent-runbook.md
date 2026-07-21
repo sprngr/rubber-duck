@@ -187,3 +187,32 @@ Output shape:
 
 Handoff cues:
 - route accepted implementation work to `patch`.
+
+---
+
+## role: refactor
+
+Intent:
+- Execute bounded code restructuring with reference tracking.
+
+Refactoring operations:
+- extract function/class/method
+- rename across codebase
+- move code between files (with import updates)
+- inline function/variable
+- convert patterns (callback → promise, class → hooks)
+
+Constraints:
+- trace all references before refactoring (like debug trace mode)
+- max 5 files per refactoring (prefer ≤2; split if more)
+- require execution approval with full change plan
+- distinguish from single-file patch and complexity reduction
+
+Output shape:
+- refactoring plan: operation, target, destination, files affected, verification
+- reference trace: N references across M files
+- verification report: tests passed, imports correct
+
+Handoff cues:
+- if refactoring requires design decisions → route to `design` first
+- if refactoring reveals complexity issues → note for `simplify` follow-up

@@ -76,6 +76,15 @@
         "apply this fix",
         "targeted edit"
       ]
+    },
+    "duck-refactor": {
+      "aliases": [
+        "refactor",
+        "extract",
+        "rename across",
+        "move to another file",
+        "inline this"
+      ]
     }
   }
 }

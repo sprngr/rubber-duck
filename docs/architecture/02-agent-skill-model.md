@@ -53,6 +53,7 @@ It routes to active skills using explicit role/mode constraints from `quack`:
 - **duck-triage**
 - **duck-debt**
 - **duck-patch** (bounded implementation)
+- **duck-refactor** (multi-file restructuring)
 
 ## Skill/subagent flows (when routed)
 
