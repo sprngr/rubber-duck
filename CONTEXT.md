@@ -13,9 +13,14 @@ Outcomes:
 
 **2026-07-21:**
 - New skill: duck-adapt (meta-skill for external skill adaptation, philosophy compliance auditing, overlap detection)
+  - 5 philosophy assets (2,196 lines): philosophy-core.md, socratic-patterns.md, approval-gate-spec.md, adaptation-checklist.md, overlap-patterns.md
 - Skill rename: grill-with-ducks → duck-grill (pattern consistency, 8 chars shorter)
 - Enhanced duck-grill: batched questions (up to 3), context threading, pressure calibration, assumption ledger
-- Documentation: added development workflow section to CONTEXT.md
+- AGENTS.md style guide completion: anti-repetition rules, Auto-Clarity definition, terseness rules (no invented abbreviations, no custom symbols like →)
+- AGENTS.md mutating action gate clarification: applies to assistant-initiated actions only; user-initiated changes expected and normal
+- Installer feature parity: --skip-agents-md (bash) / -SkipAgentsMd (PowerShell) flags skip AGENTS.md policy block operations
+- Documentation: development workflow section, installer sync notes, skills section in README with routing model distinction
+- Commits: 46ae62c, 0aa2311, 516981b, 70753cd, da904b6, eff56ad, db819a6, 8ca7179, ed961b7, 9e54571, dbed25d, 2fac089, 2ea3edd
 
 **2026-07-20:**
 Comprehensive optimization pass completed:
@@ -33,6 +38,7 @@ Comprehensive optimization pass completed:
 - Agent source: `src/agents/<name>/` (`meta.json` + `body.md`)
 - Skill source: `src/skills/*/SKILL.md`
   - 13 active skills: duck-adapt, duck-debug, duck-debt, duck-design, duck-grill, duck-patch, duck-refactor, duck-review, duck-risk, duck-simplify, duck-teach, duck-triage, quack
+  - Routing model: inline-default (4 skills: debug, debt, design, teach), delegated-default (6 skills: patch, refactor, review, risk, simplify, triage), governor-invoked (2 skills: adapt, grill)
   - Asset structure: `assets/` (runtime, always loaded) vs `references/` (conditional docs)
 - Canonical shared guardrails source: `src/shared/references/GUARDRAILS.md`
 - Policy snippets: `src/shared/policy-snippets/` (atomic policy fragments for consistency)
@@ -91,6 +97,28 @@ When editing skills or agents:
 - Clarify-first: ask 1–3 targeted questions when context is incomplete
 - Terse by default; expand for security/irreversible risk/user confusion
 
+## Skill routing model
+
+Skills use three routing patterns:
+
+**Inline-default (4 skills):**
+- debug, debt, design, teach
+- Governor handles request directly with skill instructions inline
+- Lightweight, conversational flow
+- Use for: exploratory questioning, read-only analysis, teaching
+
+**Delegated-default (6 skills):**
+- patch, refactor, review, risk, simplify, triage
+- Governor delegates to fresh skill-specific subagent by default
+- Structured workflow, isolated context
+- Use for: multi-step processes, complex analysis, workspace-changing actions
+
+**Governor-invoked (2 skills):**
+- adapt, grill
+- Governor loads skill only when explicitly requested
+- Meta-skills for special-purpose tasks
+- Use for: skill adaptation, adversarial grilling sessions
+
 ## Prompt maintenance guidelines
 
 - Canonical order: `docs/architecture/04-prompt-order-standard.md`
@@ -114,9 +142,20 @@ When editing skills or agents:
 - Update `scripts/README.md` CLI reference tables when flags change
 - Test both installers with new flags before committing
 
-Skills install behavior:
+**Skills install behavior:**
 - default global install: `npx skills add <source> -y -g`
-- project scope only when explicitly requested (`--project-skills` / `-ProjectSkills`)
+- project scope only when explicitly requested (`--project-skills` / `-ProjectSkips`)
+
+**AGENTS.md install behavior:**
+- Source file (`AGENTS.md`) has no fences; clean Markdown for version control
+- Installer adds `<!-- RUBBER_DUCK_MANAGED_BLOCK START/END -->` fences when installing to user directories
+- Skip flags: `--skip-agents-md` (bash) / `-SkipAgentsMd` (PowerShell) skip policy block operations entirely
+- Policy block updates: installer detects managed block fences and updates content between them
+
+**AGENTS.md key policies:**
+- Mutating action gate applies to assistant-initiated actions only; user-initiated changes expected and normal
+- Style guide: anti-repetition rules, Auto-Clarity (expand for security/irreversible risk), terseness (no invented abbreviations, no custom symbols like →, drop articles/filler)
+- Safety carve-outs: never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements
 
 ## How to verify behavior
 
