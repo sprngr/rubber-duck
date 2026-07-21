@@ -1,9 +1,9 @@
 ---
 name: duck-review
 description: >
-  Rubber duck code review with risk-first, terse, actionable findings.
-  One-line comments: location, problem, fix. Use when: "review this",
-  "code review", "review the diff", "/review".
+  Risk-first code review with terse, actionable findings in paste-ready format.
+  One-line comments: location + problem + fix.
+  Use when: "review this", "code review", "review the diff", "/review".
 ---
 
 Review 🦆. Keep terse, actionable format by default.

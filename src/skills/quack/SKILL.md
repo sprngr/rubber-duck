@@ -1,9 +1,9 @@
 ---
 name: quack
 description: >
-   Explicit user-invoked routing for Rubber Duck. Resolves known intent aliases to route skills first;
-   on alias miss, asks one targeted disambiguation question and waits. Use when user says "quack" or
-   asks for explicit route control.
+  Explicit user-invoked routing for Rubber Duck workflows. Resolves known intent aliases
+  to route skills first; on alias miss, asks one targeted disambiguation question and waits.
+  Use when: "quack", explicit route control requested.
 ---
 
 # Skill: quack
@@ -27,16 +27,17 @@ Use only when user explicitly invokes `quack`; do not auto-activate from inferre
 1. Verify explicit `quack` invocation.
 2. Normalize intent: strip separator after `quack` (`:`, `-`, `—`), strip outer matching quotes, strip trailing punctuation (`?!.;:`).
 3. **Bare `quack` (heartbeat path):**
-   - Emit one heartbeat line from `assets/heartbeat.md`
-   - Emit full `assets/quick-help.md` verbatim
-   - Emit one-line route-intent prompt
-   - Stop (do not generate ad-hoc quips)
+   - If normalized intent is empty or whitespace-only:
+     - Read `assets/heartbeat.md` and select one random heartbeat line from the list
+     - Read and emit full `assets/quick-help.md` content verbatim (no summarization)
+     - Emit closing prompt: `What would you like to route?`
+     - Stop (do not generate ad-hoc quips, do not enter disambiguation)
 4. Parse optional override: `use <subagent>` or `with <subagent>` or `via <subagent>`.
 5. Validate override (if present) against platform subagent list; if invalid, ask one correction question: `Need one detail: unknown subagent "<x>". Use duckling or general?` and stop.
-6. Determine effective subagent: override if valid, else default `duckling`.
+6. Determine effective subagent: if override parsed in step 4, use that; otherwise default to `duckling`.
 7. Determine route execution policy:
-   - inline-default: `duck-design`, `duck-teach`, `duck-debug`
-   - delegated-default: `duck-patch`, `duck-risk`, `duck-review`, `duck-triage`, `duck-simplify`
+   - inline-default: `duck-design`, `duck-teach`, `duck-debug`, `duck-debt`
+   - delegated-default: `duck-patch`, `duck-refactor`, `duck-risk`, `duck-review`, `duck-triage`, `duck-simplify`
    - user override forces delegation regardless of default policy
 8. If explicit full skill name in input, resolve that skill and execute route (see step 11).
 9. Otherwise, load `assets/route-aliases.json` and attempt case-insensitive match.
@@ -56,15 +57,17 @@ Use only when user explicitly invokes `quack`; do not auto-activate from inferre
        - execute skill inline
        - emit `Routing: <skill>.` only
      - Otherwise (delegated-default OR user override):
-       - launch `task` with `subagent_type=<effective_subagent>` and `skill_name=<resolved_skill>`
-       - emit `Routing: <skill> via <subagent>.` if override supplied, else `Routing: <skill>.`
+       - launch `task` with `subagent_type=<effective_subagent>` (determined in step 6, defaults to `duckling`)
+       - pass `skill_name=<resolved_skill>` parameter
+       - emit `Routing: <skill> via <subagent>.` if user override supplied, else `Routing: <skill>.`
        - if dispatch fails, ask one corrective question and stop
 13. **Alias miss (disambiguation):**
     - Detect intent fragment and ask one targeted question:
       - debug-ish (error/fail/trace/stack/broken): `Need one detail: is this debug, trace, or review?`
       - rollout/risk (rollout/migration/compat/rollback): `Need one detail: is this risk review or design tradeoff?`
-      - code-change (fix/change/refactor/clean up): `Need one detail: do you want review, patch, or simplify?`
-      - unknown: `Need one detail: which route fits—review, debug, design, teach, triage, risk, or simplify?`
+      - code-change (fix/change/refactor/clean up): `Need one detail: do you want review, patch, refactor, or simplify?`
+      - tech-debt (todo/defer/fixme/debt): `Need one detail: is this debt audit or simplify?`
+      - unknown: `Need one detail: which route fits—review, debug, design, teach, triage, risk, simplify, patch, refactor, or debt?`
     - Wait for user clarification, then retry alias resolution.
 
 ## Boundaries

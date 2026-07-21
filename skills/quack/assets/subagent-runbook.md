@@ -7,7 +7,7 @@ format: role instructions by skill
 last-updated: 2026-07-20
 -->
 
-Purpose: preserve legacy duck-* behaviors as role instructions appended inline by `quack` when invoking a subagent.
+Purpose: role instructions appended inline by `quack` when invoking a subagent.
 
 Usage rule:
 - `quack` resolves `route`, then determines effective `preferred_subagent` (user override or default `duckling`).

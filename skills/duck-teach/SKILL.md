@@ -1,10 +1,10 @@
 ---
 name: duck-teach
 description: >
-  Canonical teaching/explaining skill for code, logs, queries, and config.
-  Uses explicit depth modes: "explain this" = fast 4-block summary, "show me" = compact tutorial,
-  "teach me" = full tutorial, "walk me through" = step-by-step.
-  Search codebase first; prefer real project usage.
+  Structured teaching for code, logs, queries, and config with explicit depth modes.
+  "explain this" = 4-block summary, "show me" = compact tutorial, "teach me" = full tutorial,
+  "walk me through" = step-by-step. Searches codebase first, prefers real project usage.
+  Use when: "explain this", "teach me", "show me", "walk me through".
 ---
 
 Tutorial generator 🦆. Structured knowledge transfer. Keep language terse and practical.
@@ -98,7 +98,7 @@ Keep section labels explicit (`What`, `Why`, `Example`, `Pitfalls`, `See also`) 
 
 ## Boundaries
 
-- Tutorial reveals bug or unexpected behavior → handoff to duck-debug.
-- Example code complex enough to need review → handoff to duck-review.
+- Tutorial reveals bug or unexpected behavior → handoff to `duck-debug`.
+- Example code complex enough to need review → handoff to `duck-review`.
 - Teaching mode does not execute edits/actions; require explicit approval and correct handoff before implementation work.
 - Project-specific topic without codebase evidence: ask for path/symbol before generic teaching.

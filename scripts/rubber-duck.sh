@@ -10,8 +10,8 @@ COPILOT_MODE_SET=0
 SKIP_SKILLS=0
 PROJECT_SKILLS=0
 SKILLS_SOURCE="https://github.com/sprngr/rubber-duck"
-SKILLS_CLI="skills@^1.5.14" # pinned npx CLI package spec
-SOURCE_MODE="auto" # auto|local|web
+SKILLS_CLI="skills@^1.5.14"  # pinned npx CLI package spec
+SOURCE_MODE="auto"  # auto|local|web
 RAW_BASE="https://raw.githubusercontent.com/sprngr/rubber-duck/main"
 DRY_RUN=0
 
@@ -29,7 +29,7 @@ LOCAL_POLICY_AGENTS_FILE=""
 REMOTE_AGENTS_PATH=""
 REMOTE_POLICY_PATH=""
 REMOTE_POLICY_AGENTS_PATH=""
-POLICY_MODE="managed_block" # managed_block|file
+POLICY_MODE="managed_block"  # managed_block|file
 
 MANAGED_START="<!-- RUBBER_DUCK_MANAGED_BLOCK START -->"
 MANAGED_END="<!-- RUBBER_DUCK_MANAGED_BLOCK END -->"
@@ -56,10 +56,14 @@ REQUIRED_SKILLS=(
   "duck-debt"
   "duck-debug"
   "duck-design"
+  "duck-patch"
+  "duck-refactor"
   "duck-review"
-  "duck-teach"
+  "duck-risk"
   "duck-simplify"
+  "duck-teach"
   "duck-triage"
+  "quack"
 )
 
 usage() {
@@ -68,7 +72,7 @@ Usage:
   scripts/rubber-duck.sh [install|uninstall|status|doctor] [options]
 
 Options:
-  --opencode                        Use global opencode paths (~/.config/opencode/agents + ~/config/opencode/AGENTS.md)
+  --opencode                        Use global opencode paths (~/.config/opencode/agents + ~/.config/opencode/AGENTS.md)
   --opencode-project                Use project opencode paths (.opencode/agents + AGENTS.md)
   --copilot                         Use global Copilot paths (~/.copilot/agents + ~/.copilot/AGENTS.md)
   --copilot-project                 Use project Copilot paths (.github/agents + AGENTS.md)

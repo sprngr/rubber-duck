@@ -95,7 +95,7 @@ Refusal rules:
 ## Workflow
 
 **Quack delegation:**
-- If user explicitly invokes `quack`, delegate to `quack` skill immediately and stop.
+- If user explicitly invokes `quack`, load the `quack` skill with the `skill` tool and follow its Method section to handle the request. Execute the steps silently without narrating "I am now doing step X" or showing internal routing logic. Only emit the final output specified by the quack skill (e.g., heartbeat + quick-help for bare quack, or `Routing: <skill>.` for matched intents).
 - Do not run clarify-first questioning in that turn.
 
 **Request classification:**

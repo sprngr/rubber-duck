@@ -17,11 +17,10 @@ param(
 )
 
 function rubber-duck {
-# Parameters are declared once in the top-level param() block above and read
-# from script scope here (nested helper functions close over the same scope).
+# Parameters are declared in the top-level param() block and read from script scope here.
 $ErrorActionPreference = "Stop"
 
-# Pinned npx CLI package spec (not a flag; mirrors SKILLS_CLI in rubber-duck.sh)
+# Pinned npx CLI package spec (mirrors SKILLS_CLI in rubber-duck.sh)
 $SkillsCli = "skills@^1.5.14"
 
 if ($Claude -and $ClaudeProject) {
@@ -40,12 +39,10 @@ if (-not $Claude -and -not $ClaudeProject -and -not [string]::IsNullOrWhiteSpace
   throw "-ClaudeMd requires -Claude or -ClaudeProject."
 }
 
-# When run via `iwr | iex` there is no backing script file, so
-# $MyInvocation.MyCommand.Path is null and ScriptDir/RepoRoot cannot be
-# resolved. Mirror the .sh running_piped logic: flag it and force web source,
-# since local artifact detection would otherwise use empty/broken paths.
-# Keep ScriptDir/RepoRoot as non-null placeholders so Join-Path never throws;
-# they are never used because Resolve-Source forces web when piped.
+# When run via `iwr | iex` there is no backing script file, so $MyInvocation.MyCommand.Path
+# is null and ScriptDir/RepoRoot cannot be resolved. Mirror the .sh running_piped logic:
+# flag it and force web source. Keep ScriptDir/RepoRoot as non-null placeholders so
+# Join-Path never throws; they are never used because Resolve-Source forces web when piped.
 $ScriptPath = $MyInvocation.MyCommand.Path
 $script:RunningPiped = [string]::IsNullOrWhiteSpace($ScriptPath)
 if ($script:RunningPiped) {
@@ -61,12 +58,12 @@ $LocalAgentsPolicyFile = $null
 $RemoteAgentsPath = $null
 $RemotePolicyPath = $null
 $RemoteAgentsPolicyPath = $null
-$PolicyMode = "managed_block" # managed_block|file
+$PolicyMode = "managed_block"  # managed_block|file
 
 $ManagedStart = "<!-- RUBBER_DUCK_MANAGED_BLOCK START -->"
 $ManagedEnd = "<!-- RUBBER_DUCK_MANAGED_BLOCK END -->"
 
-# Built agent filenames are identical across harnesses (<name>.md).
+# Built agent filenames are identical across harnesses (<name>.md)
 $AgentFiles = @(
   "rubber-duck.md",
   "duckling.md"
@@ -76,10 +73,14 @@ $RequiredSkills = @(
   "duck-debt",
   "duck-debug",
   "duck-design",
+  "duck-patch",
+  "duck-refactor",
   "duck-review",
-  "duck-teach",
+  "duck-risk",
   "duck-simplify",
-  "duck-triage"
+  "duck-teach",
+  "duck-triage",
+  "quack"
 )
 
 function Log($msg) { Write-Host $msg }

@@ -1,10 +1,10 @@
 ---
 name: duck-refactor
 description: >
-  Dedicated refactoring skill for code restructuring. Extract functions/classes,
+  Multi-file code restructuring with reference tracking. Extract functions/classes,
   rename across codebase, move code between files, inline, convert patterns.
   Use when: "refactor this", "extract this function", "rename X across codebase",
-  "move this to another file".
+  "move this to another file", "inline this".
 ---
 
 # Skill: duck-refactor
@@ -46,7 +46,7 @@ Ask one scoping question if any detail unclear:
 
 ### 2. Trace references and dependencies
 
-Use read-only evidence gathering (similar to duck-debug trace mode):
+Use read-only evidence gathering (similar to `duck-debug` trace mode):
 - Locate all usages of target code
 - Map imports/exports
 - Identify callers and callees
@@ -117,20 +117,20 @@ Report: "Refactoring complete. Verification: [test results]. [N] files changed."
 
 **Distinguish from other skills:**
 
-- **vs duck-patch**: duck-refactor is multi-file restructuring; duck-patch is single-file bug fix
-- **vs duck-simplify**: duck-refactor is neutral restructuring; duck-simplify is complexity reduction with specific goal
-- **vs duck-design**: duck-refactor is implementation; duck-design is decision/tradeoff analysis
-- **vs duck-debug**: duck-refactor changes code; duck-debug only traces/investigates
+- **vs duck-patch**: `duck-refactor` is multi-file restructuring; `duck-patch` is single-file bug fix
+- **vs duck-simplify**: `duck-refactor` is neutral restructuring; `duck-simplify` is complexity reduction with specific goal
+- **vs duck-design**: `duck-refactor` is implementation;`duck-design` is decision/tradeoff analysis
+- **vs duck-debug**: `duck-refactor` changes code; `duck-debug` only traces/investigates
 
 **What duck-refactor does NOT do:**
-- Single-file edits without restructuring → use duck-patch
-- Complexity reduction as primary goal → use duck-simplify
-- Architecture decisions → use duck-design
-- Just moving files without code changes → use duck-patch
+- Single-file edits without restructuring → use `duck-patch`
+- Complexity reduction as primary goal → use `duck-simplify`
+- Architecture decisions → use `duck-design`
+- Just moving files without code changes → use `duck-patch`
 
 **Scope limits:**
 - Prefer ≤5 files per refactoring (split larger refactorings)
-- If refactoring requires design decisions, pause and route to duck-design first
-- If refactoring reveals complexity issues, note for duck-simplify follow-up
+- If refactoring requires design decisions, pause and route to `duck-design` first
+- If refactoring reveals complexity issues, note for `duck-simplify` follow-up
 
   {{include: policy-snippets/safety-carveouts.md}}

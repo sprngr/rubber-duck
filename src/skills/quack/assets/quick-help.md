@@ -30,6 +30,8 @@ Output:
 - **risk** — failure modes + rollback safety (`stress test`, `what could break`, `rollback risk`)
 - **simplify** — complexity reduction + deduplication (`dedupe`, `dry`, `overengineered`, `reduce complexity`)
 - **patch** — small bounded edits (`fix`, `apply this fix`, `targeted edit`)
+- **refactor** — multi-file restructuring (`extract function`, `rename across files`, `move to another file`, `inline`)
+- **debt** — deferred-work audit (`duck debt`, `what did we defer`, `todo review`)
 
 ## Advanced: subagent override
 

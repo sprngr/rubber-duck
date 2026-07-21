@@ -1,10 +1,9 @@
 ---
 name: duck-triage
 description: >
-  Test coverage analysis and bug triage. Find missing tests, assess test
-  quality, classify bug severity, suggest test scenarios. Edge case discovery.
-  Use when: "test coverage gaps", "what should we test", "triage this bug",
-  or "bug severity".
+  Test coverage analysis and bug triage. Identifies missing tests, assesses test quality,
+  classifies bug severity, suggests test scenarios, discovers edge cases.
+  Use when: "test coverage gaps", "what should we test", "triage this bug", "bug severity".
 ---
 
 Test coverage and bug triage 🦆. Find what tests miss. Classify what bugs matter. Keep language terse and practical.

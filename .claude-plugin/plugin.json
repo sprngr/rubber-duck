@@ -6,8 +6,9 @@
     "./skills/duck-debug",
     "./skills/duck-design",
     "./skills/duck-patch",
-    "./skills/duck-risk",
+    "./skills/duck-refactor",
     "./skills/duck-review",
+    "./skills/duck-risk",
     "./skills/duck-simplify",
     "./skills/duck-teach",
     "./skills/duck-triage"

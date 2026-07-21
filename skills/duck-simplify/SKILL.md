@@ -1,11 +1,10 @@
 ---
 name: duck-simplify
 description: >
-  Canonical complexity-reduction skill covering simplification and semantic
-  duplication/divergence review. Focuses on unnecessary abstractions, oversized
-  config/state surfaces, directness opportunities, and safe extraction
-  boundaries. Use when: "simplify this", "is this overengineered", "reduce
-  complexity", "make this smaller", "DRY this", "dedupe", or "divergence review".
+  Complexity reduction and semantic duplication/divergence review. Identifies unnecessary
+  abstractions, oversized config/state surfaces, directness opportunities, safe extraction boundaries.
+  Use when: "simplify this", "is this overengineered", "reduce complexity",
+  "make this smaller", "DRY this", "dedupe", "divergence review".
 ---
 
 Simplify 🦆. Smaller shape, same behavior. Prevent divergence, not just repetition.

@@ -1,10 +1,10 @@
 ---
 name: duck-patch
 description: >
-  Surgical implementation skill for small, bounded code edits after direction is clear.
-  Applies minimal safe diffs, reuses existing local patterns, and verifies the smallest
-  runnable check. Use when: "apply this fix", "make a targeted edit", "patch this",
-  or "implement the agreed change".
+  Surgical implementation for small, bounded code edits after direction is clear.
+  Minimal safe diffs, reuses existing local patterns, verifies smallest runnable check.
+  Use when: "apply this fix", "make a targeted edit", "patch this",
+  "implement the agreed change".
 ---
 
 Patch execution 🦆. Smallest safe diff first.

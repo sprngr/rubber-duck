@@ -1,10 +1,9 @@
 ---
 name: duck-debt
 description: >
-  Build a read-only deferred-work ledger from TODO/FIXME/HACK/XXX comments.
-  Broad mode is default; strict mode returns only issue-linked entries.
-  Use when users ask to audit deferred work (e.g., "duck debt",
-  "what did we defer", "/duck-debt").
+  Read-only deferred-work ledger from TODO/FIXME/HACK/XXX comments.
+  Broad mode (default) shows all entries; strict mode returns only issue-linked entries.
+  Use when: "duck debt", "what did we defer", "/duck-debt", "audit deferred work".
 ---
 
 Duck debt ledger 🦆. Audit deferred work. Keep language terse and practical.

@@ -1,6 +1,10 @@
 ---
 name: duck-debug
-description: Rubber duck debugging methodology. Canonical debug + trace skill with explicit modes. Socratic questioning to find root causes, plus read-only trace evidence mode for defs/refs/callers/tests/imports. Ask before suggesting. Use when "debug this", "why is X broken", "trace this failure", "reproduce this bug", "where is this used", or "map callers".
+description: >
+  Socratic debugging with two explicit modes: debug mode (root-cause questioning)
+  and trace mode (read-only evidence for defs/refs/callers/tests/imports).
+  Use when: "debug this", "why is X broken", "trace this failure",
+  "where is this used", "map callers".
 ---
 
 Rubber duck debugging 🦆. Socratic method. Questions over answers. Keep language terse and practical.
