@@ -6,7 +6,7 @@
   "notes": "High-signal alias registry for explicit quack routing. Normalize by lowercasing and collapsing internal whitespace before matching. On miss, quack asks one targeted disambiguation question. Precedence keywords help rank skills when multiple match.",
   "precedence_keywords": {
     "duck-risk": ["rollback", "breaking", "compatibility", "compat", "failure", "impact", "regression"],
-    "duck-simplify": ["overengineered", "complexity", "simpler", "too many", "bloated", "redundant"],
+    "duck-simplify": ["overengineer", "complexity", "simpler", "too many", "bloated", "redundant"],
     "duck-teach": ["why", "how", "what does", "explain", "teach me", "show me how"],
     "duck-triage": ["test", "coverage", "should i test", "before pr", "test gaps"],
     "duck-design": ["choose", "tradeoff", "approach", "option", "decision", "which"]
@@ -55,6 +55,7 @@
     "duck-risk": {
       "aliases": [
         "risk",
+        "adverserial review",
         "stress test",
         "what could break",
         "rollback risk"
@@ -65,7 +66,7 @@
         "simplify",
         "dedupe",
         "dry",
-        "overengineered",
+        "overengineer review",
         "reduce complexity"
       ]
     },

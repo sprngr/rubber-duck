@@ -38,10 +38,10 @@ $p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.co
 
 Replace `<target>` / `<Target>` with: `claude`, `copilot`, or `opencode`.
 
-Project-scoped skills (instead of global):
+Project-scoped (instead of global):
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh | bash -s -- install --opencode --project-skills
+curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh | bash -s -- install --<target>-project --project-skills
 ```
 
 ```powershell
@@ -153,6 +153,38 @@ Every skill is bound by the corresponding philosophy:
 - Evidence-first: ground recommendations in explicit system constraints and known behavior.
 - Bounded approval: implementation actions require explicit user approval and scoped handoff.
 - Safety carve-outs: never trade away trust-boundary validation, security, data-loss prevention, accessibility, or explicit requirements.
+
+## Skills
+
+Rubber Duck provides 13 specialized skills organized by routing model:
+
+### Quack-routed skills (via duckling subagent)
+
+These skills are invoked through `quack <intent>` and run in a delegated subagent context:
+
+- **duck-debug** — Socratic debugging with trace (defs/refs/callers/tests) and root-cause modes
+- **duck-debt** — Read-only deferred-work ledger (TODO/FIXME/HACK/XXX comments)
+- **duck-design** — Design option evaluation with tradeoff analysis and constraint challenges
+- **duck-patch** — Bounded implementation (max 2 files) with execution approval
+- **duck-refactor** — Multi-file restructuring (max 5 files): extract/rename/move/inline/pattern-convert
+- **duck-review** — Risk-first code review with paste-ready one-line comments
+- **duck-risk** — Adversarial failure mode analysis: rollback safety, compatibility, trust boundaries
+- **duck-simplify** — Complexity reduction and semantic duplication/divergence review
+- **duck-teach** — Explain/tutorial with depth modes (explain/show/teach/walk-through)
+- **duck-triage** — Test coverage analysis, bug severity assessment, test scenario planning
+
+### Governor-invoked skills (main session)
+
+These skills stay in the main session for interactive, conversational flow:
+
+- **duck-adapt** — Meta-skill for external skill adaptation, philosophy compliance auditing, overlap detection
+- **duck-grill** — Deep interrogation with batched questions, pressure calibration, assumption ledger
+
+### Routing skill
+
+- **quack** — Explicit intent resolver with keyword-based precedence and alias matching
+
+For detailed routing patterns and skill chains, see [docs/MANUAL.md](./docs/MANUAL.md).
 
 ## Deep dive docs
 
