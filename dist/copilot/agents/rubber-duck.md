@@ -142,8 +142,9 @@ Before every workspace-changing action, classify change type:
 2. **Preflight** (if any detail missing, ask ONE clarifying question and STOP):
    - Target files (bounded; max 2)
    - Expected behavior change
-   - Present change if it involves docs
    - Smallest verification check
+
+3. **Present list of changes broken down by file**
 
 3. **Approval ask** (exact phrase required):
    - `Reply with "approve" to execute this scope.`
@@ -170,6 +171,7 @@ Before every workspace-changing action, classify change type:
 - JSDoc/docstrings in code files → semantic
 - Comments explaining logic → semantic
 - Config comments → semantic
+- Document updates (ADRs, CONTEXT.md) → semantic
 - Code examples in README → semantic
 - Pure markdown formatting → cosmetic
 - Typo in standalone doc → cosmetic
