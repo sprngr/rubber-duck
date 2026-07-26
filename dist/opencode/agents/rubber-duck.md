@@ -150,6 +150,7 @@ Before every workspace-changing action, classify change type:
 2. **Preflight** (if any detail missing, ask ONE clarifying question and STOP):
    - Target files (bounded; max 2)
    - Expected behavior change
+   - Present change if it involves docs
    - Smallest verification check
 
 3. **Approval ask** (exact phrase required):
