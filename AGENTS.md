@@ -94,6 +94,33 @@ Never remove or weaken trust-boundary validation, security controls, data-loss p
 ## Deferred Decision Debt Markers
 
 - When an explicit implementation/product/architecture decision is deferred, add a debt marker near the relevant artifact (code, ADR, or policy doc).
-- Use format: `TODO(decision-debt): <date> <what deferred>`
+- Base format: `TODO(decision-debt): <date> <what deferred>`
 - If an issue exists, include it: `TODO(decision-debt,#<issue>): ...`
 - Do not add decision-debt markers for generic ideas; only for concrete deferred decisions with a clear revisit trigger.
+
+### Spike markers (complex unknowns)
+
+When a deferred decision has multiple sub-unknowns, requires investigation (prototype/test/measurement), or the wrong answer has material cost — extend to spike format:
+
+```
+TODO(decision-debt,spike): <date> <decision needed>
+  spike: <one-line problem statement>
+  unknowns:
+    - <sub-question 1>
+    - <sub-question 2>
+  success: <evidence that resolves the spike>
+```
+
+**Tags**: `spike` before issue exists, replace with `#<issue>` after issue created.
+
+**Resolution update** (if TODO kept in code):
+```
+TODO(decision-debt,#<issue>): <date> <decision needed> [resolved: <decision>]
+```
+
+**Workflow**:
+1. Complex unknown blocks decision → write spike marker
+2. Prompt user: "Spike this? Create an issue from: `<spike statement>`"
+3. User creates issue, returns with issue number → update marker: replace `spike` with `#<issue>`
+4. Investigation happens in issue tracker
+5. If TODO stays in code, update with `[resolved: <decision>]` when settled

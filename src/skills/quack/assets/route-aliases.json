@@ -86,6 +86,14 @@
         "move to another file",
         "inline this"
       ]
+    },
+    "duck-debt": {
+      "aliases": [
+        "debt",
+        "spike",
+        "what did we defer",
+        "todo review"
+      ]
     }
   }
 }
