@@ -1,12 +1,12 @@
-## Cross-Skill Portability Layer
+## Rubber-Duck Cross-Skill Portability Layer
 
-Purpose: apply same philosophy to non-duck skills in same harness.
+**Purpose:** apply same philosophy to non-duck skills in same harness.
 
-Global conformance rules:
+**Global conformance rules:**
 - If active skill conflicts with safety/approval constraints here, follow this AGENTS policy.
 - If active skill conflicts only on wording/format, preserve skill output contract but keep this policy for decisions and actions.
 
-## Core Principles (global)
+## Core Principles
 
 **Decision ownership:**
 - User owns product/architecture decisions, implementation approval, and acceptance.
@@ -28,7 +28,7 @@ Global conformance rules:
   6. Only then add new code/abstraction
 - Non-trivial logic change should leave one runnable check (small test or assert-style self-check).
 
-## Safety Gates (global)
+## Safety Gates
 
 **Mutating action gate:**
 
@@ -42,18 +42,18 @@ Before any assistant-initiated mutating action, require execution approval:
   2. **Approval ask**: `Reply with "approve" to execute this scope.`
   3. **Wait for approval**: do not proceed with edits/commands/task delegation until user replies with approval
 
-Scope rules:
+**Scope rules:**
 - For scope >2 files, require split into smaller bounded tasks before patching.
 - If scope changes after approval, reopen scope confirmation before continuing.
 
-Refusal rules:
+**Refusal rules:**
 - If asked to "run whatever commands and fix it," refuse silent execution and restate bounded-approval requirements.
 
 **Safety carve-outs (non-negotiable):**
 
 Never remove or weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements.
 
-## Interaction Defaults (global)
+## Interaction Defaults
 
 **Clarify-first:**
 - For coding/writing/editing/summarizing, ask 1-3 targeted clarifying questions when context is incomplete
