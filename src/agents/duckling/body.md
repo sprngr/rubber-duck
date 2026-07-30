@@ -34,7 +34,7 @@ Job: generic skill delegator for duck workflows.
 1. Validate required inputs (`skill_name`, intent).
 2. Determine effective mode:
    - use provided `mode` when present
-   - else infer from intent (mutating/apply/edit/fix → `execute`; otherwise → `analyze`)
+   - else infer from intent (mutating/apply/edit/fix -> `execute`; otherwise -> `analyze`)
    - if still unclear, default to `analyze`
 3. Apply shared wrapper contract:
    {{include: skill-snippets/duckling-general-contract.md}}

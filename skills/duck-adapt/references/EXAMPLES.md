@@ -4,7 +4,7 @@ Real-world examples of skill adaptation with philosophy transformation details.
 
 ---
 
-## Example 1: External Imperative Skill → Duck-Adapted
+## Example 1: External Imperative Skill -> Duck-Adapted
 
 ### Before (External Skill: "Auto-Fix")
 
@@ -83,7 +83,7 @@ Group issues by severity and type:
 
 Output format:
 - Prefix + location + issue type + evidence
-- Prioritized list (critical → low)
+- Prioritized list (critical -> low)
 - Count per severity
 
 ### 3. Proposal with Duck Ladder
@@ -148,12 +148,12 @@ Output:
 - ✅ Decision ownership: User selects issues and approves execution
 - ✅ Evidence-first: Issue detection with location + evidence + severity
 - ✅ Duck Ladder: Applied before proposing fixes
-- ✅ Execution approval: Preflight → approval ask → wait → execute
+- ✅ Execution approval: Preflight -> approval ask -> wait -> execute
 - ✅ Socratic flow: Clarifying questions for scope/severity
 
 ---
 
-## Example 2: Workflow Description → Duck-Adapted
+## Example 2: Workflow Description -> Duck-Adapted
 
 ### Before (User Request)
 
@@ -312,8 +312,8 @@ If user requests adjustments:
 - If commit history unavailable, use standard conventional commit format without project-specific style
 
 **Handoffs:**
-- If diff is unclear or changes lack focus → `duck-review` to assess change scope
-- If breaking changes detected → `duck-risk` for compatibility review
+- If diff is unclear or changes lack focus -> `duck-review` to assess change scope
+- If breaking changes detected -> `duck-risk` for compatibility review
 ```
 
 **Transformations applied:**
@@ -338,7 +338,7 @@ If user requests adjustments:
 
 ### Compliance Check
 - ✅ Philosophy guardrails present (include directive used)
-- ✅ Prompt order standard followed (Purpose → Guardrails → Activation → Method → Boundaries)
+- ✅ Prompt order standard followed (Purpose -> Guardrails -> Activation -> Method -> Boundaries)
 - ✅ Execution approval gates on mutating actions (step 1 preflight + approval)
 - ✅ Asset convention compliance (no assets needed for this skill)
 - ✅ Duck Ladder discipline included (step 2 explicit)
@@ -349,8 +349,8 @@ If user requests adjustments:
 - None
 
 **Medium priority:**
-- [M1] Method step 1 could clarify "one targeted clarifying question" → "up to 3 targeted questions" for consistency with other skills
-  - Fix: Update "ask one targeted clarifying question" → "ask 1-3 targeted clarifying questions"
+- [M1] Method step 1 could clarify "one targeted clarifying question" -> "up to 3 targeted questions" for consistency with other skills
+  - Fix: Update "ask one targeted clarifying question" -> "ask 1-3 targeted clarifying questions"
 
 **Low priority:**
 - [L1] Boundaries section could add explicit handoff to `duck-refactor` if scope exceeds 2 files
@@ -358,11 +358,11 @@ If user requests adjustments:
 
 ### Overlap Analysis
 - Semantic overlap with: `duck-refactor` (40% — both implement code changes, but different scope limits)
-- Composition opportunities: `duck-debug` → `duck-patch` (trace + root-cause → bounded fix)
+- Composition opportunities: `duck-debug` -> `duck-patch` (trace + root-cause -> bounded fix)
 - Redundancy risk: None (distinct scope and file limits)
 
 ### Recommendations
-1. [M1] Update clarifying question count for consistency (1 → 1-3)
+1. [M1] Update clarifying question count for consistency (1 -> 1-3)
 2. [L1] Add explicit handoff to duck-refactor in Boundaries
 
 **Overall assessment:** Strong compliance. Minor wording improvements suggested.
@@ -391,8 +391,8 @@ If user requests adjustments:
 - Both provide evidence map for investigation
 
 **Workflow overlap:**
-- Proposed: "find function → show dependencies → list callers"
-- duck-debug trace: "entry point → defs/refs/callers/tests → evidence map"
+- Proposed: "find function -> show dependencies -> list callers"
+- duck-debug trace: "entry point -> defs/refs/callers/tests -> evidence map"
 
 **Unique value of proposed skill:**
 - None identified; duck-debug trace mode already covers this workflow
@@ -414,9 +414,9 @@ If user requests adjustments:
 Use existing workflow:
 ```
 quack duck-debug
-→ select "trace mode"
-→ specify function name
-→ receive dependency map
+-> select "trace mode"
+-> specify function name
+-> receive dependency map
 ```
 
 ### Recommendation
@@ -459,7 +459,7 @@ quack duck-debug
 
 **What proposed skill would add:**
 - Migration-specific patterns (additive-only, expand-contract, dual-write)
-- Schema evolution planning (phase 1 → phase 2 → cleanup)
+- Schema evolution planning (phase 1 -> phase 2 -> cleanup)
 - Data backfill strategies
 - Rollback automation (how to reverse migration)
 - Breaking change windows
@@ -472,8 +472,8 @@ quack duck-debug
 Partial coverage via:
 ```
 quack duck-design
-→ evaluate migration approaches
-→ hand to duck-risk for rollback review
+-> evaluate migration approaches
+-> hand to duck-risk for rollback review
 ```
 
 But lacks migration-specific patterns and sequencing logic.
@@ -498,28 +498,28 @@ Would complement `duck-design` (for high-level approach) and `duck-risk` (for fa
 
 ## Key Patterns from Examples
 
-### Imperative → Socratic
+### Imperative -> Socratic
 - Replace "do X" with "ask about X context, present options, get approval"
 - Insert clarifying questions before execution
 - Make assumptions explicit
 
-### Autopilot → Approval-Gated
+### Autopilot -> Approval-Gated
 - Identify mutating actions (edits, commands, commits)
 - Add preflight (files + behavior + verification)
 - Add blocking approval gate
 - Add scope-change detection
 
-### Black-Box → Evidence-First
+### Black-Box -> Evidence-First
 - Add evidence-gathering steps before conclusions
 - Cite locations, definitions, tests, constraints
 - Label unknowns explicitly
 
-### Complex → Duck Ladder
+### Complex -> Duck Ladder
 - Before "add new code", check 6 rungs
 - Prefer reuse over invention
 - Prefer root-cause fixes over symptom patches
 
-### Ambiguous → Structured
+### Ambiguous -> Structured
 - Apply prompt order standard
 - Inline outputs in Method steps
 - Clear boundaries and handoffs

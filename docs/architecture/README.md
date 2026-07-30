@@ -9,7 +9,7 @@ This section defines the system-level architecture and operating contracts for R
 3. [03-adaptive-socratic-policy.md](./03-adaptive-socratic-policy.md) — adaptive default policy with strict checkpoints for mutating actions.
 4. [04-prompt-order-standard.md](./04-prompt-order-standard.md) — canonical prompt section order and compression rules.
 5. [05-harness-agent-config.md](./05-harness-agent-config.md) — per-agent, per-harness config model and the build-time renderer.
-6. [06-skill-assembly-contract.md](./06-skill-assembly-contract.md) — source-to-artifact contract for skills (`src/skills` → `skills`) and drift controls.
+6. [06-skill-assembly-contract.md](./06-skill-assembly-contract.md) — source-to-artifact contract for skills (`src/skills` -> `skills`) and drift controls.
 7. [07-skill-asset-convention.md](./07-skill-asset-convention.md) — skill asset structure (`assets/` vs `references/`), metadata headers, and loading conventions.
 
 ## Validation

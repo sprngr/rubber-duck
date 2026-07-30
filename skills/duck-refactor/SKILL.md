@@ -131,10 +131,10 @@ Report: "Refactoring complete. Verification: [test results]. [N] files changed."
 - **vs duck-debug**: `duck-refactor` changes code; `duck-debug` only traces/investigates
 
 **What duck-refactor does NOT do:**
-- Single-file edits without restructuring → use `duck-patch`
-- Complexity reduction as primary goal → use `duck-simplify`
-- Architecture decisions → use `duck-design`
-- Just moving files without code changes → use `duck-patch`
+- Single-file edits without restructuring -> use `duck-patch`
+- Complexity reduction as primary goal -> use `duck-simplify`
+- Architecture decisions -> use `duck-design`
+- Just moving files without code changes -> use `duck-patch`
 
 **Scope limits:**
 - Prefer ≤5 files per refactoring (split larger refactorings)

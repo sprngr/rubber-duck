@@ -87,9 +87,9 @@ Use adaptive questioning:
 - Track unresolved tensions and surface them when relevant to current question
 
 **Pressure calibration:**
-- Low stakes + clear evidence → lighter touch, faster progression through checkpoints
-- High stakes OR weak evidence → increase challenge depth, require concrete justification
-- User hedging ("probably", "I think", "maybe") → press for concrete evidence or explicit uncertainty acknowledgment
+- Low stakes + clear evidence -> lighter touch, faster progression through checkpoints
+- High stakes OR weak evidence -> increase challenge depth, require concrete justification
+- User hedging ("probably", "I think", "maybe") -> press for concrete evidence or explicit uncertainty acknowledgment
 
 **Pivot detection:**
 - If answers reveal problem statement mismatch, surface explicitly: "Your answers suggest the real problem is X, not Y. Should we redirect?"
@@ -127,7 +127,7 @@ If discussion reaches "let's just build it," that's the signal to hand off to du
 
 If implementation choices must be evaluated to make the decision:
 - Use Duck Ladder to guide minimal-change thinking
-- Stop at first rung: YAGNI → reuse existing → stdlib → installed dependency → smallest diff → new abstraction
+- Stop at first rung: YAGNI -> reuse existing -> stdlib -> installed dependency -> smallest diff -> new abstraction
 - Close out the decision before any patching begins
 
 ### 6. Session close-out
@@ -165,12 +165,12 @@ Do not edit docs by default during grilling session.
 - Branch-by-branch decision tree resolution
 
 **Handoff to other skills when:**
-- Runtime root-cause debugging needed → `duck-debug`
-- Quick architecture option comparison without deep grilling → `duck-design`
-- Diff/PR findings and inline review comments → `duck-review`
-- Test coverage planning or bug severity → `duck-triage`
-- Plain code/log/config explanation → `duck-teach`
-- Tutorial-style teaching with examples → `duck-teach`
+- Runtime root-cause debugging needed -> `duck-debug`
+- Quick architecture option comparison without deep grilling -> `duck-design`
+- Diff/PR findings and inline review comments -> `duck-review`
+- Test coverage planning or bug severity -> `duck-triage`
+- Plain code/log/config explanation -> `duck-teach`
+- Tutorial-style teaching with examples -> `duck-teach`
 
 If conversation shifts into one of these tasks, propose explicit handoff.
 

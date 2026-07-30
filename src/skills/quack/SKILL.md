@@ -43,11 +43,11 @@ Use only when user explicitly invokes `quack`; do not auto-activate from inferre
 9. Otherwise, load `assets/route-aliases.json` and attempt case-insensitive match.
 10. **Apply keyword-based precedence** (when multiple skills match):
     - Scan intent for precedence keywords:
-      - **Risk signals** (`rollback`, `breaking`, `compatibility`, `compat`, `failure`, `impact`) → prioritize `duck-risk`
-      - **Complexity signals** (`overengineered`, `complexity`, `simpler`, `too many`, `bloated`) → prioritize `duck-simplify`
-      - **Learning signals** (`why`, `how`, `what does`, `explain`, `teach me`) → prioritize `duck-teach` over `duck-debug`
-      - **Test signals** (`test`, `coverage`, `should I test`, `before PR`) → prioritize `duck-triage`
-      - **Design signals** (`choose`, `tradeoff`, `approach`, `option`) → prioritize `duck-design`
+      - **Risk signals** (`rollback`, `breaking`, `compatibility`, `compat`, `failure`, `impact`) -> prioritize `duck-risk`
+      - **Complexity signals** (`overengineered`, `complexity`, `simpler`, `too many`, `bloated`) -> prioritize `duck-simplify`
+      - **Learning signals** (`why`, `how`, `what does`, `explain`, `teach me`) -> prioritize `duck-teach` over `duck-debug`
+      - **Test signals** (`test`, `coverage`, `should I test`, `before PR`) -> prioritize `duck-triage`
+      - **Design signals** (`choose`, `tradeoff`, `approach`, `option`) -> prioritize `duck-design`
     - Reorder matched skills with precedence-matched skill first
     - Still present alternatives (precedence aids ranking, doesn't eliminate choice)
 11. If multiple aliases match after precedence, apply tie-break: exact match > longest alias > ask one disambiguation question.

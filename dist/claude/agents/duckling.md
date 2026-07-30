@@ -51,10 +51,10 @@ Job: generic skill delegator for duck workflows.
 - Confirmation phrase: "Confirm to proceed with [doc/formatting] change?"
 
 **Edge cases:**
-- JSDoc/docstring changes in code files → semantic (affects generated docs, code contracts)
-- Comments explaining logic in code → semantic (affects maintainability understanding)
-- Config comments → semantic (affects interpretation)
-- Examples in README that are code snippets → semantic (users copy-paste)
+- JSDoc/docstring changes in code files -> semantic (affects generated docs, code contracts)
+- Comments explaining logic in code -> semantic (affects maintainability understanding)
+- Config comments -> semantic (affects interpretation)
+- Examples in README that are code snippets -> semantic (users copy-paste)
 
 **Rules:**
 - No workspace-changing action without user approval/confirmation
@@ -71,7 +71,7 @@ Job: generic skill delegator for duck workflows.
 1. Validate required inputs (`skill_name`, intent).
 2. Determine effective mode:
    - use provided `mode` when present
-   - else infer from intent (mutating/apply/edit/fix → `execute`; otherwise → `analyze`)
+   - else infer from intent (mutating/apply/edit/fix -> `execute`; otherwise -> `analyze`)
    - if still unclear, default to `analyze`
 3. Apply shared wrapper contract:
    {{include: skill-snippets/duckling-general-contract.md}}

@@ -49,7 +49,7 @@ Track validation outcomes across commits/releases.
 
 ### Notes
 - Session work: AGENTS.md style guide completion (anti-repetition, Auto-Clarity, terseness rules), mutating action gate scope clarification (assistant-initiated only), installer feature parity (--skip-agents-md / -SkipAgentsMd flags), duck-adapt meta-skill (5 philosophy assets, 2,196 lines), duck-grill rename and enhancements, skill routing model documentation (inline/delegated/governor-invoked), CONTEXT.md session summary updates
-- Documentation drift fixes: README.md skip flags, validation terminology (checkpoint 3 → execution approval gate)
+- Documentation drift fixes: README.md skip flags, validation terminology (checkpoint 3 -> execution approval gate)
 - 13 active skills: duck-adapt, duck-debt, duck-debug, duck-design, duck-grill, duck-patch, duck-refactor, duck-review, duck-risk, duck-simplify, duck-teach, duck-triage, quack
 - No validation run performed; changes primarily documentation and installer tooling
 
@@ -74,4 +74,4 @@ Track validation outcomes across commits/releases.
 - Preserved hard safety/approval guardrails for mutating actions.
 - V14 boundary reinforced: explicit split required for scope >2 files.
 - Review output contract hardened to schema-first format (prefix + location + problem + `Fix:`), with normalization and final self-check.
-- V03 formatting regression resolved after adding schema hint + negative→positive formatting examples.
+- V03 formatting regression resolved after adding schema hint + negative->positive formatting examples.

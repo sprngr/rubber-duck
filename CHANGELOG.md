@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### AGENTS.md Policy
 - Complete style guide: anti-repetition rules, Auto-Clarity definition, terseness rules
   - No invented abbreviations (cfg/impl/req/res/fn)
-  - No custom symbols like → (own token, saves nothing)
+  - No custom symbols like → (can cause issues in code, same token value as ->, saves nothing)
   - Drop articles/filler/hedging for directness
 - Mutating action gate scope clarification: applies to assistant-initiated actions only; user-initiated changes expected and normal
 - Auto-Clarity interaction rule: automatically expand from terse to full explanation when safety requires it (security vulnerabilities, irreversible actions, data-loss risk, severe user confusion)
@@ -43,13 +43,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CLI reference for skip flags in scripts/README.md
 
 ### Changed
-- Skill count: 11 → 13 active skills (duck-adapt, duck-grill added)
-- Agent architecture: consolidated 6 specialized duckling subagents → single `duckling` delegator with skill-based routing
-  - duck-adversary → duck-risk | duck-builder → duck-patch | duck-dry → duck-teach
-  - duck-investigator → duck-debug | duck-reviewer → duck-review | duck-simple → duck-simplify
-  - duck-explain (v1.0.0 skill) → merged into duck-teach
+- Skill count: 11 -> 13 active skills (duck-adapt, duck-grill added)
+- Agent architecture: consolidated 6 specialized duckling subagents -> single `duckling` delegator with skill-based routing
+  - duck-adversary -> duck-risk | duck-builder -> duck-patch | duck-dry -> duck-teach
+  - duck-investigator -> duck-debug | duck-reviewer -> duck-review | duck-simple -> duck-simplify
+  - duck-explain (v1.0.0 skill) -> merged into duck-teach
 - Decision-debt marker format simplified: `TODO(decision-debt): <date> <what deferred>` (removed owner/trigger fields)
-- Validation terminology: "checkpoint 3 approval gate" → "execution approval gate" (consistent naming)
+- Validation terminology: "checkpoint 3 approval gate" -> "execution approval gate" (consistent naming)
 
 ### Fixed
 - Documentation drift between README.md, scripts/README.md, and docs/validation/README.md
@@ -66,14 +66,14 @@ Major optimization pass with validation framework and UX standardization.
 - Execution approval terminology (renamed from checkpoint-3/mutating action gate)
 - Two-tier approval: semantic changes (full 6-step) vs cosmetic (lightweight confirmation)
 - Simple-vs-workflow request classification
-- Composition patterns: debug→patch, review→risk→simplify, design→triage, teach→debug
+- Composition patterns: debug->patch, review->risk->simplify, design->triage, teach->debug
 
 ### Changed
 - UX standardization: prompt-order standard, Duck Ladder 6-rung format, execution approval terminology
 - Routing improvements: keyword-based precedence in quack (risk/simplify/teach/triage/design)
-- Alias reduction: 76→33 aliases (-57%)
+- Alias reduction: 76->33 aliases (-57%)
 - Formatting consistency: include directives, asset structure (assets/ vs references/)
-- Agent consolidation: pruned 6 specialized duckling subagents (duck-adversary, duck-builder, duck-dry, duck-investigator, duck-reviewer, duck-simple) → unified `duckling` delegator (-1,797 lines)
+- Agent consolidation: pruned 6 specialized duckling subagents (duck-adversary, duck-builder, duck-dry, duck-investigator, duck-reviewer, duck-simple) -> unified `duckling` delegator (-1,797 lines)
 
 ### Fixed
 - Gap closure: 6-step blocking approval workflow enforced

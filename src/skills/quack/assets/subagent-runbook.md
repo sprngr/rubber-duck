@@ -193,7 +193,7 @@ Refactoring operations:
 - rename across codebase
 - move code between files (with import updates)
 - inline function/variable
-- convert patterns (callback → promise, class → hooks)
+- convert patterns (callback -> promise, class -> hooks)
 
 Constraints:
 - trace all references before refactoring (like debug trace mode)
@@ -207,5 +207,5 @@ Output shape:
 - verification report: tests passed, imports correct
 
 Handoff cues:
-- if refactoring requires design decisions → route to `design` first
-- if refactoring reveals complexity issues → note for `simplify` follow-up
+- if refactoring requires design decisions -> route to `design` first
+- if refactoring reveals complexity issues -> note for `simplify` follow-up

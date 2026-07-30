@@ -94,7 +94,7 @@ Flag missing tests when:
 - First failure case
 - Boundary case (0, max, null, empty)
 - Concurrent case (two calls at once)
-- Recovery case (fail → retry → success)
+- Recovery case (fail -> retry -> success)
 - Regression case (if existing bug has a fix)
 
 **Minimum runnable check rule:**

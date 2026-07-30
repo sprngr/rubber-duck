@@ -8,7 +8,7 @@ description: >
   "should we add this skill".
 ---
 
-Skill adapter 🦆. External skill → duck philosophy.
+Skill adapter 🦆. External skill -> duck philosophy.
 
 ## Purpose
 
@@ -83,7 +83,7 @@ Ask clarifying questions (up to 3) to establish:
 
 Load philosophy assets:
 - `assets/philosophy-core.md` — Complete duck philosophy reference
-- `assets/socratic-patterns.md` — 10 transformation patterns (imperative→question, autopilot→approval, etc.)
+- `assets/socratic-patterns.md` — 10 transformation patterns (imperative->question, autopilot->approval, etc.)
 - `assets/approval-gate-spec.md` — 6-step execution approval specification
 - `assets/adaptation-checklist.md` — Comprehensive transformation checklist
 
@@ -93,32 +93,32 @@ Apply rubber-duck philosophy transformations using loaded patterns:
 - Inject clarifying questions at decision points
 - Make user choice explicit ("Which option?" not "I'll pick X")
 - Surface tradeoffs before recommendations
-- Pattern: Imperative → Question (socratic-patterns.md #1)
+- Pattern: Imperative -> Question (socratic-patterns.md #1)
 
 **Evidence-first:**
 - Add evidence-gathering steps before conclusions
 - Map to codebase reading patterns (defs/refs/callers/tests)
 - Anchor claims in artifacts
-- Pattern: Black-Box → Evidence-First (socratic-patterns.md #3)
+- Pattern: Black-Box -> Evidence-First (socratic-patterns.md #3)
 
 **Duck Ladder:**
 - Add minimal-change discipline to implementation steps
 - Insert 6-rung ladder check before "add new code" steps
 - Prefer root-cause fixes over symptom patches
-- Pattern: Complex → Duck Ladder (socratic-patterns.md #6)
+- Pattern: Complex -> Duck Ladder (socratic-patterns.md #6)
 
 **Execution approval:**
 - Identify all mutating actions (edits, commands, task delegation)
 - Insert 6-step approval gate (approval-gate-spec.md)
 - Add preflight (files + behavior + verification)
 - Add scope-change detection
-- Pattern: Autopilot → Approval Gate (socratic-patterns.md #2)
+- Pattern: Autopilot -> Approval Gate (socratic-patterns.md #2)
 
 **Socratic flow:**
 - Convert imperative steps to questioning steps where appropriate
 - Add assumption surfacing
 - Add constraint challenge opportunities
-- Patterns: Single-Path → Multi-Option (socratic-patterns.md #4), Tell → Show Options (#8)
+- Patterns: Single-Path -> Multi-Option (socratic-patterns.md #4), Tell -> Show Options (#8)
 
 ### 4. Structure transformation
 
@@ -165,7 +165,7 @@ Check against existing skills using loaded patterns:
 - High duplication (>90% overlap)
 
 **Composition patterns (from overlap-patterns.md):**
-- debug→patch, review→risk→simplify, design→triage, teach→debug
+- debug->patch, review->risk->simplify, design->triage, teach->debug
 
 ### 6. Output generation
 
@@ -273,6 +273,6 @@ src/skills/duck-<name>/
 - Do not execute `make build-skills` automatically; user runs after approval
 
 **Handoffs:**
-- If user approves new skill → "Run `make build-skills` to generate artifacts"
-- If audit reveals issues → suggest `duck-patch` for small fixes or `duck-refactor` for restructuring
-- If overlap is high → suggest using existing skill with explicit workflow
+- If user approves new skill -> "Run `make build-skills` to generate artifacts"
+- If audit reveals issues -> suggest `duck-patch` for small fixes or `duck-refactor` for restructuring
+- If overlap is high -> suggest using existing skill with explicit workflow

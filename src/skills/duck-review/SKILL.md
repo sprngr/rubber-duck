@@ -37,7 +37,7 @@ When proposing fix direction, stop at first rung:
 ### 3. Review workflow
 
 1. Confirm review input exists (diff, PR text, or pasted code chunk). If missing, ask for concrete review target.
-2. Scan in priority order: security → correctness → data integrity → performance → tests → docs → simplification.
+2. Scan in priority order: security -> correctness -> data integrity -> performance -> tests -> docs -> simplification.
 3. Emit only actionable findings. One line each: location, problem, fix direction.
 4. Use strongest matching prefix. If multiple apply, pick highest risk prefix.
 5. Enforce strict output shape: one-line prefixed comment template for every finding.
@@ -85,7 +85,7 @@ Good:
 - `🧪 test: src/auth/session.ts:88 — refresh-token expiry path untested. Fix: add test for expired refresh token returning 401.`
 - `🔒 sec: db/userRepo.ts:44 — SQL built from raw user input enables injection. Fix: parameterize query placeholders and bind values.`
 
-Bad → Good:
+Bad -> Good:
 - bad: `- HIGH src/parseAge.ts:3 — invalid input becomes 0`
 - good: `⚠️ bug: src/parseAge.ts:3 — invalid input collapses to 0 via falsy check. Fix: use Number.isNaN(n) and throw on invalid age.`
 

@@ -15,10 +15,10 @@
 - Confirmation phrase: "Confirm to proceed with [doc/formatting] change?"
 
 **Edge cases:**
-- JSDoc/docstring changes in code files → semantic (affects generated docs, code contracts)
-- Comments explaining logic in code → semantic (affects maintainability understanding)
-- Config comments → semantic (affects interpretation)
-- Examples in README that are code snippets → semantic (users copy-paste)
+- JSDoc/docstring changes in code files -> semantic (affects generated docs, code contracts)
+- Comments explaining logic in code -> semantic (affects maintainability understanding)
+- Config comments -> semantic (affects interpretation)
+- Examples in README that are code snippets -> semantic (users copy-paste)
 
 **Rules:**
 - No workspace-changing action without user approval/confirmation

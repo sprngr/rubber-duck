@@ -4,7 +4,7 @@ Practical patterns for converting imperative/autopilot steps into Socratic quest
 
 ---
 
-## Pattern 1: Imperative → Question
+## Pattern 1: Imperative -> Question
 
 ### Before (Imperative)
 ```
@@ -29,11 +29,11 @@ Ask: "Which approach fits your requirements?"
 ```
 
 **Pattern:**
-- Imperative "do X" → Question "which X?" + options + tradeoffs
+- Imperative "do X" -> Question "which X?" + options + tradeoffs
 
 ---
 
-## Pattern 2: Autopilot → Approval Gate
+## Pattern 2: Autopilot -> Approval Gate
 
 ### Before (Autopilot)
 ```
@@ -76,11 +76,11 @@ Ask: "Which approach fits your requirements?"
 ```
 
 **Pattern:**
-- Autopilot steps → Evidence gathering + presentation + user selection + approval gate + execution + user finalizes
+- Autopilot steps -> Evidence gathering + presentation + user selection + approval gate + execution + user finalizes
 
 ---
 
-## Pattern 3: Black-Box → Evidence-First
+## Pattern 3: Black-Box -> Evidence-First
 
 ### Before (Black-Box)
 ```
@@ -115,11 +115,11 @@ Ask: "Which hypothesis should we investigate first?"
 ```
 
 **Pattern:**
-- Black-box "figure out X" → Evidence sources + collection steps + summary + hypothesis generation + user chooses direction
+- Black-box "figure out X" -> Evidence sources + collection steps + summary + hypothesis generation + user chooses direction
 
 ---
 
-## Pattern 4: Single-Path → Multi-Option
+## Pattern 4: Single-Path -> Multi-Option
 
 ### Before (Single-Path)
 ```
@@ -163,11 +163,11 @@ Step 3: Evaluate state management approaches.
 ```
 
 **Pattern:**
-- Single recommendation → Evidence analysis + multiple options + pros/cons + recommendation with rationale + user choice
+- Single recommendation -> Evidence analysis + multiple options + pros/cons + recommendation with rationale + user choice
 
 ---
 
-## Pattern 5: Assumption → Explicit Check
+## Pattern 5: Assumption -> Explicit Check
 
 ### Before (Assumption)
 ```
@@ -198,11 +198,11 @@ Step 2: Parse the response with validation.
 ```
 
 **Pattern:**
-- Hidden assumption → Explicit assumption list + validation steps + failure handling + user choice on implementation
+- Hidden assumption -> Explicit assumption list + validation steps + failure handling + user choice on implementation
 
 ---
 
-## Pattern 6: Complex → Duck Ladder
+## Pattern 6: Complex -> Duck Ladder
 
 ### Before (Complex)
 ```
@@ -249,11 +249,11 @@ Step 4: Apply Duck Ladder before adding abstraction.
 ```
 
 **Pattern:**
-- "Add new code" → Duck Ladder check + evidence per rung + stop at first rung that holds + user confirms
+- "Add new code" -> Duck Ladder check + evidence per rung + stop at first rung that holds + user confirms
 
 ---
 
-## Pattern 7: Vague → Bounded
+## Pattern 7: Vague -> Bounded
 
 ### Before (Vague)
 ```
@@ -287,11 +287,11 @@ Step 1: Clarify scope and expected behavior.
 ```
 
 **Pattern:**
-- Vague task → Clarifying questions + bounded scope + expected behavior + verification + approval gate
+- Vague task -> Clarifying questions + bounded scope + expected behavior + verification + approval gate
 
 ---
 
-## Pattern 8: Tell → Show Options
+## Pattern 8: Tell -> Show Options
 
 ### Before (Tell)
 ```
@@ -338,11 +338,11 @@ Step 3: Choose password hashing strategy.
 ```
 
 **Pattern:**
-- "Use X" directive → Context + multiple options + Duck Ladder check + recommendation with rationale + user choice
+- "Use X" directive -> Context + multiple options + Duck Ladder check + recommendation with rationale + user choice
 
 ---
 
-## Pattern 9: Fix → Understand Then Fix
+## Pattern 9: Fix -> Understand Then Fix
 
 ### Before (Fix)
 ```
@@ -400,11 +400,11 @@ Step 2: Investigate why endpoint needs to change.
 ```
 
 **Pattern:**
-- Direct fix → Evidence gathering + analysis + multiple options + questions + user input → recommended fix + approval gate
+- Direct fix -> Evidence gathering + analysis + multiple options + questions + user input -> recommended fix + approval gate
 
 ---
 
-## Pattern 10: Recommendation → Exploration
+## Pattern 10: Recommendation -> Exploration
 
 ### Before (Recommendation)
 ```
@@ -461,7 +461,7 @@ Use microservices architecture for better scalability.
 ```
 
 **Pattern:**
-- Direct recommendation → Context gathering + problem clarification + multiple options + Duck Ladder + questions + user input → tailored recommendation
+- Direct recommendation -> Context gathering + problem clarification + multiple options + Duck Ladder + questions + user input -> tailored recommendation
 
 ---
 

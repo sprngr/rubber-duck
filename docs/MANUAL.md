@@ -58,12 +58,12 @@ Use `quack <intent>` for explicit routing with keyword-based precedence (risk/co
 
 | User signal | Start skill | Typical chain / Notes |
 |---|---|---|
-| "review this" + diff/code | `duck-review` | `duck-review` → `duck-risk` (rollback/compat) → `duck-simplify` (complexity) → `duck-triage` (test gaps) |
-| "debug this" + complaint | `duck-debug` | `duck-debug` trace mode → root-cause mode → `duck-triage` (if repro weak) → `duck-patch` (execution approval required) |
-| "design/tradeoffs" | `duck-design` | `duck-design` → `duck-risk` (failure modes) → `duck-triage` (test scenarios) |
+| "review this" + diff/code | `duck-review` | `duck-review` -> `duck-risk` (rollback/compat) -> `duck-simplify` (complexity) -> `duck-triage` (test gaps) |
+| "debug this" + complaint | `duck-debug` | `duck-debug` trace mode -> root-cause mode -> `duck-triage` (if repro weak) -> `duck-patch` (execution approval required) |
+| "design/tradeoffs" | `duck-design` | `duck-design` -> `duck-risk` (failure modes) -> `duck-triage` (test scenarios) |
 | "explain this" | `duck-teach` | explain mode; escalate to `duck-debug`/`duck-review`/`duck-design` when issue type emerges |
 | "teach me/how works" | `duck-teach` | tutorial modes; escalate when troubleshooting needed |
-| "patch this/apply fix" | `duck-patch` | bounded fix (max 2 files); requires execution approval (preflight → approve → execute → verify) |
+| "patch this/apply fix" | `duck-patch` | bounded fix (max 2 files); requires execution approval (preflight -> approve -> execute -> verify) |
 | "refactor/extract/rename" | `duck-refactor` | multi-file restructuring (max 5 files); requires execution approval |
 | "what could break/rollback risk" | `duck-risk` | failure modes, rollback safety, compatibility; often follows `duck-review` |
 | "simplify/dedupe/overengineered" | `duck-simplify` | complexity reduction; dry mode (read-only) available |
@@ -101,7 +101,7 @@ Include duck-risk when rollback/compatibility risk is central.
 
 ```text
 Apply this bounded fix with duck-patch. Confirm scope ≤2 files, expected behavior change clear.
-Execution approval required (preflight → approve → execute → verify).
+Execution approval required (preflight -> approve -> execute -> verify).
 ```
 
 #### Refactor
@@ -138,7 +138,7 @@ force explicit decision closure with evidence and rollback path.
 
 ### Composition patterns (multi-skill workflows)
 
-#### Review → Risk → Simplify (comprehensive review)
+#### Review -> Risk -> Simplify (comprehensive review)
 
 ```text
 quack review this refactor for correctness, risk, and complexity
@@ -148,7 +148,7 @@ quack review this refactor for correctness, risk, and complexity
 - `duck-risk`: rollback safety, compatibility, failure modes
 - `duck-simplify`: complexity reduction, duplication
 
-#### Debug → Patch (root-cause → bounded fix)
+#### Debug -> Patch (root-cause -> bounded fix)
 
 ```text
 quack debug this endpoint failure then patch it
@@ -158,7 +158,7 @@ quack debug this endpoint failure then patch it
 - `duck-debug` root-cause mode: identify failure cause
 - `duck-patch`: apply bounded fix after scope is clear
 
-#### Design → Triage (architecture → testing)
+#### Design -> Triage (architecture -> testing)
 
 ```text
 quack design this migration and suggest test scenarios
@@ -167,7 +167,7 @@ quack design this migration and suggest test scenarios
 - `duck-design`: evaluate options, tradeoffs, architecture decisions
 - `duck-triage`: test scenarios, coverage gaps
 
-#### Teach → Debug (learning → troubleshooting)
+#### Teach -> Debug (learning -> troubleshooting)
 
 ```text
 quack explain this authentication flow, then help debug the token expiry issue
@@ -189,7 +189,7 @@ quack explain this authentication flow, then help debug the token expiry issue
 - **Scope exceeds refactor boundary**
   - Fix: split into smaller bounded tasks before refactoring (max 5 files for `duck-refactor`)
 - **Execution approval bypassed or unclear**
-  - Fix: enforce 6-step workflow (preflight → approval ask → wait → execute → verify → scope-change-check)
+  - Fix: enforce 6-step workflow (preflight -> approval ask -> wait -> execute -> verify -> scope-change-check)
 - **Cosmetic vs semantic changes confused**
   - Fix: use two-tier approval (lightweight confirmation for whitespace/doc/formatting; full execution approval for code/config/logic changes)
 - **Quack alias ambiguity**

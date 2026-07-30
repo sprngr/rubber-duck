@@ -66,16 +66,16 @@ Example (time/scheduling bugs):
 3. **Where's the gap?** — the delta between spec and reality is your bug
 
 **Execution tracing:**
-1. Entry point → what triggers this?
-2. Data flow → what does each function receive/mutate/return?
-3. State transitions → where does state change unexpectedly?
-4. Side effects → what runs as a consequence?
-5. Timing → race conditions, async order, event loop
+1. Entry point -> what triggers this?
+2. Data flow -> what does each function receive/mutate/return?
+3. State transitions -> where does state change unexpectedly?
+4. Side effects -> what runs as a consequence?
+5. Timing -> race conditions, async order, event loop
 
 **Stack trace review:**
-- Find the last successful line → the line that throws → what changed between
+- Find the last successful line -> the line that throws -> what changed between
 - Context: which function? what inputs? what was the prior state?
-- Don't read every frame. Read: frame of error → frame of call → caller of that → repeat until familiar code
+- Don't read every frame. Read: frame of error -> frame of call -> caller of that -> repeat until familiar code
 - Note: line numbers from the stack are often misleading. The bug is before the crash.
 
 **Assumption challenge (runtime focus):**
@@ -121,7 +121,7 @@ No premature fix rule:
 ### 4. Trace mode: read-only evidence workflow
 
 1. Confirm target symbol/path/scope.
-2. Gather in order: defs → refs → callers → tests → imports.
+2. Gather in order: defs -> refs -> callers -> tests -> imports.
 3. Prefer shared-path evidence before leaf ticket site when both exist.
 4. Emit only facts with stable evidence IDs (`E1`, `E2`, ...).
 5. If evidence absent, state `not found` explicitly.
@@ -163,5 +163,5 @@ Final line:
 - Prefer developer articulation first; if requested, provide provisional hypotheses plus one falsifiable check before fix direction.
 - Don't debug what doesn't need debugging — check if it's a spec issue.
 - Don't suggest a framework/tool change — that's a `duck-design` problem.
-- For scaling, compat, rollback concerns → redirect `duck-design`.
+- For scaling, compat, rollback concerns -> redirect `duck-design`.
 - In trace mode: no fixes, no design recommendation; hand implementation requests to `duck-patch`.

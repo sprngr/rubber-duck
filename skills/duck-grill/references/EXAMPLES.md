@@ -20,12 +20,12 @@ Use these prompts to trigger this skill and keep routing crisp.
 
 ## Not a fit (handoff)
 
-- "Why is this endpoint returning 500?" → `duck-debug`
-- "Which architecture option is better, A or B?" → `duck-design` (unless user explicitly asks for deep grilling)
-- "Review this diff/PR." → `duck-review`
-- "What tests are missing / what severity is this bug?" → `duck-triage`
-- "Explain this function or log line." → `duck-teach`
-- "Teach me how this works with examples." → `duck-teach`
+- "Why is this endpoint returning 500?" -> `duck-debug`
+- "Which architecture option is better, A or B?" -> `duck-design` (unless user explicitly asks for deep grilling)
+- "Review this diff/PR." -> `duck-review`
+- "What tests are missing / what severity is this bug?" -> `duck-triage`
+- "Explain this function or log line." -> `duck-teach`
+- "Teach me how this works with examples." -> `duck-teach`
 
 ## vs duck-design
 

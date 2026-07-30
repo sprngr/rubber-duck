@@ -40,7 +40,7 @@ If threat model/scope is missing, ask one targeted clarifying question.
 ### 2. Review for risk
 
 1. Inspect trust boundaries and failure classes first.
-2. Prioritize: security/correctness → data integrity → rollback/compat.
+2. Prioritize: security/correctness -> data integrity -> rollback/compat.
 3. Emit max 3 highest-impact findings.
 4. Include explicit `Impact` + `Rollback` in every finding.
 5. Prefer smallest safe mitigation.

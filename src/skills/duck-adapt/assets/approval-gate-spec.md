@@ -208,7 +208,7 @@ Return to preflight with new scope and request renewed approval.
 - Mutating commands (git commit, install, build, deploy)
 - Task delegation for implementation
 
-**Approval flow:** Full 6-step blocking workflow (preflight → approve → execute)
+**Approval flow:** Full 6-step blocking workflow (preflight -> approve -> execute)
 
 ### Cosmetic Changes (Lightweight Confirmation)
 
@@ -223,10 +223,10 @@ Return to preflight with new scope and request renewed approval.
 - Acceptable confirmations: "yes", "confirm", "ok", "go ahead", "approve"
 
 **Edge cases (count as SEMANTIC, not cosmetic):**
-- JSDoc/docstrings in code files → semantic (affects generated docs)
-- Comments explaining logic → semantic (affects maintainability)
-- Config comments → semantic (affects interpretation)
-- Code examples in README → semantic (users copy-paste)
+- JSDoc/docstrings in code files -> semantic (affects generated docs)
+- Comments explaining logic -> semantic (affects maintainability)
+- Config comments -> semantic (affects interpretation)
+- Code examples in README -> semantic (users copy-paste)
 
 ---
 
@@ -357,7 +357,7 @@ Original scope completed. Reply with "approve" to execute additional model-layer
 ### Step 2: Update documentation
 
 **Change:**
-Fix typo in README.md line 42: "authentification" → "authentication"
+Fix typo in README.md line 42: "authentification" -> "authentication"
 
 **Confirm to proceed with doc change?**
 
@@ -380,7 +380,7 @@ Execution approval gate and Duck Ladder work together:
 7. Execute minimal change
 
 **Order:**
-Evidence → Duck Ladder → Preflight → Approval → Execute → Verify
+Evidence -> Duck Ladder -> Preflight -> Approval -> Execute -> Verify
 
 ---
 

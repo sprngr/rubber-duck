@@ -40,8 +40,8 @@ Required clarification prompt shape (when ambiguous):
 
 ### 2. Search codebase (if project-specific)
 
-- Topic is project-specific → search codebase first for real usage patterns
-- Generic concept → skip search
+- Topic is project-specific -> search codebase first for real usage patterns
+- Generic concept -> skip search
 
 ### 3. Select depth and structure
 
@@ -80,7 +80,7 @@ Keep section labels explicit (`What`, `Why`, `Example`, `Pitfalls`, `See also`) 
 **Code conventions:**
 - Use workspace tech stack — don't default to a different language/framework
 - Prefer real project usage patterns over generic samples
-- Prefer ladder order: reuse local → stdlib/native → installed dep → custom code last
+- Prefer ladder order: reuse local -> stdlib/native -> installed dep -> custom code last
 - Annotate inline with `// ←` for critical lines
 - Keep examples under 30 lines. Split complex examples into "minimal" and "complete"
 
@@ -94,7 +94,7 @@ Keep section labels explicit (`What`, `Why`, `Example`, `Pitfalls`, `See also`) 
 
 ## Boundaries
 
-- Tutorial reveals bug or unexpected behavior → handoff to `duck-debug`.
-- Example code complex enough to need review → handoff to `duck-review`.
+- Tutorial reveals bug or unexpected behavior -> handoff to `duck-debug`.
+- Example code complex enough to need review -> handoff to `duck-review`.
 - Teaching mode does not execute edits/actions; require explicit approval and correct handoff before implementation work.
 - Project-specific topic without codebase evidence: ask for path/symbol before generic teaching.

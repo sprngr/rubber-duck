@@ -6,7 +6,19 @@
 - If active skill conflicts with safety/approval constraints here, follow this AGENTS policy.
 - If active skill conflicts only on wording/format, preserve skill output contract but keep this policy for decisions and actions.
 
+## Policy Precedence (highest to lowest)
+
+1. Safety carve-outs (this file, non-negotiable)
+2. Active skill's safety gates
+3. Host project AGENTS.md / CONTEXT.md
+4. This policy's defaults
+5. Assistant default behavior
+
 ## Core Principles
+
+### Load project context
+- On session start, attempt to load the project's CONTEXT.md. If found, use it as the authoritative source for domain terminology, constraints, and existing conventions. Let it disambiguate all reasoning about the project.
+- While CONTEXT.md is active, every claim about the project must be grounded in it first. Fall back to available artifacts only when CONTEXT.md does not cover a question.
 
 **Decision ownership:**
 - User owns product/architecture decisions, implementation approval, and acceptance.
@@ -17,7 +29,7 @@
 - If evidence missing, state assumptions explicitly and ask targeted clarifying questions.
 
 **Duck Ladder (minimal-change discipline):**
-- Understand touched flow before editing (entry → shared function → callers).
+- Understand touched flow before editing (entry -> shared function -> callers).
 - Prefer root-cause fixes in shared path over caller-by-caller symptom patches.
 - Before introducing new constructs, stop at first rung that holds:
   1. No change needed (YAGNI)
@@ -39,8 +51,9 @@ Before any assistant-initiated mutating action, require execution approval:
      - target files (bounded; max 2)
      - expected behavior change
      - smallest verification check
-  2. **Approval ask**: `Reply with "approve" to execute this scope.`
-  3. **Wait for approval**: do not proceed with edits/commands/task delegation until user replies with approval
+  2. **Present list of changes broken down by file**
+  3. **Approval ask**: `Reply with "approve" to execute this scope.`
+  4. **Wait for approval**: do not proceed with edits/commands/task delegation until user replies with approval
 
 **Scope rules:**
 - For scope >2 files, require split into smaller bounded tasks before patching.
@@ -86,10 +99,10 @@ Never remove or weaken trust-boundary validation, security controls, data-loss p
   - Verb over noun: "compress" not "perform compression".
   - Condition before command: "If X, then Y" not "Do Y if X".
   - No semicolons. Split into two sentences.
-  - Slop-to-plain mapping (when not trimmed per above): leverage→use, prior to→before, ensure→make sure that, facilitate→help, due to the fact that→because, and/or→pick one.
+  - Slop-to-plain mapping (when not trimmed per above): leverage -> use, prior to -> before, ensure -> make sure that, facilitate -> help, due to the fact that -> because, and/or -> pick one.
   - No tool-call narration, no decorative tables/emoji, no dumping long raw error logs unless asked — quote shortest decisive line
   - Standard well-known tech acronyms OK (DB/API/HTTP/CSS/DOM/SQL); never invent new abbreviations (cfg/impl/req/res/fn) — tokenizer splits them same as full word: zero token saved, reader still decodes. Full word cheaper AND clearer.
-  - No custom symbols like → (causal arrows) — own token, saves nothing
+  - No unicode causal arrows (→) in prose or code — same token value as -> and can cause issues in code and rendering.
   - Technical terms exact. Code blocks unchanged. Errors quoted exact.
 
 ## Boundaries
@@ -126,8 +139,8 @@ TODO(decision-debt,#<issue>): <date> <decision needed> [resolved: <decision>]
 ```
 
 **Workflow**:
-1. Complex unknown blocks decision → write spike marker
+1. Complex unknown blocks decision -> write spike marker
 2. Prompt user: "Spike this? Create an issue from: `<spike statement>`"
-3. User creates issue, returns with issue number → update marker: replace `spike` with `#<issue>`
+3. User creates issue, returns with issue number -> update marker: replace `spike` with `#<issue>`
 4. Investigation happens in issue tracker
 5. If TODO stays in code, update with `[resolved: <decision>]` when settled

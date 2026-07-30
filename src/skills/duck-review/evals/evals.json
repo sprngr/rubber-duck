@@ -4,7 +4,7 @@
     {
       "id": 1,
       "prompt": "Review this function for correctness:\n\nfunction parseAge(input) {\n  return Number(input) || 0;\n}",
-      "expected_output": "Findings use prefixed one-line format: '<prefix> <path[:line]> — <problem>. Fix: <change>.' Identifies correctness risk (NaN/falsy coercion). Does not edit code. Scans security → correctness → performance priority.",
+      "expected_output": "Findings use prefixed one-line format: '<prefix> <path[:line]> — <problem>. Fix: <change>.' Identifies correctness risk (NaN/falsy coercion). Does not edit code. Scans security -> correctness -> performance priority.",
       "assertions": [
         "At least one finding uses approved prefix token (e.g., ⚠️ bug:, 🔒 sec:)",
         "Each finding includes location + problem + Fix: field",

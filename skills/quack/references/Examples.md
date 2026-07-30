@@ -43,36 +43,36 @@ Invalid override:
 
 ## Route Priority Hints
 
-- diff / PR / changed files → bias `duck-review`
-- stack trace / call path / "where used" → bias `duck-debug` (trace mode)
-- rollout / migration / compatibility / rollback → bias `duck-risk`
-- "overengineered" / "too complex" → bias `duck-simplify`
-- "duplicate" / "drift" → bias `duck-simplify`
-- "fix/edit/patch" → bias `duck-patch`
+- diff / PR / changed files -> bias `duck-review`
+- stack trace / call path / "where used" -> bias `duck-debug` (trace mode)
+- rollout / migration / compatibility / rollback -> bias `duck-risk`
+- "overengineered" / "too complex" -> bias `duck-simplify`
+- "duplicate" / "drift" -> bias `duck-simplify`
+- "fix/edit/patch" -> bias `duck-patch`
 
 ## Skill Composition Examples
 
 Multi-skill workflows using natural language chaining:
 
-**Debug → Patch**:
+**Debug -> Patch**:
 ```
 User: quack debug this endpoint failure then patch it
 Expected: Routes to duck-debug first, then suggests duck-patch after root cause identified
 ```
 
-**Review → Risk → Simplify** (comprehensive review):
+**Review -> Risk -> Simplify** (comprehensive review):
 ```
 User: quack review this refactor for correctness, risk, and complexity
 Expected: Routes to duck-review with note to follow up with duck-risk and duck-simplify
 ```
 
-**Design → Triage**:
+**Design -> Triage**:
 ```
 User: quack design this migration and suggest test scenarios
 Expected: Routes to duck-design, then suggests duck-triage for test planning
 ```
 
-**Teach → Debug**:
+**Teach -> Debug**:
 ```
 User: quack explain this auth flow then help debug the token expiry
 Expected: Routes to duck-teach first, then duck-debug for investigation

@@ -112,7 +112,7 @@
       "scenario": "Composition pattern suggestion",
       "input": "I want a skill that reviews code, identifies risks, and suggests simplifications.",
       "expected_behavior": [
-        "Identifies as composition of duck-review → duck-risk → duck-simplify",
+        "Identifies as composition of duck-review -> duck-risk -> duck-simplify",
         "Recommends using existing skills in sequence",
         "Provides workflow example",
         "Explains why composition is better than new skill"
@@ -125,7 +125,7 @@
       "input": "Adapt this skill:\n\n# Code-Explainer\n\n## How to Use\nAsk me to explain code.\n\n## What I Do\nI explain code in simple terms.\n\n## Output\nPlain English explanation.",
       "expected_behavior": [
         "Applies prompt order standard",
-        "Restructures to: Purpose → Philosophy → Activation → Method → Boundaries",
+        "Restructures to: Purpose -> Philosophy -> Activation -> Method -> Boundaries",
         "Moves output format inline to Method steps",
         "Adds frontmatter with name/description",
         "Identifies overlap with duck-teach (high)",
@@ -141,7 +141,7 @@
     "asset_structure": "Correct assets/ vs references/ distinction with metadata headers and loading triggers"
   },
   "notes": [
-    "Test cases cover full range: imperative→Socratic, workflow→skill, overlap detection, audit, safety violations",
+    "Test cases cover full range: imperative->Socratic, workflow->skill, overlap detection, audit, safety violations",
     "Each test case includes verification criteria for key behaviors",
     "Success criteria aligned with skill purpose and philosophy guardrails"
   ]

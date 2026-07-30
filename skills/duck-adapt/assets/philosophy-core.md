@@ -153,7 +153,7 @@ Its function is to improve reasoning quality through structured questioning, exp
 - Are we adding the right abstraction?
 
 **Additional rules:**
-- Understand touched flow before editing (entry → shared → callers)
+- Understand touched flow before editing (entry -> shared -> callers)
 - Prefer root-cause fixes in shared path over caller-by-caller patches
 - Non-trivial logic changes should leave one runnable check
 
@@ -314,4 +314,4 @@ When adapting external skills, apply all 5 principles:
 4. **Duck Ladder:** Check minimal-change discipline
 5. **Safety boundaries:** Verify no carve-out violations
 
-Result: External skill → rubber-duck-grounded version that preserves intent while adding reasoning quality and user control.
+Result: External skill -> rubber-duck-grounded version that preserves intent while adding reasoning quality and user control.

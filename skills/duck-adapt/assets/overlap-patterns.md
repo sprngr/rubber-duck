@@ -118,32 +118,32 @@ Patterns for detecting semantic overlap between skill concepts and existing duck
 **Recommendation:** Reject or merge into existing skill
 **Rationale:** Too much duplication, confuses routing
 
-**Example:** Skill concept "trace function calls" → duck-debug trace mode already covers this
+**Example:** Skill concept "trace function calls" -> duck-debug trace mode already covers this
 
 ### Medium Overlap (40-70% intent match)
 **Recommendation:** Extend existing skill with new mode/capability
 **Rationale:** Core intent shared, but new angle adds value
 
-**Example:** Skill concept "security review" → extend duck-review with security lens
+**Example:** Skill concept "security review" -> extend duck-review with security lens
 
 ### Low Overlap (<40% intent match)
 **Recommendation:** New skill viable if distinct value clear
 **Rationale:** Different enough to justify separate skill
 
-**Example:** Skill concept "performance profiling" → duck-debug is about correctness, not performance
+**Example:** Skill concept "performance profiling" -> duck-debug is about correctness, not performance
 
 ### Complementary (composition pattern)
 **Recommendation:** Use existing skills in sequence instead of new skill
 **Rationale:** Workflow is just skill chaining, not new capability
 
-**Example:** "review then simplify" → `duck-review` → `duck-simplify` composition
+**Example:** "review then simplify" -> `duck-review` -> `duck-simplify` composition
 
 ## Composition Patterns (Existing)
 
-- `debug → patch` — trace + root-cause → bounded fix
-- `review → risk → simplify` — code review → failure modes → complexity reduction
-- `design → triage` — option evaluation → test scenario planning
-- `teach → debug` — explain → investigate when teaching reveals issue
+- `debug -> patch` — trace + root-cause -> bounded fix
+- `review -> risk -> simplify` — code review -> failure modes -> complexity reduction
+- `design -> triage` — option evaluation -> test scenario planning
+- `teach -> debug` — explain -> investigate when teaching reveals issue
 
 ## Red Flags (Always Recommend Rejection)
 
@@ -165,8 +165,8 @@ Patterns for detecting semantic overlap between skill concepts and existing duck
 
 ### When skill is specialized (narrow domain):
 - Evaluate based on frequency of use vs maintenance cost
-- High-frequency + narrow domain → viable
-- Low-frequency + narrow domain → maybe better as external skill
+- High-frequency + narrow domain -> viable
+- Low-frequency + narrow domain -> maybe better as external skill
 
 ## Output Format for Overlap Analysis
 
@@ -182,7 +182,7 @@ Patterns for detecting semantic overlap between skill concepts and existing duck
 - [brief comparison]
 
 **Composition alternative:**
-- `quack [skill-1]` → `quack [skill-2]` achieves same outcome
+- `quack [skill-1]` -> `quack [skill-2]` achieves same outcome
 
 **Recommendation:** [Add new skill | Extend existing | Use composition | Reject]
 

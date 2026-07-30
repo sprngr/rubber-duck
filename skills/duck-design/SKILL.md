@@ -83,7 +83,7 @@ For each design decision, ask (pick 2-3 most relevant):
 - "Who maintains this in 6 months?"
 - "Does this coupling create circular dependency risk?"
 
-Focus on system-level constraints, not runtime null checks (runtime bugs → redirect to `duck-debug`).
+Focus on system-level constraints, not runtime null checks (runtime bugs -> redirect to `duck-debug`).
 
 ### 4. Compare alternatives
 
