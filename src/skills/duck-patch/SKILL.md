@@ -28,13 +28,6 @@ Use when user asks for a targeted code edit and scope is clear (or can be clarif
 
 {{include: skill-snippets/clarify-first-preflight.md}}
 
-Required before edit:
-- bounded scope (max 2 files)
-- expected behavior change in one sentence
-- smallest verification check
-
-If any required item is missing, ask one targeted clarifying question first.
-
 **Mutating action gate:**
 {{include: policy-snippets/mutating-action-gate.md}}
 
@@ -60,8 +53,6 @@ Output:
 
 ## Boundaries
 
-- Do not broaden scope silently. If scope expands, pause and request renewed approval.
 - Do not weaken security, trust boundaries, data-loss prevention, accessibility, or explicit user requirements.
 - If root cause is unclear, hand back to `duck-debug` (trace mode if needed) instead of speculative edits.
-- If change requires >2 files, split into sequential bounded steps and request approval per step.
 - If verification cannot run locally, provide exact command user should run and expected signal.

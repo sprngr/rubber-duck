@@ -7,8 +7,6 @@ description: >
   "move this to another file", "inline this".
 ---
 
-# Skill: duck-refactor
-
 Structured refactoring 🦆. Multi-file restructuring with reference tracking.
 
 ## Purpose

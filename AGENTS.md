@@ -1,3 +1,11 @@
+## Load Project Context
+
+On session start, load `CONTEXT.md`:
+- Primary: `CONTEXT.md` at workspace root.
+- Localized: any `CONTEXT.md` on the path from workspace root to current working directory. Localized fills gaps root does not cover. Root wins on conflict.
+- Missing file: skip silently.
+- Empty section: not authoritative. Treat as "no documented decision".
+
 ## Rubber-Duck Cross-Skill Portability Layer
 
 **Purpose:** apply same philosophy to non-duck skills in same harness.
@@ -16,16 +24,13 @@
 
 ## Core Principles
 
-### Load project context
-- On session start, attempt to load the project's CONTEXT.md. If found, use it as the authoritative source for domain terminology, constraints, and existing conventions. Let it disambiguate all reasoning about the project.
-- While CONTEXT.md is active, every claim about the project must be grounded in it first. Fall back to available artifacts only when CONTEXT.md does not cover a question.
-
 **Decision ownership:**
 - User owns product/architecture decisions, implementation approval, and acceptance.
 - Assistant must not make hidden product/architecture decisions.
 
 **Evidence-first:**
 - Anchor claims/recommendations in available artifacts (code, diff, logs, tests, config, constraints).
+- CONTEXT.md governs terminology, conventions, and deferred decisions. Code governs behavior. On conflict, flag the divergence. Use code for behavior claims. Use CONTEXT.md for naming and convention claims.
 - If evidence missing, state assumptions explicitly and ask targeted clarifying questions.
 
 **Duck Ladder (minimal-change discipline):**
@@ -100,7 +105,7 @@ Never remove or weaken trust-boundary validation, security controls, data-loss p
   - Condition before command: "If X, then Y" not "Do Y if X".
   - No semicolons. Split into two sentences.
   - Slop-to-plain mapping (when not trimmed per above): leverage -> use, prior to -> before, ensure -> make sure that, facilitate -> help, due to the fact that -> because, and/or -> pick one.
-  - No tool-call narration, no decorative tables/emoji, no dumping long raw error logs unless asked — quote shortest decisive line
+  - No tool-call narration, no dumping long raw error logs unless asked — quote shortest decisive line
   - Standard well-known tech acronyms OK (DB/API/HTTP/CSS/DOM/SQL); never invent new abbreviations (cfg/impl/req/res/fn) — tokenizer splits them same as full word: zero token saved, reader still decodes. Full word cheaper AND clearer.
   - No unicode causal arrows (→) in prose or code — same token value as -> and can cause issues in code and rendering.
   - Technical terms exact. Code blocks unchanged. Errors quoted exact.
@@ -114,8 +119,8 @@ Never remove or weaken trust-boundary validation, security controls, data-loss p
 ## Deferred Decision Debt Markers
 
 - When an explicit implementation/product/architecture decision is deferred, add a debt marker near the relevant artifact (code, ADR, or policy doc).
-- Base format: `TODO(decision-debt): <date> <what deferred>`
-- If an issue exists, include it: `TODO(decision-debt,#<issue>): ...`
+- Base format: `TODO(<debt type>): <date> <what deferred>`
+- If an issue exists, include it: `TODO(<debt type>,#<issue>): ...`
 - Do not add decision-debt markers for generic ideas; only for concrete deferred decisions with a clear revisit trigger.
 
 ### Spike markers (complex unknowns)
@@ -123,7 +128,7 @@ Never remove or weaken trust-boundary validation, security controls, data-loss p
 When a deferred decision has multiple sub-unknowns, requires investigation (prototype/test/measurement), or the wrong answer has material cost — extend to spike format:
 
 ```
-TODO(decision-debt,spike): <date> <decision needed>
+TODO(<debt type>,spike): <date> <decision needed>
   spike: <one-line problem statement>
   unknowns:
     - <sub-question 1>
@@ -135,7 +140,7 @@ TODO(decision-debt,spike): <date> <decision needed>
 
 **Resolution update** (if TODO kept in code):
 ```
-TODO(decision-debt,#<issue>): <date> <decision needed> [resolved: <decision>]
+TODO(<debt type>,#<issue>): <date> <decision needed> [resolved: <decision>]
 ```
 
 **Workflow**:

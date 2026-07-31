@@ -304,6 +304,26 @@ for src_dir in "${SKILL_DIRS[@]}"; do
     shopt -u globstar
   fi
 
+  if [[ -d "${src_dir}/examples" ]]; then
+    shopt -s globstar
+    for example in "${src_dir}"/examples/**; do
+      [[ -f "${example}" ]] || continue
+      rel="${example#${src_dir}/}"
+      if (( CHECK_ONLY == 1 )); then
+        check_portability "${example}" || failed=1
+      fi
+      copy_or_check "${example}" "${out_dir}/${rel}" || failed=1
+    done
+    shopt -u globstar
+  fi
+
+  if [[ -f "${src_dir}/README.md" ]]; then
+    if (( CHECK_ONLY == 1 )); then
+      check_portability "${src_dir}/README.md" || failed=1
+    fi
+    copy_or_check "${src_dir}/README.md" "${out_dir}/README.md" || failed=1
+  fi
+
   prune_legacy_reference_assets "${src_dir}" "${out_dir}" || failed=1
 
   if (( CHECK_ONLY == 1 )); then

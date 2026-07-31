@@ -184,7 +184,18 @@ Final line:
 - JSDoc/docstring changes in code files -> semantic (affects generated docs, code contracts)
 - Comments explaining logic in code -> semantic (affects maintainability understanding)
 - Config comments -> semantic (affects interpretation)
+- Document updates (ADRs, CONTEXT.md) -> semantic
 - Examples in README that are code snippets -> semantic (users copy-paste)
+
+**Approval workflow:**
+Before any semantic change, require execution approval:
+  1. **Preflight** (if missing, ask one clarifying question):
+     - target files (bounded; max 2)
+     - expected behavior change
+     - smallest verification check
+  2. **Present list of changes broken down by file**
+  3. **Approval ask**: `Reply with "approve" to execute this scope.`
+  4. **Wait for approval**: do not proceed with edits/commands/task delegation until user replies with approval
 
 **Rules:**
 - No workspace-changing action without user approval/confirmation

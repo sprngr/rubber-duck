@@ -38,6 +38,7 @@ Use this checklist to ensure complete philosophy integration during skill adapta
 
 - [ ] All mutating actions identified (edits/commands/task delegation)
 - [ ] Approval gate with preflight (files + behavior + verification)
+- [ ] "Present list of changes" step before approval ask
 - [ ] Explicit "approve" token required (not "continue"/"go ahead")
 - [ ] Scope limit stated (max 2 files for patch, max 5 for refactor)
 - [ ] Scope-change detection and re-approval requirement

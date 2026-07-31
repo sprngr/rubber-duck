@@ -20,12 +20,6 @@ Optional sections (use only when adding value):
 - `## Inputs` (for delegator agents like duckling)
 - `## Boundaries` (hard constraints not covered in Safety Gates)
 
-Removed from standard (merge into above):
-- ~~Agent Contracts~~ -> merge into Inputs or Workflow
-- ~~When to Use~~ -> not needed for agent bodies
-- ~~Preflight Checks~~ -> merge into Safety Gates or Workflow
-- ~~Rules & Limits~~ -> merge into Core Principles
-
 ## Skill file order (recommended)
 
 1. `## Purpose`
@@ -36,10 +30,6 @@ Removed from standard (merge into above):
 
 Optional sections:
 - `## References` / `## Examples` / `## Edge Cases` (as needed)
-
-Removed from standard (merge into Method):
-- ~~Output Format~~ -> describe inline in Method steps (reduces duplication)
-- ~~Preflight Checks~~ -> merge into Method or Boundaries
 
 ## Compression rules
 

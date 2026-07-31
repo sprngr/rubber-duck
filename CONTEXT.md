@@ -1,6 +1,6 @@
 # Rubber Duck Context
 
-## Mission
+## Goals
 
 Rubber Duck optimizes for decision quality over blind automation.
 
@@ -9,46 +9,26 @@ Outcomes:
 - evidence + questioning improve reasoning
 - bounded change reduces rework
 
-## Recent work
+## Decisions
 
-**2026-07-21:**
-- New skill: duck-adapt (meta-skill for external skill adaptation, philosophy compliance auditing, overlap detection)
-  - 5 philosophy assets (2,196 lines): philosophy-core.md, socratic-patterns.md, approval-gate-spec.md, adaptation-checklist.md, overlap-patterns.md
-- Skill rename: grill-with-ducks -> duck-grill (pattern consistency, 8 chars shorter)
-- Enhanced duck-grill: batched questions (up to 3), context threading, pressure calibration, assumption ledger
-- AGENTS.md style guide completion: anti-repetition rules, Auto-Clarity definition, terseness rules (no invented abbreviations, no custom symbols like ->)
-- AGENTS.md mutating action gate clarification: applies to assistant-initiated actions only; user-initiated changes expected and normal
-- Installer feature parity: --skip-agents-md (bash) / -SkipAgentsMd (PowerShell) flags skip AGENTS.md policy block operations
-- Documentation: development workflow section, installer sync notes, skills section in README with routing model distinction
-- Commits: 46ae62c, 0aa2311, 516981b, 70753cd, da904b6, eff56ad, db819a6, 8ca7179, ed961b7, 9e54571, dbed25d, 2fac089, 2ea3edd
+**Non-negotiable guardrails**
 
-**2026-07-20:**
-Comprehensive optimization pass completed:
-- UX standardization: prompt-order standard, Duck Ladder 6-rung format, execution approval terminology
-- Routing improvements: keyword-based precedence in quack (risk/simplify/teach/triage/design), 76->33 aliases (-57%)
-- New skill: duck-refactor (extract/rename/move/inline/pattern-convert; max 5 files; execution approval required)
-- Validation framework: 21 tests in docs/validation/test-prompts.json, run-validation-tests.sh script
-- Gap closure: 6-step blocking approval workflow, two-tier approval (semantic vs cosmetic), simple-vs-workflow classification
-- Composition patterns: debug->patch, review->risk->simplify, design->triage, teach->debug
-- Formatting consistency: include directives, asset structure (assets/ vs references/)
-- Net: 11 skills (10 duck-* + quack), 2 agents, ~1,200 lines added, ~390 lines removed
+1. **User decision ownership**
+   - no hidden product/architecture decisions
+2. **Evidence-first**
+   - claims anchored in code/diff/log/tests/constraints
+3. **Execution approval gate** (renamed from checkpoint-3/mutating action gate)
+   - 6-step blocking workflow: preflight -> approval ask -> wait -> execute -> verify -> scope-change-check
+   - explicit "approve" token required (not "continue" / "go ahead")
+   - two-tier: semantic changes (full 6-step) vs cosmetic (lightweight confirmation for whitespace/comments/formatting)
+4. **Scope limit**
+   - scope >2 files must be split first
+5. **Safety carve-outs**
+   - never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
 
-## Current system shape (source-first)
+## Conventions
 
-- Agent source: `src/agents/<name>/` (`meta.json` + `body.md`)
-- Skill source: `src/skills/*/SKILL.md`
-  - 13 active skills: duck-adapt, duck-debug, duck-debt, duck-design, duck-grill, duck-patch, duck-refactor, duck-review, duck-risk, duck-simplify, duck-teach, duck-triage, quack
-  - Routing model: inline-default (4 skills: debug, debt, design, teach), delegated-default (6 skills: patch, refactor, review, risk, simplify, triage), governor-invoked (2 skills: adapt, grill)
-  - Asset structure: `assets/` (runtime, always loaded) vs `references/` (conditional docs)
-- Canonical shared guardrails source: `src/shared/references/GUARDRAILS.md`
-- Policy snippets: `src/shared/policy-snippets/` (atomic policy fragments for consistency)
-- Generated skill artifacts: `skills/*/` (for `npx skills`)
-- Generated harness artifacts: `dist/{claude,opencode,copilot}/`
-- Global policy: `AGENTS.md`
-- Architecture docs: `docs/architecture/`
-- Validation suite: `docs/validation/` (test-prompts.json + run-validation-tests.sh)
-
-## Development workflow
+**Development workflow**
 
 When editing skills or agents:
 1. Edit source files in `src/skills/*/` or `src/agents/*/`
@@ -60,7 +40,7 @@ When editing skills or agents:
    - checks guardrails drift, skills assembly, agent artifacts
    - CI requires clean regenerated output
 
-## Build + check contract
+**Build + check contract**
 
 - Skills assembly/check: `scripts/assemble-skills.sh`
 - Agent artifact build/check: `scripts/build-harness-artifacts.sh`
@@ -71,22 +51,7 @@ When editing skills or agents:
   - split checks (guardrails/skills/agents), path-gated
   - PR check regenerates and requires clean `skills/` + `dist/`
 
-## Non-negotiable guardrails
-
-1. **User decision ownership**
-   - no hidden product/architecture decisions
-2. **Evidence-first**
-   - claims anchored in code/diff/log/tests/constraints
-3. **Execution approval gate** (renamed from checkpoint-3/mutating action gate)
-    - 6-step blocking workflow: preflight -> approval ask -> wait -> execute -> verify -> scope-change-check
-   - explicit "approve" token required (not "continue" / "go ahead")
-   - two-tier: semantic changes (full 6-step) vs cosmetic (lightweight confirmation for whitespace/comments/formatting)
-4. **Scope limit**
-   - scope >2 files must be split first
-5. **Safety carve-outs**
-   - never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
-
-## Interaction model
+**Interaction model**
 
 - **Request classification**: Simple (≤10 lines code, ≤5 line diffs) handled directly; workflow requests suggest quack with approach choice (conversational vs structured)
 - **Routing**: quack skill provides explicit route control; keyword-based precedence (risk/complexity/learning/test/design signals); 33 aliases covering common intents
@@ -97,7 +62,7 @@ When editing skills or agents:
 - Clarify-first: ask 1–3 targeted questions when context is incomplete
 - Terse by default; expand for security/irreversible risk/user confusion
 
-## Skill routing model
+**Skill routing model**
 
 Skills use three routing patterns:
 
@@ -119,19 +84,19 @@ Skills use three routing patterns:
 - Meta-skills for special-purpose tasks
 - Use for: skill adaptation, adversarial grilling sessions
 
-## Prompt maintenance guidelines
+**Prompt maintenance guidelines**
 
 - Canonical order: `docs/architecture/04-prompt-order-standard.md`
 - Keep prompts schema-first, non-duplicative, explicit on boundaries/handoffs.
 
-## Review output contract (important)
+**Review output contract (important)**
 
 `duck-review` findings are prefixed one-liners:
 - prefix + location + problem + `Fix:`
 - Auto-Clarity exception only for security/irreversible-risk comments
 - normalize non-compliant finding lines before final output
 
-## Installation model
+**Installation model**
 
 - Bash installer: `scripts/rubber-duck.sh`
 - PowerShell installer: `scripts/rubber-duck.ps1`
@@ -157,7 +122,7 @@ Skills use three routing patterns:
 - Style guide: anti-repetition rules, Auto-Clarity (expand for security/irreversible risk), terseness (no invented abbreviations, no custom symbols like ->, drop articles/filler)
 - Safety carve-outs: never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements
 
-## How to verify behavior
+**How to verify behavior**
 
 Validation docs:
 - `docs/validation/README.md`
@@ -172,7 +137,7 @@ Quick subset gate (must pass):
 
 Note: Test runner is skeleton; requires harness integration for automated execution
 
-## Session handoff expectation
+**Session handoff expectation**
 
 When changing prompts/policy/tooling:
 1. preserve non-negotiable guardrails
@@ -180,8 +145,37 @@ When changing prompts/policy/tooling:
 3. update docs/links if renamed/moved
 4. run `make check`
 
-## Key commits (optimization pass)
+## Glossary
 
+## Deferred-Debt
+
+## Open-Questions
+
+## Session-Log
+
+**2026-07-21:**
+- New skill: duck-adapt (meta-skill for external skill adaptation, philosophy compliance auditing, overlap detection)
+  - 5 philosophy assets (2,196 lines): philosophy-core.md, socratic-patterns.md, approval-gate-spec.md, adaptation-checklist.md, overlap-patterns.md
+- Skill rename: grill-with-ducks -> duck-grill (pattern consistency, 8 chars shorter)
+- Enhanced duck-grill: batched questions (up to 3), context threading, pressure calibration, assumption ledger
+- AGENTS.md style guide completion: anti-repetition rules, Auto-Clarity definition, terseness rules (no invented abbreviations, no custom symbols)
+- AGENTS.md mutating action gate clarification: applies to assistant-initiated actions only; user-initiated changes expected and normal
+- Installer feature parity: --skip-agents-md (bash) / -SkipAgentsMd (PowerShell) flags skip AGENTS.md policy block operations
+- Documentation: development workflow section, installer sync notes, skills section in README with routing model distinction
+- Commits: 46ae62c, 0aa2311, 516981b, 70753cd, da904b6, eff56ad, db819a6, 8ca7179, ed961b7, 9e54571, dbed25d, 2fac809, 2ea3edd
+
+**2026-07-20:**
+Comprehensive optimization pass completed:
+- UX standardization: prompt-order standard, Duck Ladder 6-rung format, execution approval terminology
+- Routing improvements: keyword-based precedence in quack (risk/simplify/teach/triage/design), 76->33 aliases (-57%)
+- New skill: duck-refactor (extract/rename/move/inline/pattern-convert; max 5 files; execution approval required)
+- Validation framework: 21 tests in docs/validation/test-prompts.json, run-validation-tests.sh script
+- Gap closure: 6-step blocking approval workflow, two-tier approval (semantic vs cosmetic), simple-vs-workflow classification
+- Composition patterns: debug->patch, review->risk->simplify, design->triage, teach->debug
+- Formatting consistency: include directives, asset structure (assets/ vs references/)
+- Net: 11 skills (10 duck-* + quack), 2 agents, ~1,200 lines added, ~390 lines removed
+
+**Key commits (optimization pass)**
 - 772ac85, d5f1150, ff822ff, f523902, 44049cb, 644c9e4, e7dbc17, 7937c6c, 112052b: UX standardization
 - 5865289: checkpoint-3 -> execution approval terminology
 - 7937c6c: 6-step blocking workflow
@@ -194,3 +188,20 @@ When changing prompts/policy/tooling:
 - c44a1e1: validation framework
 - f4693bc: duck-refactor skill
 - 588da88: formatting consistency pass
+
+## Notes
+
+**Current system shape (source-first)**
+
+- Agent source: `src/agents/<name>/` (`meta.json` + `body.md`)
+- Skill source: `src/skills/*/SKILL.md`
+  - 13 active skills: duck-adapt, duck-debug, duck-debt, duck-design, duck-grill, duck-patch, duck-refactor, duck-review, duck-risk, duck-simplify, duck-teach, duck-triage, quack
+  - Routing model: inline-default (4 skills: debug, debt, design, teach), delegated-default (6 skills: patch, refactor, review, risk, simplify, triage), governor-invoked (2 skills: adapt, grill)
+  - Asset structure: `assets/` (runtime, always loaded) vs `references/` (conditional docs)
+- Canonical shared guardrails source: `src/shared/references/GUARDRAILS.md`
+- Policy snippets: `src/shared/policy-snippets/` (atomic policy fragments for consistency)
+- Generated skill artifacts: `skills/*/` (for `npx skills`)
+- Generated harness artifacts: `dist/{claude,opencode,copilot}/`
+- Global policy: `AGENTS.md`
+- Architecture docs: `docs/architecture/`
+- Validation suite: `docs/validation/` (test-prompts.json + run-validation-tests.sh)

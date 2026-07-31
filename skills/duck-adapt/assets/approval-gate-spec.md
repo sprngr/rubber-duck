@@ -69,7 +69,24 @@ If any of these items is missing, ask ONE clarifying question and STOP:
 
 ---
 
-### Step 2: Approval Ask (Exact Phrase Required)
+### Step 2: Present List of Changes
+
+Before asking for approval, present the specific changes broken down by file:
+
+```markdown
+**Changes:**
+- `src/auth.js`: Add token expiry validation (lines 42-48)
+- `src/middleware/auth.js`: Update auth check to use new validation
+```
+
+**Requirements:**
+- List each file with brief description of what changes
+- Show enough detail for user to scope the change before approving
+- Keep to one line per file
+
+---
+
+### Step 3: Approval Ask (Exact Phrase Required)
 
 Use this exact phrase:
 
@@ -87,7 +104,7 @@ Reply with "approve" to execute this scope.
 
 ---
 
-### Step 3: Wait for Approval (Blocking Gate)
+### Step 4: Wait for Approval (Blocking Gate)
 
 **Do NOT proceed to step 4 until user replies with "approve".**
 
@@ -116,7 +133,7 @@ Reply with "approve" to execute this scope.
 
 ---
 
-### Step 4: Execute (Only After Approval Received)
+### Step 5: Execute (Only After Approval Received)
 
 Proceed with the approved scope:
 1. Apply changes to approved files only
@@ -131,7 +148,7 @@ Proceed with the approved scope:
 
 ---
 
-### Step 5: Verify (Run Smallest Check)
+### Step 6: Verify (Run Smallest Check)
 
 Run the agreed verification check:
 - Execute test command
@@ -145,7 +162,7 @@ Run the agreed verification check:
 
 ---
 
-### Step 6: Scope-Change Detection (Re-Approval Trigger)
+### Step 7: Scope-Change Detection (Re-Approval Trigger)
 
 **If scope changes during or after execution, return to step 1:**
 
@@ -158,7 +175,7 @@ Run the agreed verification check:
 **When scope changes:**
 1. Stop current execution
 2. Present new scope (files + behavior + verification)
-3. Return to step 2 (approval ask)
+3. Return to step 3 (approval ask)
 4. Wait for new approval before continuing
 
 ---
@@ -174,6 +191,10 @@ Use this template when adding approval gate to skill Method section:
 - Target files: [bounded list, max 2]
 - Expected behavior change: [one-sentence description]
 - Smallest verification check: [command or manual steps]
+
+**Present list of changes:**
+- `[file A]`: [change description]
+- `[file B]`: [change description]
 
 **Approval ask:**
 Reply with "approve" to execute this scope.
@@ -345,6 +366,9 @@ needs validation at the model layer for database consistency.
 - Additional behavior: Model-level email validation before database insert
 - Updated verification: Run full test suite to confirm model + API validation
 
+**Changes:**
+- `src/models/user.js`: Add email validation at model layer
+
 **Approval ask:**
 Original scope completed. Reply with "approve" to execute additional model-layer change.
 
@@ -375,12 +399,13 @@ Execution approval gate and Duck Ladder work together:
 2. Apply Duck Ladder (check 6 rungs)
 3. Identify minimal safe diff
 4. Present in preflight (files + behavior + verification)
-5. Ask for approval
-6. Wait
-7. Execute minimal change
+5. Present list of changes broken down by file
+6. Ask for approval
+7. Wait
+8. Execute minimal change
 
 **Order:**
-Evidence -> Duck Ladder -> Preflight -> Approval -> Execute -> Verify
+Evidence -> Duck Ladder -> Preflight -> Present Changes -> Approval -> Execute -> Verify
 
 ---
 
@@ -388,13 +413,14 @@ Evidence -> Duck Ladder -> Preflight -> Approval -> Execute -> Verify
 
 1. ✅ All mutating actions require execution approval gate
 2. ✅ Preflight must include: files (bounded), behavior, verification
-3. ✅ Approval ask must use exact phrase: "Reply with 'approve' to execute this scope."
-4. ✅ Wait for "approve" token (not "continue", "yes", "ok")
-5. ✅ Do not execute until "approve" received
-6. ✅ Scope change triggers return to step 1 (new approval required)
-7. ✅ Max 2 files for patch, max 5 for refactor (split if exceeded)
-8. ✅ Cosmetic changes use lightweight confirmation
-9. ✅ Refuse execution without bounded scope
-10. ✅ Never bypass for safety carve-out violations
+3. ✅ Present list of changes broken down by file before approval ask
+4. ✅ Approval ask must use exact phrase: "Reply with 'approve' to execute this scope."
+5. ✅ Wait for "approve" token (not "continue", "yes", "ok")
+6. ✅ Do not execute until "approve" received
+7. ✅ Scope change triggers return to step 1 (new approval required)
+8. ✅ Max 2 files for patch, max 5 for refactor (split if exceeded)
+9. ✅ Cosmetic changes use lightweight confirmation
+10. ✅ Refuse execution without bounded scope
+11. ✅ Never bypass for safety carve-out violations
 
 Apply this pattern when adapting external skills with mutating actions.

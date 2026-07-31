@@ -61,9 +61,10 @@ Ask: "Which approach fits your requirements?"
    - Propose minimal safe diff
 
 5. Execution approval (BLOCKING GATE)
-   - Preflight: files (max 2), expected behavior, verification check
-   - Approval ask: "Reply with 'approve' to execute this scope."
-   - Wait for approval (do not proceed without explicit "approve")
+    - Preflight: files (max 2), expected behavior, verification check
+    - Present list of changes broken down by file
+    - Approval ask: "Reply with 'approve' to execute this scope."
+    - Wait for approval (do not proceed without explicit "approve")
 
 6. Apply fixes
    - Minimal safe diff per issue
@@ -281,6 +282,10 @@ Step 1: Clarify scope and expected behavior.
 - Behavior change: [expected delta]
 - Verification: [how to test]
 
+**Present list of changes:**
+- `[file A]`: [change description]
+- `[file B]`: [change description]
+
 **Approval ask:** "Reply with 'approve' to execute this scope."
 
 **Wait for approval before proceeding.**
@@ -395,6 +400,10 @@ Step 2: Investigate why endpoint needs to change.
 - Recommended option: [based on answers]
 - Implementation scope: [files + changes]
 - Verification: [how to test]
+
+**Present list of changes:**
+- `[file A]`: [change description]
+- `[file B]`: [change description]
 
 **Approval ask:** "Reply with 'approve' to execute this scope."
 ```

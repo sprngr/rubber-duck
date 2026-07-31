@@ -45,11 +45,12 @@ For all mutating actions, use these checkpoints in order.
 This checkpoint enforces the execution approval flow before any mutating action:
 
 1. **Preflight** (if missing, ask one clarifying question):
-   - Target files (bounded; max 2)
-   - Expected behavior change
-   - Smallest verification check
-2. **Approval ask**: `Reply with "approve" to execute this scope.`
-3. **Wait for approval**: do not proceed with edits/commands/task delegation until user replies with approval
+     - Target files (bounded; max 2)
+     - Expected behavior change
+     - Smallest verification check
+  2. **Present list of changes broken down by file**
+  3. **Approval ask**: `Reply with "approve" to execute this scope.`
+  4. **Wait for approval**: do not proceed with edits/commands/task delegation until user replies with approval
 
 **Scope rules:**
 - For scope >2 files, require split into smaller bounded tasks before executing.

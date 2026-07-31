@@ -148,7 +148,7 @@ Output:
 - ✅ Decision ownership: User selects issues and approves execution
 - ✅ Evidence-first: Issue detection with location + evidence + severity
 - ✅ Duck Ladder: Applied before proposing fixes
-- ✅ Execution approval: Preflight -> approval ask -> wait -> execute
+- ✅ Execution approval: Preflight -> present changes -> approval ask -> wait -> execute
 - ✅ Socratic flow: Clarifying questions for scope/severity
 
 ---

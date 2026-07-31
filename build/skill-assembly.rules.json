@@ -10,7 +10,8 @@
     "include": [
       "SKILL.md",
       "references/**",
-      "assets/**"
+      "assets/**",
+      "examples/**"
     ],
     "source_template": "src/skills/{skill}/",
     "output_template": "skills/{skill}/"
@@ -66,7 +67,8 @@
         "duck-design",
         "duck-review",
         "duck-teach",
-        "duck-triage"
+        "duck-triage",
+        "duck-tape"
       ],
       "skills_with_ladder": [
         "duck-debug",
@@ -81,7 +83,8 @@
         "duck-triage"
       ],
       "skills_with_mutating_gate": [
-        "duck-debug"
+        "duck-debug",
+        "duck-tape"
       ]
     },
     "group_assertions": {
