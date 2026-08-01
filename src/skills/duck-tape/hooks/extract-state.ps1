@@ -136,6 +136,16 @@ function Extract-ClaudeCode {
     }
   }
 
+  # Dedupe before tail-10 (parity with extract-state.sh awk + opencode.plugin.js Set).
+  $unique = [System.Collections.Generic.List[string]]::new()
+  $seen = @{}
+  foreach ($d in $decisions) {
+    if (-not $seen.ContainsKey($d)) {
+      $seen[$d] = $true
+      $unique.Add($d)
+    }
+  }
+  $decisions = $unique
   if ($decisions.Count -gt 10) {
     $decisions = $decisions.GetRange($decisions.Count - 10, 10)
   }
@@ -158,8 +168,9 @@ function Extract-Copilot {
     catch { continue }
 
     if ($obj.type -eq "user.message") {
-      if (-not $obj.data.content.StartsWith("<") -and [string]::IsNullOrEmpty($firstPrompt)) {
-        $firstPrompt = $obj.data.content
+      $content = $obj.data.content
+      if (-not [string]::IsNullOrEmpty($content) -and -not $content.StartsWith("<") -and [string]::IsNullOrEmpty($firstPrompt)) {
+        $firstPrompt = $content
       }
     }
     elseif ($obj.type -eq "assistant.message") {
@@ -185,6 +196,16 @@ function Extract-Copilot {
     }
   }
 
+  # Dedupe before tail-10 (parity with extract-state.sh awk + opencode.plugin.js Set).
+  $unique = [System.Collections.Generic.List[string]]::new()
+  $seen = @{}
+  foreach ($d in $decisions) {
+    if (-not $seen.ContainsKey($d)) {
+      $seen[$d] = $true
+      $unique.Add($d)
+    }
+  }
+  $decisions = $unique
   if ($decisions.Count -gt 10) {
     $decisions = $decisions.GetRange($decisions.Count - 10, 10)
   }
@@ -276,7 +297,9 @@ function Render-State {
         Remove-Item -Path $oldest.FullName -Force
       }
       else {
-        $oldest = $all | Sort-Object LastWriteTime | Select-Object -First 1
+        # Re-query: $all captured at loop entry may include already-deleted files.
+        $allCurrent = Get-ChildItem -Path $DuckTapeDir -Filter "*.state.md" -File -ErrorAction SilentlyContinue
+        $oldest = $allCurrent | Sort-Object LastWriteTime | Select-Object -First 1
         Remove-Item -Path $oldest.FullName -Force
       }
     }

@@ -180,8 +180,10 @@ export const DuckTapeCompact = async ({ client, directory }) => {
         await fs.writeFile(gitignore, "*\n")
       }
 
-      const timestamp = new Date().toISOString()
-      const stamp = new Date().toISOString().slice(0, 10) + "-" + new Date().toISOString().slice(11, 16)
+      const now = new Date()
+      const iso = now.toISOString()
+      const timestamp = iso
+      const stamp = iso.slice(0, 10) + "-" + iso.slice(11, 16)
 
       // Require client + sessionId for extraction. Accept both sessionId and sessionID (opencode uses sessionID).
       if (!client || (!input?.sessionId && !input?.sessionID)) {
