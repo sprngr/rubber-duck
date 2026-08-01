@@ -47,7 +47,36 @@ async function writeMarkerOnly(duckTapeDir, timestamp, cwd) {
   return marker
 }
 
-async function renderState(duckTapeDir, transcriptRef, cwd, stamp, timestamp, firstPrompt, toolCalls, lastText, decisions) {
+// Incremental transcript snapshot for Angle B recovery.
+// Writes messages created after the last existing state file's mtime.
+// Called before renderState writes the new state file, so the delta window
+// captures content since the previous checkpoint, not the one being created.
+async function writeTranscriptSnapshot(duckTapeDir, sessionId, messageList) {
+  let sinceMs = 0
+  try {
+    const entries = await fs.readdir(duckTapeDir)
+    const states = entries.filter((f) => f.endsWith(".state.md"))
+    if (states.length > 0) {
+      const statted = await Promise.all(
+        states.map(async (f) => ({
+          mt: (await fs.stat(path.join(duckTapeDir, f))).mtimeMs,
+        }))
+      )
+      sinceMs = Math.max(...statted.map((s) => s.mt))
+    }
+  } catch {
+    // No state files or stat error: include all messages.
+  }
+  const filtered = messageList.filter((m) => {
+    const c = m?.info?.time?.created
+    return typeof c === "number" && c > sinceMs
+  })
+  const snapPath = path.join(duckTapeDir, `${sessionId}-transcript.json`)
+  await fs.writeFile(snapPath, JSON.stringify(filtered))
+  return snapPath
+}
+
+async function renderState(duckTapeDir, transcriptRef, cwd, stamp, timestamp, firstPrompt, toolCalls, lastText, decisions, snapshotPath) {
   if (!firstPrompt && toolCalls.length === 0 && !lastText) {
     return false
   }
@@ -96,7 +125,7 @@ async function renderState(duckTapeDir, transcriptRef, cwd, stamp, timestamp, fi
   const stateFile = path.join(duckTapeDir, `${stamp}-auto.state.md`)
   await fs.writeFile(stateFile, sb)
 
-  // Rotation cap: 10 files, auto files dropped first.
+  // Rotation cap: 10 files. Eviction precedence: auto, recovered, manual.
   const all = (await fs.readdir(duckTapeDir))
     .filter((f) => f.endsWith(".state.md"))
     .map((f) => ({ name: f, path: path.join(duckTapeDir, f) }))
@@ -111,7 +140,12 @@ async function renderState(duckTapeDir, transcriptRef, cwd, stamp, timestamp, fi
       if (autos.length > 0) {
         drop = autos.sort((a, b) => a.mtime - b.mtime)[0]
       } else {
-        drop = statted.sort((a, b) => a.mtime - b.mtime)[0]
+        const recovered = statted.filter((s) => s.name.endsWith("-recovered.state.md"))
+        if (recovered.length > 0) {
+          drop = recovered.sort((a, b) => a.mtime - b.mtime)[0]
+        } else {
+          drop = statted.sort((a, b) => a.mtime - b.mtime)[0]
+        }
       }
       try { await fs.unlink(drop.path) } catch {}
       statted.splice(statted.indexOf(drop), 1)
@@ -121,7 +155,11 @@ async function renderState(duckTapeDir, transcriptRef, cwd, stamp, timestamp, fi
 
   // Marker points at newest state file.
   const latest = await latestStateFile(duckTapeDir)
-  let line = `${timestamp} | cwd: ${cwd} | latest-state: ${latest}\n`
+  let line = `${timestamp} | cwd: ${cwd} | latest-state: ${latest}`
+  if (snapshotPath) {
+    try { await fs.access(snapshotPath); line += ` | transcript: ${snapshotPath}` } catch {}
+  }
+  line += "\n"
   const marker = path.join(duckTapeDir, ".last-compact")
   await fs.writeFile(marker, line)
   return stateFile
@@ -204,9 +242,17 @@ export const DuckTapeCompact = async ({ client, directory }) => {
           ? decisions.slice(decisions.length - 10)
           : decisions
 
+        // Incremental snapshot for Angle B recovery (before state file write).
+        let snapshotPath = null
+        try {
+          snapshotPath = await writeTranscriptSnapshot(duckTapeDir, sessionId, messageList)
+        } catch {
+          // Snapshot failure is non-fatal; marker omits transcript field.
+        }
+
         const ok = await renderState(
           duckTapeDir, sessionId, cwd, stamp, timestamp,
-          firstPrompt, toolCalls, lastText, trimmedDecisions
+          firstPrompt, toolCalls, lastText, trimmedDecisions, snapshotPath
         )
         if (!ok) {
           return await writeMarkerOnly(duckTapeDir, timestamp, cwd)

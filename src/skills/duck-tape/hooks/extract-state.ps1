@@ -50,6 +50,7 @@ function Write-MarkerOnly {
   }
   $line = "$timestamp | cwd: $cwd"
   if ($latestState) { $line += " | latest-state: $latestState" }
+  if ($Transcript -and (Test-Path $Transcript -PathType Leaf)) { $line += " | transcript: $Transcript" }
   Set-Content -Path $marker -Value $line -NoNewline
   Write-Output $marker
 }
@@ -259,7 +260,7 @@ function Render-State {
 
   Set-Content -Path $stateFile -Value $sb.ToString() -Encoding UTF8 -NoNewline
 
-  # Rotation cap: 10 files, auto files dropped first.
+  # Rotation cap: 10 files. Eviction precedence: auto, recovered, manual.
   $all = Get-ChildItem -Path $DuckTapeDir -Filter "*.state.md" -File -ErrorAction SilentlyContinue
   $count = if ($all) { @($all).Count } else { 0 }
   while ($count -gt 10) {
@@ -269,8 +270,15 @@ function Render-State {
       Remove-Item -Path $oldest.FullName -Force
     }
     else {
-      $oldest = $all | Sort-Object LastWriteTime | Select-Object -First 1
-      Remove-Item -Path $oldest.FullName -Force
+      $recoveredFiles = Get-ChildItem -Path $DuckTapeDir -Filter "*-recovered.state.md" -File -ErrorAction SilentlyContinue
+      if ($recoveredFiles) {
+        $oldest = $recoveredFiles | Sort-Object LastWriteTime | Select-Object -First 1
+        Remove-Item -Path $oldest.FullName -Force
+      }
+      else {
+        $oldest = $all | Sort-Object LastWriteTime | Select-Object -First 1
+        Remove-Item -Path $oldest.FullName -Force
+      }
     }
     $count--
   }
@@ -279,6 +287,7 @@ function Render-State {
   $latestAll = Get-ChildItem -Path $DuckTapeDir -Filter "*.state.md" -File -ErrorAction SilentlyContinue
   $latest = ($latestAll | Sort-Object LastWriteTime -Descending | Select-Object -First 1).Name
   $line = "$timestamp | cwd: $cwd | latest-state: $latest"
+  if ($Transcript -and (Test-Path $Transcript -PathType Leaf)) { $line += " | transcript: $Transcript" }
   Set-Content -Path $marker -Value $line -Encoding UTF8 -NoNewline
   Write-Output $stateFile
   return $true

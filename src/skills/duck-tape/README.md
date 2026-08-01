@@ -57,7 +57,7 @@ Prompts for harness choice (opencode, Claude Code, Copilot) and platform (unix/W
 
 ### `/duck-tape resume` — Reload from compaction
 
-Checks `.duck-tape/.last-compact` marker. If compaction occurred this session, reads latest state file and CONTEXT.md. Reports position, decisions, and facts. Read-only. No writes.
+Checks `.duck-tape/.last-compact` marker. If compaction occurred this session, reads latest state file and CONTEXT.md. Reports position, decisions, and facts. If only an auto-checkpoint exists (no manual), invokes LLM-assisted recovery: reads transcript via `extract-raw.sh`/`.ps1`, synthesizes a higher-fidelity `-recovered.state.md` state file. State file write requires approval.
 
 **Use when:** compaction may have occurred and you lost context. Signal: "resume session".
 
@@ -82,8 +82,10 @@ Five scenarios covering the session lifecycle.
 
 1. If you notice missing detail or context feels summarized, compaction may have occurred.
 2. Run `/duck-tape resume` or say "resume session". Skill checks `.duck-tape/.last-compact` marker.
-3. If marker is newer than session start: compaction occurred. Skill reads latest state file and CONTEXT.md. Reports position, decisions, facts.
-4. Pick up where you left off. No files written. Read-only recovery.
+3. If marker is newer than session start: compaction occurred. Skill selects state file by precedence: manual > recovered > auto.
+4. If only an auto-checkpoint exists or no state file: skill invokes LLM-assisted recovery. Runs `extract-raw.sh`/`.ps1` on transcript (path from marker `transcript` field), reads raw material, synthesizes `<id>-recovered.state.md` with semantic decision extraction. State file write requires approval.
+5. If manual checkpoint exists and is newer: skill reads it directly. No recovery needed.
+6. Skill reads CONTEXT.md, reports position, decisions, facts. Pick up where you left off.
 
 ### End of a session
 
@@ -191,9 +193,11 @@ The state file translates into CONTEXT.md via a rigid map:
 
 Pre-compact trigger writes `.duck-tape/.last-compact` marker and `.duck-tape/<id>-auto.state.md` state file before context compaction. State file is auto-extracted from the session transcript (Claude Code, Copilot) or fetched via SDK (opencode). Contains auto-extracted Approved Workflow, Position (tool calls + last assistant text), and Decision Log (pattern-matched). Low-fidelity recovery fallback — manual `/duck-tape` checkpoint produces higher-fidelity state.
 
+Marker format: `<timestamp> | cwd: <path> | latest-state: <file> | transcript: <path>`. The `transcript` field records the source transcript path (Claude Code, Copilot) or opencode snapshot path (`<id>-transcript.json`). Absent in older markers written before Angle B, or when transcript was unavailable at compaction time.
+
 **Fallback:** marker-only on failure. jq missing (bash), transcript missing, format unknown, nothing extracted, SDK error (opencode). `pre-compact.sh`/`.ps1` retained as marker-only fallback scripts.
 
-**Resume from compaction:** triggered by `/duck-tape resume` or "resume session". Skill checks `.duck-tape/.last-compact`. If marker exists and is newer than session start, compaction occurred. Skill reads `CONTEXT.md` and latest state file to resume from checkpoint. Auto state files use `-auto` suffix; manual checkpoints have no suffix. Marker `latest-state` points at newest file regardless of suffix.
+**Resume from compaction:** triggered by `/duck-tape resume` or "resume session". Skill checks `.duck-tape/.last-compact`. If marker exists and is newer than session start, compaction occurred. State file precedence: manual > recovered > auto. If only auto-checkpoint or no state file exists, skill invokes LLM-assisted recovery (Angle B): runs `extract-raw.sh`/`.ps1` on transcript, synthesizes `<id>-recovered.state.md` with semantic decision extraction. Higher fidelity than auto, lower than manual. State file write requires approval. opencode plugin writes incremental `<id>-transcript.json` snapshot at pre-compact time (messages since last state file) for recovery input.
 
 **Behavior identical across opencode, Claude Code, and Copilot.** No threshold detection. No context re-injection. State file + marker.
 
@@ -221,8 +225,10 @@ Redaction applies to both tiers (CONTEXT.md and state files).
   .duck-tape/
     .gitignore                  — `*` (auto-created)
     .last-compact               — pre-compact marker (harness-written)
-    <YYYY-MM-DD-HHMM>.state.md      — Tier 2 working state (manual /duck-tape)
-    <YYYY-MM-DD-HHMM>-auto.state.md — Tier 2 auto-extracted state (pre-compact hook)
+    <YYYY-MM-DD-HHMM>.state.md          — Tier 2 working state (manual /duck-tape)
+    <YYYY-MM-DD-HHMM>-auto.state.md     — Tier 2 auto-extracted state (pre-compact hook)
+    <YYYY-MM-DD-HHMM>-recovered.state.md — Tier 2 LLM-synthesized state (resume recovery)
+    <id>-transcript.json                — opencode message snapshot (Angle B recovery input)
 ```
 
 ## References
@@ -233,6 +239,8 @@ Redaction applies to both tiers (CONTEXT.md and state files).
 - `references/HOOKS_GUIDE.md` — per-harness hook install, troubleshooting, portability notes
 - `hooks/extract-state.sh` — pre-compact transcript parser (unix/bash, requires jq)
 - `hooks/extract-state.ps1` — pre-compact transcript parser (Windows/PowerShell)
+- `hooks/extract-raw.sh` — raw material extractor for LLM-assisted recovery (unix/bash, requires jq)
+- `hooks/extract-raw.ps1` — raw material extractor for LLM-assisted recovery (Windows/PowerShell)
 - `hooks/opencode.plugin.js` — opencode plugin (JS, SDK fetch, cross-platform, no shell)
 - `hooks/pre-compact.sh` — marker-only fallback script (unix/bash)
 - `hooks/pre-compact.ps1` — marker-only fallback script (Windows/PowerShell)

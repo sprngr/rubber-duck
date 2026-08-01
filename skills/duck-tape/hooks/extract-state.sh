@@ -42,6 +42,9 @@ write_marker_only() {
     if [[ -n "$latest_state" ]]; then
       printf ' | latest-state: %s' "$latest_state"
     fi
+    if [[ -n "$transcript" && -f "$transcript" ]]; then
+      printf ' | transcript: %s' "$transcript"
+    fi
     printf '\n'
   } > "$marker"
   printf '%s\n' "$marker"
@@ -213,7 +216,7 @@ render_state() {
     printf -- '- duck-tape (run /duck-tape for full state before next compaction)\n'
   } > "$state_file"
 
-  # Rotation cap: 10 files, auto files dropped first.
+  # Rotation cap: 10 files. Eviction precedence: auto, recovered, manual.
   shopt -s nullglob
   local all=( "$duck_tape_dir"/*.state.md )
   shopt -u nullglob
@@ -225,10 +228,17 @@ render_state() {
     if [[ -n "$oldest_auto" ]]; then
       rm -f "$oldest_auto"
     else
-      # No auto files left; drop oldest manual.
-      local oldest
-      oldest="$(ls -t "$duck_tape_dir"/*.state.md 2>/dev/null | tail -1 || true)"
-      [[ -n "$oldest" ]] && rm -f "$oldest"
+      # No auto files; oldest recovered next.
+      local oldest_recovered
+      oldest_recovered="$(ls -t "$duck_tape_dir"/*-recovered.state.md 2>/dev/null | tail -1 || true)"
+      if [[ -n "$oldest_recovered" ]]; then
+        rm -f "$oldest_recovered"
+      else
+        # No auto or recovered; drop oldest manual.
+        local oldest
+        oldest="$(ls -t "$duck_tape_dir"/*.state.md 2>/dev/null | tail -1 || true)"
+        [[ -n "$oldest" ]] && rm -f "$oldest"
+      fi
     fi
     count=$((count - 1))
   done
@@ -237,7 +247,11 @@ render_state() {
   local latest
   latest="$(basename -- "$(ls -t "$duck_tape_dir"/*.state.md 2>/dev/null | head -1)")"
   {
-    printf '%s | cwd: %s | latest-state: %s\n' "$timestamp_utc" "$cwd" "$latest"
+    printf '%s | cwd: %s | latest-state: %s' "$timestamp_utc" "$cwd" "$latest"
+    if [[ -n "$transcript" && -f "$transcript" ]]; then
+      printf ' | transcript: %s' "$transcript"
+    fi
+    printf '\n'
   } > "$marker"
   printf '%s\n' "$state_file"
 }

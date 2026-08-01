@@ -7,8 +7,13 @@ Pre-compact trigger for duck-tape. Writes `.duck-tape/.last-compact` marker and 
 `extract-state.sh` (or `.ps1`, or opencode plugin) parses the session transcript and writes a state file plus a one-line marker:
 
 ```
-2026-07-31T18:33:03Z | cwd: /project | latest-state: 2026-07-31-1200-auto.state.md
+2026-07-31T18:33:03Z | cwd: /project | latest-state: 2026-07-31-1200-auto.state.md | transcript: /path/to/transcript.jsonl
 ```
+
+Marker fields:
+- `cwd`: working directory at compaction time
+- `latest-state`: newest state file in `.duck-tape/` at compaction time
+- `transcript`: source transcript path (Claude Code, Copilot) or opencode snapshot path (`<id>-transcript.json`). Absent in older markers written before Angle B, or when transcript was unavailable at compaction time.
 
 State file `.duck-tape/<YYYY-MM-DD-HHMM>-auto.state.md` contains:
 - **Approved Workflow:** first user prompt (truncated 200 chars)
@@ -16,15 +21,16 @@ State file `.duck-tape/<YYYY-MM-DD-HHMM>-auto.state.md` contains:
 - **Decision Log:** assistant text matching decision patterns (APPROVED/DECIDED/CHOSE/DECISION), last 10
 - **Re-derivation:** transcript path or session ID for full content
 
-State file is auto-extracted, low-fidelity. Manual `/duck-tape` checkpoint produces higher-fidelity state.
+State file is auto-extracted, low-fidelity. Manual `/duck-tape` checkpoint produces higher-fidelity state. `/duck-tape resume` with LLM-assisted recovery (Angle B) produces `-recovered.state.md` with semantic decision extraction, between auto and manual in fidelity.
 
 ## Auto-checkpoint vs marker
 
 - **Auto-checkpoint** (`extract-state.sh`/`.ps1`, opencode plugin): transcript parsing produces `<id>-auto.state.md` state file + marker. Runs on every compaction. No user action.
 - **Marker-only** (`pre-compact.sh`/`.ps1`): writes marker line only. Retained as fallback if jq missing (bash), transcript missing, format unknown, or nothing extracted.
-- opencode plugin has no shell/jq dependency. Uses SDK to fetch session messages. Falls back to marker-only if SDK call fails or no client/sessionId.
+- **LLM-assisted recovery** (`extract-raw.sh`/`.ps1` + skill synthesis): runs on `/duck-tape resume` when only an auto-checkpoint exists or no state file exists. Produces `<id>-recovered.state.md` with semantic decision extraction from raw transcript material. Higher fidelity than auto, lower than manual.
+- opencode plugin has no shell/jq dependency. Uses SDK to fetch session messages. Falls back to marker-only if SDK call fails or no client/sessionId. Plugin also writes `<id>-transcript.json` snapshot (messages since last state file) for Angle B recovery.
 
-State files share the 10-file rotation cap. Auto files dropped first (oldest auto before oldest manual) if cap exceeded.
+State files share the 10-file rotation cap. Eviction precedence: auto dropped first (oldest auto), then recovered, then manual.
 
 ## What the trigger does not do
 
@@ -32,9 +38,28 @@ State files share the 10-file rotation cap. Auto files dropped first (oldest aut
 - Does not merge into CONTEXT.md. Use `/duck-tape merge` for that.
 - Does not re-inject context after compaction. Use `/duck-tape resume` to resume from checkpoint.
 
+## LLM-assisted recovery (Angle B)
+
+`/duck-tape resume` invokes LLM-assisted recovery when the only available state file is an auto-checkpoint (`-auto` suffix) or no state file exists. Recovery flow:
+
+1. Skill reads marker `transcript` field. If absent, no recovery possible. Report and suggest `/duck-tape` for fresh checkpoint.
+2. Skill runs `extract-raw.sh <transcript_path>` (bash) or `extract-raw.ps1 <transcript_path>` (PowerShell). Script outputs structured markdown: user prompts (chronological), tool calls (chronological), last 10 assistant messages, failed tool results, session metadata.
+3. Skill reads raw material, synthesizes Agent State file with semantic understanding of decisions, position, facts. Higher fidelity than auto-checkpoint pattern matching.
+4. Skill writes `.duck-tape/<YYYY-MM-DD-HHMM>-recovered.state.md`. State file write requires approval.
+5. Skill reports position from new file.
+
+`extract-raw.sh`/`.ps1` supports three input formats:
+- Claude Code JSONL (message.role present)
+- Copilot JSONL (type:"user.message"/"assistant.message")
+- opencode JSON array (`{ info, parts }` shape, from `<id>-transcript.json` snapshot)
+
+opencode snapshot: plugin writes incremental `<id>-transcript.json` at pre-compact time, containing messages created after the last existing state file's mtime. Keeps snapshot bounded for long sessions.
+
+Recovery is reactive. Angle A (auto-checkpoint) is proactive. Both complement: Angle A catches sessions where user forgets to resume; Angle B produces better state when user does resume.
+
 ## Dependencies
 
-**bash (Claude Code unix, Copilot unix/Linux):** requires `jq` for transcript parsing. Standard on macOS (Homebrew), most Linux distros. Windows Claude Code users need jq in PATH (Git Bash includes it, or install separately). If jq missing, script falls back to marker-only.
+**bash (Claude Code unix, Copilot unix/Linux):** requires `jq` for transcript parsing. Standard on macOS (Homebrew), most Linux distros. Windows Claude Code users need jq in PATH (Git Bash includes it, or install separately). If jq missing, script falls back to marker-only. `extract-raw.sh` also requires `jq`.
 
 **PowerShell (Claude Code Windows, Copilot Windows):** no external dependency. Uses built-in `ConvertFrom-Json`.
 
@@ -119,9 +144,11 @@ Run `/duck-tape init` for guided setup. Skill prompts for harness choice, writes
 
 ## Platform choice
 
-`bash` is not guaranteed on Windows. Two script variants ship:
-- `extract-state.sh` — bash + jq. Unix + Copilot cloud agent (Linux sandbox).
-- `extract-state.ps1` — PowerShell. Windows desktop (Claude Code, Copilot CLI).
+`bash` is not guaranteed on Windows. Two script variants ship per script type:
+- `extract-state.sh` — bash + jq. Auto-checkpoint extractor. Unix + Copilot cloud agent (Linux sandbox).
+- `extract-state.ps1` — PowerShell. Auto-checkpoint extractor. Windows desktop (Claude Code, Copilot CLI).
+- `extract-raw.sh` — bash + jq. Raw material extractor for LLM-assisted recovery. Unix + Copilot cloud agent.
+- `extract-raw.ps1` — PowerShell. Raw material extractor for LLM-assisted recovery. Windows desktop.
 
 `pre-compact.sh` and `pre-compact.ps1` retained as marker-only fallback scripts.
 

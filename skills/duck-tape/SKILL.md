@@ -131,7 +131,9 @@ Merge:
 
 Pre-compact trigger writes `.duck-tape/.last-compact` marker and `.duck-tape/<id>-auto.state.md` state file before context compaction. State file is auto-extracted from session transcript (Claude Code, Copilot) or fetched via SDK (opencode). Trigger runs as shell script or plugin outside LLM context.
 
-State file (`<id>-auto.state.md`) contains auto-extracted Approved Workflow, Position (tool calls + last assistant text), and Decision Log (pattern-matched). Low-fidelity recovery fallback. Manual `/duck-tape` checkpoint produces higher-fidelity state.
+Marker format: `<timestamp> | cwd: <path> | latest-state: <file> | transcript: <path>`. The `transcript` field records the source transcript path (Claude Code, Copilot) or opencode snapshot path (`<id>-transcript.json`). Absent in older markers written before Angle B.
+
+State file (`<id>-auto.state.md`) contains auto-extracted Approved Workflow, Position (tool calls + last assistant text), and Decision Log (pattern-matched). Low-fidelity recovery fallback. Manual `/duck-tape` checkpoint produces higher-fidelity state. `/duck-tape resume` with LLM-assisted recovery (Angle B) produces `-recovered.state.md` with semantic decision extraction, between auto and manual in fidelity.
 
 Trigger falls back to marker-only on failure: jq missing (bash), transcript missing, format unknown, nothing extracted, SDK error (opencode). `pre-compact.sh`/`.ps1` retained as marker-only fallback scripts.
 
@@ -143,16 +145,27 @@ Trigger falls back to marker-only on failure: jq missing (bash), transcript miss
 
 ## Resume
 
-`/duck-tape resume` — detect compaction and reload checkpoint. Read-only.
+`/duck-tape resume` — detect compaction and reload checkpoint.
 
 1. Check `.duck-tape/.last-compact`. If missing, no compaction occurred. Report "no compaction marker found" and stop.
 2. Compare marker timestamp to session start time. If marker older than session start, no compaction in this session. Report "no recent compaction" and stop.
-3. If marker newer than session start, compaction occurred. Read latest `.duck-tape/*.state.md` (filename from marker `latest-state` field, or newest file if field absent). Auto state files use `-auto` suffix (e.g. `2026-07-31-1200-auto.state.md`); manual checkpoints have no suffix. Marker `latest-state` points at newest file regardless of suffix. If manual checkpoint exists after auto-checkpoint, manual wins. Auto is recovery fallback; manual `/duck-tape` produces higher fidelity.
-4. Read `CONTEXT.md` if it exists.
-5. Report: compaction timestamp, session state position (Current/Done/Remaining), and any CONTEXT.md decisions relevant to current work.
-6. Do not write any files. No approval required.
+3. If marker newer than session start, compaction occurred. Read marker fields: `cwd`, `latest-state`, `transcript` (transcript path or opencode snapshot path; absent in older markers).
+4. Select state file by precedence: **manual > recovered > auto**.
+   a. If a manual checkpoint (no suffix) exists and is newer than the newest auto-checkpoint, use manual. Report position from it. Skip to step 6.
+   b. If only an auto-checkpoint (`-auto` suffix) exists or no state file exists at all, invoke LLM-assisted recovery (step 5).
+5. **LLM-assisted recovery** (Angle B). Produces a higher-fidelity state file than the auto-checkpoint by semantic synthesis from transcript content.
+   - Transcript path: marker `transcript` field if present. If absent, no recovery possible; report "compaction occurred but no transcript path in marker" and suggest running `/duck-tape` to checkpoint fresh.
+   - Run `hooks/extract-raw.sh <transcript_path>` (bash) or `hooks/extract-raw.ps1 <transcript_path>` (PowerShell on Windows) to get raw material. Script outputs structured markdown: user prompts, tool calls, last 10 assistant messages, failed tool results, session metadata.
+   - Read raw material output.
+   - Synthesize Agent State file from raw material. Extract decisions semantically (not pattern-matched like Angle A): "we're going with option 2 because X" is a decision even without the keyword. Extract position (current/done/remaining) from assistant messages and tool calls. Extract established facts from tool results and user confirmations.
+   - Write state file as `.duck-tape/<YYYY-MM-DD-HHMM>-recovered.state.md`.
+   - Rotation: `-recovered` files share the 10-file cap with manual and auto. Precedence on eviction: auto dropped first, then recovered, then manual.
+   - Report position from new file.
+6. Read `CONTEXT.md` if it exists.
+7. Report: compaction timestamp, session state position (Current/Done/Remaining), and any CONTEXT.md decisions relevant to current work.
+8. State file writes (step 5 only) require approval. Read-only resume (steps 1-4, 6-7) does not write.
 
-If no state file exists but marker present, report "compaction occurred but no state file found" and suggest running `/duck-tape` to checkpoint fresh.
+If no state file exists and no transcript path in marker, report "compaction occurred but no recoverable state" and suggest running `/duck-tape` to checkpoint fresh.
 
 ## Init
 
@@ -220,7 +233,7 @@ Prune never touches fixed-schema sections.
 ## Boundaries
 
 - Default mode is state-only. CONTEXT.md is written only on merge signals.
-- Write only `CONTEXT.md`, `.duck-tape/<id>.state.md`, `.duck-tape/.gitignore`, `.duck-tape/.last-compact` marker.
+- Write only `CONTEXT.md`, `.duck-tape/<id>.state.md`, `.duck-tape/<id>-recovered.state.md`, `.duck-tape/<id>-transcript.json`, `.duck-tape/.gitignore`, `.duck-tape/.last-compact` marker.
 - Respect existing CONTEXT.md structure. If file lacks schema sections, prompt user to migrate before first merge.
 - Never infer Goals or Conventions entries on bootstrap.
 - Never fuzzy-rewrite Notes. Append-only at write time.
