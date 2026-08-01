@@ -115,7 +115,7 @@ Single write on `/duck-tape` invocation. No mid-session checkpoints.
 ### Rotation
 
 - Max 10 state files in `.duck-tape/`.
-- On write, if count exceeds 10: drop oldest file by session ID (lexicographic = chronological).
+- Eviction precedence: auto dropped first (oldest auto), then recovered, then manual.
 - Note dropped ID in CONTEXT.md Session-Log: "Rotated out session state: <id>".
 
 ### gitignore
