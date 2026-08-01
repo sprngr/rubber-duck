@@ -29,7 +29,7 @@ Inherit shared guardrails from `references/GUARDRAILS.md`.
 Skill-specific delta:
 - Persistent artifact safety: CONTEXT.md is long-lived and likely committed. Redaction is non-negotiable before any write.
 - Session state safety: `.duck-tape/<id>.state.md` is workspace-local but may be read by next agent. Redaction applies.
-- Rotation cap: max 10 state files in `.duck-tape/`. Oldest rotated out.
+- Rotation cap: max 10 state files in `.duck-tape/`. Eviction precedence: auto dropped first, then recovered, then manual.
 - Pre-compact marker (`.duck-tape/.last-compact`) is harness-written, non-semantic. No approval required for marker write.
 
 ## Activation
