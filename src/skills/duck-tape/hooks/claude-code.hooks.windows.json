@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -ExecutionPolicy Bypass -File \"$CLAUDE_PROJECT_DIR/src/skills/duck-tape/hooks/pre-compact.ps1\""
+            "command": "powershell -ExecutionPolicy Bypass -File \"$CLAUDE_PROJECT_DIR/src/skills/duck-tape/hooks/extract-state.ps1\""
           }
         ]
       }

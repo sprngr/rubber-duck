@@ -1,41 +1,63 @@
 # Hooks Guide
 
-Pre-compact trigger for duck-tape. Writes `.duck-tape/.last-compact` marker before context compaction. Skill reads marker at session resume to detect compaction occurred.
+Pre-compact trigger for duck-tape. Writes `.duck-tape/.last-compact` marker and `.duck-tape/<id>-auto.state.md` state file before context compaction. Skill reads marker at session resume to detect compaction occurred, and reads state file to recover position.
 
 ## What the trigger does
 
-`pre-compact.sh` writes one line to `.duck-tape/.last-compact`:
+`extract-state.sh` (or `.ps1`, or opencode plugin) parses the session transcript and writes a state file plus a one-line marker:
 
 ```
-2026-07-31T18:33:03Z | cwd: /project | latest-state: 2026-07-31-1200.state.md
+2026-07-31T18:33:03Z | cwd: /project | latest-state: 2026-07-31-1200-auto.state.md
 ```
 
-No state stub. No merge. No CONTEXT.md write. Marker only.
+State file `.duck-tape/<YYYY-MM-DD-HHMM>-auto.state.md` contains:
+- **Approved Workflow:** first user prompt (truncated 200 chars)
+- **Position:** last assistant text, all tool calls (cumulative)
+- **Decision Log:** assistant text matching decision patterns (APPROVED/DECIDED/CHOSE/DECISION), last 10
+- **Re-derivation:** transcript path or session ID for full content
+
+State file is auto-extracted, low-fidelity. Manual `/duck-tape` checkpoint produces higher-fidelity state.
+
+## Auto-checkpoint vs marker
+
+- **Auto-checkpoint** (`extract-state.sh`/`.ps1`, opencode plugin): transcript parsing produces `<id>-auto.state.md` state file + marker. Runs on every compaction. No user action.
+- **Marker-only** (`pre-compact.sh`/`.ps1`): writes marker line only. Retained as fallback if jq missing (bash), transcript missing, format unknown, or nothing extracted.
+- opencode plugin has no shell/jq dependency. Uses SDK to fetch session messages. Falls back to marker-only if SDK call fails or no client/sessionId.
+
+State files share the 10-file rotation cap. Auto files dropped first (oldest auto before oldest manual) if cap exceeded.
 
 ## What the trigger does not do
 
-- Does not capture session content. Shell scripts run outside LLM context.
+- Does not capture full session content. Transcript parsing extracts four sections only. Use `/duck-tape` for full checkpoint.
 - Does not merge into CONTEXT.md. Use `/duck-tape merge` for that.
 - Does not re-inject context after compaction. Use `/duck-tape resume` to resume from checkpoint.
+
+## Dependencies
+
+**bash (Claude Code unix, Copilot unix/Linux):** requires `jq` for transcript parsing. Standard on macOS (Homebrew), most Linux distros. Windows Claude Code users need jq in PATH (Git Bash includes it, or install separately). If jq missing, script falls back to marker-only.
+
+**PowerShell (Claude Code Windows, Copilot Windows):** no external dependency. Uses built-in `ConvertFrom-Json`.
+
+**opencode:** no external dependency. Plugin uses opencode SDK client. Cross-platform.
 
 ## Install per harness
 
 ### opencode
 
 1. Copy `hooks/opencode.plugin.js` to `.opencode/plugins/duck-tape.js`.
-2. No shell script needed. Plugin inlines marker logic in JS.
+2. No shell script needed. Plugin fetches session messages via SDK, extracts state, writes state file + marker.
 3. Restart opencode. Plugin loads at startup.
 
 ### Claude Code
 
 **Unix (macOS/Linux):**
 1. Merge `hooks/claude-code.hooks.json` content into `.claude/settings.json` under `hooks` key. If `hooks` exists, add `PreCompact` as sibling.
-2. Confirm `src/skills/duck-tape/hooks/pre-compact.sh` exists in project root.
+2. Confirm `src/skills/duck-tape/hooks/extract-state.sh` exists in project root.
 3. Run `/hooks` in Claude Code. Confirm `PreCompact` appears.
 
 **Windows:**
 1. Merge `hooks/claude-code.hooks.windows.json` content into `.claude/settings.json` under `hooks` key.
-2. Confirm `src/skills/duck-tape/hooks/pre-compact.ps1` exists in project root.
+2. Confirm `src/skills/duck-tape/hooks/extract-state.ps1` exists in project root.
 3. Run `/hooks` in Claude Code. Confirm `PreCompact` appears.
 
 Pick one variant. Do not merge both into the same settings file.
@@ -49,8 +71,8 @@ Pick one variant. Do not merge both into the same settings file.
 ### Copilot cloud agent
 
 1. Same as Copilot CLI. `.github/hooks/duck-tape.json` loads in sandbox.
-2. Only `bash` field honored (Linux sandbox). `pre-compact.sh` runs in `/workspace`.
-3. Marker writes to ephemeral sandbox. Lost when job ends. Useful only within same job if compaction occurs mid-job.
+2. Only `bash` field honored (Linux sandbox). `extract-state.sh` runs in `/workspace`.
+3. State file + marker write to ephemeral sandbox. Lost when job ends. Useful only within same job if compaction occurs mid-job.
 
 ## Guided install
 
@@ -60,8 +82,13 @@ Run `/duck-tape init` for guided setup. Skill prompts for harness choice, writes
 
 **Marker not written after compaction:**
 - Confirm hook config file in correct location per harness.
-- Confirm `pre-compact.sh` is executable: `chmod +x src/skills/duck-tape/hooks/pre-compact.sh`.
+- Confirm `extract-state.sh` is executable: `chmod +x src/skills/duck-tape/hooks/extract-state.sh`.
 - Check harness hook logs for errors.
+
+**State file not written (marker only):**
+- Bash: confirm `jq` installed and in PATH. If missing, script falls back to marker-only. Install jq or accept marker-only fallback.
+- Confirm transcript path passed to script via hook input (stdin JSON `transcript_path` for Claude Code, `transcriptPath` for Copilot).
+- opencode: confirm `client` and `sessionId` passed to plugin. If absent, plugin falls back to marker-only.
 
 **Marker written but skill does not resume:**
 - Skill checks `.duck-tape/.last-compact` on `/duck-tape resume`. Confirm file exists.
@@ -84,27 +111,29 @@ Run `/duck-tape init` for guided setup. Skill prompts for harness choice, writes
 
 ## Portability notes
 
-- All three harnesses run shell commands pre-compact. Behavior identical.
+- All three harnesses run pre-compact. Behavior identical: state file + marker.
 - No harness exposes context usage percentage to shell. No threshold detection.
 - Only opencode can inject context into compaction summary (`output.context`). This trigger does not use that capability. Keeps behavior consistent across harnesses.
-- Claude Code can re-inject post-compact via `SessionStart` matcher `compact`. This trigger does not use that. Skill handles resume via marker + guidance.
-- Copilot cannot re-inject within compaction cycle. Relies on marker + skill guidance at next session start.
+- Claude Code can re-inject post-compact via `SessionStart` matcher `compact`. This trigger does not use that. Skill handles resume via marker + state file + guidance.
+- Copilot cannot re-inject within compaction cycle. Relies on marker + state file + skill guidance at next session start.
 
 ## Platform choice
 
 `bash` is not guaranteed on Windows. Two script variants ship:
-- `pre-compact.sh` — bash. Unix + Copilot cloud agent (Linux sandbox).
-- `pre-compact.ps1` — PowerShell. Windows desktop (Claude Code, Copilot CLI).
+- `extract-state.sh` — bash + jq. Unix + Copilot cloud agent (Linux sandbox).
+- `extract-state.ps1` — PowerShell. Windows desktop (Claude Code, Copilot CLI).
+
+`pre-compact.sh` and `pre-compact.ps1` retained as marker-only fallback scripts.
 
 ### opencode
 
-No platform choice needed. Plugin inlines marker logic in JS via Bun `fs`. No shell call. Cross-platform.
+No platform choice needed. Plugin fetches messages via SDK, extracts state, writes state file + marker. No shell call. Cross-platform.
 
 ### Claude Code
 
 Single `command` field, no platform branching. Two config files ship:
-- `claude-code.hooks.json` — unix, calls `pre-compact.sh` via bash.
-- `claude-code.hooks.windows.json` — Windows, calls `pre-compact.ps1` via powershell.
+- `claude-code.hooks.json` — unix, calls `extract-state.sh` via bash.
+- `claude-code.hooks.windows.json` — Windows, calls `extract-state.ps1` via powershell.
 
 Merge one into `.claude/settings.json` under `hooks` key. Pick the one matching your platform. Do not merge both.
 

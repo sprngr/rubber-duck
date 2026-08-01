@@ -129,13 +129,17 @@ Merge:
 
 ## Harness integration
 
-Pre-compact trigger writes `.duck-tape/.last-compact` marker before context compaction. Marker records timestamp, cwd, and latest state filename. No session content captured. Trigger runs as shell script outside LLM context.
+Pre-compact trigger writes `.duck-tape/.last-compact` marker and `.duck-tape/<id>-auto.state.md` state file before context compaction. State file is auto-extracted from session transcript (Claude Code, Copilot) or fetched via SDK (opencode). Trigger runs as shell script or plugin outside LLM context.
+
+State file (`<id>-auto.state.md`) contains auto-extracted Approved Workflow, Position (tool calls + last assistant text), and Decision Log (pattern-matched). Low-fidelity recovery fallback. Manual `/duck-tape` checkpoint produces higher-fidelity state.
+
+Trigger falls back to marker-only on failure: jq missing (bash), transcript missing, format unknown, nothing extracted, SDK error (opencode). `pre-compact.sh`/`.ps1` retained as marker-only fallback scripts.
 
 **Resume from compaction:** see `## Resume` below. Triggered by `/duck-tape resume`, not automatic.
 
 **Guided install:** see `## Init` section below. See `references/HOOKS_GUIDE.md` for manual install and troubleshooting.
 
-**Portability:** trigger behavior identical across all three harnesses. No threshold detection. No context re-injection. Marker only.
+**Portability:** trigger behavior identical across all three harnesses. No threshold detection. No context re-injection. State file + marker.
 
 ## Resume
 
@@ -143,7 +147,7 @@ Pre-compact trigger writes `.duck-tape/.last-compact` marker before context comp
 
 1. Check `.duck-tape/.last-compact`. If missing, no compaction occurred. Report "no compaction marker found" and stop.
 2. Compare marker timestamp to session start time. If marker older than session start, no compaction in this session. Report "no recent compaction" and stop.
-3. If marker newer than session start, compaction occurred. Read latest `.duck-tape/*.state.md` (filename from marker `latest-state` field, or newest file if field absent).
+3. If marker newer than session start, compaction occurred. Read latest `.duck-tape/*.state.md` (filename from marker `latest-state` field, or newest file if field absent). Auto state files use `-auto` suffix (e.g. `2026-07-31-1200-auto.state.md`); manual checkpoints have no suffix. Marker `latest-state` points at newest file regardless of suffix. If manual checkpoint exists after auto-checkpoint, manual wins. Auto is recovery fallback; manual `/duck-tape` produces higher fidelity.
 4. Read `CONTEXT.md` if it exists.
 5. Report: compaction timestamp, session state position (Current/Done/Remaining), and any CONTEXT.md decisions relevant to current work.
 6. Do not write any files. No approval required.
@@ -167,7 +171,7 @@ If no state file exists but marker present, report "compaction occurred but no s
 4. Ask user if they want the skill to write the file or show the snippet for manual placement.
 5. If write: confirm target path with user (approval required, file creation). Write file. Report success.
 6. If show: print snippet and placement instructions. Point to `references/HOOKS_GUIDE.md` for troubleshooting.
-7. Confirm `hooks/pre-compact.sh` (unix) or `hooks/pre-compact.ps1` (Windows) is in project. For opencode, no shell script needed (JS inlines marker logic).
+7. Confirm `hooks/extract-state.sh` (unix) or `hooks/extract-state.ps1` (Windows) is in project. For opencode, no shell script needed (plugin fetches via SDK).
 
 **Preflight:**
 - Target file: harness-specific config path (max 1 file)

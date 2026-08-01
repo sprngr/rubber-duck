@@ -4,8 +4,8 @@
     "preCompact": [
       {
         "type": "command",
-        "bash": "bash ./src/skills/duck-tape/hooks/pre-compact.sh",
-        "powershell": "powershell -ExecutionPolicy Bypass -File ./src/skills/duck-tape/hooks/pre-compact.ps1",
+        "bash": "bash ./src/skills/duck-tape/hooks/extract-state.sh",
+        "powershell": "powershell -ExecutionPolicy Bypass -File ./src/skills/duck-tape/hooks/extract-state.ps1",
         "timeoutSec": 10
       }
     ]
