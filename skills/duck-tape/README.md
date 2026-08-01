@@ -158,7 +158,7 @@ State files use the Agent State schema:
 # Agent State
 
 Session: <id> | Cwd: <path> | Repo/Branch: <repo>@<branch>
-Created: <ISO-8601> | Updated: <ISO-8601> | Compactions: 0
+Created: <ISO-8601>
 
 ## Approved Workflow
 <what was approved, link spec/plan/ticket>

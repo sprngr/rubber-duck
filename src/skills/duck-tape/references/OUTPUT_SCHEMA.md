@@ -76,7 +76,7 @@ Strict output specifications for duck-tape artifacts.
 # Agent State
 
 Session: <YYYY-MM-DD-HHMM> | Cwd: <absolute-path> | Repo/Branch: <repo>@<branch>
-Created: <ISO-8601> | Updated: <ISO-8601> | Compactions: <integer>
+Created: <ISO-8601>
 ```
 
 ### Section requirements

@@ -233,7 +233,7 @@ function Render-State {
   [void]$sb.AppendLine("# Agent State")
   [void]$sb.AppendLine("")
   [void]$sb.AppendLine("Session: ${stamp}-auto | Cwd: $cwd | Trigger: pre-compact-auto")
-  [void]$sb.AppendLine("Created: $timestamp | Updated: $timestamp | Compactions: 0")
+  [void]$sb.AppendLine("Created: $timestamp")
   [void]$sb.AppendLine("")
   [void]$sb.AppendLine("## Approved Workflow")
   if ($firstPromptT) {

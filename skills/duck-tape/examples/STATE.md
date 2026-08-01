@@ -1,7 +1,7 @@
 # Agent State
 
 Session: 2025-01-15-1430 | Cwd: /project | Repo/Branch: myorg/myapp@main
-Created: 2025-01-15T14:30:00Z | Updated: 2025-01-15T15:45:00Z | Compactions: 2
+Created: 2025-01-15T14:30:00Z
 
 ## Approved Workflow
 Implement JWT authentication with refresh tokens. Reference: AUTH-101 spec.

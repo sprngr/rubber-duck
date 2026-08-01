@@ -179,7 +179,7 @@ render_state() {
   {
     printf '# Agent State\n\n'
     printf 'Session: %s-auto | Cwd: %s | Trigger: pre-compact-auto\n' "$stamp" "$cwd"
-    printf 'Created: %s | Updated: %s | Compactions: 0\n\n' "$timestamp_utc" "$timestamp_utc"
+    printf 'Created: %s\n\n' "$timestamp_utc"
     printf '## Approved Workflow\n'
     if [[ -n "$first_prompt_t" ]]; then
       printf '%s\n\n' "$first_prompt_t"

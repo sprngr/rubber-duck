@@ -87,7 +87,7 @@ async function renderState(duckTapeDir, transcriptRef, cwd, stamp, timestamp, fi
   let sb = ""
   sb += "# Agent State\n\n"
   sb += `Session: ${stamp}-auto | Cwd: ${cwd} | Trigger: pre-compact-auto\n`
-  sb += `Created: ${timestamp} | Updated: ${timestamp} | Compactions: 0\n\n`
+  sb += `Created: ${timestamp}\n\n`
   sb += "## Approved Workflow\n"
   sb += firstPromptT ? firstPromptT + "\n" : "(not derivable from transcript)\n"
   sb += "\n"

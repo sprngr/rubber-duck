@@ -1,7 +1,7 @@
 # Agent State
 
 Session: __STAMP__-auto | Cwd: __CWD__ | Trigger: pre-compact-auto
-Created: __TIMESTAMP__ | Updated: __TIMESTAMP__ | Compactions: 0
+Created: __TIMESTAMP__
 
 ## Approved Workflow
 Build the feature
