@@ -237,10 +237,18 @@ export const DuckTapeCompact = async ({ client, directory }) => {
           }
         }
 
-        // Last 10 decisions.
-        const trimmedDecisions = decisions.length > 10
-          ? decisions.slice(decisions.length - 10)
-          : decisions
+        // Last 10 unique decisions.
+        const uniqueDecisions = []
+        const seen = new Set()
+        for (const d of decisions) {
+          if (!seen.has(d)) {
+            seen.add(d)
+            uniqueDecisions.push(d)
+          }
+        }
+        const trimmedDecisions = uniqueDecisions.length > 10
+          ? uniqueDecisions.slice(uniqueDecisions.length - 10)
+          : uniqueDecisions
 
         // Incremental snapshot for Angle B recovery (before state file write).
         let snapshotPath = null

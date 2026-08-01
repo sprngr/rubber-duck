@@ -163,6 +163,24 @@ function Extract-ClaudeCode {
   }
   Write-Output ""
 
+  # Potential Decisions (all matching, deduped)
+  Write-Output "## Potential Decisions (all matching, chronological, deduped)"
+  $decisionPattern = 'APPROVED|DECIDED|CHOSE|DECISION|we will use|going with|let''s go with'
+  $decisions = @()
+  $seen = @{}
+  foreach ($t in $texts) {
+    if ($t -match $decisionPattern -and -not $seen.ContainsKey($t)) {
+      $seen[$t] = $true
+      $decisions += $t
+    }
+  }
+  $idx = 0
+  foreach ($d in $decisions) {
+    $idx++
+    Write-Output "$idx. $d"
+  }
+  Write-Output ""
+
   # Failed Tool Results
   Write-Output "## Failed Tool Results"
   $idx = 0
@@ -232,6 +250,29 @@ function Extract-Copilot {
                   Select-Object -Last 10)) {
     $idx++
     Write-Output "$idx. $($t.timestamp): $($t.data.content)"
+  }
+  Write-Output ""
+
+  # Potential Decisions (all matching, deduped)
+  Write-Output "## Potential Decisions (all matching, chronological, deduped)"
+  $decisionPattern = 'APPROVED|DECIDED|CHOSE|DECISION|we will use|going with|let''s go with'
+  $copilotTexts = @()
+  foreach ($r in ($records | Where-Object { $_.type -eq "assistant.message" -and $_.data.content })) {
+    $copilotTexts += "$($r.timestamp): $($r.data.content)"
+    if ($r.data.reasoningText) { $copilotTexts += "$($r.timestamp): $($r.data.reasoningText)" }
+  }
+  $decisions = @()
+  $seen = @{}
+  foreach ($t in $copilotTexts) {
+    if ($t -match $decisionPattern -and -not $seen.ContainsKey($t)) {
+      $seen[$t] = $true
+      $decisions += $t
+    }
+  }
+  $idx = 0
+  foreach ($d in $decisions) {
+    $idx++
+    Write-Output "$idx. $d"
   }
   Write-Output ""
 
@@ -305,6 +346,24 @@ function Extract-OpenCode {
   foreach ($t in ($texts | Select-Object -Last 10)) {
     $idx++
     Write-Output "$idx. $t"
+  }
+  Write-Output ""
+
+  # Potential Decisions (all matching, deduped)
+  Write-Output "## Potential Decisions (all matching, chronological, deduped)"
+  $decisionPattern = 'APPROVED|DECIDED|CHOSE|DECISION|we will use|going with|let''s go with'
+  $decisions = @()
+  $seen = @{}
+  foreach ($t in $texts) {
+    if ($t -match $decisionPattern -and -not $seen.ContainsKey($t)) {
+      $seen[$t] = $true
+      $decisions += $t
+    }
+  }
+  $idx = 0
+  foreach ($d in $decisions) {
+    $idx++
+    Write-Output "$idx. $d"
   }
   Write-Output ""
 

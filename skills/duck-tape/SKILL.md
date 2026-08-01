@@ -133,7 +133,7 @@ Pre-compact trigger writes `.duck-tape/.last-compact` marker and `.duck-tape/<id
 
 Marker format: `<timestamp> | cwd: <path> | latest-state: <file> | transcript: <path>`. The `transcript` field records the source transcript path (Claude Code, Copilot) or opencode snapshot path (`<id>-transcript.json`). Absent in older markers written before Angle B.
 
-State file (`<id>-auto.state.md`) contains auto-extracted Approved Workflow, Position (tool calls + last assistant text), and Decision Log (pattern-matched). Low-fidelity recovery fallback. Manual `/duck-tape` checkpoint produces higher-fidelity state. `/duck-tape resume` with LLM-assisted recovery (Angle B) produces `-recovered.state.md` with semantic decision extraction, between auto and manual in fidelity.
+State file (`<id>-auto.state.md`) contains auto-extracted Approved Workflow, Position (tool calls + last assistant text), and Decision Log (pattern-matched, deduped, last 10). Low-fidelity recovery fallback. Pattern matching catches explicit decisions (APPROVED/DECIDED/CHOSE) but misses implicit ones. Manual `/duck-tape` checkpoint produces higher-fidelity state. `/duck-tape resume` with LLM-assisted recovery (Angle B) produces `-recovered.state.md` with semantic decision extraction, between auto and manual in fidelity.
 
 Trigger falls back to marker-only on failure: jq missing (bash), transcript missing, format unknown, nothing extracted, SDK error (opencode). `pre-compact.sh`/`.ps1` retained as marker-only fallback scripts.
 

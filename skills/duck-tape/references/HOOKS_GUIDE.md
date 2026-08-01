@@ -18,7 +18,7 @@ Marker fields:
 State file `.duck-tape/<YYYY-MM-DD-HHMM>-auto.state.md` contains:
 - **Approved Workflow:** first user prompt (truncated 200 chars)
 - **Position:** last assistant text, all tool calls (cumulative)
-- **Decision Log:** assistant text matching decision patterns (APPROVED/DECIDED/CHOSE/DECISION), last 10
+- **Decision Log:** assistant text matching decision patterns (APPROVED/DECIDED/CHOSE/DECISION), deduped, last 10. Catches explicit decisions only. Implicit decisions ("we're going with X") missed by pattern matching, captured by Angle B LLM synthesis.
 - **Re-derivation:** transcript path or session ID for full content
 
 State file is auto-extracted, low-fidelity. Manual `/duck-tape` checkpoint produces higher-fidelity state. `/duck-tape resume` with LLM-assisted recovery (Angle B) produces `-recovered.state.md` with semantic decision extraction, between auto and manual in fidelity.
@@ -64,6 +64,8 @@ Recovery is reactive. Angle A (auto-checkpoint) is proactive. Both complement: A
 **PowerShell (Claude Code Windows, Copilot Windows):** no external dependency. Uses built-in `ConvertFrom-Json`.
 
 **opencode:** no external dependency. Plugin uses opencode SDK client. Cross-platform.
+
+**Performance:** both `extract-state.sh` and `extract-raw.sh` process 1MB+ transcripts in under 120ms. Well within Copilot's 10s hook timeout. No size limit needed for typical sessions.
 
 ## Install per harness
 
@@ -133,6 +135,15 @@ Run `/duck-tape init` for guided setup. Skill prompts for harness choice, writes
 - Confirm `.github/hooks/duck-tape.json` is valid JSON with `"version": 1`.
 - Confirm `preCompact` event name (camelCase).
 - Check hook timeout: default 10s. Increase if script slow.
+
+**Resume without transcript path in marker:**
+- Markers written before Angle B lack the `transcript` field. Angle B recovery cannot run without it.
+- Copilot transcript locations (for manual recovery if marker missing):
+  - Windows: `C:\Users\<user>\AppData\Roaming\Code\User\workspaceStorage\<id>\GitHub.copilot-chat\transcripts\`
+  - Linux: `~/.config/Code/User/workspaceStorage/<id>/GitHub.copilot-chat/transcripts/`
+  - Mac: `~/Library/Application Support/Code/User/workspaceStorage/<id>/GitHub.copilot-chat/transcripts/`
+  - `<id>` is workspace storage ID, not session ID. Skill cannot derive without listing directory. Recommend: rely on marker. If marker missing, run `/duck-tape` for fresh checkpoint instead of recovery.
+- Claude Code: transcript at `~/.claude/projects/<encoded-cwd>/<session-id>.jsonl`. Can be derived from session metadata if marker stores session ID.
 
 ## Portability notes
 

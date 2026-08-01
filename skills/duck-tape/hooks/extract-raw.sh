@@ -126,6 +126,20 @@ extract_claude_code() {
   ' "$t" 2>/dev/null | tail -10 || true)
   printf '\n'
 
+  printf '## Potential Decisions (all matching, chronological, deduped)\n'
+  idx=0
+  while IFS= read -r line; do
+    [[ -z "$line" ]] && continue
+    idx=$((idx + 1))
+    printf '%d. %s\n' "$idx" "$line"
+  done < <(jq -r '
+    select(.type=="assistant")
+    | .timestamp + ": " + (.message.content[]? | select(.type=="text") | .text)
+  ' "$t" 2>/dev/null \
+    | grep -iE 'APPROVED|DECIDED|CHOSE|DECISION|we will use|going with|let'"'"'s go with' \
+    | awk '!seen[$0]++' || true)
+  printf '\n'
+
   printf '## Failed Tool Results\n'
   idx=0
   while IFS= read -r line; do
@@ -180,6 +194,17 @@ extract_copilot() {
     idx=$((idx + 1))
     printf '%d. %s\n' "$idx" "$line"
   done < <(jq -r 'select(.type=="assistant.message") | .timestamp + ": " + .data.content' "$t" 2>/dev/null | tail -10 || true)
+  printf '\n'
+
+  printf '## Potential Decisions (all matching, chronological, deduped)\n'
+  idx=0
+  while IFS= read -r line; do
+    [[ -z "$line" ]] && continue
+    idx=$((idx + 1))
+    printf '%d. %s\n' "$idx" "$line"
+  done < <(jq -r 'select(.type=="assistant.message") | .timestamp + ": " + (.data.content + "\n" + (.data.reasoningText // ""))' "$t" 2>/dev/null \
+    | grep -iE 'APPROVED|DECIDED|CHOSE|DECISION|we will use|going with|let'"'"'s go with' \
+    | awk '!seen[$0]++' || true)
   printf '\n'
 
   printf '## Failed Tool Results\n'
@@ -246,6 +271,22 @@ extract_opencode() {
     | (try ((.info.time.created // 0) / 1000 | todateiso8601) catch ((.info.time.created // 0 | tostring)))
     + ": " + (.parts[]? | select(.type=="text") | .text)
   ' "$t" 2>/dev/null | tail -10 || true)
+  printf '\n'
+
+  printf '## Potential Decisions (all matching, chronological, deduped)\n'
+  idx=0
+  while IFS= read -r line; do
+    [[ -z "$line" ]] && continue
+    idx=$((idx + 1))
+    printf '%d. %s\n' "$idx" "$line"
+  done < <(jq -r '
+    .[]
+    | select(.info.role=="assistant")
+    | (try ((.info.time.created // 0) / 1000 | todateiso8601) catch ((.info.time.created // 0 | tostring)))
+    + ": " + (.parts[]? | select(.type=="text") | .text)
+  ' "$t" 2>/dev/null \
+    | grep -iE 'APPROVED|DECIDED|CHOSE|DECISION|we will use|going with|let'"'"'s go with' \
+    | awk '!seen[$0]++' || true)
   printf '\n'
 
   printf '## Failed Tool Results\n'

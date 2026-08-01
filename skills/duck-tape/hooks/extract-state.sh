@@ -131,6 +131,7 @@ extract_claude_code() {
     | .text
   ' "$t" 2>/dev/null \
     | grep -iE 'APPROVED|DECIDED|CHOSE|DECISION|we will use|going with|let'"'"'s go with' \
+    | awk '!seen[$0]++' \
     | tail -10 || true)"
 
   render_state "$first_prompt" "$tool_calls" "$last_text" "$decisions"
@@ -157,6 +158,7 @@ extract_copilot() {
 
   decisions="$(jq -r 'select(.type=="assistant.message") | .data.content + "\n" + (.data.reasoningText // "")' "$t" 2>/dev/null \
     | grep -iE 'APPROVED|DECIDED|CHOSE|DECISION|we will use|going with|let'"'"'s go with' \
+    | awk '!seen[$0]++' \
     | tail -10 || true)"
 
   render_state "$first_prompt" "$tool_calls" "$last_text" "$decisions"
