@@ -317,6 +317,19 @@ for src_dir in "${SKILL_DIRS[@]}"; do
     shopt -u globstar
   fi
 
+  if [[ -d "${src_dir}/hooks" ]]; then
+    shopt -s globstar
+    for hook in "${src_dir}"/hooks/**; do
+      [[ -f "${hook}" ]] || continue
+      rel="${hook#${src_dir}/}"
+      if (( CHECK_ONLY == 1 )); then
+        check_portability "${hook}" || failed=1
+      fi
+      copy_or_check "${hook}" "${out_dir}/${rel}" || failed=1
+    done
+    shopt -u globstar
+  fi
+
   if [[ -f "${src_dir}/README.md" ]]; then
     if (( CHECK_ONLY == 1 )); then
       check_portability "${src_dir}/README.md" || failed=1

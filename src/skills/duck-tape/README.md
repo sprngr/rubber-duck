@@ -49,13 +49,55 @@ Classifies freeform content in an existing CONTEXT.md into schema sections. Prop
 
 **Use when:** you have a CONTEXT.md that predates the schema or drifted from structure.
 
-### `/duck-tape auto on` — Enable auto-compact
+### `/duck-tape init` — Guided hook install
 
-Grants standing approval for automatic state writes and merges at token threshold. Writes `.duck-tape/auto` marker file.
+Prompts for harness choice (opencode, Claude Code, Copilot) and platform (unix/Windows for Claude Code). Writes the correct hook config snippet to the right path. Explains placement.
 
-### `/duck-tape auto off` — Disable auto-compact
+**Use when:** setting up pre-compact trigger for the first time. See `references/HOOKS_GUIDE.md` for manual install.
 
-Removes marker file. Revokes standing approval.
+### `/duck-tape resume` — Reload from compaction
+
+Checks `.duck-tape/.last-compact` marker. If compaction occurred this session, reads latest state file and CONTEXT.md. Reports position, decisions, and facts. Read-only. No writes.
+
+**Use when:** compaction may have occurred and you lost context. Signal: "resume session".
+
+## Typical Workflow
+
+Five scenarios covering the session lifecycle.
+
+### First-time setup
+
+1. Run `/duck-tape init`. Pick your harness (opencode, Claude Code, Copilot). Skill writes hook config to the right path.
+2. Confirm `hooks/pre-compact.sh` (unix) or `hooks/pre-compact.ps1` (Windows) is in project. opencode skips this (JS plugin inlines marker logic).
+3. Start working. Hook fires automatically on compaction and writes `.duck-tape/.last-compact` marker.
+
+### During a session
+
+1. Checkpoint after completing a logical unit of work: feature done, decision made, bug fixed.
+2. Run `/duck-tape` or say "checkpoint session". Skill writes state file with position, decisions, facts.
+3. Continue working. Repeat as needed. State files rotate (max 10, oldest dropped).
+4. No need to checkpoint mid-thought. State files capture where you are, not every keystroke.
+
+### After compaction
+
+1. If you notice missing detail or context feels summarized, compaction may have occurred.
+2. Run `/duck-tape resume` or say "resume session". Skill checks `.duck-tape/.last-compact` marker.
+3. If marker is newer than session start: compaction occurred. Skill reads latest state file and CONTEXT.md. Reports position, decisions, facts.
+4. Pick up where you left off. No files written. Read-only recovery.
+
+### End of a session
+
+1. Ask: did this session produce decisions, conventions, or facts worth keeping long-term?
+2. If yes: run `/duck-tape merge` or say "compact session". Skill writes state file, then merges translated content into CONTEXT.md. Changelog reports what changed.
+3. If no: run `/duck-tape` for a state-only checkpoint. State file stays in `.duck-tape/` for recovery. CONTEXT.md untouched.
+4. If CONTEXT.md does not exist yet: merge triggers bootstrap. Skill creates CONTEXT.md with scaffold from state file content.
+
+### Periodic maintenance
+
+1. Check CONTEXT.md Notes section size. If it grew large, run `/duck-tape prune`. Pick stale entries to remove. Fixed-schema sections are never touched.
+2. Review Deferred-Debt entries. Update status markers as decisions get made.
+3. If CONTEXT.md drifted from schema (freeform content outside the 8 sections), run `/duck-tape migrate`. Skill classifies content and proposes restructure.
+4. Check `.duck-tape/` for old state files. Rotation handles this automatically (max 10), but verify if disk space matters.
 
 ## Context Hygiene
 
@@ -145,11 +187,15 @@ The state file translates into CONTEXT.md via a rigid map:
 - Re-derivation → **Notes** (verbatim)
 - Suggested Skills → consumed by next agent, not merged
 
-## Auto-Compact
+## Harness Integration
 
-When enabled, duck-tape automatically writes state and merges into CONTEXT.md when session token usage crosses a threshold. This prevents context loss on long sessions.
+Pre-compact trigger writes `.duck-tape/.last-compact` marker before context compaction. Marker records timestamp, cwd, and latest state filename. No session content captured.
 
-**Tradeoff:** auto-compact merges everything. Review CONTEXT.md periodically with `/duck-tape prune` to keep it tight.
+**Resume from compaction:** triggered by `/duck-tape resume` or "resume session". Skill checks `.duck-tape/.last-compact`. If marker exists and is newer than session start, compaction occurred. Skill reads `CONTEXT.md` and latest state file to resume from checkpoint.
+
+**Behavior identical across opencode, Claude Code, and Copilot.** No threshold detection. No context re-injection. Marker only.
+
+**Install:** run `/duck-tape init` for guided setup, or see `references/HOOKS_GUIDE.md` for manual install per harness.
 
 ## Security
 
@@ -165,8 +211,6 @@ Redaction applies to both tiers (CONTEXT.md and state files).
 
 **Merge produced unexpected entries.** Check the changelog. Each addition, supersession, and drop is logged with a reason. Use `/duck-tape prune` to clean Notes if needed.
 
-**Auto-compact merging too aggressively.** Run `/duck-tape auto off` to disable. Merge manually only when you want CONTEXT.md updated.
-
 ## File Layout
 
 ```
@@ -174,25 +218,22 @@ Redaction applies to both tiers (CONTEXT.md and state files).
   CONTEXT.md                    — Tier 1 persistent memory
   .duck-tape/
     .gitignore                  — `*` (auto-created)
+    .last-compact               — pre-compact marker (harness-written)
     <YYYY-MM-DD-HHMM>.state.md  — Tier 2 working state
-    auto                        — auto-compact marker (if enabled)
 ```
-
-## Troubleshooting
-
-**CONTEXT.md lacks schema sections.** Run `/duck-tape migrate` to classify existing content and append missing headers.
-
-**State files accumulating.** Check rotation cap (max 10). Oldest files drop automatically. Check CONTEXT.md Session-Log for dropped IDs.
-
-**Merge produced unexpected entries.** Check the changelog. Each addition, supersession, and drop is logged with a reason. Use `/duck-tape prune` to clean Notes if needed.
-
-**Auto-compact merging too aggressively.** Run `/duck-tape auto off` to disable. Merge manually only when you want CONTEXT.md updated.
 
 ## References
 
 - `references/SCHEMA.md` — full CONTEXT.md schema definitions and merge rules
 - `references/STATE_SCHEMA.md` — Agent State schema and translation map
 - `references/OUTPUT_SCHEMA.md` — strict output specifications for all artifacts
+- `references/HOOKS_GUIDE.md` — per-harness hook install, troubleshooting, portability notes
+- `hooks/pre-compact.sh` — pre-compact trigger script (unix/bash)
+- `hooks/pre-compact.ps1` — pre-compact trigger script (Windows/PowerShell)
+- `hooks/opencode.plugin.js` — opencode plugin (JS, cross-platform, no shell)
+- `hooks/claude-code.hooks.json` — Claude Code hook config (unix)
+- `hooks/claude-code.hooks.windows.json` — Claude Code hook config (Windows)
+- `hooks/copilot.hooks.json` — Copilot hook config (unix + Windows fields)
 - `examples/bootstrap-CONTEXT.md` — empty scaffold with markers for new CONTEXT.md files
 - `examples/CONTEXT.md` — fully populated CONTEXT.md sample
 - `examples/STATE.md` — sample session state file

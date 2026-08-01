@@ -3,9 +3,10 @@ name: duck-tape
 description: >
   Two-tier session memory: compact into CONTEXT.md (persistent) and
   .duck-tape/<id>.state.md (working). Merge/dedupe fixed-schema sections,
-  append-only Notes, bootstrap from session content. Replaces handoff skill.
+  append-only Notes, bootstrap from session content.
   Use when: "/duck-tape", "compact session", "update CONTEXT.md",
-  "persist memory", "save session state", "checkpoint session".
+  "persist memory", "save session state", "checkpoint session",
+  "resume session".
 ---
 
 Session memory management 🦆📼. Context hygiene, persistent memory, session state handoff.
@@ -29,7 +30,7 @@ Skill-specific delta:
 - Persistent artifact safety: CONTEXT.md is long-lived and likely committed. Redaction is non-negotiable before any write.
 - Session state safety: `.duck-tape/<id>.state.md` is workspace-local but may be read by next agent. Redaction applies.
 - Rotation cap: max 10 state files in `.duck-tape/`. Oldest rotated out.
-- Standing-approval via `.duck-tape/auto` marker file covers auto-compact state writes and merges only. Manual runs require per-run approval.
+- Pre-compact marker (`.duck-tape/.last-compact`) is harness-written, non-semantic. No approval required for marker write.
 
 ## Activation
 
@@ -37,7 +38,7 @@ Skill-specific delta:
 
 **Merge** (CONTEXT.md): write state file plus merge into CONTEXT.md. Signals: "compact session", "update CONTEXT.md", "persist memory", `/duck-tape merge`.
 
-Auto-compact threshold triggers merge mode.
+**Resume**: detect compaction and reload checkpoint. Signals: `/duck-tape resume`, "resume session". Read-only, no writes, no approval required.
 
 ## Method
 
@@ -126,7 +127,52 @@ Merge:
 - Expected: write state file, merge translated state into CONTEXT.md per schema rules
 - Verification: re-read both files, confirm changelog matches CONTEXT.md diff
 
-Auto-compact skips per-write approval. Standing approval from `/duck-tape auto on` covers auto state writes and merges.
+## Harness integration
+
+Pre-compact trigger writes `.duck-tape/.last-compact` marker before context compaction. Marker records timestamp, cwd, and latest state filename. No session content captured. Trigger runs as shell script outside LLM context.
+
+**Resume from compaction:** see `## Resume` below. Triggered by `/duck-tape resume`, not automatic.
+
+**Guided install:** see `## Init` section below. See `references/HOOKS_GUIDE.md` for manual install and troubleshooting.
+
+**Portability:** trigger behavior identical across all three harnesses. No threshold detection. No context re-injection. Marker only.
+
+## Resume
+
+`/duck-tape resume` — detect compaction and reload checkpoint. Read-only.
+
+1. Check `.duck-tape/.last-compact`. If missing, no compaction occurred. Report "no compaction marker found" and stop.
+2. Compare marker timestamp to session start time. If marker older than session start, no compaction in this session. Report "no recent compaction" and stop.
+3. If marker newer than session start, compaction occurred. Read latest `.duck-tape/*.state.md` (filename from marker `latest-state` field, or newest file if field absent).
+4. Read `CONTEXT.md` if it exists.
+5. Report: compaction timestamp, session state position (Current/Done/Remaining), and any CONTEXT.md decisions relevant to current work.
+6. Do not write any files. No approval required.
+
+If no state file exists but marker present, report "compaction occurred but no state file found" and suggest running `/duck-tape` to checkpoint fresh.
+
+## Init
+
+`/duck-tape init` — guided hook install. Opt-in.
+
+1. Ask user which harness: opencode, Claude Code, or Copilot.
+2. Based on choice, identify the correct hook config snippet:
+   - opencode: `hooks/opencode.plugin.js`
+   - Claude Code (unix): `hooks/claude-code.hooks.json`
+   - Claude Code (Windows): `hooks/claude-code.hooks.windows.json`
+   - Copilot: `hooks/copilot.hooks.json`
+3. Show user the target install path for their harness:
+   - opencode: `.opencode/plugins/duck-tape.js`
+   - Claude Code: merge into `.claude/settings.json` under `hooks` key
+   - Copilot: `.github/hooks/duck-tape.json`
+4. Ask user if they want the skill to write the file or show the snippet for manual placement.
+5. If write: confirm target path with user (approval required, file creation). Write file. Report success.
+6. If show: print snippet and placement instructions. Point to `references/HOOKS_GUIDE.md` for troubleshooting.
+7. Confirm `hooks/pre-compact.sh` (unix) or `hooks/pre-compact.ps1` (Windows) is in project. For opencode, no shell script needed (JS inlines marker logic).
+
+**Preflight:**
+- Target file: harness-specific config path (max 1 file)
+- Expected: write hook config snippet to harness install path
+- Verification: re-read written file, confirm valid JSON or JS syntax
 
 ## Prune
 
@@ -167,18 +213,11 @@ Prune never touches fixed-schema sections.
 - Expected: classify freeform content into schema sections, append missing headers, preserve unmatched content above schema
 - Verification: re-read CONTEXT.md, confirm all 8 headers present, confirm all original content accounted for (moved or left above schema)
 
-## Auto-compact opt-in
-
-- `/duck-tape auto on` — grants standing approval for auto state writes and merges at token threshold. Writes `.duck-tape/auto` marker file.
-- `/duck-tape auto off` — revokes. Removes marker file.
-- On auto-compact fire: state write plus merge run with no per-write approval. Reply carries post-merge summary and prune direction.
-
 ## Boundaries
 
 - Default mode is state-only. CONTEXT.md is written only on merge signals.
-- Write only `CONTEXT.md`, `.duck-tape/<id>.state.md`, `.duck-tape/.gitignore`, `.duck-tape/auto` marker.
+- Write only `CONTEXT.md`, `.duck-tape/<id>.state.md`, `.duck-tape/.gitignore`, `.duck-tape/.last-compact` marker.
 - Respect existing CONTEXT.md structure. If file lacks schema sections, prompt user to migrate before first merge.
 - Never infer Goals or Conventions entries on bootstrap.
 - Never fuzzy-rewrite Notes. Append-only at write time.
 - Never silently drop entries. Changelog with reason required.
-- Standing-approval via `.duck-tape/auto` is a skill-local extension to approval-gate-spec. Covers auto state writes and merges only.
