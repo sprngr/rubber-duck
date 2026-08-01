@@ -99,6 +99,9 @@ Before every workspace-changing action, classify change type:
    - Smallest verification check
 
 3. **Present list of changes broken down by file as formatted diff**
+   - File exists: unified diff (`---`/`+++`/`@@` hunks, `-`/`+` prefixes)
+   - File does not exist: full content in fenced code block, file path as header
+   - One file per diff block
 
 4. **Approval ask** (exact phrase required):
    - `Reply with "approve" to execute this scope.`

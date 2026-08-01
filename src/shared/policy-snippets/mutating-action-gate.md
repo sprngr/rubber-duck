@@ -28,6 +28,9 @@ Before any semantic change, require execution approval:
      - expected behavior change
      - smallest verification check
   2. **Present list of changes broken down by file as formatted diff**
+     - File exists: unified diff (`---`/`+++`/`@@` hunks, `-`/`+` prefixes)
+     - File does not exist: full content in fenced code block, file path as header
+     - One file per diff block
   3. **Approval ask**: `Reply with "approve" to execute this scope.`
   4. **Wait for approval**: do not proceed with edits/commands/task delegation until user replies with approval
 
