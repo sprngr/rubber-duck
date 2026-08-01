@@ -1,0 +1,1 @@
+__TIMESTAMP__ | cwd: __CWD__ | latest-state: __STAMP__-auto.state.md | transcript: __CWD__/.duck-tape/test-session-transcript.json

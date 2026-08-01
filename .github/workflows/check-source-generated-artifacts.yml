@@ -117,3 +117,14 @@ jobs:
             git status --porcelain -- skills dist >&2
             exit 1
           fi
+
+  check-hooks-behavior:
+    needs: changes
+    if: ${{ needs.changes.outputs.skills == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run hook tests (bash + JS)
+        run: bash tests/run.sh && node tests/run.js

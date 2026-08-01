@@ -1,0 +1,6 @@
+{"type":"user","message":{"role":"user","content":"Build the feature"},"timestamp":"2026-08-01T00:00:00Z"}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"Starting work"}]},"timestamp":"2026-08-01T00:00:01Z"}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"tool_use","name":"Edit","input":{"file_path":"src/app.ts"}}]},"timestamp":"2026-08-01T00:00:02Z"}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"APPROVED: use option A"}]},"timestamp":"2026-08-01T00:00:03Z"}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"APPROVED: use option A"}]},"timestamp":"2026-08-01T00:00:04Z"}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"Done with the work"}]},"timestamp":"2026-08-01T00:00:05Z"}
