@@ -98,7 +98,7 @@ Before every workspace-changing action, classify change type:
    - Expected behavior change
    - Smallest verification check
 
-3. **Present list of changes broken down by file**
+3. **Present list of changes broken down by file as formatted diff**
 
 4. **Approval ask** (exact phrase required):
    - `Reply with "approve" to execute this scope.`

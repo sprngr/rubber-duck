@@ -62,7 +62,7 @@ Ask: "Which approach fits your requirements?"
 
 5. Execution approval (BLOCKING GATE)
     - Preflight: files (max 2), expected behavior, verification check
-    - Present list of changes broken down by file
+    - Present list of changes broken down by file as formatted diff
     - Approval ask: "Reply with 'approve' to execute this scope."
     - Wait for approval (do not proceed without explicit "approve")
 
@@ -369,7 +369,7 @@ Step 2: Investigate why endpoint needs to change.
 - POST vs GET semantics:
   - POST: intended for state-changing operations
   - GET: intended for read-only, cacheable operations
-  
+
 - Current endpoint behavior: [mutating or read-only?]
 - Caller expectations: [what do callers assume?]
 - REST/HTTP compliance: [which method matches semantics?]

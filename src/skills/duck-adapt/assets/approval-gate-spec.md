@@ -288,7 +288,7 @@ Return to preflight with new scope and request renewed approval.
 - Refuse to ignore explicit user requirements
 
 **Provide rationale:**
-"This change would [weaken security / bypass validation / remove safety check]. 
+"This change would [weaken security / bypass validation / remove safety check].
 I can suggest a safer alternative: [alternative approach]."
 
 ---
@@ -356,7 +356,7 @@ Reply with "approve" to execute this scope.
 ```markdown
 **During execution:**
 
-While fixing `src/api/users.js`, discovered that `src/models/user.js` also 
+While fixing `src/api/users.js`, discovered that `src/models/user.js` also
 needs validation at the model layer for database consistency.
 
 **Scope change detected.**
@@ -399,7 +399,7 @@ Execution approval gate and Duck Ladder work together:
 2. Apply Duck Ladder (check 6 rungs)
 3. Identify minimal safe diff
 4. Present in preflight (files + behavior + verification)
-5. Present list of changes broken down by file
+5. Present list of changes broken down by file as formatted diff
 6. Ask for approval
 7. Wait
 8. Execute minimal change
@@ -413,7 +413,7 @@ Evidence -> Duck Ladder -> Preflight -> Present Changes -> Approval -> Execute -
 
 1. ✅ All mutating actions require execution approval gate
 2. ✅ Preflight must include: files (bounded), behavior, verification
-3. ✅ Present list of changes broken down by file before approval ask
+3. ✅ Present list of changes broken down by file as formatted diff before approval ask
 4. ✅ Approval ask must use exact phrase: "Reply with 'approve' to execute this scope."
 5. ✅ Wait for "approve" token (not "continue", "yes", "ok")
 6. ✅ Do not execute until "approve" received

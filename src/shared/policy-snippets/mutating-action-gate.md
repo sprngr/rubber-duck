@@ -27,7 +27,7 @@ Before any semantic change, require execution approval:
      - target files (bounded; max 2)
      - expected behavior change
      - smallest verification check
-  2. **Present list of changes broken down by file**
+  2. **Present list of changes broken down by file as formatted diff**
   3. **Approval ask**: `Reply with "approve" to execute this scope.`
   4. **Wait for approval**: do not proceed with edits/commands/task delegation until user replies with approval
 
