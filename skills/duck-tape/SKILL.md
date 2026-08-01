@@ -38,7 +38,7 @@ Skill-specific delta:
 
 **Merge** (CONTEXT.md): write state file plus merge into CONTEXT.md. Signals: "compact session", "update CONTEXT.md", "persist memory", `/duck-tape merge`.
 
-**Resume**: detect compaction and reload checkpoint. Signals: `/duck-tape resume`, "resume session". Read-only, no writes, no approval required.
+**Resume**: detect compaction and reload checkpoint. Signals: `/duck-tape resume`, "resume session". Read-only when manual checkpoint exists. If only auto-checkpoint or no state file, invokes LLM-assisted recovery that writes `-recovered.state.md` (approval required).
 
 ## Method
 
@@ -50,7 +50,7 @@ Scan session content for secrets/PII: API keys, passwords, tokens, connection st
 
 Write `.duck-tape/<session_id>.state.md` using Agent State schema. Session ID format: `<YYYY-MM-DD-HHMM>`. Full schema in `references/STATE_SCHEMA.md`. Output format in `references/OUTPUT_SCHEMA.md`. Sample in `examples/STATE.md`. Auto-create `.duck-tape/.gitignore` with `*` content if missing.
 
-Apply rotation cap: max 10 state files. Drop oldest if exceeded. Note dropped ID in Session-Log.
+Apply rotation cap: max 10 state files. Eviction precedence: auto dropped first (oldest auto), then recovered, then manual. Note dropped ID in Session-Log.
 
 Report state file path: `.duck-tape/<session_id>.state.md` — user can use this to reload session state later.
 
@@ -155,7 +155,7 @@ Trigger falls back to marker-only on failure: jq missing (bash), transcript miss
    b. If only an auto-checkpoint (`-auto` suffix) exists or no state file exists at all, invoke LLM-assisted recovery (step 5).
 5. **LLM-assisted recovery** (Angle B). Produces a higher-fidelity state file than the auto-checkpoint by semantic synthesis from transcript content.
    - Transcript path: marker `transcript` field if present. If absent, no recovery possible; report "compaction occurred but no transcript path in marker" and suggest running `/duck-tape` to checkpoint fresh.
-   - Run `hooks/extract-raw.sh <transcript_path>` (bash) or `hooks/extract-raw.ps1 <transcript_path>` (PowerShell on Windows) to get raw material. Script outputs structured markdown: user prompts, tool calls, last 10 assistant messages, failed tool results, session metadata.
+   - Run `hooks/extract-raw.sh <transcript_path>` (bash) or `hooks/extract-raw.ps1 <transcript_path>` (PowerShell on Windows) to get raw material. Script outputs structured markdown: user prompts, tool calls, last 10 assistant messages, potential decisions (pattern-filtered, deduped), failed tool results, session metadata.
    - Read raw material output.
    - Synthesize Agent State file from raw material. Extract decisions semantically (not pattern-matched like Angle A): "we're going with option 2 because X" is a decision even without the keyword. Extract position (current/done/remaining) from assistant messages and tool calls. Extract established facts from tool results and user confirmations.
    - Write state file as `.duck-tape/<YYYY-MM-DD-HHMM>-recovered.state.md`.
@@ -184,7 +184,7 @@ If no state file exists and no transcript path in marker, report "compaction occ
 4. Ask user if they want the skill to write the file or show the snippet for manual placement.
 5. If write: confirm target path with user (approval required, file creation). Write file. Report success.
 6. If show: print snippet and placement instructions. Point to `references/HOOKS_GUIDE.md` for troubleshooting.
-7. Confirm `hooks/extract-state.sh` (unix) or `hooks/extract-state.ps1` (Windows) is in project. For opencode, no shell script needed (plugin fetches via SDK).
+7. Confirm `hooks/extract-state.sh` (unix) or `hooks/extract-state.ps1` (Windows) is in project. For opencode, no shell script needed (plugin fetches via SDK). Also confirm `hooks/extract-raw.sh`/`.ps1` exists for LLM-assisted recovery on `/duck-tape resume`.
 
 **Preflight:**
 - Target file: harness-specific config path (max 1 file)

@@ -16,7 +16,7 @@ Not every session deserves permanent context. State files capture the full pictu
 - Short-term session state
 - Agent State schema with position tracking, decisions, facts
 - Auto-ignored (`.gitignore` created automatically)
-- Rotated after 10 files (oldest dropped)
+- Rotated after 10 files (auto dropped first, then recovered, then manual)
 - Staging input for CONTEXT.md merges
 
 ## Commands
@@ -75,7 +75,7 @@ Five scenarios covering the session lifecycle.
 
 1. Checkpoint after completing a logical unit of work: feature done, decision made, bug fixed.
 2. Run `/duck-tape` or say "checkpoint session". Skill writes state file with position, decisions, facts.
-3. Continue working. Repeat as needed. State files rotate (max 10, oldest dropped).
+3. Continue working. Repeat as needed. State files rotate (max 10, auto dropped first, then recovered, then manual).
 4. No need to checkpoint mid-thought. State files capture where you are, not every keystroke.
 
 ### After compaction
@@ -213,7 +213,7 @@ Redaction applies to both tiers (CONTEXT.md and state files).
 
 **CONTEXT.md lacks schema sections.** Run `/duck-tape migrate` to classify existing content and append missing headers.
 
-**State files accumulating.** Check rotation cap (max 10). Oldest files drop automatically. If you need to recover a dropped state, check CONTEXT.md Session-Log for the dropped ID.
+**State files accumulating.** Check rotation cap (max 10). Eviction precedence: auto dropped first (oldest auto), then recovered, then manual. If you need to recover a dropped state, check CONTEXT.md Session-Log for the dropped ID.
 
 **Merge produced unexpected entries.** Check the changelog. Each addition, supersession, and drop is logged with a reason. Use `/duck-tape prune` to clean Notes if needed.
 
