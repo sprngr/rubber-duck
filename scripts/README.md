@@ -104,6 +104,7 @@ Use Bash CLI for Linux/macOS and shell-based CI.
 | `--source <auto\|local\|web>` | value | Artifact source selection (`auto` default) |
 | `--raw-base <url>` | value | Raw GitHub base URL for web source |
 | `--dry-run` | switch | Print planned actions without writing |
+| `--extras` | switch | Also install extras skills (duck-adapt, duck-grill, duck-tape) |
 | `-h`, `--help` | switch | Show help |
 
 ## PowerShell CLI (`scripts/rubber-duck.ps1`)
@@ -127,6 +128,7 @@ Use PowerShell CLI for Windows-native environments.
 | `-SkillsSource <url-or-path>` | value | Override skills package source |
 | `-Source auto\|local\|web` | value | Artifact source selection (`auto` default) |
 | `-RawBase <url>` | value | Raw GitHub base URL for web source |
+| `-Extras` | switch | Also install extras skills (duck-adapt, duck-grill, duck-tape) |
 
 ## Notes
 
@@ -189,3 +191,11 @@ Hook runs:
 - Use project scope only when explicitly requested:
   - Bash: `--project-skills`
   - PowerShell: `-ProjectSkills`
+
+### Skills Sets
+
+Default skills (11) match `.claude-plugin/plugin.json`: quack, duck-debt, duck-debug, duck-design, duck-patch, duck-refactor, duck-review, duck-risk, duck-simplify, duck-teach, duck-triage.
+
+Extras skills (3): duck-adapt, duck-grill, duck-tape. Installed only with `--extras` (bash) / `-Extras` (PowerShell). Optional by default.
+
+`uninstall` removes all 14 skills (default + extras) regardless of flag so no orphan skills remain. `status` reports extras separately as optional (present/missing count).

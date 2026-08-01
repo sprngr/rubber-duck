@@ -12,6 +12,7 @@ param(
   [switch]$SkipSkills,
   [switch]$SkipAgentsMd,
   [switch]$ProjectSkills,
+  [switch]$Extras,
   [string]$SkillsSource = "https://github.com/sprngr/rubber-duck",
   [ValidateSet("auto","local","web")]
   [string]$Source = "auto",
@@ -81,12 +82,10 @@ $AgentFiles = @(
   "duckling.md"
 )
 
-$RequiredSkills = @(
-  "duck-adapt",
+$DefaultSkills = @(
   "duck-debt",
   "duck-debug",
   "duck-design",
-  "duck-grill",
   "duck-patch",
   "duck-refactor",
   "duck-review",
@@ -95,6 +94,13 @@ $RequiredSkills = @(
   "duck-teach",
   "duck-triage",
   "quack"
+)
+
+# Optional extras: installed only with -Extras.
+$ExtrasSkills = @(
+  "duck-adapt",
+  "duck-grill",
+  "duck-tape"
 )
 
 function Log($msg) { Write-Host $msg }
@@ -370,8 +376,10 @@ function Skills-Install {
     Warn "npx not found; skipping skills install"
     return
   }
+  $installList = @() + $DefaultSkills
+  if ($Extras) { $installList += $ExtrasSkills }
   $scope = if ($ProjectSkills) { @() } else { @("-g") }
-  $args = @("--yes", $SkillsCli, "add", $SkillsSource, "--skill") + $RequiredSkills + $scope
+  $args = @("--yes", $SkillsCli, "add", $SkillsSource, "--skill") + $installList + $scope
   & npx @args
 }
 
@@ -381,9 +389,10 @@ function Skills-Uninstall {
     Warn "npx not found; skipping skills uninstall"
     return
   }
+  $allSkills = @() + $DefaultSkills + $ExtrasSkills
   $scope = if ($ProjectSkills) { @() } else { @("-g") }
   try {
-    $args = @("--yes", $SkillsCli, "remove", $SkillsSource, "--skill") + $RequiredSkills + $scope
+    $args = @("--yes", $SkillsCli, "remove", $SkillsSource, "--skill") + $allSkills + $scope
     & npx @args
   } catch {
     Warn "skills remove failed; remove package manually if needed"
@@ -403,7 +412,7 @@ function Skills-Status {
     $args = @("--yes", $SkillsCli, "list") + $scope
     $list = & npx @args | Out-String
     $allPresent = $true
-    foreach ($skill in $RequiredSkills) {
+    foreach ($skill in $DefaultSkills) {
       if ($list.IndexOf($skill, [System.StringComparison]::Ordinal) -lt 0) {
         $allPresent = $false
         break
@@ -414,6 +423,14 @@ function Skills-Status {
     } else {
       Log "skills: not detected ($SkillsSource)"
     }
+    $extrasPresent = @()
+    foreach ($skill in $ExtrasSkills) {
+      if ($list.IndexOf($skill, [System.StringComparison]::Ordinal) -ge 0) {
+        $extrasPresent += $skill
+      }
+    }
+    $extrasSuffix = if ($extrasPresent.Count -gt 0) { " ([$($extrasPresent -join ', ')])" } else { "" }
+    Log "skills extras (optional): $($extrasPresent.Count)/$($ExtrasSkills.Count) present$extrasSuffix"
   } catch {
     Log "skills: unable to query (npx skills list failed)"
   } finally {

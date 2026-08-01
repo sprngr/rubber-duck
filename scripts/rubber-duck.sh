@@ -16,6 +16,7 @@ SOURCE_MODE="auto"  # auto|local|web
 BRANCH="main"  # default branch
 RAW_BASE="https://raw.githubusercontent.com/sprngr/rubber-duck/main"
 DRY_RUN=0
+EXTRAS=0
 
 SCRIPT_PATH="${0:-}"
 if [[ -z "${SCRIPT_PATH}" || "${SCRIPT_PATH}" == "-" || "${SCRIPT_PATH}" == "bash" || "${SCRIPT_PATH}" == "sh" ]]; then
@@ -54,12 +55,11 @@ AGENT_FILES=(
   "duckling.md"
 )
 
-REQUIRED_SKILLS=(
-  "duck-adapt"
+# Default skills: the set declared in .claude-plugin/plugin.json.
+DEFAULT_SKILLS=(
   "duck-debt"
   "duck-debug"
   "duck-design"
-  "duck-grill"
   "duck-patch"
   "duck-refactor"
   "duck-review"
@@ -68,6 +68,13 @@ REQUIRED_SKILLS=(
   "duck-teach"
   "duck-triage"
   "quack"
+)
+
+# Optional extras: installed only with --extras.
+EXTRAS_SKILLS=(
+  "duck-adapt"
+  "duck-grill"
+  "duck-tape"
 )
 
 usage() {
@@ -91,10 +98,12 @@ Options:
   --source <auto|local|web>         Artifact source (default: auto)
   --raw-base <url>                  Raw GitHub base for web source
   --dry-run                         Print planned actions only
+  --extras                          Also install extras skills (duck-adapt, duck-grill, duck-tape)
   -h, --help                        Show help
 
 Examples:
   scripts/rubber-duck.sh install --opencode
+  scripts/rubber-duck.sh install --opencode --extras
   scripts/rubber-duck.sh install --opencode-project
   scripts/rubber-duck.sh install --copilot
   scripts/rubber-duck.sh install --copilot-project
@@ -209,6 +218,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --dry-run)
       DRY_RUN=1
+      shift
+      ;;
+    --extras)
+      EXTRAS=1
       shift
       ;;
     -h|--help)
@@ -536,31 +549,34 @@ uninstall_agents() {
 skills_install() {
   (( SKIP_SKILLS == 1 )) && return 0
   local scope=""
+  local -a install_list=("${DEFAULT_SKILLS[@]}")
   (( PROJECT_SKILLS == 0 )) && scope="-g"
+  (( EXTRAS == 1 )) && install_list+=("${EXTRAS_SKILLS[@]}")
   if (( DRY_RUN == 1 )); then
-    log "[dry-run] npx --yes ${SKILLS_CLI} add ${SKILLS_SOURCE} --skill ${REQUIRED_SKILLS[*]} ${scope}"
+    log "[dry-run] npx --yes ${SKILLS_CLI} add ${SKILLS_SOURCE} --skill ${install_list[*]} ${scope}"
     return
   fi
   if ! command -v npx >/dev/null 2>&1; then
     warn "npx not found; skipping skills install"
     return
   fi
-  npx --yes "${SKILLS_CLI}" add "${SKILLS_SOURCE}" --skill ${REQUIRED_SKILLS[*]} ${scope}
+  npx --yes "${SKILLS_CLI}" add "${SKILLS_SOURCE}" --skill ${install_list[*]} ${scope}
 }
 
 skills_uninstall() {
   (( SKIP_SKILLS == 1 )) && return 0
   local scope=""
+  local -a all_skills=("${DEFAULT_SKILLS[@]}" "${EXTRAS_SKILLS[@]}")
   (( PROJECT_SKILLS == 0 )) && scope="-g"
   if (( DRY_RUN == 1 )); then
-    log "[dry-run] npx --yes ${SKILLS_CLI} remove ${SKILLS_SOURCE} --skill ${REQUIRED_SKILLS[*]} ${scope}"
+    log "[dry-run] npx --yes ${SKILLS_CLI} remove ${SKILLS_SOURCE} --skill ${all_skills[*]} ${scope}"
     return
   fi
   if ! command -v npx >/dev/null 2>&1; then
     warn "npx not found; skipping skills uninstall"
     return
   fi
-  if ! npx --yes "${SKILLS_CLI}" remove "${SKILLS_SOURCE}" --skill ${REQUIRED_SKILLS[*]}  ${scope}; then
+  if ! npx --yes "${SKILLS_CLI}" remove "${SKILLS_SOURCE}" --skill ${all_skills[*]} ${scope}; then
     warn "skills remove failed; remove package manually if needed"
   fi
 }
@@ -572,13 +588,13 @@ skills_status() {
     return
   fi
   local list scope=""
-  local skill
-  local missing=0
+  local skill missing=0
+  local -a extras_present=()
   (( PROJECT_SKILLS == 0 )) && scope="-g"
   SKILLS_LIST_CMD=(npx --yes "${SKILLS_CLI}" list ${scope})
 
   if list="$(NO_COLOR=1 "${SKILLS_LIST_CMD[@]}" </dev/null 2>/dev/null)"; then
-    for skill in "${REQUIRED_SKILLS[@]}"; do
+    for skill in "${DEFAULT_SKILLS[@]}"; do
       if ! printf '%s' "${list}" | grep -Fq -- "${skill}"; then
         missing=1
         break
@@ -589,6 +605,12 @@ skills_status() {
     else
       log "skills: not detected (${SKILLS_SOURCE})"
     fi
+    for skill in "${EXTRAS_SKILLS[@]}"; do
+      if printf '%s' "${list}" | grep -Fq -- "${skill}"; then
+        extras_present+=("${skill}")
+      fi
+    done
+    log "skills extras (optional): ${#extras_present[@]}/${#EXTRAS_SKILLS[@]} present${extras_present[*]:+ ([${extras_present[*]}])}"
   else
     log "skills: unable to query (npx skills list failed)"
   fi
