@@ -282,23 +282,27 @@ function Render-State {
   Set-Content -Path $stateFile -Value $sb.ToString() -Encoding UTF8 -NoNewline
 
   # Rotation cap: 10 files. Eviction precedence: auto, recovered, manual.
+  # Exclude the just-written state file so the fresh checkpoint survives.
   $all = Get-ChildItem -Path $DuckTapeDir -Filter "*.state.md" -File -ErrorAction SilentlyContinue
   $count = if ($all) { @($all).Count } else { 0 }
   while ($count -gt 10) {
-    $autoFiles = Get-ChildItem -Path $DuckTapeDir -Filter "*-auto.state.md" -File -ErrorAction SilentlyContinue
+    $autoFiles = Get-ChildItem -Path $DuckTapeDir -Filter "*-auto.state.md" -File -ErrorAction SilentlyContinue |
+      Where-Object { $_.FullName -ne $stateFile }
     if ($autoFiles) {
       $oldest = $autoFiles | Sort-Object LastWriteTime | Select-Object -First 1
       Remove-Item -Path $oldest.FullName -Force
     }
     else {
-      $recoveredFiles = Get-ChildItem -Path $DuckTapeDir -Filter "*-recovered.state.md" -File -ErrorAction SilentlyContinue
+      $recoveredFiles = Get-ChildItem -Path $DuckTapeDir -Filter "*-recovered.state.md" -File -ErrorAction SilentlyContinue |
+        Where-Object { $_.FullName -ne $stateFile }
       if ($recoveredFiles) {
         $oldest = $recoveredFiles | Sort-Object LastWriteTime | Select-Object -First 1
         Remove-Item -Path $oldest.FullName -Force
       }
       else {
         # Re-query: $all captured at loop entry may include already-deleted files.
-        $allCurrent = Get-ChildItem -Path $DuckTapeDir -Filter "*.state.md" -File -ErrorAction SilentlyContinue
+        $allCurrent = Get-ChildItem -Path $DuckTapeDir -Filter "*.state.md" -File -ErrorAction SilentlyContinue |
+          Where-Object { $_.FullName -ne $stateFile }
         $oldest = $allCurrent | Sort-Object LastWriteTime | Select-Object -First 1
         Remove-Item -Path $oldest.FullName -Force
       }

@@ -219,26 +219,27 @@ render_state() {
   } > "$state_file"
 
   # Rotation cap: 10 files. Eviction precedence: auto, recovered, manual.
+  # Exclude the just-written state file so the fresh checkpoint survives.
   shopt -s nullglob
   local all=( "$duck_tape_dir"/*.state.md )
   shopt -u nullglob
   local count=${#all[@]}
   while (( count > 10 )); do
-    # Oldest auto file first.
+    # Oldest auto file first (skip just-written file).
     local oldest_auto
-    oldest_auto="$(ls -t "$duck_tape_dir"/*-auto.state.md 2>/dev/null | tail -1 || true)"
+    oldest_auto="$(ls -t "$duck_tape_dir"/*-auto.state.md 2>/dev/null | grep -vxF "$state_file" | tail -1 || true)"
     if [[ -n "$oldest_auto" ]]; then
       rm -f "$oldest_auto"
     else
-      # No auto files; oldest recovered next.
+      # No auto files; oldest recovered next (skip just-written file).
       local oldest_recovered
-      oldest_recovered="$(ls -t "$duck_tape_dir"/*-recovered.state.md 2>/dev/null | tail -1 || true)"
+      oldest_recovered="$(ls -t "$duck_tape_dir"/*-recovered.state.md 2>/dev/null | grep -vxF "$state_file" | tail -1 || true)"
       if [[ -n "$oldest_recovered" ]]; then
         rm -f "$oldest_recovered"
       else
-        # No auto or recovered; drop oldest manual.
+        # No auto or recovered; drop oldest manual (skip just-written file).
         local oldest
-        oldest="$(ls -t "$duck_tape_dir"/*.state.md 2>/dev/null | tail -1 || true)"
+        oldest="$(ls -t "$duck_tape_dir"/*.state.md 2>/dev/null | grep -vxF "$state_file" | tail -1 || true)"
         [[ -n "$oldest" ]] && rm -f "$oldest"
       fi
     fi

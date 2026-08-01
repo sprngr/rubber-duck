@@ -126,9 +126,11 @@ async function renderState(duckTapeDir, transcriptRef, cwd, stamp, timestamp, fi
   await fs.writeFile(stateFile, sb)
 
   // Rotation cap: 10 files. Eviction precedence: auto, recovered, manual.
+  // Exclude the just-written state file so the fresh checkpoint survives.
   const all = (await fs.readdir(duckTapeDir))
     .filter((f) => f.endsWith(".state.md"))
     .map((f) => ({ name: f, path: path.join(duckTapeDir, f) }))
+    .filter((s) => s.path !== stateFile)
   if (all.length > 0) {
     const statted = await Promise.all(
       all.map(async (s) => ({ ...s, mtime: (await fs.stat(s.path)).mtimeMs }))

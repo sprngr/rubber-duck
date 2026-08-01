@@ -108,9 +108,10 @@ async function runTest() {
     }
   }
 
-  // Verify rotation: three-tier eviction (auto before manual).
-  // Setup: 4 manual (oldest) + 6 auto (medium) + hook creates 1 new auto = 11 total.
-  // Eviction should drop oldest auto, not oldest manual.
+  // Verify rotation: three-tier eviction (auto before manual), just-written file excluded.
+  // Setup: 4 manual (oldest) + 7 auto (medium) + hook creates 1 new auto = 12 total.
+  // New auto is excluded from eviction candidates (11 candidates > 10 cap).
+  // Eviction should drop oldest auto, not oldest manual, not the new file.
   console.log("\n=== opencode.plugin.js rotation ===")
   const rotDir = await fs.mkdtemp(path.join("/tmp", "duck-test-rot-"))
   const rotDuckTape = path.join(rotDir, ".duck-tape")
@@ -126,24 +127,26 @@ async function runTest() {
     await fs.utimes(path.join(rotDuckTape, fname), baseTime + i * 3600, baseTime + i * 3600)
   }
 
-  // 6 auto state files (medium: hours 10-15).
-  for (let i = 0; i < 6; i++) {
+  // 7 auto state files (medium: hours 10-16).
+  for (let i = 0; i < 7; i++) {
     const fname = `2026-07-0${i + 1}-100${i}-auto.state.md`
     await fs.writeFile(path.join(rotDuckTape, fname), "# auto\n")
     const t = baseTime + (10 + i) * 3600
     await fs.utimes(path.join(rotDuckTape, fname), t, t)
   }
 
-  // Run the hook (creates 1 new auto state file, triggers rotation to 10).
+  // Run the hook (creates 1 new auto state file, triggers rotation).
   const rotHooks = await DuckTapeCompact({ client: mockClient, directory: rotDir })
   await rotHooks["experimental.session.compacting"]({ sessionID: "rot-test" })
 
   const rotEntries = await fs.readdir(rotDuckTape)
   const rotStates = rotEntries.filter((f) => f.endsWith(".state.md"))
-  if (rotStates.length === 10) {
-    console.log("  PASS: rotation caps at 10 files")
+
+  // 12 total - 1 evicted = 11 retained (new auto excluded from candidates).
+  if (rotStates.length === 11) {
+    console.log("  PASS: rotation evicts 1 of 12, retains 11 (new file excluded)")
   } else {
-    console.error(`  FAIL: expected 10 state files, got ${rotStates.length}`)
+    console.error(`  FAIL: expected 11 state files, got ${rotStates.length}`)
     failures++
   }
 
@@ -158,10 +161,10 @@ async function runTest() {
     failures++
   }
 
-  if (autoRemaining.length === 6) {
-    console.log("  PASS: oldest auto evicted, 6 auto remain (was 7 including new)")
+  if (autoRemaining.length === 7) {
+    console.log("  PASS: 7 auto files remain (was 8 including new, oldest evicted)")
   } else {
-    console.error(`  FAIL: expected 6 auto files remaining, got ${autoRemaining.length}`)
+    console.error(`  FAIL: expected 7 auto files remaining, got ${autoRemaining.length}`)
     failures++
   }
 
@@ -171,6 +174,15 @@ async function runTest() {
     console.log("  PASS: oldest auto evicted (hour 10 gone)")
   } else {
     console.error("  FAIL: oldest auto file (hour 10) should have been evicted")
+    failures++
+  }
+
+  // Verify the just-written auto file survived (it's newest, excluded from eviction).
+  const newAutoSurvives = autoRemaining.some((f) => f.includes("-auto.state.md") && !f.startsWith("2026-07-"))
+  if (newAutoSurvives) {
+    console.log("  PASS: just-written auto file retained (excluded from eviction)")
+  } else {
+    console.error("  FAIL: just-written auto file was evicted (should be excluded)")
     failures++
   }
 
