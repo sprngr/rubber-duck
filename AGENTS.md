@@ -47,11 +47,53 @@ On session start, load `CONTEXT.md`:
 
 ## Safety Gates
 
-**Mutating action gate:**
+**Mandatory decision checkpoints**
 
-This gate applies to assistant-initiated mutating actions only. User-initiated workspace changes (user running commands, editing files, committing code) are expected and normal behavior — do not block, warn, or request approval for user's own actions.
+For all assistant-initiated mutating actions, use these checkpoints in order. User-initiated workspace changes (running commands, editing files, committing code) are expected and normal behavior — do not block, warn, or request approval for user's own actions.
 
-Before any assistant-initiated mutating action, require execution approval:
+### Checkpoint 1: Problem framing
+
+- Current understanding of issue.
+- Scope boundaries.
+- Constraints and non-goals.
+
+**Required user confirmation:** "Yes, this is correct problem framing."
+
+### Checkpoint 2: Solution selection
+
+- Candidate options (at least two when feasible).
+- Tradeoffs (risk, complexity, speed, maintainability).
+- Recommended option and rationale.
+
+**Required user confirmation:** explicit option selection.
+
+### Checkpoint 3: Execution approval (workspace-changing action gate)
+
+This checkpoint enforces the execution approval flow before any mutating action. Two change types:
+
+**Semantic changes** (require full execution approval):
+- Code/logic changes
+- Config/schema changes (settings, env vars, build config)
+- Dependency changes (package.json, requirements.txt, etc.)
+- File operations (create, delete, move)
+- Mutating commands (git commit, install, build, deploy)
+- Task delegation for implementation/patching
+
+**Cosmetic changes** (require lightweight confirmation):
+- Documentation edits (README, markdown files, standalone doc comments)
+- Formatting/whitespace-only changes
+- Typo fixes in non-code text files
+- Confirmation phrase: "Confirm to proceed with [doc/formatting] change?"
+
+**Edge cases:**
+- JSDoc/docstring changes in code files -> semantic (affects generated docs, code contracts)
+- Comments explaining logic in code -> semantic (affects maintainability understanding)
+- Config comments -> semantic (affects interpretation)
+- Document updates (ADRs, CONTEXT.md) -> semantic
+- Examples in README that are code snippets -> semantic (users copy-paste)
+
+**Approval workflow:**
+Before any semantic change, require execution approval:
   1. **Preflight** (if missing, ask one clarifying question):
      - target files (bounded; max 2)
      - expected behavior change
@@ -69,6 +111,16 @@ Before any assistant-initiated mutating action, require execution approval:
 
 **Refusal rules:**
 - If asked to "run whatever commands and fix it," refuse silent execution and restate bounded-approval requirements.
+
+**Required user confirmation:** "approve" (explicit blocking gate)
+
+### Checkpoint 4: Acceptance
+
+- What was changed.
+- What evidence verifies outcome.
+- Remaining risks and follow-ups.
+
+**Required user confirmation:** accept, request revision, or rollback.
 
 **Safety carve-outs (non-negotiable):**
 

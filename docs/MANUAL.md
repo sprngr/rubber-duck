@@ -14,7 +14,7 @@ For full architecture and policy details, use the canonical docs linked below.
 - Skill assembly contract: [docs/architecture/06-skill-assembly-contract.md](./architecture/06-skill-assembly-contract.md)
 - Skill asset convention: [docs/architecture/07-skill-asset-convention.md](./architecture/07-skill-asset-convention.md)
 - Validation prompts: [docs/validation/README.md](./validation/README.md)
-- Validation runbook template: [docs/validation/RUNBOOK.md](./validation/RUNBOOK.md)
+- Validation runbook template: [docs/validation/README.md](./validation/README.md) (Runbook section)
 - Validation test suite: [docs/validation/test-prompts.json](./validation/test-prompts.json) (21 tests)
 - Test runner: [scripts/run-validation-tests.sh](../scripts/run-validation-tests.sh)
 - Global operating policy: [AGENTS.md](../AGENTS.md)
@@ -23,33 +23,37 @@ For full architecture and policy details, use the canonical docs linked below.
 
 ### Governor
 
-- [rubber-duck](../.agents/agents/rubber-duck)
+- [rubber-duck](../src/agents/rubber-duck)
 
-### Explicit router skill
-
-- [quack](../.agents/skills/quack/SKILL.md)
-
-### Duckling subagent
-
-- [duckling](../.agents/agents/duckling)
-
-### Skills (duck-* suite, quack-routed)
-
-- [duck-debug](../.agents/skills/duck-debug/SKILL.md)
-- [duck-debt](../.agents/skills/duck-debt/SKILL.md)
-- [duck-design](../.agents/skills/duck-design/SKILL.md)
-- [duck-patch](../.agents/skills/duck-patch/SKILL.md)
-- [duck-refactor](../.agents/skills/duck-refactor/SKILL.md)
-- [duck-review](../.agents/skills/duck-review/SKILL.md)
-- [duck-risk](../.agents/skills/duck-risk/SKILL.md)
-- [duck-simplify](../.agents/skills/duck-simplify/SKILL.md)
-- [duck-teach](../.agents/skills/duck-teach/SKILL.md)
-- [duck-triage](../.agents/skills/duck-triage/SKILL.md)
-
-### Skills (governor-invoked, main session)
-
-- [duck-adapt](../.agents/skills/duck-adapt/SKILL.md)
-- [duck-grill](../.agents/skills/duck-grill/SKILL.md)
+ ### Explicit router skill [default]
+ 
+ - [quack](../src/skills/quack/SKILL.md) — alias-first intent resolver
+ 
+ ### Duckling subagent
+ 
+ - [duckling](../src/agents/duckling)
+ 
+ ### Skills (quack-routed, inline-default) [default]
+ 
+ - [duck-debug](../src/skills/duck-debug/SKILL.md) — trace + root-cause
+ - [duck-debt](../src/skills/duck-debt/SKILL.md) — deferred-work ledger
+ - [duck-design](../src/skills/duck-design/SKILL.md) — option/tradeoff
+ - [duck-teach](../src/skills/duck-teach/SKILL.md) — structured teaching
+ 
+ ### Skills (quack-routed, delegated-default) [default]
+ 
+ - [duck-patch](../src/skills/duck-patch/SKILL.md) — bounded fix (max 2 files)
+ - [duck-refactor](../src/skills/duck-refactor/SKILL.md) — restructuring (max 5 files)
+ - [duck-review](../src/skills/duck-review/SKILL.md) — risk-first review
+ - [duck-risk](../src/skills/duck-risk/SKILL.md) — failure modes
+ - [duck-simplify](../src/skills/duck-simplify/SKILL.md) — complexity reduction
+ - [duck-triage](../src/skills/duck-triage/SKILL.md) — test coverage + severity
+ 
+ ### Skills (governor-invoked, main session) [extras: --extras flag]
+ 
+ - [duck-adapt](../src/skills/duck-adapt/SKILL.md) — external skill adaptation + audit
+ - [duck-grill](../src/skills/duck-grill/SKILL.md) — grilling interview
+ - [duck-tape](../src/skills/duck-tape/SKILL.md) — two-tier session memory
 
 
 ## Routing cheat sheet
@@ -74,9 +78,13 @@ Use `quack <intent>` for explicit routing with keyword-based precedence (risk/co
 
 ## Operator playbooks (copy/paste)
 
+See also: [best practices](./best-practices.md) for routing, scope, and approval guidance.
+
 ### Single-skill playbooks
 
 #### Review
+
+**When to use:** diff or code ready for correctness/risk review. Output is paste-ready comments.
 
 ```text
 Review this diff with duck-review. Prioritize security/correctness first.
@@ -85,12 +93,16 @@ If duplication appears, include duck-simplify dry mode. If tests are missing, in
 
 #### Debug
 
+**When to use:** issue reported but root cause unknown. Output is evidence map + questions.
+
 ```text
 Debug this issue. Start with duck-debug trace mode evidence map (defs/refs/callers/tests),
 then run duck-debug root-cause questioning. Suggest patch target only after caller map.
 ```
 
 #### Design
+
+**When to use:** architecture or migration decision pending. Output is option matrix + tradeoffs.
 
 ```text
 Evaluate this design with duck-design. Challenge constraints and tradeoffs.
@@ -99,6 +111,8 @@ Include duck-risk when rollback/compatibility risk is central.
 
 #### Patch
 
+**When to use:** root cause known, fix scoped to ≤2 files. Output is bounded diff after approval.
+
 ```text
 Apply this bounded fix with duck-patch. Confirm scope ≤2 files, expected behavior change clear.
 Execution approval required (preflight -> approve -> execute -> verify).
@@ -106,11 +120,15 @@ Execution approval required (preflight -> approve -> execute -> verify).
 
 #### Refactor
 
+**When to use:** restructuring across ≤5 files (extract/rename/move/inline). Output is diff after approval.
+
 ```text
 Refactor with duck-refactor. Verify references tracked, max 5 files, execution approval required.
 ```
 
 #### Risk
+
+**When to use:** rollback/compat/failure-mode stress test before shipping. Output is risk list.
 
 ```text
 Stress-test with duck-risk. Focus on rollback safety, compatibility, and failure modes.
@@ -118,11 +136,15 @@ Stress-test with duck-risk. Focus on rollback safety, compatibility, and failure
 
 #### Simplify
 
+**When to use:** complexity or duplication signals present. Output is extraction/simplification suggestions.
+
 ```text
 Simplify with duck-simplify. Start with dry mode (read-only), then wet mode for extract suggestions.
 ```
 
 #### Triage
+
+**When to use:** bug severity or test coverage gaps need assessment. Output is severity + test scenarios.
 
 ```text
 Triage this bug and test coverage. Classify severity, list missing tests,
@@ -130,6 +152,8 @@ and propose one minimum runnable check for non-trivial logic changes.
 ```
 
 #### Grill (assumption/risk interrogation)
+
+**When to use:** plan or design needs adversarial pressure test. Output is assumption ledger + decisions.
 
 ```text
 Grill this plan before implementation. Challenge assumptions, validate against docs/code,
@@ -175,6 +199,35 @@ quack explain this authentication flow, then help debug the token expiry issue
 
 - `duck-teach`: explain code/concept/pattern first
 - `duck-debug`: if issue persists after understanding, trace execution
+
+### Walked-through end-to-end examples
+
+#### Example 1: Debug -> Patch (root-cause to bounded fix)
+
+Scenario: endpoint returns 500 when userId is missing.
+
+1. Start with `duck-debug` trace mode to map evidence: locate the endpoint handler, find callers, identify input validation path.
+2. `duck-debug` root-cause mode asks: what should happen when userId is missing? What actually happens? Where does the null dereference occur?
+3. Once root cause is clear (e.g., missing null guard in handler), request `duck-patch` with scope: 1 file, expected behavior: return 400 with error message instead of 500, verification: curl endpoint without userId.
+4. Rubber Duck presents diff. Reply "approve" to execute. Verify with curl.
+
+#### Example 2: Review -> Risk -> Simplify (comprehensive review)
+
+Scenario: refactor touched 3 files, validation logic extracted to shared helper.
+
+1. Start with `duck-review` for correctness: check data integrity in the shared helper, confirm caller signatures match.
+2. Add `duck-risk` for rollback safety: if the shared helper has a bug, all 3 callers break. Assess rollback path (revert to per-file validation).
+3. Add `duck-simplify` dry mode: check if the shared helper introduces unnecessary abstraction or if further consolidation is possible.
+4. Merge findings by highest-risk priority. Address security/correctness first, complexity second.
+
+#### Example 3: Design -> Triage (architecture to testing)
+
+Scenario: migrating from monolith cache to Redis-backed cache.
+
+1. Start with `duck-design` to evaluate options: direct Redis client vs caching library vs drop-in replacement. Tradeoffs: latency, dependency surface, operational burden.
+2. Add `duck-risk` for failure modes: Redis connection failure, cache stampede, serialization mismatch.
+3. Add `duck-triage` for test scenarios: integration test for Redis connection, unit test for serialization, load test for stampede behavior.
+4. Decision crystallizes with explicit tradeoffs documented. Test plan covers identified risks.
 
 ## Common failure modes
 

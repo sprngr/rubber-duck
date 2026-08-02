@@ -42,7 +42,30 @@ For all mutating actions, use these checkpoints in order.
 
 ### Checkpoint 3: Execution approval (workspace-changing action gate)
 
-This checkpoint enforces the execution approval flow before any mutating action:
+This checkpoint enforces the execution approval flow before any mutating action. Two change types:
+
+**Semantic changes** (require full execution approval):
+- Code/logic changes
+- Config/schema changes (settings, env vars, build config)
+- Dependency changes (package.json, requirements.txt, etc.)
+- File operations (create, delete, move)
+- Mutating commands (git commit, install, build, deploy)
+- Task delegation for implementation/patching
+
+**Cosmetic changes** (require lightweight confirmation):
+- Documentation edits (README, markdown files, standalone doc comments)
+- Formatting/whitespace-only changes
+- Typo fixes in non-code text files
+- Confirmation phrase: "Confirm to proceed with [doc/formatting] change?"
+
+**Edge cases:**
+- JSDoc/docstring changes in code files -> semantic (affects generated docs, code contracts)
+- Comments explaining logic in code -> semantic (affects maintainability understanding)
+- Config comments -> semantic (affects interpretation)
+- Document updates (ADRs, CONTEXT.md) -> semantic
+- Examples in README that are code snippets -> semantic (users copy-paste)
+
+Approval workflow:
 
 1. **Preflight** (if missing, ask one clarifying question):
      - Target files (bounded; max 2)

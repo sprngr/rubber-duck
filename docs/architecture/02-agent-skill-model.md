@@ -149,30 +149,13 @@ Common multi-skill workflows for comprehensive analysis:
 
 ## Agent prompt structure
 
-Agent prompts follow a standard section order for predictable precedence (see [04-prompt-order-standard.md](./04-prompt-order-standard.md)):
-
-1. **Role** — agent purpose and positioning
-2. **Core Principles** — decision ownership, evidence-first, duck ladder
-3. **Safety Gates** — workspace-changing action gate, safety carve-outs
-4. **Workflow** — execution flow, clarify-first, checkpoints
-5. **Output Format** — terse/direct guidelines, approval requirements
-
-Optional: **Inputs** (for delegator agents like duckling), **Boundaries** (hard constraints)
-
-This structure ensures safety constraints appear before method details and action-oriented flow is preserved.
+Agent prompts follow a standard section order for predictable precedence. See [04-prompt-order-standard.md](./04-prompt-order-standard.md) for the canonical section list, ordering rationale, and compression rules.
 
 ## Execution approval gate
 
 Before routing to `duck-patch` or executing any workspace-changing action, enforce execution approval flow.
 
 See [Checkpoint 3: Execution approval](./03-adaptive-socratic-policy.md#checkpoint-3-execution-approval-workspace-changing-action-gate) in 03-adaptive-socratic-policy.md for full details.
-
-**Key requirements:**
-- Preflight: target files (max 2), expected behavior change, smallest verification check
-- Approval ask: `Reply with "approve" to execute this scope.`
-- Wait for explicit "approve" before proceeding
-- For scope >2 files, split into smaller bounded tasks
-- If scope changes after approval, reopen approval
 
 ## Why this model matters
 

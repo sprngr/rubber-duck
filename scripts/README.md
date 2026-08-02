@@ -51,6 +51,7 @@ Notes:
 - Requires `jq` at build/check time.
 - Check mode validates guardrails drift before artifact freshness checks.
 - Agent source-of-truth is `src/agents/*`.
+- Model details (per-harness metadata, renderer boundary, adding a new harness): [docs/architecture/05-harness-agent-config.md](../docs/architecture/05-harness-agent-config.md).
 
 ## Scripts
 
@@ -73,6 +74,8 @@ Examples:
 bash scripts/assemble-skills.sh
 bash scripts/assemble-skills.sh --check
 ```
+
+Contract details (rules schema, drift controls, invariants): [docs/architecture/06-skill-assembly-contract.md](../docs/architecture/06-skill-assembly-contract.md).
 
 ## Commands
 

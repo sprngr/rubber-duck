@@ -1,32 +1,85 @@
 # Rubber Duck 🦆
 
-Socratic assistant operating system for developers who want **better quality decisions**, not blind automation.
+Socratic assistant operating system for developers who want better quality decisions, not blind automation.
 
-Rubber Duck helps you debug, review, design, and triage with structured questioning, evidence-first governance, and explicit safety guardrails.
+ ## Why
+ 
+ I built Rubber Duck after noticing something in my own agent-assisted workflow: I could ship code faster, but I didn't always feel like I fully understood the decisions behind it.
+ 
+ The same pattern kept showing up — the model would make implicit assumptions or design calls, and I'd only catch them later during review, cleanup, or when explaining the work to someone else. By then the rework cost was already paid.
+ 
+ Rubber Duck flips that tradeoff. Instead of optimizing for output speed, it optimizes for decision quality:
+ 
+ - **decision quality** over raw throughput
+ - **developer understanding** over delegation
+ - **safe, bounded change** over far-reaching edits
+ - **reduced rework** over fast-wrong
+ 
+ Core idea: keep humans in control and make reasoning explicit before execution.
+ 
+ ### Before / after
+ 
+ Same task. Two outcomes.
+ 
+ #### Without Rubber Duck
+ 
+ ```text
+ You: Fix the auth middleware bug.
+ 
+ Agent: [edits 3 files, adds a helper, refactors the token check, opens a PR]
+ Done. I refactored the auth middleware to use a shared validator and fixed the token expiry check.
+ ```
+ 
+ You review later. The refactor wasn't asked for. The helper duplicates one in `lib/`. The actual bug fix is buried.
+ 
+ #### With Rubber Duck
+ 
+ ```text
+ You: Fix the auth middleware bug.
+ 
+ Duck: Need one detail: bug is wrong-token rejection, wrong-expiry handling, or both?
+ You: expiry. Token with valid signature but expired past TTL gets through.
+ Duck: Target: src/auth/middleware.ts. Change: tighten expiry check. Verify: curl with expired token returns 401.
+ Reply with "approve" to execute this scope.
+ ```
+ 
+ One file. One change. You saw the scope before any edit happened.
+ 
+ ## Who this is for
+ 
+ - You want an assistant that helps you think more clearly, challenge assumptions, and keeps decision ownership with you — not the model.
+ - You catch regressions in review more often than you'd like, and want to move that catch upstream.
+ - You work in codebases where a wrong assumption costs more than a slow turn.
+ - You prefer explicit scope and approval over discovering what changed after the fact.
+ - You want a durable thinking partner, not a one-shot code generator.
+ 
+ ## Who this is not for
+ 
+ - You want fully autonomous, end-to-end execution with minimal checkpoints or human involvement.
+ - You measure assistant value primarily by tokens-per-second or LOC shipped per turn.
+ - You find clarifying questions friction and prefer the agent to just do the thing.
+ - You want a code generator, not a thinking partner.
+ 
+ ## What this is not
+ 
+ - **Not a code generator.** Rubber Duck patches and refactors, but always bounded, scoped, and approved. It will not produce a feature from a one-line prompt and ship it.
+ - **Not an autonomous agent.** No background loops, no self-approving task chains, no "spin up three subagents and let them figure it out." Every mutating action stops at the approval gate.
+ - **Not a linter or formatter.** It will not silently rewrite your codebase to its preferences. Suggestions surface as findings; you decide.
+ - **Not a token compressor.** Terse language is a side effect of clear thinking, not the goal. For pure token reduction, [Caveman](https://github.com/JuliusBrussee/caveman) does that better.
+ - **Not a YAGNI enforcer.** Rubber Duck applies a minimal-change ladder, but it will not refuse work that genuinely needs to exist. For pure "write less code" discipline, [Ponytail](https://github.com/DietrichGebert/ponytail) is more focused.
+ - **Not a replacement for your judgment.** It frames options, surfaces risks, asks sharp questions. You make the call.
+ 
+ ## Quick start
 
-## Quick start
+Two install paths. Full install options (flags, targets, uninstall) in [docs/MANUAL.md](./docs/MANUAL.md).
 
-### Quick skills-only install
+### Skills-only
 
 ```bash
 npx skills add https://github.com/sprngr/rubber-duck
 ```
 
-Use this when you want just the [skills](#skills) built with the [Rubber Duck philosophy](#philosophy-guardrails).
-
-For raw `npx skills` usage, see [vercel-labs/skills](https://github.com/vercel-labs/skills).
-
-### Full Rubber Duck agent system (Installer / Updater / Uninstaller)
-
-Use the installer scripts for managed agent + policy setup. Adds the full skill set (`quack` + `duck-*`) required by the governor and delegated `duckling` flow, plus optional AGENTS.md policy block installation. See [Skills](#skills) for the complete list and routing model.
-
-Full CLI/options are documented in: [scripts/README.md](./scripts/README.md) (canonical).
-
-**Skip flags:**
-- `--skip-skills` / `-SkipSkills` — skip skills package operations
-- `--skip-agents-md` / `-SkipAgentsMd` — skip AGENTS.md policy block operations
-
-#### Minimal install examples
+### Full agent system (installer)
 
 **Bash (macOS/Linux):**
 
@@ -40,162 +93,108 @@ curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rub
 $p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.ps1 -OutFile $p; & $p -Action install -<Target>
 ```
 
-Replace `<target>` / `<Target>` with: `claude`, `copilot`, or `opencode`.
-
-Project-scoped (instead of global):
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh | bash -s -- install --<target>-project --project-skills
-```
-
-```powershell
-$p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.ps1 -OutFile $p; & $p -Action install -OpenCode -ProjectSkills
-```
-
-For generic/custom paths, uninstall, status, doctor, mode constraints, and all flags, see [scripts/README.md](./scripts/README.md).
+Replace `<target>` / `<Target>` with: `claude`, `copilot`, or `opencode`. See [docs/MANUAL.md](./docs/MANUAL.md) for project-scoped install, skip flags, extras, and all CLI options.
 
 ## Verify after install
 
-Use this to quickly validate behavior and fit in your own workflow.
-
 ### Step 0: Enable Rubber Duck Agent
 
-Rubber Duck can run two ways:
+Rubber Duck runs two ways:
 
-- **As the main agent (whole session):** the duck *is* the session and governs from the first turn.
-  - **Claude Code**: `claude --agent rubber-duck`, or set `"agent": "rubber-duck"` in `.claude/settings.json` (project) or `~/.claude/settings.json` (global). The startup header shows `@rubber-duck` to confirm, and the governor greeting (`initialPrompt`) auto-runs on the first turn. The `--agent` flag overrides the setting when both are present.
-  - **Copilot CLI**: select `rubber-duck` through the `/agent` menu (appears in the status bar as `🦆`). Use the menu to avoid confusion with GitHub's built-in [rubber-duck agent](https://docs.github.com/en/copilot/concepts/agents/copilot-cli/rubber-duck).
-  - **Copilot VS Code**: select `🦆` from the agent menu, the argument hint should display 'Quack.' to show it's ready.
-  - **OpenCode**: `opencode --agent 🦆` (recommended to assign to alias) or select `🦆` as the primary agent (its `mode: all` allows primary use) through the `/agents` menu or keyboard shortcut (default: tab).
+- **As the main agent (whole session):** the duck governs from the first turn.
+  - **Claude Code**: `claude --agent rubber-duck`, or set `"agent": "rubber-duck"` in `.claude/settings.json`.
+  - **Copilot CLI**: select `rubber-duck` through the `/agent` menu (appears as `🦆`).
+  - **Copilot VS Code**: select `🦆` from the agent menu.
+  - **OpenCode**: `opencode --agent 🦆` or select `🦆` through the `/agents` menu.
 
-> [!NOTE]
-> Delegation runs through `duckling` (the specialized subagent that enforces role/mode constraints and routes to active skills).
+- **As a subagent (on demand):** invoke from inside an existing session — `@agent-rubber-duck <prompt>` (Claude Code), `#runSubagent @rubber-duck <prompt>` (Copilot), `@🦆 <prompt>` (OpenCode).
 
-- **As a subagent (on demand):** invoke it from inside an existing session —
-  - **Claude Code**: `@agent-rubber-duck <prompt>`.
-  - **Copilot CLI & VS Code**: `#runSubagent @rubber-duck <prompt>`.
-  - **OpenCode**: `@🦆 <prompt>` (use the autocomplete menu that appears to pick the name).
+Agent must already be installed for your target. Delegation runs through `duckling` (the specialized subagent that enforces role/mode constraints and routes to active skills).
 
-Either way the agent must already be installed for your target (see install section above).
-
-### Step 1: heartbeat check
-
-Prompt:
-
-```text
-quack
-```
-
-Expected:
-- duck status response (governor active).
-
-### Step 2: review behavior check
-
-Prompt:
-
-```text
-Review this snippet for correctness and simplification:
-
-function parseAge(input) {
-  return Number(input) || 0;
-}
-```
-
-Expected:
-- risk-aware findings first (e.g., NaN-to-0 coercion loses invalid input signal),
-- concrete fix direction,
-- no silent code edits.
-
-### Step 3: debug behavior check
-
-Prompt:
-
-```text
-My endpoint returns 500 when userId is missing. Help me debug this.
-```
-
-Expected:
-- clarifying questions first,
-- evidence-first reasoning,
-- explicit handoff/approval before implementation.
-
-## Positioning and intent
-
-### Why
-
-I built Rubber Duck after noticing something in my own agent-assisted workflow: I could ship code faster, but I didn’t always feel like I fully understood the decisions behind it.
-
-The same pattern kept showing up — the model would make implicit assumptions or design calls, and I’d only catch them later during review, cleanup, or when explaining the work to someone else.
-
-Rubber Duck is my way of flipping that tradeoff. It prioritizes:
-
-- decision quality,
-- developer understanding,
-- safe, bounded change,
-- reduced rework.
-
-Core idea: keep humans in control and make reasoning explicit before execution.
-
-### Who this is for
-
-- This is for you if you want an assistant that helps you think more clearly, challenge assumptions, and keeps decision ownership with you — not the model.
-
-### Who this is not for
-
-- This is probably not a fit if you want fully autonomous, end-to-end execution with minimal checkpoints or human involvement.
-
-### Does it actually work better?
-
-- For me, yes — because “better” is not raw speed; it’s leaving a session knowing exactly what was decided, why it was decided, and which risks I’m consciously accepting. Maybe that's what you're searching for too.
+ ### Step 1: heartbeat check
+ 
+ ```text
+ quack
+ ```
+ 
+ Expected: random heartbeat line (e.g., `🦆 Waddling in. I run on breadcrumbs and bad assumptions.`), followed by quick-help listing available routes, then `What would you like to route?`.
+ 
+ ### Step 2: review behavior check
+ 
+ ```text
+ quack review this snippet for correctness and simplification:
+ 
+ function parseAge(input) {
+   return Number(input) || 0;
+ }
+ ```
+ 
+ Expected: `Routing: duck-review.` then risk-aware findings first (e.g., NaN-to-0 coercion loses invalid input signal), concrete fix direction, no silent code edits. Runs via duckling subagent (delegated-default).
+ 
+ ### Step 3: debug behavior check
+ 
+ ```text
+ quack debug this: my endpoint returns 500 when userId is missing.
+ ```
+ 
+ Expected: `Routing: duck-debug.` then clarifying questions first, evidence-first reasoning, explicit handoff/approval before implementation. Runs in main session (inline-default).
 
 ## Philosophy Guardrails
 
 Every skill is bound by the corresponding philosophy:
 
-- Decision ownership: developer selects tradeoff; this skill frames options and consequences.
+- Decision ownership: developer selects tradeoff; skill frames options and consequences.
 - Ask-before-act: ask clarifying scoping questions before recommendations.
 - Evidence-first: ground recommendations in explicit system constraints and known behavior.
 - Bounded approval: implementation actions require explicit user approval and scoped handoff.
 - Safety carve-outs: never trade away trust-boundary validation, security, data-loss prevention, accessibility, or explicit requirements.
 
-## Skills
+Full philosophy: [docs/architecture/01-philosophy.md](./docs/architecture/01-philosophy.md).
 
-Rubber Duck provides 13 specialized skills organized by routing model:
+ ## Skills
 
-### Quack-routed skills
+ Rubber Duck packages 14 skills: 11 default + 3 extras.
 
-These skills are invoked through `quack <intent>` and have different execution defaults:
+ ### Default skills (installed automatically)
 
-#### Inline-default (run in main session for simple cases)
+ - quack — explicit route control
+ - duck-debug — Socratic debugging (trace + root-cause)
+ - duck-debt — deferred-work ledger (read-only)
+ - duck-design — option/tradeoff evaluation
+ - duck-patch — bounded fix (max 2 files)
+ - duck-refactor — multi-file restructuring (max 5 files)
+ - duck-review — risk-first code review
+ - duck-risk — failure-mode/rollback stress test
+ - duck-simplify — complexity reduction
+ - duck-teach — structured teaching (explain/show/teach/walk)
+ - duck-triage — test coverage + bug severity
 
-- **duck-debug** — Socratic debugging with trace (defs/refs/callers/tests) and root-cause modes
-- **duck-debt** — Read-only deferred-work ledger (TODO/FIXME/HACK/XXX comments)
-- **duck-design** — Design option evaluation with tradeoff analysis and constraint challenges
-- **duck-teach** — Explain/tutorial with depth modes (explain/show/teach/walk-through)
+ ### Extras (require --extras flag)
 
-#### Delegated-default (run via duckling subagent)
+ - duck-adapt — external skill adaptation + philosophy audit
+ - duck-grill — batched grilling interview
+ - duck-tape — two-tier session memory (CONTEXT.md + state files)
 
-- **duck-patch** — Bounded implementation (max 2 files) with execution approval
-- **duck-refactor** — Multi-file restructuring (max 5 files): extract/rename/move/inline/pattern-convert
-- **duck-review** — Risk-first code review with paste-ready one-line comments
-- **duck-risk** — Adversarial failure mode analysis: rollback safety, compatibility, trust boundaries
-- **duck-simplify** — Complexity reduction and semantic duplication/divergence review
-- **duck-triage** — Test coverage analysis, bug severity assessment, test scenario planning
+ Install extras: `scripts/rubber-duck.sh install --<target> --extras`
 
-> **Note:** User override (explicit delegation request) forces duckling delegation regardless of default policy.
+ Routing model (inline vs delegated vs governor-invoked), composition patterns, workflow examples: [docs/MANUAL.md](./docs/MANUAL.md). Best practices: [docs/best-practices.md](./docs/best-practices.md).
 
-### Governor-invoked skills (main session)
+```mermaid
+flowchart TD
+    USER[User request] --> GOV[Governor: rubber-duck]
+    GOV -->|simple request| DIRECT[Handle directly]
+    GOV -->|workflow request| QUACK[Router: quack]
+    QUACK -->|route selected| DUCKLING[Subagent: duckling]
+    DUCKLING --> SKILL[Active skill]
+    SKILL --> OUTPUT[Findings / patch / review]
+    GOV -->|approval gate| APPROVAL{User approves?}
+    APPROVAL -->|yes| EXECUTE[Execute]
+    APPROVAL -->|no| WAIT[Wait for approval]
+    DIRECT --> OUTPUT
+    EXECUTE --> OUTPUT
+```
 
-These skills stay in the main session for interactive, conversational flow:
-
-- **duck-adapt** — Meta-skill for external skill adaptation, philosophy compliance auditing, overlap detection
-- **duck-grill** — Deep interrogation with batched questions, pressure calibration, assumption ledger
-
-### Routing skill
-
-- **quack** — Explicit intent resolver with keyword-based precedence and alias matching
-
-For detailed routing patterns and skill chains, see [docs/MANUAL.md](./docs/MANUAL.md).
+Full routing flow with state transitions: [docs/architecture/02-agent-skill-model.md](./docs/architecture/02-agent-skill-model.md).
 
 ## Deep dive docs
 
@@ -206,7 +205,7 @@ For detailed routing patterns and skill chains, see [docs/MANUAL.md](./docs/MANU
 - [Agent + skill model](./docs/architecture/02-agent-skill-model.md)
 - [Adaptive Socratic policy](./docs/architecture/03-adaptive-socratic-policy.md)
 - [Validation prompt suite](./docs/validation/README.md)
-- [Operator start here](./docs/MANUAL.md)
+- [Operator manual](./docs/MANUAL.md)
 
 ### Prompt contracts
 
@@ -216,8 +215,12 @@ For detailed routing patterns and skill chains, see [docs/MANUAL.md](./docs/MANU
 
 ## Attribution
 
-Rubber Duck is inspired by its [namesake](https://rubberduckdebugging.com/) and the practice of talking through a problem to find your own solution—except this one can talk back and ask sharp questions.
+Rubber Duck is inspired by its [namesake](https://rubberduckdebugging.com/) and the practice of talking through a problem to find your own solution — except this one can talk back and ask sharp questions.
 
-Rubber Duck adopted terse language and the review structure inspired by [Caveman](https://github.com/JuliusBrussee/caveman), though token reduction slowly stopped being the primary goal as it took on a life of its own.
+Rubber Duck adopted terse language and a review structure inspired by [Caveman](https://github.com/JuliusBrussee/caveman) by Julius Brusse.
 
 Part of Rubber Duck's operating model adapts ideas from [Ponytail](https://github.com/DietrichGebert/ponytail) by Dietrich Gebert.
+
+Duck-Grill is adapted from `grill` skills from [Matt Pocock Skills](https://github.com/mattpocock/skills).
+
+Licensed under the [LICENSE](./LICENSE).

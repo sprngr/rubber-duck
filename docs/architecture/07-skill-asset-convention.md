@@ -95,16 +95,3 @@ Skills may include a References section listing available conditional assets:
 - [DesignPatterns.md](references/DesignPatterns.md) — Common architectural patterns and decision prompts
 - [Example.md](references/Example.md) — End-to-end design session walkthrough
 ```
-
-## Migration from old structure
-
-**Before (inconsistent):**
-- Mixed `assets/` and `references/` without clear distinction
-- Some skills had neither folder
-- Inconsistent loading language
-
-**After (standardized):**
-- `assets/` = always-loaded runtime data
-- `references/` = conditionally-loaded documentation
-- All assets have metadata headers
-- Clear loading triggers in Method steps
