@@ -60,7 +60,7 @@ Current state of work.
 
 Translation:
 - `Current` -> CONTEXT.md **Session-Log** first entry: `Status: <current>` (if meaningful change).
-- `Done` -> CONTEXT.md **Session-Log** entries appended after Status.
+- `Done` -> CONTEXT.md **Session-Log** entries appended after Status. Summarize to decision-level, not commit-level. Drop commit hashes and verification step lists; keep outcomes and decisions.
 - `Remaining` -> CONTEXT.md **Open-Questions**, one question per item.
 
 ### Decision Log
@@ -81,7 +81,7 @@ Translation: one term per fact -> CONTEXT.md **Glossary**. Verbatim.
 
 Recovery instructions for lost conversation history. Commands to run, files to read, endpoints to query. Assume reader has lost all conversation history.
 
-Translation: verbatim copy -> CONTEXT.md **Notes** under `### Re-derivation <id>` subsection. No interpretation, no rewrite.
+Translation: none. Consumed by next agent directly from state file. Does not land in CONTEXT.md. Same category as Suggested Skills: state-file-local, not translated to persistent context.
 
 ### Suggested Skills
 
@@ -99,10 +99,10 @@ Translation: none. Consumed by next agent directly from state file. Does not lan
 | Position.Remaining | Open-Questions | one question per remaining item |
 | Decision Log | Decisions | one key per decision, status preserved in text |
 | Established Facts | Glossary | one term per fact, verbatim |
-| Re-derivation | Notes | verbatim copy under `### Re-derivation <id>` |
 | Suggested Skills | (none) | consumed by next agent, not translated |
+| Re-derivation | (none) | consumed by next agent, not translated. State-file-local. |
 
-No interpretation. Each state section maps to exactly one CONTEXT.md target. Deterministic.
+No interpretation. Each state section maps to exactly one CONTEXT.md target. Re-derivation and Suggested Skills are state-file-local: not translated. Deterministic.
 
 ## Lifecycle
 
@@ -135,6 +135,6 @@ Applies to all state content before write. Same rules as CONTEXT.md redaction:
 
 - State file uses Agent State schema only. No CONTEXT.md sections in state file.
 - Translation is rigid. No interpretation of content to pick target section.
-- Re-derivation is verbatim. Never rewrite or summarize.
+- Re-derivation is verbatim in state file. Never rewrite or summarize. Not translated to CONTEXT.md.
 - Suggested Skills does not translate. Next agent reads state file directly.
 - State files are working memory, not persistent. Rotation cap enforced.

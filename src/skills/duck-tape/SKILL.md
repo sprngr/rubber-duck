@@ -55,14 +55,15 @@ Report state file path: `.duck-tape/<session_id>.state.md` — user can use this
 
 Run only on merge signals. Skip for state-only mode.
 
-**Bootstrap** (CONTEXT.md missing): create CONTEXT.md with translated content from state file using rigid map in `references/STATE_SCHEMA.md`. Empty sections get scaffold from `examples/bootstrap-CONTEXT.md`. Output format in `references/OUTPUT_SCHEMA.md`. Sample in `examples/CONTEXT.md`. Never infer Goals or Conventions entries.
+**Bootstrap** (CONTEXT.md missing): create CONTEXT.md with translated content from state file using rigid map in `references/STATE_SCHEMA.md`. Empty sections get scaffold from `examples/bootstrap-CONTEXT.md`. Generate TOC under title from the 8 section headers. Output format in `references/OUTPUT_SCHEMA.md`. Sample in `examples/CONTEXT.md`. Never infer Goals or Conventions entries.
 
-**Merge** (CONTEXT.md exists): translate from session state file using rigid map. Per-section merge rules in `references/SCHEMA.md`. Summary:
+**Merge** (CONTEXT.md exists): translate from session state file using rigid map. Summarize translated content to persistent-context granularity (decision-level, not commit-level) before applying per-section merge rules. Refresh TOC only if the set of `##` section headings changes. Per-section merge rules in `references/SCHEMA.md`. Summary:
 - Goals/Decisions/Conventions/Glossary: dedupe by key, supersede on conflict, append new
 - Deferred-Debt: append-only with status markers
 - Open-Questions: append new, dedupe by text
-- Session-Log: append timestamped entry, cap at 50, rotate oldest
-- Notes: timestamped append-only, no rewrite, Re-derivation verbatim under `### Re-derivation <id>`
+- Session-Log: append timestamped entry, cap at 50, rotate oldest. Entries are 1-3 decision-level bullets (no commit hash lists, no verification logs — those stay in state file Re-derivation)
+- Notes: timestamped append-only, no rewrite
+- Re-derivation + Suggested Skills: state-file-local, not translated to CONTEXT.md
 
 Emit changelog per `references/OUTPUT_SCHEMA.md`. Sample in `examples/CHANGELOG.md`:
 - `Added: <section> <key>`
@@ -183,7 +184,7 @@ Prune never touches fixed-schema sections.
    - Session-Log: timestamped entries, status updates, session notes
    - Notes: everything else, freeform observations
 5. Propose restructure to user. Show mapping: existing block -> target section. Flag low-confidence placements. Leave unmatched blocks listed above schema.
-6. Get approval. Execute restructure. Report what moved, what stayed above schema.
+6. Get approval. Execute restructure. Generate TOC under title from the 8 section headers. Report what moved, what stayed above schema.
 
 **Preflight:**
 - Target file: `CONTEXT.md`

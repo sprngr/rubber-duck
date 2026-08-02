@@ -1,3 +1,16 @@
+# Project Context
+
+## Contents
+
+- [Goals](#goals)
+- [Decisions](#decisions)
+- [Conventions](#conventions)
+- [Glossary](#glossary)
+- [Deferred-Debt](#deferred-debt)
+- [Open-Questions](#open-questions)
+- [Session-Log](#session-log)
+- [Notes](#notes)
+
 ## Goals
 - **performance**: sub-second API response times for all user-facing endpoints
 - **developer experience**: minimal boilerplate, clear error messages
@@ -47,10 +60,3 @@ Investigated OAuth2 vs JWT tradeoffs. JWT wins for our use case due to stateless
 
 ### 2025-01-14 09:15
 Database migration ran successfully. All 12 tables migrated with zero downtime. Verified with checksum comparison.
-
-### Re-derivation 2025-01-15
-To reproduce auth flow:
-1. Run `npm run dev` to start local server
-2. POST to /auth/login with valid credentials
-3. Extract JWT from response headers
-4. Use token in Authorization header for subsequent requests

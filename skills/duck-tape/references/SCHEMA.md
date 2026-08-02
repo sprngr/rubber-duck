@@ -2,6 +2,37 @@
 
 ## Sections
 
+The file opens with a top-level title (`# <name>`) followed by a Table of Contents. The 8 fixed sections follow.
+
+### 0. Table of Contents (Contents)
+
+Second block in the file, directly under the title. Lists the 8 fixed sections with anchor links.
+
+```
+# <Project Context title>
+
+## Contents
+
+- [Goals](#goals)
+- [Decisions](#decisions)
+- [Conventions](#conventions)
+- [Glossary](#glossary)
+- [Deferred-Debt](#deferred-debt)
+- [Open-Questions](#open-questions)
+- [Session-Log](#session-log)
+- [Notes](#notes)
+
+## Goals
+...
+```
+
+Heading is `## Contents` to match the fixed-section heading level. TOC is the only addition above Goals.
+
+Merge:
+- Bootstrap: generate TOC from the 8 section headers after first write.
+- Merge: regenerate TOC if the set of `##` section headings changes (rare). Otherwise leave existing TOC untouched.
+- Migrate: generate TOC after section headers appended to restructured file.
+
 ### 1. Goals
 
 What the project optimizes for. Keyed by goal name.
@@ -97,11 +128,19 @@ Timestamped session entries. Append + rotate.
 - <entry>
 ```
 
+Entry shape: 1-3 bullets per session block. Each block captures decision-level summary:
+- decision/outcome
+- what shipped (summary, not commit hashes)
+- blockers if any
+
+Do not include: commit hash lists, step-by-step verification logs, raw command output. Those belong in state file Re-derivation.
+
 Merge:
 - Append new timestamped entry.
 - Cap at 50 entries (default). Rotate oldest out.
 - Rotation drops oldest entry with changelog note: "Rotated out: <topic> (<date>)".
 - Recommended: first entry of a session's new block is `Status: <current state>` when a meaningful status change occurred. Omit when no meaningful status change. Not required.
+- Compression: incoming state file Position.Done may contain commit-level detail. Summarize to decision-level on translation. Facts preserved, detail dropped.
 
 ### 8. Notes
 
@@ -130,13 +169,14 @@ Merge input is translated from session state file (`.duck-tape/<id>.state.md`), 
    - Applies to all sections including Notes freeform.
 1. Parse existing CONTEXT.md into sections by `##` headers.
 2. Translate redacted state file into CONTEXT.md sections using rigid map in `references/STATE_SCHEMA.md`. Parse subsections within each top-level section by `###` headers.
-3. Per section, apply merge rules above.
-4. Generate changelog:
+3. Summarize translated content to persistent-context granularity. State file detail (commands, hashes, raw output) stays in state file. CONTEXT.md receives decision-level summary. This is granularity reduction, not rewrite or interpretation. Facts preserved. Detail dropped.
+4. Per section, apply merge rules above.
+5. Generate changelog:
    - `Added: <section> <key>`
    - `Superseded: <section> <key> (<old> -> <new>)`
    - `Dropped: <section> <key> (<reason>)`
-5. Write merged CONTEXT.md.
-6. Emit changelog to user.
+6. Write merged CONTEXT.md.
+7. Emit changelog to user.
 
 ## Conflict Resolution
 
@@ -166,4 +206,4 @@ If existing CONTEXT.md lacks one or more schema sections:
 3. Prompt: "CONTEXT.md lacks schema sections: <list>. Run /duck-tape migrate to add empty sections before merge."
 4. Do not infer or auto-add sections silently.
 
-Migration (`/duck-tape migrate` — defined in SKILL.md) appends missing section headers + bootstrap markers to existing file. Preserves all existing content above appended sections. Requires execution approval per SKILL.md Migrate section.
+Migration (`/duck-tape migrate` — defined in SKILL.md) appends missing section headers + bootstrap markers to existing file. Preserves all existing content above appended sections. Generates TOC after section headers appended. Requires execution approval per SKILL.md Migrate section.

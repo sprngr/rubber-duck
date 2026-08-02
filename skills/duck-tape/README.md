@@ -186,7 +186,7 @@ The state file translates into CONTEXT.md via a rigid map:
 - Position.Current + Position.Done → **Session-Log**
 - Position.Remaining → **Open-Questions**
 - Established Facts → **Glossary**
-- Re-derivation → **Notes** (verbatim)
+- Re-derivation → consumed by next agent, not merged
 - Suggested Skills → consumed by next agent, not merged
 
 ## Harness Integration
