@@ -18,6 +18,7 @@ For full architecture and policy details, use the canonical docs linked below.
 - Validation test suite: [docs/validation/test-prompts.json](./validation/test-prompts.json) (21 tests)
 - Test runner: [scripts/run-validation-tests.sh](../scripts/run-validation-tests.sh)
 - Global operating policy: [AGENTS.md](../AGENTS.md)
+- Install/update/uninstall CLI reference: [scripts/README.md](../scripts/README.md)
 
 ## System map
 

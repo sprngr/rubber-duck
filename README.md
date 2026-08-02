@@ -103,7 +103,7 @@
  
  ## Quick start
 
-Two install paths. Full install options (flags, targets, uninstall) in [docs/MANUAL.md](./docs/MANUAL.md).
+Two install paths. Full install options (flags, targets, uninstall) in [docs/MANUAL.md](./docs/MANUAL.md) and [scripts/README.md](./scripts/README.md).
 
 ### Skills-only
 
