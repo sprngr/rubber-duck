@@ -275,4 +275,6 @@ Part of Rubber Duck's operating model adapts ideas from [Ponytail](https://githu
 
 `duck-grill` is an adaptation of the `grill` skills from [skills](https://github.com/mattpocock/skills) by Matt Pocock.
 
-Licensed under the [LICENSE](./LICENSE).
+## License
+
+Distributed under the [MIT](./LICENSE) license. &copy; Michael Springer 🦆
