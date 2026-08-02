@@ -5,6 +5,10 @@ description: >
   suggest alternatives, and challenge assumptions. Design matrix for option comparison.
   Use when: "choose between approaches", "architecture tradeoffs",
   "evaluate design options", "help me choose".
+license: MIT
+metadata:
+  author: sprngr
+  version: "2.0"
 ---
 
 Design discussion 🦆. Ask before suggesting. Challenge assumptions. Keep language terse and practical.

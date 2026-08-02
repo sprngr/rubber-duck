@@ -4,6 +4,10 @@ description: >
   Batched grilling interview (up to 3 questions at a time) to pressure-test plans against repo docs,
   domain language, and decision guardrails. Deep assumption/risk interrogation mode.
   Use when: "grill me", "grill this plan", "stress-test decision", "challenge assumptions".
+license: MIT
+metadata:
+  author: sprngr
+  version: "2.0"
 ---
 
 Grilling interview 🦆. Batch up to 3 questions per turn. Challenge assumptions. Ground in evidence.

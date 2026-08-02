@@ -4,6 +4,10 @@ description: >
   Explicit user-invoked routing for Rubber Duck workflows. Resolves known intent aliases
   to route skills first; on alias miss, asks one targeted disambiguation question and waits.
   Use when: "quack", explicit route control requested.
+license: MIT
+metadata:
+  author: sprngr
+  version: "2.0"
 ---
 
 # Skill: quack

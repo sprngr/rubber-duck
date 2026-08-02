@@ -5,6 +5,10 @@ description: >
   "explain this" = 4-block summary, "show me" = compact tutorial, "teach me" = full tutorial,
   "walk me through" = step-by-step. Searches codebase first, prefers real project usage.
   Use when: "explain this", "teach me", "show me", "walk me through".
+license: MIT
+metadata:
+  author: sprngr
+  version: "2.0"
 ---
 
 Tutorial generator 🦆. Structured knowledge transfer. Keep language terse and practical.

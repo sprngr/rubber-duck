@@ -5,6 +5,10 @@ description: >
   rename across codebase, move code between files, inline, convert patterns.
   Use when: "refactor this", "extract this function", "rename X across codebase",
   "move this to another file", "inline this".
+license: MIT
+metadata:
+  author: sprngr
+  version: "2.0"
 ---
 
 Structured refactoring 🦆. Multi-file restructuring with reference tracking.

@@ -7,6 +7,10 @@ description: >
   Use when: "/duck-tape", "compact session", "update CONTEXT.md",
   "persist memory", "save session state", "checkpoint session",
   "resume session".
+license: MIT
+metadata:
+  author: sprngr
+  version: "2.0"
 ---
 
 Session memory management 🦆📼. Context hygiene, persistent memory, session state handoff.

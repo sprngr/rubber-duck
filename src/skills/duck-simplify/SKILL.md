@@ -5,6 +5,10 @@ description: >
   abstractions, oversized config/state surfaces, directness opportunities, safe extraction boundaries.
   Use when: "simplify this", "is this overengineered", "reduce complexity",
   "make this smaller", "DRY this", "dedupe", "divergence review".
+license: MIT
+metadata:
+  author: sprngr
+  version: "2.0"
 ---
 
 Simplify 🦆. Smaller shape, same behavior. Prevent divergence, not just repetition.

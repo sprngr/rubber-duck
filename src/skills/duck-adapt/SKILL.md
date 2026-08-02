@@ -6,6 +6,10 @@ description: >
   Also audits existing skills for philosophy compliance and detects overlaps.
   Use when: "adapt this skill", "make this duck-compatible", "audit skill",
   "should we add this skill".
+license: MIT
+metadata:
+  author: sprngr
+  version: "2.0"
 ---
 
 Skill adapter 🦆. External skill -> duck philosophy.

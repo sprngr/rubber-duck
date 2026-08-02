@@ -4,6 +4,10 @@ description: >
   Read-only deferred-work ledger from TODO/FIXME/HACK/XXX comments.
   Broad mode (default) shows all entries; strict mode returns only issue-linked entries.
   Use when: "duck debt", "what did we defer", "/duck-debt", "audit deferred work".
+license: MIT
+metadata:
+  author: sprngr
+  version: "2.0"
 ---
 
 Duck debt ledger 🦆. Audit deferred work. Keep language terse and practical.

@@ -4,6 +4,10 @@ description: >
   Test coverage analysis and bug triage. Identifies missing tests, assesses test quality,
   classifies bug severity, suggests test scenarios, discovers edge cases.
   Use when: "test coverage gaps", "what should we test", "triage this bug", "bug severity".
+license: MIT
+metadata:
+  author: sprngr
+  version: "2.0"
 ---
 
 Test coverage and bug triage 🦆. Find what tests miss. Classify what bugs matter. Keep language terse and practical.

@@ -5,6 +5,10 @@ description: >
   and trace mode (read-only evidence for defs/refs/callers/tests/imports).
   Use when: "debug this", "why is X broken", "trace this failure",
   "where is this used", "map callers".
+license: MIT
+metadata:
+  author: sprngr
+  version: "2.0"
 ---
 
 Rubber duck debugging 🦆. Socratic method. Questions over answers. Keep language terse and practical.

@@ -4,6 +4,10 @@ description: >
   Risk-first code review with terse, actionable findings in paste-ready format.
   One-line comments: location + problem + fix.
   Use when: "review this", "code review", "review the diff", "/review".
+license: MIT
+metadata:
+  author: sprngr
+  version: "2.0"
 ---
 
 Review 🦆. Keep terse, actionable format by default.

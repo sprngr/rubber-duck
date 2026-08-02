@@ -5,6 +5,10 @@ description: >
   Minimal safe diffs, reuses existing local patterns, verifies smallest runnable check.
   Use when: "apply this fix", "make a targeted edit", "patch this",
   "implement the agreed change".
+license: MIT
+metadata:
+  author: sprngr
+  version: "2.0"
 ---
 
 Patch execution 🦆. Smallest safe diff first.
