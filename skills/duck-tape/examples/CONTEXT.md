@@ -31,6 +31,8 @@
 ## Deferred-Debt
 - TODO(decision-debt): 2025-01-15 evaluate message queue for async processing [status: open]
 - TODO(decision-debt,#42): 2025-01-10 caching strategy [resolved: Redis with 5-minute TTL]
+- TODO(tech-debt): 2025-01-14 replace deprecated auth library before v2 upgrade [status: open]
+- TODO(test-debt): 2025-01-13 add integration tests for webhook delivery guarantees [status: open]
 - TODO(decision-debt,spike): 2025-01-12 multi-region deployment feasibility
   spike: determine if we need active-active or active-passive replication
   unknowns:

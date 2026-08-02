@@ -48,7 +48,7 @@ Signal conventions:
 - `FIXME` — known issue
 - `HACK` — temporary workaround
 - `XXX` — needs attention
-- `spike` — investigation spike from `TODO(decision-debt,spike)` marker
+- `spike` — investigation spike from `TODO(<debt type>,spike)` marker
 
 Issue-link detection:
 - `#<number>` (e.g., `#123`)
@@ -64,11 +64,11 @@ Count only active deferred-work comment signals with concrete deferred work cont
 
 Tier classification:
 - `explicit` — signal includes issue link
-- `spike` — `TODO(decision-debt,spike)` marker (no issue link yet, intentional investigation)
+- `spike` — `TODO(<debt type>,spike)` marker (no issue link yet, intentional investigation)
 - `likely` — `FIXME` or `HACK` without issue link
 - `weak` — `TODO` or `XXX` without issue link
 
-If a spike entry gains an issue link (becomes `TODO(decision-debt,#<issue>)`), classify as `explicit`.
+If a spike entry gains an issue link (becomes `TODO(<debt type>,#<issue>)`), classify as `explicit`.
 
 In strict mode, include only `explicit` entries (spike entries excluded — no issue link).
 

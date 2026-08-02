@@ -38,8 +38,8 @@ Strict output specifications for duck-tape artifacts.
 **Deferred-Debt**
 ```markdown
 ## Deferred-Debt
-- TODO(decision-debt): <YYYY-MM-DD> <what deferred> [status: open|resolved]
-- TODO(decision-debt,#<issue>): <YYYY-MM-DD> <what> [resolved: <decision>]
+- TODO(<debt type>): <YYYY-MM-DD> <what deferred> [status: open|resolved]
+- TODO(<debt type>,#<issue>): <YYYY-MM-DD> <what> [resolved: <decision>]
 ```
 
 **Open-Questions**

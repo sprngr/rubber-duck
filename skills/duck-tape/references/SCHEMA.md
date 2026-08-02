@@ -94,8 +94,8 @@ Deferred work and decisions. Append-only with status markers.
 
 ```
 ## Deferred-Debt
-- TODO(decision-debt): <date> <what deferred> [status: open|resolved]
-- TODO(decision-debt,#<issue>): <date> <what> [resolved: <decision>]
+- TODO(<debt type>): <date> <what deferred> [status: open|resolved]
+- TODO(<debt type>,#<issue>): <date> <what> [resolved: <decision>]
 ```
 
 Merge:

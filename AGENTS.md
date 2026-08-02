@@ -171,12 +171,12 @@ Never remove or weaken trust-boundary validation, security controls, data-loss p
 - Handoffs between skills require explicit routing (via quack or direct skill invocation)
 - Mutating handoffs do not bypass approval gate
 
-## Deferred Decision Debt Markers
+## Deferred Debt Markers
 
 - When an explicit implementation/product/architecture decision is deferred, add a debt marker near the relevant artifact (code, ADR, or policy doc).
 - Base format: `TODO(<debt type>): <date> <what deferred>`
 - If an issue exists, include it: `TODO(<debt type>,#<issue>): ...`
-- Do not add decision-debt markers for generic ideas; only for concrete deferred decisions with a clear revisit trigger.
+- Do not add debt markers for generic ideas; only for concrete deferred decisions with a clear revisit trigger.
 
 ### Spike markers (complex unknowns)
 
