@@ -113,6 +113,12 @@ npx skills add https://github.com/sprngr/rubber-duck
 
 ### Full agent system (installer)
 
+Project-scoped install (agents + skills to current repo):
+
+```bash
+scripts/rubber-duck.sh install --opencode --project --source local
+```
+
 **Bash (macOS/Linux):**
 
 ```bash
@@ -125,7 +131,7 @@ curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rub
 $p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.ps1 -OutFile $p; & $p -Action install -<Target>
 ```
 
-Replace `<target>` / `<Target>` with: `claude`, `copilot`, or `opencode`. See [docs/MANUAL.md](./docs/MANUAL.md) for project-scoped install, skip flags, extras, and all CLI options.
+Replace `<target>` / `<Target>` with: `claude`, `copilot`, or `opencode`. Add `--project` / `-Project` for project scope. See [docs/MANUAL.md](./docs/MANUAL.md) for skip flags, extras, and all CLI options.
 
  ## Verify after install
  

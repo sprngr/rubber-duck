@@ -160,7 +160,9 @@ Skills use three routing patterns:
 
 **Skills install behavior:**
 - default global install: `npx skills add <source> -y -g`
-- project scope only when explicitly requested (`--project-skills` / `-ProjectSkips`)
+- project scope via `--project` (bash) / `-Project` (PowerShell); applies to both target and skills
+- skills source derived from `--source` (local -> repo path, web -> GitHub URL) + `--branch`
+- `--skills-source` / `-SkillsSource` removed; installer assumes known skills set
 
 **AGENTS.md install behavior:**
 - Source file (`AGENTS.md`) has no fences; clean Markdown for version control
