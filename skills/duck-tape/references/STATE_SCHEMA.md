@@ -59,8 +59,8 @@ Current state of work.
 - `Remaining`: in order.
 
 Translation:
-- `Current` -> CONTEXT.md **Session-Log** first entry: `Status: <current>` (if meaningful change).
-- `Done` -> CONTEXT.md **Session-Log** entries appended after Status. Summarize to decision-level, not commit-level. Drop commit hashes and verification step lists; keep outcomes and decisions.
+- `Current` -> state-file-local. Not translated to CONTEXT.md. Next agent reads state file on resume.
+- `Done` -> state-file-local. Not translated to CONTEXT.md. Next agent reads state file on resume.
 - `Remaining` -> CONTEXT.md **Open-Questions**, one question per item.
 
 ### Decision Log
@@ -94,8 +94,8 @@ Translation: none. Consumed by next agent directly from state file. Does not lan
 | State section | CONTEXT.md target | Rule |
 |---|---|---|
 | Approved Workflow | Decisions | one key per approved workflow, verbatim text |
-| Position.Current | Session-Log | first entry: `Status: <current>` if meaningful change |
-| Position.Done | Session-Log | entries appended after Status |
+| Position.Current | (none) | state-file-local, not translated |
+| Position.Done | (none) | state-file-local, not translated |
 | Position.Remaining | Open-Questions | one question per remaining item |
 | Decision Log | Decisions | one key per decision, status preserved in text |
 | Established Facts | Glossary | one term per fact, verbatim |
@@ -114,7 +114,7 @@ Single write on `/duck-tape` invocation. No mid-session checkpoints.
 
 - Max 10 state files in `.duck-tape/`.
 - Eviction precedence: auto dropped first (oldest auto), then recovered, then manual.
-- Note dropped ID in CONTEXT.md Session-Log: "Rotated out session state: <id>".
+- Note dropped ID in CONTEXT.md Notes: "Rotated out session state: <id>" (freeform rotation note).
 
 ### gitignore
 

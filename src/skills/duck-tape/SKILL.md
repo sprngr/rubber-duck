@@ -15,7 +15,7 @@ Session memory management 🦆📼. Context hygiene, persistent memory, session 
 
 Two-tier memory management for active sessions.
 
-- **Tier 1 (persistent):** `CONTEXT.md` in cwd. Long-term, repo-tracked. 8 fixed sections, deterministic merge.
+- **Tier 1 (persistent):** `CONTEXT.md` in cwd. Long-term, repo-tracked. 7 fixed sections, deterministic merge.
 - **Tier 2 (working):** `.duck-tape/<session_id>.state.md`. Short-term, not committed. Agent State schema. Staging input for CONTEXT.md merge.
 
 Preserve fidelity, keep interruption low.
@@ -47,7 +47,7 @@ Scan session content for secrets/PII: API keys, passwords, tokens, connection st
 
 Write `.duck-tape/<session_id>.state.md` using Agent State schema. Session ID format: `<YYYY-MM-DD-HHMM>`. Full schema in `references/STATE_SCHEMA.md`. Output format in `references/OUTPUT_SCHEMA.md`. Sample in `examples/STATE.md`. Auto-create `.duck-tape/.gitignore` with `*` content if missing.
 
-Apply rotation cap: max 10 state files. Eviction precedence: auto dropped first (oldest auto), then recovered, then manual. Note dropped ID in Session-Log.
+Apply rotation cap: max 10 state files. Eviction precedence: auto dropped first (oldest auto), then recovered, then manual. Note dropped ID in Notes (freeform rotation note).
 
 Report state file path: `.duck-tape/<session_id>.state.md` — user can use this to reload session state later.
 
@@ -61,9 +61,9 @@ Run only on merge signals. Skip for state-only mode.
 - Goals/Decisions/Conventions/Glossary: dedupe by key, supersede on conflict, append new
 - Deferred-Debt: append-only with status markers
 - Open-Questions: append new, dedupe by text
-- Session-Log: append timestamped entry, cap at 50, rotate oldest. Entries are 1-3 decision-level bullets (no commit hash lists, no verification logs — those stay in state file Re-derivation)
-- Notes: timestamped append-only, no rewrite
+- Notes: timestamped append-only, no rewrite. State file rotation note lands here as freeform entry.
 - Re-derivation + Suggested Skills: state-file-local, not translated to CONTEXT.md
+- Position.Current + Position.Done: state-file-local, not translated. Next agent reads state file on resume.
 
 Emit changelog per `references/OUTPUT_SCHEMA.md`. Sample in `examples/CHANGELOG.md`:
 - `Added: <section> <key>`
@@ -172,7 +172,7 @@ Prune never touches fixed-schema sections.
 `/duck-tape migrate` — restructures existing CONTEXT.md into schema. Classifies freeform content into sections, appends missing headers, leaves unmatched content above schema.
 
 1. Read existing CONTEXT.md.
-2. Identify which of 8 schema sections exist, which are missing.
+2. Identify which of 7 schema sections exist, which are missing.
 3. Parse freeform content (blocks not under a schema `##` header).
 4. Classify each freeform block into nearest schema section:
    - Goals: optimization targets, priorities, north-star statements
@@ -181,7 +181,7 @@ Prune never touches fixed-schema sections.
    - Glossary: term definitions, domain vocabulary, acronym expansions
    - Deferred-Debt: TODO/FIXME/HACK entries, deferred work
    - Open-Questions: unresolved questions, pending clarifications
-   - Session-Log: timestamped entries, status updates, session notes
+   - Open-Questions: unresolved questions, pending clarifications
    - Notes: everything else, freeform observations
 5. Propose restructure to user. Show mapping: existing block -> target section. Flag low-confidence placements. Leave unmatched blocks listed above schema.
 6. Get approval. Execute restructure. Generate TOC under title from the 8 section headers. Report what moved, what stayed above schema.
@@ -189,7 +189,7 @@ Prune never touches fixed-schema sections.
 **Preflight:**
 - Target file: `CONTEXT.md`
 - Expected: classify freeform content into schema sections, append missing headers, preserve unmatched content above schema
-- Verification: re-read CONTEXT.md, confirm all 8 headers present, confirm all original content accounted for (moved or left above schema)
+- Verification: re-read CONTEXT.md, confirm all 7 headers present, confirm all original content accounted for (moved or left above schema)
 
 ## Boundaries
 

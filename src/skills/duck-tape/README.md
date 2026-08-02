@@ -8,7 +8,7 @@ Not every session deserves permanent context. State files capture the full pictu
 
 **Tier 1 — `CONTEXT.md`** (persistent, repo-tracked)
 - Long-term memory across sessions
-- 8 fixed schema sections with deterministic merge rules
+- 7 fixed schema sections with deterministic merge rules
 - Committed to version control
 - Merged from state files only on explicit merge signals
 
@@ -98,7 +98,7 @@ Five scenarios covering the session lifecycle.
 
 1. Check CONTEXT.md Notes section size. If it grew large, run `/duck-tape prune`. Pick stale entries to remove. Fixed-schema sections are never touched.
 2. Review Deferred-Debt entries. Update status markers as decisions get made.
-3. If CONTEXT.md drifted from schema (freeform content outside the 8 sections), run `/duck-tape migrate`. Skill classifies content and proposes restructure.
+3. If CONTEXT.md drifted from schema (freeform content outside the 7 sections), run `/duck-tape migrate`. Skill classifies content and proposes restructure.
 4. Check `.duck-tape/` for old state files. Rotation handles this automatically (max 10), but verify if disk space matters.
 
 ## Context Hygiene
@@ -138,7 +138,6 @@ Never prune fixed-schema sections via prune. Those merge only.
 ## Glossary        — Domain terms and definitions
 ## Deferred-Debt   — Deferred work with status markers
 ## Open-Questions  — Unresolved questions
-## Session-Log     — Timestamped session entries (capped at 50)
 ## Notes           — Freeform observations (append-only, prune-safe)
 ```
 
@@ -146,7 +145,6 @@ Never prune fixed-schema sections via prune. Those merge only.
 
 - **One entry, one line.** Decisions and conventions are single-line keyed entries.
 - **Supersede, don't accumulate.** When a decision changes, the old entry is replaced. The changelog records what changed.
-- **Session-Log rotates.** Oldest entries drop at 50. Don't use Session-Log for anything you need forever.
 - **Notes is the dump zone.** Freeform content goes here. Prune it when it stops being useful.
 - **Never infer Goals or Conventions.** These sections get entries only from explicit user decisions.
 
@@ -183,9 +181,9 @@ Created: <ISO-8601>
 
 The state file translates into CONTEXT.md via a rigid map:
 - Approved Workflow + Decision Log → **Decisions**
-- Position.Current + Position.Done → **Session-Log**
 - Position.Remaining → **Open-Questions**
 - Established Facts → **Glossary**
+- Position.Current + Position.Done → consumed by next agent, not merged (state-file-local)
 - Re-derivation → consumed by next agent, not merged
 - Suggested Skills → consumed by next agent, not merged
 
@@ -213,7 +211,7 @@ Redaction applies to both tiers (CONTEXT.md and state files).
 
 **CONTEXT.md lacks schema sections.** Run `/duck-tape migrate` to classify existing content and append missing headers.
 
-**State files accumulating.** Check rotation cap (max 10). Eviction precedence: auto dropped first (oldest auto), then recovered, then manual. If you need to recover a dropped state, check CONTEXT.md Session-Log for the dropped ID.
+**State files accumulating.** Check rotation cap (max 10). Eviction precedence: auto dropped first (oldest auto), then recovered, then manual. Dropped IDs are noted in CONTEXT.md Notes as freeform rotation entries.
 
 **Merge produced unexpected entries.** Check the changelog. Each addition, supersession, and drop is logged with a reason. Use `/duck-tape prune` to clean Notes if needed.
 
@@ -251,4 +249,3 @@ Redaction applies to both tiers (CONTEXT.md and state files).
 - `examples/CONTEXT.md` — fully populated CONTEXT.md sample
 - `examples/STATE.md` — sample session state file
 - `examples/CHANGELOG.md` — changelog output examples
-- `examples/SESSION-LOG.md` — session log entry examples

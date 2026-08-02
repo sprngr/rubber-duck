@@ -15,6 +15,4 @@ TODO(scaffold): <date> context bootstrap pending first explicit deferral
 
 ## Open-Questions
 
-## Session-Log
-
 ## Notes

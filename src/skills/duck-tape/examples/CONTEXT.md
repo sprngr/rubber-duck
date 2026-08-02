@@ -8,7 +8,6 @@
 - [Glossary](#glossary)
 - [Deferred-Debt](#deferred-debt)
 - [Open-Questions](#open-questions)
-- [Session-Log](#session-log)
 - [Notes](#notes)
 
 ## Goals
@@ -42,17 +41,6 @@
 ## Open-Questions
 - Should we support multi-region deployment? (date: 2025-01-15)
 - What is the acceptable cold-start time for serverless functions? (date: 2025-01-12) [resolved: under 200ms]
-
-## Session-Log
-### 2025-01-15 14:30 — auth implementation
-- Status: implementing JWT middleware
-- Completed token refresh flow
-- Added rate limiting to auth endpoints
-
-### 2025-01-14 09:15 — database migration
-- Status: running schema migrations
-- Migrated user table to new schema
-- Verified data integrity post-migration
 
 ## Notes
 ### 2025-01-15 14:30

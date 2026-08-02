@@ -2,11 +2,11 @@
 
 ## Sections
 
-The file opens with a top-level title (`# <name>`) followed by a Table of Contents. The 8 fixed sections follow.
+The file opens with a top-level title (`# <name>`) followed by a Table of Contents. The 7 fixed sections follow.
 
 ### 0. Table of Contents (Contents)
 
-Second block in the file, directly under the title. Lists the 8 fixed sections with anchor links.
+Second block in the file, directly under the title. Lists the 7 fixed sections with anchor links.
 
 ```
 # <Project Context title>
@@ -19,7 +19,6 @@ Second block in the file, directly under the title. Lists the 8 fixed sections w
 - [Glossary](#glossary)
 - [Deferred-Debt](#deferred-debt)
 - [Open-Questions](#open-questions)
-- [Session-Log](#session-log)
 - [Notes](#notes)
 
 ## Goals
@@ -29,7 +28,7 @@ Second block in the file, directly under the title. Lists the 8 fixed sections w
 Heading is `## Contents` to match the fixed-section heading level. TOC is the only addition above Goals.
 
 Merge:
-- Bootstrap: generate TOC from the 8 section headers after first write.
+- Bootstrap: generate TOC from the 7 section headers after first write.
 - Merge: regenerate TOC if the set of `##` section headings changes (rare). Otherwise leave existing TOC untouched.
 - Migrate: generate TOC after section headers appended to restructured file.
 
@@ -117,32 +116,7 @@ Merge:
 - Dedupe by question text (normalized whitespace).
 - No supersede. Resolved questions stay with `[resolved: <answer>]` marker.
 
-### 7. Session-Log
-
-Timestamped session entries. Append + rotate.
-
-```
-## Session-Log
-### <YYYY-MM-DD HH:MM> — <session topic>
-- <entry>
-- <entry>
-```
-
-Entry shape: 1-3 bullets per session block. Each block captures decision-level summary:
-- decision/outcome
-- what shipped (summary, not commit hashes)
-- blockers if any
-
-Do not include: commit hash lists, step-by-step verification logs, raw command output. Those belong in state file Re-derivation.
-
-Merge:
-- Append new timestamped entry.
-- Cap at 50 entries (default). Rotate oldest out.
-- Rotation drops oldest entry with changelog note: "Rotated out: <topic> (<date>)".
-- Recommended: first entry of a session's new block is `Status: <current state>` when a meaningful status change occurred. Omit when no meaningful status change. Not required.
-- Compression: incoming state file Position.Done may contain commit-level detail. Summarize to decision-level on translation. Facts preserved, detail dropped.
-
-### 8. Notes
+### 7. Notes
 
 User-defined freeform content. Timestamped append-only.
 
@@ -157,6 +131,7 @@ Merge:
 - Never rewrite existing blocks.
 - Prune via `/duck-tape prune` only.
 - Status detail (blockers, in-progress detail, next-up) belongs in Notes subsection `### Status`. Uses Notes append-only semantics.
+- State file rotation note: when a state file is evicted from `.duck-tape/` (max 10 cap), append `Rotated out session state: <id>` to Notes. Replaces former Session-Log rotation note.
 
 ## Merge Algorithm
 
@@ -186,7 +161,7 @@ Conflict = same key exists in existing and incoming with different values.
 - Goals: incoming supersedes existing. Session content is newer truth.
 - Deferred-Debt: no conflict possible (append-only with status).
 - Open-Questions: no supersede. Incoming resolved marker updates existing question.
-- Session-Log/Notes: no conflict possible (append-only).
+- Notes: no conflict possible (append-only).
 
 ## Subsection Merge Rules
 
