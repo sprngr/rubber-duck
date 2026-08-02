@@ -213,22 +213,23 @@ When changing prompts/policy/tooling:
 
 ## Open-Questions
 - Update scripts/README.md CLI reference tables with --extras/-Extras flag? (date: 2026-08-01) [resolved: yes, see README Skills Sets section + CLI table rows]
-- Commit installer extras split changes? (date: 2026-08-01)
-- Hash out larger holistic README overhaul plan? (date: 2026-08-01)
+- Commit installer extras split changes? (date: 2026-08-01) [resolved: yes, commit 461d8a4]
+- Hash out larger holistic README overhaul plan? (date: 2026-08-01) [resolved: yes, landed in 0490b1b + 89be11f + 106d13b]
 
 ## Session-Log
 
 ## Notes
 
+### 2026-08-02 14:30
 **Current system shape (source-first)**
 
 - Agent source: `src/agents/<name>/` (`meta.json` + `body.md`)
 - Skill source: `src/skills/*/SKILL.md`
-  - 13 active skills: duck-adapt, duck-debug, duck-debt, duck-design, duck-grill, duck-patch, duck-refactor, duck-review, duck-risk, duck-simplify, duck-teach, duck-triage, quack
-  - Routing model: inline-default (4 skills: debug, debt, design, teach), delegated-default (6 skills: patch, refactor, review, risk, simplify, triage), governor-invoked (2 skills: adapt, grill)
+  - 14 active skills: duck-adapt, duck-debug, duck-debt, duck-design, duck-grill, duck-patch, duck-refactor, duck-review, duck-risk, duck-simplify, duck-tape, duck-teach, duck-triage, quack
+  - Routing model: inline-default (4 skills: debug, debt, design, teach), delegated-default (6 skills: patch, refactor, review, risk, simplify, triage), governor-invoked (2 skills: adapt, grill), router-only (1 skill: quack)
   - Asset structure: `assets/` (runtime, always loaded) vs `references/` (conditional docs)
 - Canonical shared guardrails source: `src/shared/references/GUARDRAILS.md`
-- Policy snippets: `src/shared/policy-snippets/` (atomic policy fragments for consistency)
+- Shared snippets: `src/shared/policy-snippets/` (atomic policy fragments) + `src/shared/skill-snippets/` (atomic skill fragments)
 - Generated skill artifacts: `skills/*/` (for `npx skills`)
 - Generated harness artifacts: `dist/{claude,opencode,copilot}/`
 - Global policy: `AGENTS.md`
