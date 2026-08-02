@@ -19,6 +19,19 @@ CANONICAL_GUARDRAILS="${REPO_ROOT}/src/shared/references/GUARDRAILS.md"
 SKILL_SNIPPETS_ROOT="${REPO_ROOT}/src/shared/skill-snippets"
 POLICY_SNIPPETS_ROOT="${REPO_ROOT}/src/shared/policy-snippets"
 
+# rsync mirrors src/skills/ -> skills/ for raw assets.
+# --checksum: compare file content (not mtime+size). Matches cmp-based check semantics.
+# --no-times: ignore timestamp-only differences. Prevents false drift on cp'd files.
+# --delete: prune orphan files and orphan skill dirs in mirror.
+# Excludes: SKILL.md (rendered separately), references/GUARDRAILS.md (injected from canonical source),
+# evals/ (src-only, not shipped in built artifacts).
+RSYNC_FLAGS=(
+  -a --checksum --no-times --delete --itemize-changes
+  --exclude='SKILL.md'
+  --exclude='references/GUARDRAILS.md'
+  --exclude='evals/'
+)
+
 if [[ ! -d "${SRC_ROOT}" ]]; then
   printf 'ERROR: missing source root: %s\n' "${SRC_ROOT}" >&2
   exit 1
@@ -29,63 +42,37 @@ if [[ ! -f "${CANONICAL_GUARDRAILS}" ]]; then
   exit 1
 fi
 
-copy_or_check() {
-  local src="$1"
+# ===== Render pipeline ({{include}} resolution) =====
+
+append_include_if_match() {
+  local line="$1"
   local out="$2"
 
-  if [[ ! -f "${src}" ]]; then
-    printf 'ERROR: missing source file: %s\n' "${src}" >&2
-    return 1
-  fi
-
-  if (( CHECK_ONLY == 1 )); then
-    if [[ ! -f "${out}" ]]; then
-      printf 'MISSING: %s\n' "${out}" >&2
-      return 1
+  if [[ "${line}" =~ ^[[:space:]]*\{\{include:[[:space:]]*skill-snippets/([^[:space:]\}]+)[[:space:]]*\}\}[[:space:]]*$ ]]; then
+    local snippet_name="${BASH_REMATCH[1]}"
+    local snippet_path="${SKILL_SNIPPETS_ROOT}/${snippet_name}"
+    if [[ ! -f "${snippet_path}" ]]; then
+      printf 'ERROR: missing skill snippet: %s\n' "${snippet_path}" >&2
+      return 2
     fi
-    if ! cmp -s "${src}" "${out}"; then
-      printf 'STALE: %s\n' "${out}" >&2
-      return 1
-    fi
-    printf 'Checked: %s\n' "${out}"
+    cat "${snippet_path}" >> "${out}"
+    printf '\n' >> "${out}"
     return 0
   fi
 
-  mkdir -p "$(dirname -- "${out}")"
-  cp -f "${src}" "${out}"
-  printf 'Built: %s\n' "${out}"
-}
-
-prune_legacy_reference_assets() {
-  local src_dir="$1"
-  local out_dir="$2"
-  local legacy_name=""
-  local asset_path=""
-  local legacy_out_path=""
-  local stale=0
-
-  for legacy_name in "heartbeat.md" "quick-help.md"; do
-    asset_path="${src_dir}/assets/${legacy_name}"
-    legacy_out_path="${out_dir}/references/${legacy_name}"
-
-    [[ -f "${asset_path}" ]] || continue
-    [[ -f "${legacy_out_path}" ]] || continue
-
-    if (( CHECK_ONLY == 1 )); then
-      printf 'STALE: %s (migrated to assets/)\n' "${legacy_out_path}" >&2
-      stale=1
-      continue
+  if [[ "${line}" =~ ^[[:space:]]*\{\{include:[[:space:]]*policy-snippets/([^[:space:]\}]+)[[:space:]]*\}\}[[:space:]]*$ ]]; then
+    local snippet_name="${BASH_REMATCH[1]}"
+    local snippet_path="${POLICY_SNIPPETS_ROOT}/${snippet_name}"
+    if [[ ! -f "${snippet_path}" ]]; then
+      printf 'ERROR: missing policy snippet: %s\n' "${snippet_path}" >&2
+      return 2
     fi
-
-    rm -f "${legacy_out_path}"
-    printf 'Pruned: %s\n' "${legacy_out_path}"
-  done
-
-  if (( stale != 0 )); then
-    return 1
+    cat "${snippet_path}" >> "${out}"
+    printf '\n' >> "${out}"
+    return 0
   fi
 
-  return 0
+  return 1
 }
 
 render_skill_markdown() {
@@ -119,73 +106,7 @@ render_skill_markdown() {
   return 0
 }
 
-append_include_if_match() {
-  local line="$1"
-  local out="$2"
-
-  if [[ "${line}" =~ ^[[:space:]]*\{\{include:[[:space:]]*skill-snippets/([^[:space:]\}]+)[[:space:]]*\}\}[[:space:]]*$ ]]; then
-    local snippet_name="${BASH_REMATCH[1]}"
-    local snippet_path="${SKILL_SNIPPETS_ROOT}/${snippet_name}"
-    if [[ ! -f "${snippet_path}" ]]; then
-      printf 'ERROR: missing skill snippet: %s\n' "${snippet_path}" >&2
-      return 2
-    fi
-    cat "${snippet_path}" >> "${out}"
-    printf '\n' >> "${out}"
-    return 0
-  fi
-
-  if [[ "${line}" =~ ^[[:space:]]*\{\{include:[[:space:]]*policy-snippets/([^[:space:]\}]+)[[:space:]]*\}\}[[:space:]]*$ ]]; then
-    local snippet_name="${BASH_REMATCH[1]}"
-    local snippet_path="${POLICY_SNIPPETS_ROOT}/${snippet_name}"
-    if [[ ! -f "${snippet_path}" ]]; then
-      printf 'ERROR: missing policy snippet: %s\n' "${snippet_path}" >&2
-      return 2
-    fi
-    cat "${snippet_path}" >> "${out}"
-    printf '\n' >> "${out}"
-    return 0
-  fi
-
-  return 1
-}
-
-render_or_check_skill() {
-  local src="$1"
-  local out="$2"
-  local tmp
-
-  tmp="$(mktemp)"
-  if ! render_skill_markdown "${src}" "${tmp}"; then
-    rm -f "${tmp}"
-    return 1
-  fi
-
-  render_or_check_file "${tmp}" "${out}"
-  rm -f "${tmp}"
-}
-
-render_or_check_file() {
-  local tmp_path="$1"
-  local out_path="$2"
-
-  if (( CHECK_ONLY == 1 )); then
-    if [[ ! -f "${out_path}" ]]; then
-      printf 'MISSING: %s\n' "${out_path}" >&2
-      return 1
-    fi
-    if ! cmp -s "${tmp_path}" "${out_path}"; then
-      printf 'STALE: %s\n' "${out_path}" >&2
-      return 1
-    fi
-    printf 'Checked: %s\n' "${out_path}"
-    return 0
-  fi
-
-  mkdir -p "$(dirname -- "${out_path}")"
-  cp -f "${tmp_path}" "${out_path}"
-  printf 'Built: %s\n' "${out_path}"
-}
+# ===== Rule checks =====
 
 load_deny_tokens() {
   local rules_file="$1"
@@ -250,6 +171,141 @@ enforce_rule_checks() {
     --group-file-template 'src/skills/{item}/SKILL.md'
 }
 
+# ===== Mirror raw assets via rsync =====
+# Mirrors references/, assets/, examples/, hooks/, README.md from src/skills/ -> skills/.
+# --delete prunes orphan files within valid skill dirs.
+# Orphan skill dirs (whole dir not in src) handled separately after rsync,
+# because excluded references/GUARDRAILS.md prevents rsync --delete from removing parent dir.
+
+mirror_or_check_assets() {
+  local output
+  local filtered
+  local rc=0
+
+  if (( CHECK_ONLY == 1 )); then
+    output="$(rsync "${RSYNC_FLAGS[@]}" --dry-run "${SRC_ROOT}/" "${OUT_ROOT}/" 2>&1)" || rc=$?
+    if (( rc != 0 )); then
+      printf 'ERROR: rsync check failed (rc=%d):\n%s\n' "${rc}" "${output}" >&2
+      return 1
+    fi
+    # Filter to real changes only: *deleting (orphans), >f (file updates), cd (new dirs).
+    # Ignore cosmetic noise: "cannot delete non-empty directory", ".d..t" (timestamp-only).
+    filtered="$(printf '%s\n' "${output}" | grep -E '^\*deleting|^>f|^cd' || true)"
+    if [[ -n "${filtered}" ]]; then
+      printf 'STALE: mirror drift detected:\n' >&2
+      printf '%s\n' "${filtered}" >&2
+      return 1
+    fi
+    return 0
+  fi
+
+  output="$(rsync "${RSYNC_FLAGS[@]}" "${SRC_ROOT}/" "${OUT_ROOT}/" 2>&1)" || rc=$?
+  if (( rc != 0 )); then
+    printf 'ERROR: rsync build failed (rc=%d):\n%s\n' "${rc}" "${output}" >&2
+    return 1
+  fi
+  filtered="$(printf '%s\n' "${output}" | grep -E '^\*deleting|^>f|^cd' || true)"
+  if [[ -n "${filtered}" ]]; then
+    printf '%s\n' "${filtered}" | while IFS= read -r line; do
+      case "${line}" in
+        "*deleting"*)
+          printf 'Pruned: %s\n' "${line:12}"
+          ;;
+        ">"*|"cd"*)
+          printf 'Built: %s\n' "${line:12}"
+          ;;
+      esac
+    done
+  fi
+  return 0
+}
+
+# ===== Remove orphan skill dirs =====
+# rsync --delete can't remove skill dirs containing excluded files (references/GUARDRAILS.md).
+# Separate pass: any dir in skills/ without a matching dir in src/skills/ is an orphan.
+
+prune_or_check_orphan_skill_dirs() {
+  local out_skill
+  local skill_name
+
+  shopt -s nullglob
+  for out_skill in "${OUT_ROOT}"/*; do
+    [[ -d "${out_skill}" ]] || continue
+    skill_name="$(basename -- "${out_skill}")"
+    if [[ ! -d "${SRC_ROOT}/${skill_name}" ]]; then
+      if (( CHECK_ONLY == 1 )); then
+        printf 'STALE: orphan skill dir: %s\n' "${out_skill}" >&2
+        return 1
+      else
+        rm -rf "${out_skill}"
+        printf 'Pruned: %s\n' "${out_skill}"
+      fi
+    fi
+  done
+  shopt -u nullglob
+  return 0
+}
+
+# ===== Render or check SKILL.md per skill =====
+
+render_or_check_skill() {
+  local src="$1"
+  local out="$2"
+  local tmp
+
+  tmp="$(mktemp)"
+  if ! render_skill_markdown "${src}" "${tmp}"; then
+    rm -f "${tmp}"
+    return 1
+  fi
+
+  if (( CHECK_ONLY == 1 )); then
+    if [[ ! -f "${out}" ]]; then
+      printf 'MISSING: %s\n' "${out}" >&2
+      rm -f "${tmp}"
+      return 1
+    fi
+    if ! cmp -s "${tmp}" "${out}"; then
+      printf 'STALE: %s\n' "${out}" >&2
+      rm -f "${tmp}"
+      return 1
+    fi
+    printf 'Checked: %s\n' "${out}"
+    rm -f "${tmp}"
+    return 0
+  fi
+
+  mkdir -p "$(dirname -- "${out}")"
+  cp -f "${tmp}" "${out}"
+  printf 'Built: %s\n' "${out}"
+  rm -f "${tmp}"
+}
+
+# ===== Inject or check canonical GUARDRAILS.md per skill =====
+
+inject_or_check_guardrails() {
+  local out="$1"
+
+  if (( CHECK_ONLY == 1 )); then
+    if [[ ! -f "${out}" ]]; then
+      printf 'MISSING: %s\n' "${out}" >&2
+      return 1
+    fi
+    if ! cmp -s "${CANONICAL_GUARDRAILS}" "${out}"; then
+      printf 'STALE: %s\n' "${out}" >&2
+      return 1
+    fi
+    printf 'Checked: %s\n' "${out}"
+    return 0
+  fi
+
+  mkdir -p "$(dirname -- "${out}")"
+  cp -f "${CANONICAL_GUARDRAILS}" "${out}"
+  printf 'Built: %s\n' "${out}"
+}
+
+# ===== Main =====
+
 failed=0
 
 if (( CHECK_ONLY == 1 )); then
@@ -265,6 +321,18 @@ if (( ${#SKILL_DIRS[@]} == 0 )); then
   exit 1
 fi
 
+# 1. Mirror raw assets (rsync handles orphan file deletion within valid skill dirs)
+mirror_or_check_assets || failed=1
+
+# 2. Remove orphan skill dirs (rsync can't remove dirs containing excluded GUARDRAILS.md)
+prune_or_check_orphan_skill_dirs || failed=1
+
+# 3. Portability check on canonical GUARDRAILS (once, not per-skill)
+if (( CHECK_ONLY == 1 )); then
+  check_portability "${CANONICAL_GUARDRAILS}" || failed=1
+fi
+
+# 3. Per-skill: render SKILL.md, inject GUARDRAILS.md, portability checks on src assets
 processed=0
 for src_dir in "${SKILL_DIRS[@]}"; do
   [[ -d "${src_dir}" ]] || continue
@@ -277,72 +345,24 @@ for src_dir in "${SKILL_DIRS[@]}"; do
   fi
   render_or_check_skill "${src_dir}/SKILL.md" "${out_dir}/SKILL.md" || failed=1
 
-  if [[ -d "${src_dir}/references" ]]; then
-    shopt -s globstar
-    for ref in "${src_dir}"/references/**; do
-      [[ -f "${ref}" ]] || continue
-      [[ "$(basename -- "${ref}")" == "GUARDRAILS.md" ]] && continue
-      rel="${ref#${src_dir}/}"
-      if (( CHECK_ONLY == 1 )); then
-        check_portability "${ref}" || failed=1
-      fi
-      copy_or_check "${ref}" "${out_dir}/${rel}" || failed=1
-    done
-    shopt -u globstar
-  fi
+  inject_or_check_guardrails "${out_dir}/references/GUARDRAILS.md" || failed=1
 
-  if [[ -d "${src_dir}/assets" ]]; then
-    shopt -s globstar
-    for asset in "${src_dir}"/assets/**; do
-      [[ -f "${asset}" ]] || continue
-      rel="${asset#${src_dir}/}"
-      if (( CHECK_ONLY == 1 )); then
+  # Portability checks on src asset files (references, assets, examples, hooks, README.md)
+  if (( CHECK_ONLY == 1 )); then
+    for sub in references assets examples hooks; do
+      [[ -d "${src_dir}/${sub}" ]] || continue
+      shopt -s globstar
+      for asset in "${src_dir}"/${sub}/**; do
+        [[ -f "${asset}" ]] || continue
+        [[ "$(basename -- "${asset}")" == "GUARDRAILS.md" ]] && continue
         check_portability "${asset}" || failed=1
-      fi
-      copy_or_check "${asset}" "${out_dir}/${rel}" || failed=1
+      done
+      shopt -u globstar
     done
-    shopt -u globstar
-  fi
-
-  if [[ -d "${src_dir}/examples" ]]; then
-    shopt -s globstar
-    for example in "${src_dir}"/examples/**; do
-      [[ -f "${example}" ]] || continue
-      rel="${example#${src_dir}/}"
-      if (( CHECK_ONLY == 1 )); then
-        check_portability "${example}" || failed=1
-      fi
-      copy_or_check "${example}" "${out_dir}/${rel}" || failed=1
-    done
-    shopt -u globstar
-  fi
-
-  if [[ -d "${src_dir}/hooks" ]]; then
-    shopt -s globstar
-    for hook in "${src_dir}"/hooks/**; do
-      [[ -f "${hook}" ]] || continue
-      rel="${hook#${src_dir}/}"
-      if (( CHECK_ONLY == 1 )); then
-        check_portability "${hook}" || failed=1
-      fi
-      copy_or_check "${hook}" "${out_dir}/${rel}" || failed=1
-    done
-    shopt -u globstar
-  fi
-
-  if [[ -f "${src_dir}/README.md" ]]; then
-    if (( CHECK_ONLY == 1 )); then
+    if [[ -f "${src_dir}/README.md" ]]; then
       check_portability "${src_dir}/README.md" || failed=1
     fi
-    copy_or_check "${src_dir}/README.md" "${out_dir}/README.md" || failed=1
   fi
-
-  prune_legacy_reference_assets "${src_dir}" "${out_dir}" || failed=1
-
-  if (( CHECK_ONLY == 1 )); then
-    check_portability "${CANONICAL_GUARDRAILS}" || failed=1
-  fi
-  copy_or_check "${CANONICAL_GUARDRAILS}" "${out_dir}/references/GUARDRAILS.md" || failed=1
 
   processed=$((processed + 1))
 done
