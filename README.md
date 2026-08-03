@@ -1,14 +1,14 @@
  # Rubber Duck 🦆
- 
+
  Socratic assistant operating system for developers who want better-quality decisions, not blind automation.
- 
+
 [![License: MIT](https://img.shields.io/github/license/sprngr/rubber-duck?style=flat&color=blue)](./LICENSE)
 [![Stars](https://img.shields.io/github/stars/sprngr/rubber-duck?style=flat&color=yellow)](https://github.com/sprngr/rubber-duck/stargazers)
 [![Last commit](https://img.shields.io/github/last-commit/sprngr/rubber-duck?style=flat&color=brightgreen)](https://github.com/sprngr/rubber-duck/commits)
 [![CI](https://github.com/sprngr/rubber-duck/actions/workflows/check-source-generated-artifacts.yml/badge.svg)](https://github.com/sprngr/rubber-duck/actions/workflows/check-source-generated-artifacts.yml)
 [![skills.sh](https://skills.sh/b/sprngr/rubber-duck)](https://skills.sh/sprngr/rubber-duck)
 [![🦆 Breadcrumb-powered](https://img.shields.io/badge/🦆-breadcrumb--powered-orange)](https://rubberduckdebugging.com/)
- 
+
 ## Contents
 
 - **Is this for you?**
@@ -23,7 +23,7 @@
 - [Skills](#skills)
 - [Deep dive docs](#deep-dive-docs)
 - [Attribution](#attribution)
- 
+
  ## Why
 
  I built Rubber Duck after noticing something in my own agent-assisted workflow: I could ship code faster, but I didn't always feel like I fully understood the decisions behind it.
@@ -90,10 +90,10 @@
  - **Not a token compressor.** Terse language is a side effect of clear thinking, not the goal. For pure token reduction, [Caveman](https://github.com/JuliusBrussee/caveman) does that better.
  - **Not a YAGNI enforcer.** Rubber Duck applies a minimal-change ladder, but it will not refuse work that genuinely needs to exist. For pure "write less code" discipline, [Ponytail](https://github.com/DietrichGebert/ponytail) is more focused.
  - **Not a replacement for your judgment.** It frames options, surfaces risks, asks sharp questions. You make the call.
- 
+
  ## What to expect
- 
-> [!IMPORTANT]  
+
+> [!IMPORTANT]
 > Rubber Duck provides instructions and scripts, not hard system bounds. The LLM may still ignore constraints. YMMV.
 
  - More questions before work starts. Rubber Duck asks before it acts. The first turn on a task is usually a clarifying question, not an edit.
@@ -103,7 +103,7 @@
  - Active review, not end-of-task review. Findings and scope corrections surface before execution. You revise direction mid-task, not after a full implementation pass.
  - Terse language. Findings and responses use fragments, short sentences, no hedging. Code blocks and errors stay byte-exact.
  - Slower per-turn, faster per-feature. Each turn does less, but rework drops. Net velocity improves when wrong assumptions cost more than slow turns.
- 
+
  ## Quick start
 
 Two install paths. Full install options (flags, targets, uninstall) in [docs/MANUAL.md](./docs/MANUAL.md) and [scripts/README.md](./scripts/README.md).
@@ -131,10 +131,10 @@ $p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.co
 Replace `<target>` / `<Target>` with: `claude`, `copilot`, or `opencode`. Add `--project` / `-Project` for project scope. See [docs/MANUAL.md](./docs/MANUAL.md) for skip flags, extras, and all CLI options.
 
  ## Verify after install
- 
+
  <details>
  <summary>Expand for install verification steps</summary>
- 
+
  ### Step 0: Enable Rubber Duck Agent
 
 Rubber Duck runs two ways:
@@ -176,14 +176,14 @@ The agent must already be installed for your target. Delegation runs through `du
  ```
 
   Expected: `Routing: duck-debug.` then clarifying questions first, evidence-first reasoning, explicit handoff/approval before implementation. Runs in main session (inline-default).
- 
+
  </details>
- 
+
  ## Philosophy Guardrails
- 
+
  <details>
  <summary>Expand for guardrails</summary>
- 
+
  Every skill is bound by the corresponding philosophy:
 
 - Decision ownership: developer selects tradeoff; skill frames options and consequences.
@@ -193,14 +193,14 @@ The agent must already be installed for your target. Delegation runs through `du
 - Safety carve-outs: never trade away trust-boundary validation, security, data-loss prevention, accessibility, or explicit requirements.
 
  Full philosophy: [docs/architecture/01-philosophy.md](./docs/architecture/01-philosophy.md).
- 
+
  </details>
- 
+
   ## Skills
- 
+
  <details>
  <summary>Expand for full skill list + routing diagram</summary>
- 
+
   Rubber Duck packages 14 skills: 11 default + 3 extras.
 
  ### Default skills (installed automatically)
@@ -221,7 +221,7 @@ The agent must already be installed for your target. Delegation runs through `du
 
  - duck-adapt — external skill adaptation + philosophy audit
  - duck-grill — batched grilling interview
- - duck-tape — two-tier session memory (CONTEXT.md + state files)
+ - duck-tape — two-tier session memory (CONTEXT.md + state files). Run `/duck-tape init` to install hook.
 
  Install extras: `scripts/rubber-duck.sh install --<target> --extras`
 
@@ -231,26 +231,29 @@ The agent must already be installed for your target. Delegation runs through `du
 flowchart TD
     USER[User request] --> GOV[Governor: rubber-duck]
     GOV -->|simple request| DIRECT[Handle directly]
-    GOV -->|workflow request| QUACK[Router: quack]
+    GOV -->|workflow request| ROUTE{Route}
+    ROUTE -->|inline skill| SKILL[Active skill]
+    ROUTE -->|delegated skill| QUACK[Router: quack]
     QUACK -->|route selected| DUCKLING[Subagent: duckling]
-    DUCKLING --> SKILL[Active skill]
-    SKILL --> OUTPUT[Findings / patch / review]
-    GOV -->|approval gate| APPROVAL{User approves?}
+    DUCKLING --> SKILL
+    SKILL --> PROPOSAL[Findings / proposed scope]
+    PROPOSAL -->|non-mutating| OUTPUT[Return result]
+    PROPOSAL -->|mutating action| APPROVAL{User approves?}
     APPROVAL -->|yes| EXECUTE[Execute]
-    APPROVAL -->|no| WAIT[Wait for approval]
-    DIRECT --> OUTPUT
     EXECUTE --> OUTPUT
+    APPROVAL -->|no - revise| GOV
+    DIRECT --> OUTPUT
 ```
 
  Full routing flow with state transitions: [docs/architecture/02-agent-skill-model.md](./docs/architecture/02-agent-skill-model.md).
- 
+
  </details>
- 
+
  ## Deep dive docs
- 
+
  <details>
  <summary>Expand for doc links</summary>
- 
+
  ### Start here
 
 - [Architecture index](./docs/architecture/README.md)
@@ -265,9 +268,9 @@ flowchart TD
 - Router + duckling subagents (source markdown): [`src/agents/`](./src/agents)
 - Skills (source markdown): [`src/skills/`](./src/skills)
  - Skills (bundled artifacts for install): [`skills/`](./skills)
- 
+
  </details>
- 
+
  ## Attribution
 
 Rubber Duck is inspired by its [namesake](https://rubberduckdebugging.com/) and the practice of talking through a problem to find your own solution — except this one can talk back and ask sharp questions.
