@@ -9,6 +9,12 @@ Behavior regression suite for Rubber Duck governor + skills. Verifies governor g
 
 ## How to use
 
+### Prerequisites
+
+- **opencode** CLI (>= 1.18) — `curl -fsSL https://opencode.ai/install | bash` or see [opencode.ai](https://opencode.ai)
+- **bubblewrap** (optional, sandbox) — Linux: `apt install bubblewrap` / `dnf install bubblewrap` / `pacman -S bubblewrap`
+- **Python 3.9+** — stdlib only, no pip packages required
+
 ### Automated (primary)
 
 ```bash

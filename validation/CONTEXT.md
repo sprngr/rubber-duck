@@ -19,6 +19,7 @@ Behavior regression suite for Rubber Duck governor + skills. Verifies governor g
 
 ## Runner features
 
+- **Dependencies**: opencode CLI (>= 1.18), bubblewrap (optional, sandbox), Python 3.9+ (stdlib only)
 - Isolated temp workspace per test (bwrap sandbox by default, `--sandbox none` fallback)
 - Per-test fixture loading (synthetic codebases copied into workspace)
 - Multi-turn support via `follow_ups` field + `opencode run --session <id>`
