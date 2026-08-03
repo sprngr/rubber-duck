@@ -185,7 +185,7 @@ export const DuckTapeCompact = async ({ client, directory }) => {
       const now = new Date()
       const iso = now.toISOString()
       const timestamp = iso
-      const stamp = iso.slice(0, 10) + "-" + iso.slice(11, 16).replace(":", "-")
+      const stamp = iso.slice(0, 10) + "-" + iso.slice(11, 16).replace(":", "")
 
       // Require client + sessionId for extraction. Accept both sessionId and sessionID (opencode uses sessionID).
       if (!client || (!input?.sessionId && !input?.sessionID)) {
