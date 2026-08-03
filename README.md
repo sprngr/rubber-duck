@@ -106,6 +106,8 @@
 
  ## Quick start
 
+Upgrading from v1.x? See [migration guide](./docs/migration-v2.md).
+
 Two install paths. Full install options (flags, targets, uninstall) in [docs/MANUAL.md](./docs/MANUAL.md) and [scripts/README.md](./scripts/README.md).
 
 ### Skills-only
@@ -262,6 +264,7 @@ flowchart TD
 - [Adaptive Socratic policy](./docs/architecture/03-adaptive-socratic-policy.md)
 - [Validation suite](./validation/README.md)
 - [Operator manual](./docs/MANUAL.md)
+- [Migration from v1.x](./docs/migration-v2.md)
 
 ### Prompt contracts
 
