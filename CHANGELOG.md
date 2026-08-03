@@ -18,6 +18,8 @@ Patch release: duck-tape opencode plugin hook hardening.
 - Rotation comment aligned with actual behavior
 - Tests: `sessionId` traversal guard, extraction edge cases (`<`-prefixed user text skip, multiple DECISION_PATTERN variants, `lastText` assignment, null-info guards)
 
+- **Full Changelog**: [v2.0.0...v2.0.1](https://github.com/sprngr/rubber-duck/compare/v2.0.0...v2.0.1)
+
 ## [v2.0.0] - 2026-08-02
 
 Major release: validation framework, UX standardization, agent consolidation, new skills, installer features, and documentation refinement.
@@ -107,6 +109,8 @@ Major release: validation framework, UX standardization, agent consolidation, ne
 ### Breaking Changes
 - None expected; additive changes only
 - AGENTS.md policy block uses managed fencing (backward compatible)
+
+**Full Changelog**: [v1.1.0...v2.0.0](https://github.com/sprngr/rubber-duck/compare/v1.1.0...v2.0.0)
 
 ## [v1.1.0] - 2024-07-17
 
