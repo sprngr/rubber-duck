@@ -19,6 +19,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - duck-tape rotation notes no longer persisted to CONTEXT.md — working-memory metadata only (removed from SCHEMA.md, OUTPUT_SCHEMA.md, STATE_SCHEMA.md, examples, CHANGELOG)
 - duck-tape merge drops resolved Open-Questions instead of retaining them — resolution content already captured in Decisions or Notes
 
+## [v2.0.1] - 2026-08-03
+
+Patch release: duck-tape opencode plugin hook hardening.
+
+### Fixed
+- Path traversal in `opencode.plugin.js` — strict `sessionId` charset validation (alphanumeric + hyphen, max 128 chars) before filename construction
+- Windows filename safety — stamp format changed from `HH:MM` to `HHMM` (colon stripped) matching skill's `<YYYY-MM-DD-HHMM>` session ID format
+- Rotation off-by-one — cap now enforces 10 total state files (was allowing 11); eviction precedence auto, then recovered, then manual
+- Rotation comment aligned with actual behavior
+- Tests: `sessionId` traversal guard, extraction edge cases (`<`-prefixed user text skip, multiple DECISION_PATTERN variants, `lastText` assignment, null-info guards)
+
 ## [v2.0.0] - 2026-08-02
 
 Major release: validation framework, UX standardization, agent consolidation, new skills, installer features, and documentation refinement.
