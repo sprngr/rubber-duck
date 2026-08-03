@@ -7,12 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `CONTRIBUTING.md` — build/check/validation workflow, conventions, issue tracker link
+- `validation/CONTEXT.md` — validation-specific context (purpose, structure, pass rate state, calibration approach)
+
 ### Changed
 - Validation suite hoisted from `docs/validation/` to top-level `validation/` — reflects expanded scope beyond documentation (executable runner, fixtures, multi-turn tests, bwrap sandbox)
 - Test runner moved from `scripts/run-validation-tests.py` to `validation/run-validation-tests.py`
-
-### Added
-- `validation/CONTEXT.md` — validation-specific context (purpose, structure, pass rate state, calibration approach)
+- Skill descriptions optimized across 9 skills — token trim, body alignment, subcommands/modes lines, alias collision fix (duck-grill "grill me" -> "grill this")
+- Routing diagram in README revised — approval gate placed after skill proposal, "no" branch loops to governor for revision, single SKILL node
+- duck-tape rotation notes no longer persisted to CONTEXT.md — working-memory metadata only (removed from SCHEMA.md, OUTPUT_SCHEMA.md, STATE_SCHEMA.md, examples, CHANGELOG)
+- duck-tape merge drops resolved Open-Questions instead of retaining them — resolution content already captured in Decisions or Notes
 
 ## [v2.0.0] - 2026-08-02
 
