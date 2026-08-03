@@ -474,14 +474,14 @@ skills_install() {
   (( PROJECT_SCOPE == 0 )) && scope="-g"
   (( EXTRAS == 1 )) && install_list+=("${EXTRAS_SKILLS[@]}")
   if (( DRY_RUN == 1 )); then
-    log "[dry-run] npx --yes ${SKILLS_CLI} add ${SKILLS_SOURCE} --skill ${install_list[*]} ${scope}"
+    log "[dry-run] npx ${SKILLS_CLI} add ${SKILLS_SOURCE} --skill ${install_list[*]} ${scope} -y"
     return
   fi
   if ! command -v npx >/dev/null 2>&1; then
     warn "npx not found; skipping skills install"
     return
   fi
-  npx --yes "${SKILLS_CLI}" add "${SKILLS_SOURCE}" --skill ${install_list[*]} ${scope}
+  npx "${SKILLS_CLI}" add "${SKILLS_SOURCE}" --skill ${install_list[*]} ${scope} -y
 }
 
 skills_uninstall() {
@@ -490,14 +490,14 @@ skills_uninstall() {
   local -a all_skills=("${DEFAULT_SKILLS[@]}" "${EXTRAS_SKILLS[@]}")
   (( PROJECT_SCOPE == 0 )) && scope="-g"
   if (( DRY_RUN == 1 )); then
-    log "[dry-run] npx --yes ${SKILLS_CLI} remove ${SKILLS_SOURCE} --skill ${all_skills[*]} ${scope}"
+    log "[dry-run] npx ${SKILLS_CLI} remove ${SKILLS_SOURCE} --skill ${all_skills[*]} ${scope} -y"
     return
   fi
   if ! command -v npx >/dev/null 2>&1; then
     warn "npx not found; skipping skills uninstall"
     return
   fi
-  if ! npx --yes "${SKILLS_CLI}" remove "${SKILLS_SOURCE}" --skill ${all_skills[*]} ${scope}; then
+  if ! npx "${SKILLS_CLI}" remove "${SKILLS_SOURCE}" --skill ${all_skills[*]} ${scope} -y; then
     warn "skills remove failed; remove package manually if needed"
   fi
 }
