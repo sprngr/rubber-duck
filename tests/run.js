@@ -16,7 +16,7 @@ function normalize(text, cwd, isState) {
   let result = text
   if (isState) {
     result = result.replace(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z/g, "__TIMESTAMP__")
-    result = result.replace(/\d{4}-\d{2}-\d{2}-(\d{4}|\d{2}:\d{2})/g, "__STAMP__")
+    result = result.replace(/\d{4}-\d{2}-\d{2}-\d{2}[:-]\d{2}/g, "__STAMP__")
   }
   // Cwd path -> __CWD__ (replace all occurrences, handle both path formats).
   const cwdNormalized = cwd.replace(/\\/g, "/")
@@ -48,6 +48,17 @@ async function runTest() {
   const mockClient = {
     session: {
       messages: async ({ path: { id } }) => {
+        if (id === "extract-test") {
+          return { data: [
+            { info: { role: "user", time: { created: 1 } }, parts: [{ type: "text", text: "<system>system prompt</system>" }] },
+            { info: { role: "user", time: { created: 2 } }, parts: [{ type: "text", text: "Real first prompt" }] },
+            { info: { role: "assistant", time: { created: 3 } }, parts: [{ type: "text", text: "DECIDED: use postgres" }] },
+            { info: { role: "assistant", time: { created: 4 } }, parts: [{ type: "text", text: "we will use vite" }] },
+            { info: { role: "assistant", time: { created: 5 } }, parts: [{ type: "text", text: "Final summary" }] },
+            { info: { role: "user", time: { created: 6 } }, parts: [] },
+            { info: null, parts: null },
+          ] }
+        }
         const data = JSON.parse(
           await fs.readFile(path.join(fixturesDir, "opencode-snapshot.json"), "utf-8")
         )
@@ -99,7 +110,7 @@ async function runTest() {
     const tsDate = stateTimestamp.slice(0, 10)
     const tsTime = stateTimestamp.slice(11, 16)
     const stampDate = stateStamp.slice(0, 10)
-    const stampTime = stateStamp.slice(11, 16)
+    const stampTime = stateStamp.slice(11, 16).replace("-", ":")
     if (tsDate === stampDate && tsTime === stampTime) {
       console.log("  PASS: timestamp/stamp consistency (Date nit fix)")
     } else {
@@ -142,11 +153,11 @@ async function runTest() {
   const rotEntries = await fs.readdir(rotDuckTape)
   const rotStates = rotEntries.filter((f) => f.endsWith(".state.md"))
 
-  // 12 total - 1 evicted = 11 retained (new auto excluded from candidates).
-  if (rotStates.length === 11) {
-    console.log("  PASS: rotation evicts 1 of 12, retains 11 (new file excluded)")
+  // 12 total - 2 evicted = 10 retained (cap: 10 total, new auto excluded from candidates).
+  if (rotStates.length === 10) {
+    console.log("  PASS: rotation evicts 2 of 12, retains 10 (cap: 10 total)")
   } else {
-    console.error(`  FAIL: expected 11 state files, got ${rotStates.length}`)
+    console.error(`  FAIL: expected 10 state files, got ${rotStates.length}`)
     failures++
   }
 
@@ -161,19 +172,20 @@ async function runTest() {
     failures++
   }
 
-  if (autoRemaining.length === 7) {
-    console.log("  PASS: 7 auto files remain (was 8 including new, oldest evicted)")
+  if (autoRemaining.length === 6) {
+    console.log("  PASS: 6 auto files remain (was 8 including new, 2 oldest evicted)")
   } else {
-    console.error(`  FAIL: expected 7 auto files remaining, got ${autoRemaining.length}`)
+    console.error(`  FAIL: expected 6 auto files remaining, got ${autoRemaining.length}`)
     failures++
   }
 
-  // Verify the oldest auto (hour 10, i=0) was evicted, not hour 11+.
+  // Verify the two oldest autos (hours 10 and 11) were evicted, not hour 12+.
   const oldestAutoSurvives = autoRemaining.some((f) => f.includes("-1000-auto"))
-  if (!oldestAutoSurvives) {
-    console.log("  PASS: oldest auto evicted (hour 10 gone)")
+  const secondOldestAutoSurvives = autoRemaining.some((f) => f.includes("-1001-auto"))
+  if (!oldestAutoSurvives && !secondOldestAutoSurvives) {
+    console.log("  PASS: two oldest autos evicted (hours 10 and 11 gone)")
   } else {
-    console.error("  FAIL: oldest auto file (hour 10) should have been evicted")
+    console.error(`  FAIL: oldest autos should be evicted (hour10=${oldestAutoSurvives} hour11=${secondOldestAutoSurvives})`)
     failures++
   }
 
@@ -186,9 +198,53 @@ async function runTest() {
     failures++
   }
 
+  // Verify sec fix: path-traversal sessionId falls back to marker-only, no file
+  // written outside .duck-tape/.
+  console.log("\n=== opencode.plugin.js sessionId traversal guard ===")
+  const secDir = await fs.mkdtemp(path.join("/tmp", "duck-test-sec-"))
+  const secDuckTape = path.join(secDir, ".duck-tape")
+  const secHooks = await DuckTapeCompact({ client: mockClient, directory: secDir })
+  const secMarker = path.join(secDuckTape, ".last-compact")
+  const escapeTarget = path.join(secDir, "evil-transcript.json")
+
+  // Traversal payload: climb out of .duck-tape/ into secDir/.
+  await secHooks["experimental.session.compacting"]({ sessionID: "../../../evil" })
+
+  const markerExists = await fs.access(secMarker).then(() => true).catch(() => false)
+  const escapeExists = await fs.access(escapeTarget).then(() => true).catch(() => false)
+  if (markerExists && !escapeExists) {
+    console.log("  PASS: traversal sessionId -> marker-only, no escape file")
+  } else {
+    console.error(`  FAIL: marker=${markerExists} escape=${escapeExists}`)
+    failures++
+  }
+
+  // Verify extraction: < prefixed user text skipped, multiple decision variants, guards.
+  console.log("\n=== opencode.plugin.js extraction edge cases ===")
+  const extDir = await fs.mkdtemp(path.join("/tmp", "duck-test-ext-"))
+  const extHooks = await DuckTapeCompact({ client: mockClient, directory: extDir })
+  await extHooks["experimental.session.compacting"]({ sessionID: "extract-test" })
+  const extEntries = await fs.readdir(path.join(extDir, ".duck-tape"))
+  const extStateFile = extEntries.find((f) => f.endsWith("-auto.state.md"))
+  const extState = await fs.readFile(path.join(extDir, ".duck-tape", extStateFile), "utf-8")
+
+  const checks = [
+    ["firstPrompt skips < prefixed", extState.includes("Real first prompt"), !extState.includes("<system>")],
+    ["DECISION_PATTERN: DECIDED", extState.includes("DECIDED: use postgres"), true],
+    ["DECISION_PATTERN: we will use", extState.includes("we will use vite"), true],
+    ["lastText is final assistant text", extState.includes("Final summary"), true],
+  ]
+  for (const [label, ...conds] of checks) {
+    if (conds.every(Boolean)) console.log(`  PASS: ${label}`)
+    else { console.error(`  FAIL: ${label}`); failures++ }
+  }
+
+  await fs.rm(extDir, { recursive: true, force: true })
+
   // Cleanup.
   await fs.rm(tmpdir, { recursive: true, force: true })
   await fs.rm(rotDir, { recursive: true, force: true })
+  await fs.rm(secDir, { recursive: true, force: true })
 }
 
 console.log("### duck-tape hook tests (JS) ###")

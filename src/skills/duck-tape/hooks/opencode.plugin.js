@@ -125,7 +125,7 @@ async function renderState(duckTapeDir, transcriptRef, cwd, stamp, timestamp, fi
   const stateFile = path.join(duckTapeDir, `${stamp}-auto.state.md`)
   await fs.writeFile(stateFile, sb)
 
-  // Rotation cap: 10 files. Eviction precedence: auto, recovered, manual.
+  // Rotation cap: 10 files total (9 prior + 1 new). Eviction precedence: auto, recovered, manual.
   // Exclude the just-written state file so the fresh checkpoint survives.
   const all = (await fs.readdir(duckTapeDir))
     .filter((f) => f.endsWith(".state.md"))
@@ -136,7 +136,7 @@ async function renderState(duckTapeDir, transcriptRef, cwd, stamp, timestamp, fi
       all.map(async (s) => ({ ...s, mtime: (await fs.stat(s.path)).mtimeMs }))
     )
     let count = statted.length
-    while (count > 10) {
+    while (count > 9) {
       const autos = statted.filter((s) => s.name.endsWith("-auto.state.md"))
       let drop
       if (autos.length > 0) {
@@ -185,14 +185,19 @@ export const DuckTapeCompact = async ({ client, directory }) => {
       const now = new Date()
       const iso = now.toISOString()
       const timestamp = iso
-      const stamp = iso.slice(0, 10) + "-" + iso.slice(11, 16)
+      const stamp = iso.slice(0, 10) + "-" + iso.slice(11, 16).replace(":", "-")
 
       // Require client + sessionId for extraction. Accept both sessionId and sessionID (opencode uses sessionID).
       if (!client || (!input?.sessionId && !input?.sessionID)) {
         return await writeMarkerOnly(duckTapeDir, timestamp, cwd)
       }
 
-      const sessionId = input.sessionId || input.sessionID
+      const rawSessionId = input.sessionId || input.sessionID
+      // sessionId is untrusted at plugin boundary: reject path-traversal chars.
+      if (!/^[A-Za-z0-9_-]{1,128}$/.test(rawSessionId)) {
+        return await writeMarkerOnly(duckTapeDir, timestamp, cwd)
+      }
+      const sessionId = rawSessionId
 
       try {
         const messages = await client.session.messages({ path: { id: sessionId } })
