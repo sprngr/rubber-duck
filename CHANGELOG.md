@@ -7,18 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-- `CONTRIBUTING.md` — build/check/validation workflow, conventions, issue tracker link
-- `validation/CONTEXT.md` — validation-specific context (purpose, structure, pass rate state, calibration approach)
-
-### Changed
-- Validation suite hoisted from `docs/validation/` to top-level `validation/` — reflects expanded scope beyond documentation (executable runner, fixtures, multi-turn tests, bwrap sandbox)
-- Test runner moved from `scripts/run-validation-tests.py` to `validation/run-validation-tests.py`
-- Skill descriptions optimized across 9 skills — token trim, body alignment, subcommands/modes lines, alias collision fix (duck-grill "grill me" -> "grill this")
-- Routing diagram in README revised — approval gate placed after skill proposal, "no" branch loops to governor for revision, single SKILL node
-- duck-tape rotation notes no longer persisted to CONTEXT.md — working-memory metadata only (removed from SCHEMA.md, OUTPUT_SCHEMA.md, STATE_SCHEMA.md, examples, CHANGELOG)
-- duck-tape merge drops resolved Open-Questions instead of retaining them — resolution content already captured in Decisions or Notes
-
 ## [v2.0.1] - 2026-08-03
 
 Patch release: duck-tape opencode plugin hook hardening.
@@ -70,6 +58,8 @@ Major release: validation framework, UX standardization, agent consolidation, ne
 #### Documentation
 - Skill routing model documentation: inline-default (4 skills), delegated-default (6 skills), governor-invoked (2 skills)
 - Architecture docs: philosophy, agent-skill model, adaptive Socratic policy, prompt order standard, harness config, skill assembly contract, skill asset convention
+- `CONTRIBUTING.md` — build/check/validation workflow, conventions, issue tracker link
+- `validation/CONTEXT.md` — validation-specific context (purpose, structure, pass rate state, calibration approach)
 - Best practices doc: docs/best-practices.md
 - Validation docs consolidated: README.md (test suite + runbook + smokecheck), test-prompts.json
 - Mermaid routing diagram in README
@@ -91,6 +81,12 @@ Major release: validation framework, UX standardization, agent consolidation, ne
 - README restructure: overview-first, install one-liners, links to docs/ for depth
 - CONTEXT.md prune: session logs and re-derivations moved out, TOC added, glossary trimmed
 - Architecture docs: inline restatements replaced with cross-links
+- Validation suite hoisted from `docs/validation/` to top-level `validation/` — reflects expanded scope beyond documentation (executable runner, fixtures, multi-turn tests, bwrap sandbox)
+- Test runner moved from `scripts/run-validation-tests.py` to `validation/run-validation-tests.py`
+- Skill descriptions optimized across 9 skills — token trim, body alignment, subcommands/modes lines, alias collision fix (duck-grill "grill me" -> "grill this")
+- Routing diagram in README revised — approval gate placed after skill proposal, "no" branch loops to governor for revision, single SKILL node
+- duck-tape rotation notes no longer persisted to CONTEXT.md — working-memory metadata only (removed from SCHEMA.md, OUTPUT_SCHEMA.md, STATE_SCHEMA.md, examples, CHANGELOG)
+- duck-tape merge drops resolved Open-Questions instead of retaining them — resolution content already captured in Decisions or Notes
 
 ### Fixed
 - Documentation drift between README.md, scripts/README.md, and docs/validation/README.md
