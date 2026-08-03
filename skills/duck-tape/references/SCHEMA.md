@@ -131,7 +131,6 @@ Merge:
 - Never rewrite existing blocks.
 - Prune via `/duck-tape prune` only.
 - Status detail (blockers, in-progress detail, next-up) belongs in Notes subsection `### Status`. Uses Notes append-only semantics.
-- State file rotation note: when a state file is evicted from `.duck-tape/` (max 10 cap), append `Rotated out session state: <id>` to Notes. Replaces former Session-Log rotation note.
 
 ## Merge Algorithm
 

@@ -105,7 +105,6 @@ Changelog:
 ### State files
 - Max 10 files in `.duck-tape/`
 - Drop oldest by session ID (lexicographic order)
-- Note in Notes: "Rotated out session state: <YYYY-MM-DD-HHMM>" (freeform rotation note)
 
 ## Redaction Output Rules
 

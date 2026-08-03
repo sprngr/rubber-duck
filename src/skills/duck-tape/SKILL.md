@@ -51,7 +51,7 @@ Scan session content for secrets/PII: API keys, passwords, tokens, connection st
 
 Write `.duck-tape/<session_id>.state.md` using Agent State schema. Session ID format: `<YYYY-MM-DD-HHMM>`. Full schema in `references/STATE_SCHEMA.md`. Output format in `references/OUTPUT_SCHEMA.md`. Sample in `examples/STATE.md`. Auto-create `.duck-tape/.gitignore` with `*` content if missing.
 
-Apply rotation cap: max 10 state files. Eviction precedence: auto dropped first (oldest auto), then recovered, then manual. Note dropped ID in Notes (freeform rotation note).
+Apply rotation cap: max 10 state files. Eviction precedence: auto dropped first (oldest auto), then recovered, then manual.
 
 Report state file path: `.duck-tape/<session_id>.state.md` — user can use this to reload session state later.
 
@@ -65,7 +65,7 @@ Run only on merge signals. Skip for state-only mode.
 - Goals/Decisions/Conventions/Glossary: dedupe by key, supersede on conflict, append new
 - Deferred-Debt: append-only with status markers
 - Open-Questions: append new, dedupe by text
-- Notes: timestamped append-only, no rewrite. State file rotation note lands here as freeform entry.
+- Notes: timestamped append-only, no rewrite.
 - Re-derivation + Suggested Skills: state-file-local, not translated to CONTEXT.md
 - Position.Current + Position.Done: state-file-local, not translated. Next agent reads state file on resume.
 

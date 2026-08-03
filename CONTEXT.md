@@ -77,6 +77,18 @@ Outcomes:
 - **Skills Sets section**: new subsection under Installation Behavior documents default 11 (plugin.json) vs extras 3, optional-by-default install, uninstall orphan prevention, status extras reporting.
 - **Approval classification**: README update treated as semantic per ADR edge case (code snippets users copy-paste); full approval gate applied.
 
+**Skill description optimization** (date: 2026-08-02)
+
+- **9 skills optimized**: duck-tape, duck-debt, duck-risk, duck-refactor, duck-review, quack, duck-grill, duck-design, duck-simplify. Token trim, body alignment, subcommands/modes lines.
+- **duck-grill trigger change**: "grill me" changed to "grill this" to avoid collision with grill-me skill.
+- **Conversational approach**: user chose option 1 (conversational) over structured workflow for skill assessment.
+
+**CONTRIBUTING.md revision** (date: 2026-08-02)
+
+- **Keep "Socratic assistant" phrasing**: user preference, retained in Core Philosophy section.
+- **Fork from main**: CONTRIBUTING.md instructs fork from main (merges to v2-quackening).
+- **PR process updated**: added make build, make check, make validation to PR steps; linked issue tracker; referenced CONTEXT.md for conventions.
+
 ## Conventions
 
 **Development workflow**
@@ -214,6 +226,9 @@ When changing prompts/policy/tooling:
 - **Uninstall orphan prevention**: uninstall removes all 14 skills (default + extras) regardless of extras flag so no orphans remain.
 - **README Skills Sets section**: scripts/README.md subsection under Installation Behavior listing default 11 skills (plugin.json) and 3 extras with install/uninstall/status behavior.
 - **--dry-run bash-only**: rubber-duck.sh supports --dry-run; rubber-duck.ps1 has no -DryRun param. Asymmetry pre-existing.
+- **bwrap sandbox**: bubblewrap-based filesystem sandbox for validation test isolation; optional, via --sandbox flag on runner.
+- **follow_ups**: multi-turn validation test field in test-prompts.json; sequential prompts sent to same session to test conversation continuity.
+- **fixture clusters**: synthetic project structures loaded per-test in validation suite; 9 clusters in validation/fixtures/ (shared, auth, app, monolith, parser, validation, rollout, tape-state, tape-marker).
 
 ## Deferred-Debt
 
@@ -239,3 +254,6 @@ When changing prompts/policy/tooling:
 - Global policy: `AGENTS.md`
 - Architecture docs: `docs/architecture/`
 - Validation suite: `validation/` (test-prompts.json + run-validation-tests.py + fixtures/ + CONTEXT.md)
+
+### 2026-08-02 23:35
+Skill description optimization (9 skills), validation suite extension to 31 tests with multi-turn+fixtures+bwrap, 8 calibration rounds (58-74% accepted), validation hoist to top-level validation/, CONTRIBUTING.md revised and pushed. Commits: d5ab8de, 0bdb52e, 2f61384.

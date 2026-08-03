@@ -14,14 +14,6 @@ Changelog:
 No changes to CONTEXT.md.
 ```
 
-## With state file rotation
-```
-Changelog:
-- Added: Decisions database choice
-- Added: Notes 2025-01-16 09:00
-- Added: Notes 2025-01-16 09:00 (Rotated out session state: 2025-01-01-0900)
-```
-
 ## With redaction
 ```
 Changelog:
