@@ -87,6 +87,12 @@ def parse_args() -> argparse.Namespace:
         default="bwrap",
         help="Bubblewrap executable path (default: bwrap)",
     )
+    p.add_argument(
+        "--matcher",
+        choices=("hybrid", "substring", "judge"),
+        default="hybrid",
+        help="Signal matcher: hybrid (substring + judge fallback, default), substring (fast), judge (LLM all signals)",
+    )
     return p.parse_args()
 
 
@@ -343,10 +349,100 @@ def run_one(
     }
 
 
-def match_signals(response_text: str, expected: list[str]) -> tuple[bool, list[str]]:
+def match_signals_substring(response_text: str, expected: list[str]) -> tuple[bool, list[str]]:
     haystack = response_text.lower()
     missing = [s for s in expected if s.lower() not in haystack]
     return (not missing, missing)
+
+
+def judge_one_signal(
+    response_text: str,
+    signal: str,
+    notes: str,
+    model: str,
+) -> tuple[bool, str]:
+    """Neutral LLM judge for one signal. Returns (passed, reason)."""
+    judge_prompt = (
+        "Validation judge. Does the response exhibit the behavior described below?\n\n"
+        f"Behavior: {notes}\n"
+        f"Reference label: {signal} (response need not use this exact word)\n\n"
+        f"Response:\n{response_text[:2000]}\n\n"
+        "First line: YES or NO. Second line: one-sentence reason."
+    )
+    judge_dir = Path(tempfile.mkdtemp(prefix="rdval-judge-"))
+    try:
+        command = [
+            "opencode", "run",
+            "--dir", str(judge_dir.resolve()),
+            "--format", "json",
+            judge_prompt,
+        ]
+        if model:
+            command.extend(["--model", model])
+        try:
+            completed = subprocess.run(
+                command,
+                cwd=judge_dir,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                capture_output=True,
+                check=False,
+                timeout=RUN_TIMEOUT_SECONDS,
+            )
+        except subprocess.TimeoutExpired:
+            return (False, "judge timeout")
+        events = parse_jsonl_events(completed.stdout)
+        judge_text = extract_last_text(events)
+        lines = judge_text.strip().splitlines() if judge_text.strip() else []
+        first_line = lines[0].strip() if lines else ""
+        reason = lines[1].strip() if len(lines) > 1 else ""
+        if first_line.upper().startswith("YES"):
+            return (True, reason or "judge: yes")
+        if first_line.upper().startswith("NO"):
+            return (False, reason or "judge: no")
+        return (False, f"judge ambiguous: {first_line[:80]}")
+    finally:
+        shutil.rmtree(judge_dir, ignore_errors=True)
+
+
+def match_signals_judge(
+    response_text: str,
+    expected: list[str],
+    notes: str,
+    model: str,
+) -> tuple[bool, list[str], dict[str, str]]:
+    verdicts: dict[str, str] = {}
+    missing: list[str] = []
+    for signal in expected:
+        passed, reason = judge_one_signal(response_text, signal, notes, model)
+        verdicts[signal] = ("PASS: " if passed else "FAIL: ") + reason
+        if not passed:
+            missing.append(signal)
+    return (not missing, missing, verdicts)
+
+
+def match_signals_hybrid(
+    response_text: str,
+    expected: list[str],
+    notes: str,
+    model: str,
+) -> tuple[bool, list[str], dict[str, str]]:
+    verdicts: dict[str, str] = {}
+    haystack = response_text.lower()
+    to_judge: list[str] = []
+    for signal in expected:
+        if signal.lower() in haystack:
+            verdicts[signal] = "PASS: substring"
+        else:
+            to_judge.append(signal)
+    missing: list[str] = []
+    for signal in to_judge:
+        passed, reason = judge_one_signal(response_text, signal, notes, model)
+        verdicts[signal] = ("PASS: " if passed else "FAIL: ") + reason
+        if not passed:
+            missing.append(signal)
+    return (not missing, missing, verdicts)
 
 
 def main() -> int:
@@ -381,6 +477,7 @@ def main() -> int:
         print(f"Filter: {','.join(sorted(filter_ids))}")
     if severity_filter:
         print(f"Severity filter: {severity_filter}")
+    print(f"Matcher: {args.matcher}")
     print()
 
     passed = 0
@@ -424,26 +521,18 @@ def main() -> int:
                 shutil.rmtree(workspace, ignore_errors=True)
 
         response_file = args.results_dir / f"{tid}.json"
-        response_file.write_text(
-            json.dumps(
-                {
-                    "test_id": tid,
-                    "area": area,
-                    "prompt": prompt,
-                    "expected_signals": expected,
-                    "severity": severity,
-                    "result": result,
-                },
-                indent=2,
-                ensure_ascii=False,
-            )
-        )
-
+        verdicts: dict[str, str] = {}
         if result["error"]:
             errored += 1
             print(f"  ❌ ERROR: {result['error']}")
         else:
-            ok, missing = match_signals(result["last_text"], expected)
+            notes = test.get("notes", "")
+            if args.matcher == "substring":
+                ok, missing = match_signals_substring(result["last_text"], expected)
+            elif args.matcher == "judge":
+                ok, missing, verdicts = match_signals_judge(result["last_text"], expected, notes, args.model)
+            else:  # hybrid
+                ok, missing, verdicts = match_signals_hybrid(result["last_text"], expected, notes, args.model)
             snippet = result["last_text"].strip().split("\n")[0][:120]
             if ok:
                 passed += 1
@@ -453,6 +542,26 @@ def main() -> int:
                 failed += 1
                 print(f"  ❌ FAIL — missing: {', '.join(missing)}")
                 print(f"  Snippet: {snippet}")
+                for sig in missing:
+                    v = verdicts.get(sig)
+                    if v:
+                        print(f"    {sig}: {v}")
+        response_file.write_text(
+            json.dumps(
+                {
+                    "test_id": tid,
+                    "area": area,
+                    "prompt": prompt,
+                    "expected_signals": expected,
+                    "severity": severity,
+                    "matcher": args.matcher,
+                    "verdicts": verdicts,
+                    "result": result,
+                },
+                indent=2,
+                ensure_ascii=False,
+            )
+        )
         print(f"  Response: {response_file}")
 
         if args.interactive:

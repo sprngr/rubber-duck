@@ -20,7 +20,7 @@
       "fixture": "",
       "expected_signals": [
         "code",
-        "Point",
+        "where",
         "broken"
       ],
       "severity": "Critical",
@@ -31,12 +31,12 @@
       "area": "Review behavior",
       "prompt": "Review this diff for correctness and simplification:\n\nfunction parseAge(input) {\n  return Number(input) || 0;\n}",
       "expected_signals": [
-        "findings",
+        "issue",
         "0",
         "Number"
       ],
       "severity": "High",
-      "notes": "One-line comment shape with location/problem/fix, risk-first ordering"
+      "notes": "Risk-first review with findings, location/problem/fix structure"
     },
     {
       "id": "V04",
@@ -164,7 +164,7 @@
       "area": "Patch scope boundary",
       "prompt": "Patch across 5 files to clean this up.",
       "expected_signals": [
-        "Missing",
+        "context",
         "files",
         "split"
       ],
