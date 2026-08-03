@@ -1,0 +1,25 @@
+[
+  {
+    "info": { "role": "user", "time": { "created": 1754000000000 } },
+    "parts": [ { "type": "text", "text": "Build the feature" } ]
+  },
+  {
+    "info": { "role": "assistant", "time": { "created": 1754000001000 } },
+    "parts": [
+      { "type": "text", "text": "Starting work" },
+      { "type": "tool", "tool": "Edit", "state": { "input": { "file_path": "src/app.ts" }, "status": "ok" } }
+    ]
+  },
+  {
+    "info": { "role": "assistant", "time": { "created": 1754000003000 } },
+    "parts": [ { "type": "text", "text": "APPROVED: use option A" } ]
+  },
+  {
+    "info": { "role": "assistant", "time": { "created": 1754000004000 } },
+    "parts": [ { "type": "text", "text": "APPROVED: use option A" } ]
+  },
+  {
+    "info": { "role": "assistant", "time": { "created": 1754000005000 } },
+    "parts": [ { "type": "text", "text": "Done with the work" } ]
+  }
+]

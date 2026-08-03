@@ -6,95 +6,160 @@ Rubber Duck architecture separates orchestration, analysis lenses, and implement
 
 ## Layered model
 
-### Layer 1: Router (intent orchestration)
+### Layer 1: Governor + explicit router split
 
 Primary artifact source: [`src/agents/rubber-duck/`](../../src/agents/rubber-duck)
 
-Responsibilities:
+`rubber-duck` responsibilities (governor):
 
-- classify user intent (`debug`, `review`, `design`, `teach`, `explain`, `triage`),
-- activate the primary skill,
-- chain subagents by need,
-- enforce preflight and strict-mode policies,
-- apply adaptive strictness: lighter Socratic flow for non-mutating analysis, mandatory checkpoints for mutating actions.
+- provide recommendation/policy guidance,
+- handle simple requests directly (single factual questions, explain ≤10 lines, review ≤5 line diffs without architectural changes),
+- classify requests into simple vs workflow categories,
+- suggest `quack` for workflow-like asks but allow convenience delegation if user continues,
+- enforce execution approval for all workspace-changing actions regardless of routing path,
+- apply adaptive strictness: lighter Socratic flow for non-mutating analysis, mandatory checkpoints for workspace-changing actions.
 
-### Layer 2: Lens subagents (specialized analysis)
+`quack` responsibilities (explicit routing):
 
-Subagents provide distinct, bounded perspectives:
+- present 1–3 route candidates,
+- recommend one route with brief reason,
+- require user route choice before route-driven workflow continues,
+- hand off to selected skill/chain.
 
-- **duck-investigator**: evidence mapping only.
-- **duck-reviewer**: final review stream consolidation.
-- **duck-adversary**: failure, compatibility, rollback, misuse risks.
-- **duck-simple**: complexity minimization lens.
-- **duck-dry**: duplication/divergence risk lens.
-- **duck-triage** (skill-led): test gap and severity analysis.
+Convenience mode behavior:
 
-### Layer 3: Executor (bounded implementation)
+**Classification:**
+- **Simple requests** (governor handles): single factual questions, explain ≤10 lines, review ≤5 line diffs, term clarification
+- **Workflow requests** (suggest quack): multi-step processes, tradeoff analysis, design decisions, implementation, test planning
 
-- **duck-builder** performs surgical edits only after explicit user approval and bounded scope confirmation.
+**Routing flow:**
+- Explicit `quack` invocation always takes precedence
+- For workflow requests without `quack`: governor suggests `quack [intent]` but proceeds with convenience delegation if user continues
+- Convenience delegation does NOT bypass execution approval for workspace-changing actions
+- Harness auto-routing may occur for non-ambiguous workflow requests (harness-specific behavior)
 
-## Routing flows
+### Layer 2: Delegated execution via duckling
 
-### Review flow
+`duckling` is the single delegated subagent execution surface.
 
-`duck-review` → `duck-reviewer` + `duck-adversary` + `duck-simple` (+ `duck-dry` if duplication signal) (+ `duck-triage` if test-gap signal)
+It routes to active skills using explicit role/mode constraints from `quack`:
 
-### Debug flow
+- **duck-debug** (debug + trace mode)
+- **duck-review**
+- **duck-risk**
+- **duck-simplify** (including dry mode)
+- **duck-design**
+- **duck-teach**
+- **duck-triage**
+- **duck-debt**
+- **duck-patch** (bounded implementation)
+- **duck-refactor** (multi-file restructuring)
 
-`duck-debug` + `duck-investigator` (preferred first) → `duck-triage` if repro weak → `duck-builder` only on explicit bounded patch request
+## Skill/subagent flows (when routed)
 
-### Design flow
+### Routing state flow (canonical)
 
-`duck-design` + `duck-simple` + `duck-adversary` (+ `duck-dry` when shared-rule duplication signal)
+```mermaid
+flowchart TD
+  A[S0_RECEIVE] --> B[S1_CLASSIFY]
 
-### Explain / teach flow
+  %% Explicit quack path (wins)
+  B -->|has_quack_invocation true| E[S4_QUACK_ROUTING]
 
-- `duck-explain` and `duck-teach` are front-door understanding modes.
-- Escalate to debug/review/design when issue type becomes clear.
+  %% Simple request path
+  B -->|is_simple_request true| D[S3_DIRECT_FLOW]
 
-## Agent contracts
+  %% Workflow request path
+  B -->|is_workflow_request true| C[S2_SUGGEST_QUACK]
+  C -->|provides brief response + suggests quack| WAIT[WAIT_USER]
+  WAIT -->|user says quack intent| E
+  WAIT -->|user continues without quack| G[S6_CONVENIENCE_DELEGATE]
 
-Each agent documents three contract blocks.
+  %% Ambiguous request path
+  B -->|is_ambiguous_request true| CLARIFY[ASK_CLARIFY]
+  CLARIFY --> B
 
-### 1) Input contract
+  %% Default direct path
+  B -->|else| D
 
-- required context,
-- optional context,
-- accepted ambiguity level,
-- required confirmation points.
+  %% Quack route-selection behavior
+  E -->|ambiguous or invalid route choice| E
+  E -->|route selected| G
 
-### 2) Output contract
+  %% Direct behavior (simple requests)
+  D --> CHECK_MUTATE_D[Check workspace-changing?]
+  CHECK_MUTATE_D -->|yes| F[S5_CHECKPOINT3_GATE]
+  CHECK_MUTATE_D -->|no| EXEC[S7_EXECUTE]
 
-- output format,
-- confidence level and uncertainty,
-- explicit assumptions,
-- concrete next action options.
+  %% Convenience delegation (workflow requests without quack)
+  G --> CHECK_MUTATE_G[Check workspace-changing?]
+  CHECK_MUTATE_G -->|yes| F
+  CHECK_MUTATE_G -->|no| EXEC
 
-### 3) Boundary contract
+  %% Checkpoint 3: Execution approval gate (applies to ALL workspace-changing actions)
+  F -->|approval_received false| F
+  F -->|approval_received true| EXEC
 
-- what the agent must not do,
-- which decisions require human confirmation,
-- whether edits/tools are allowed.
+  %% Exit
+  EXEC --> H[S8_DONE]
+```
 
-## Soft preflight before any patch
+**Key updates from previous flow:**
+- Simple vs workflow classification explicit at S1_CLASSIFY
+- S2_SUGGEST_QUACK shows governor suggests but allows continuation
+- Checkpoint 3: Execution approval gate (S5) applies regardless of routing path (direct, quack, convenience)
+- Removed old "confidence_sufficient" ambiguity (replaced with classification criteria)
+- "Mutating" and "workspace-changing" are equivalent terms; both used throughout the project
 
-Before routing to `duck-builder`, confirm:
+### Skill composition patterns
 
-1. Target artifact/path confirmed.
-2. Expected behavior confirmed.
-3. Smallest shared fix location identified.
+Common multi-skill workflows for comprehensive analysis:
 
-If any item is missing, ask one clarifying question or route to `duck-investigator`.
+**Review flow:**
+- `duck-review`: correctness, data integrity, performance findings
+- Add `duck-risk` when rollback/compatibility risk is central
+- Add `duck-simplify` for complexity/duplication signals
+- Add `duck-triage` for test-gap signals
+- Pattern: "Review this refactor for correctness, risk, and complexity"
 
-Scope gate:
+**Debug flow:**
+- `duck-debug` trace mode: locate evidence (defs, refs, callers, tests)
+- `duck-debug` root-cause mode: identify failure cause
+- Add `duck-triage` if repro weak
+- `duck-patch`: apply bounded fix only on explicit request after scope is clear
+- Pattern: "Debug this endpoint failure then patch it"
 
-- If requested execution scope exceeds 2 files, split into smaller bounded tasks before routing to `duck-builder`.
+**Design flow:**
+- `duck-design`: evaluate options, tradeoffs, architecture decisions
+- Add `duck-risk` for failure/rollback/compat analysis
+- Add `duck-simplify` when complexity reduction is needed
+- Add `duck-triage` for test scenarios and coverage gaps
+- Pattern: "Design this migration and suggest test scenarios"
 
-## Why this separation matters
+**Teach flow:**
+- `duck-teach`: explain code/concept/pattern (includes concise explain mode and tutorial modes)
+- Escalate to `duck-debug`/`duck-review`/`duck-design` when issue type becomes clear
+- Pattern: "Explain this authentication flow, then help debug the token expiry issue"
 
-This model provides:
+**Notes:**
+- Composition is user-driven (not enforced)
+- Skills can be invoked sequentially or combined in single request
+- Quack routing supports explicit chaining via natural language
+- Each skill maintains independence (no hidden coupling)
 
-- **traceability**: evidence and judgments are separable,
-- **auditability**: user can inspect why a recommendation exists,
-- **control**: implementation is gated by explicit user approval,
-- **portability**: skills can be reused in other assistants without changing decision policy.
+## Agent prompt structure
+
+Agent prompts follow a standard section order for predictable precedence. See [04-prompt-order-standard.md](./04-prompt-order-standard.md) for the canonical section list, ordering rationale, and compression rules.
+
+## Execution approval gate
+
+Before routing to `duck-patch` or executing any workspace-changing action, enforce execution approval flow.
+
+See [Checkpoint 3: Execution approval](./03-adaptive-socratic-policy.md#checkpoint-3-execution-approval-workspace-changing-action-gate) in 03-adaptive-socratic-policy.md for full details.
+
+## Why this model matters
+
+- **Traceability**: evidence and judgments are separable
+- **Auditability**: user can inspect why a recommendation exists
+- **Control**: implementation is gated by explicit user approval
+- **Portability**: skills reusable in other assistants without changing decision policy

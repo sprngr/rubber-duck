@@ -1,0 +1,48 @@
+{
+  "skill_name": "duck-design",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Design this.",
+      "expected_output": "Asks one scoping question ('What constraint drives this choice?') and stops. No recommendations, alternatives, or deep analysis until user answers.",
+      "assertions": [
+        "Asks exactly one scoping question before any analysis",
+        "Does not provide recommendations in first response",
+        "Does not provide alternatives in first response",
+        "First response is approximately 1-3 lines"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Should we use a message queue or REST webhooks for our order notification system? Main concern is reliability.",
+      "expected_output": "Uses compact first-response template (~6-12 lines). States developer's framing, names strength/weakness of each option, offers tradeoff comparison, asks which outcome matters most. Does not prescribe.",
+      "assertions": [
+        "First response is approximately 6-12 lines",
+        "Names at least one strength and one weakness",
+        "Ends with a question asking developer to choose priority/tradeoff",
+        "Does not prescribe a single answer"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "We need to redesign our entire backend: new auth system, migrate DB from Postgres to Mongo, add event bus, rebuild the CI pipeline, and containerize everything.",
+      "expected_output": "Activates chunking (step 2). Identifies independently-implementable slices (>3 components). Picks one slice to start with. Asks priority question. Does not deep-dive all components at once.",
+      "assertions": [
+        "Identifies at least 3 independently-implementable slices",
+        "Proposes starting with one specific slice",
+        "Asks user to confirm slice priority",
+        "Does not analyze all components in first response"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Our API is slow. Should we add Redis caching?",
+      "expected_output": "Questions assumptions before evaluating Redis. Asks about bottleneck evidence (profiling data, which endpoints, current latency). Does not recommend Redis without evidence.",
+      "assertions": [
+        "Asks at least one assumption-challenging question",
+        "Does not recommend Redis without bottleneck evidence",
+        "Questions whether caching is the right solution"
+      ]
+    }
+  ]
+}

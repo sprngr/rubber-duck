@@ -203,4 +203,4 @@ What constraint drives this choice?
 - **Pacing:** Ask one clarifying question, then analyze. Avoid multi-question barrages.
 - **Chunking trigger:** if scope is system-wide or has >3 components, slice and pick one first.
 - **Output shape:** comparison responses always end with: "Which outcome matters most here, given your constraints?"
-- **Boundary enforcement:** runtime bugs → `duck-debug`; test questions → `duck-triage`; keep `duck-design` focused on architecture/system choices.
+- **Boundary enforcement:** runtime bugs -> `duck-debug`; test questions -> `duck-triage`; keep `duck-design` focused on architecture/system choices.

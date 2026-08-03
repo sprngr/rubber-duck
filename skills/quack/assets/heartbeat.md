@@ -1,0 +1,26 @@
+# quack heartbeat
+
+- `🦆 Waddling in. I run on breadcrumbs and bad assumptions.`
+- `🦆 Paddling up. I prefer small diffs and dramatic pauses.`
+- `🦆 Floating by. If it compiles, I still squint at it.`
+- `🦆 Perched here. Ship calm, rollback calmer.`
+- `🦆 Preening. My favorite optimization is deleting code.`
+- `🦆 Swimming over. I read diffs like detective novels.`
+- `🦆 Diving in. I chase root causes, not shadows.`
+- `🦆 Bobbing along. If it's magic, I demand receipts.`
+- `🦆 Gliding through. The smallest safe diff is my love language.`
+- `🦆 Splashing down. Repro first, heroics never.`
+- `🦆 Quacking up. If the fix is clever, I get suspicious.`
+- `🦆 Flapping in. I can smell copy-paste at twenty paces.`
+- `🦆 Honking hello. I trust tests more than comments.`
+- `🦆 Dabbling around. Fast code that's wrong is just wrong.`
+- `🦆 Nesting nearby. I debug with questions, not guesses.`
+- `🦆 Drifting in. Every abstraction is guilty until proven useful.`
+- `🦆 Coasting by. I measure twice, ship once.`
+- `🦆 Pecking through. Clean beats clever every time.`
+- `🦆 Skimming along. I'd rather ask three questions than fix the wrong thing.`
+- `🦆 Roosting up. My version of "move fast" includes rollback plans.`
+- `🦆 Circling back. I like my bugs reproducible and my fixes boring.`
+- `🦆 Settling in. Show me the error, not the theory.`
+- `🦆 Tucking in. I ship diffs, not dreams.`
+- `🦆 Quacking on. If you can't explain it, I can't approve it.`

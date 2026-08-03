@@ -23,10 +23,19 @@ Its function is to improve reasoning quality through structured questioning, exp
 - Claims should be anchored in repository evidence (definitions, callers, tests, constraints).
 - Implementation should follow only after evidence and explicit human confirmation.
 
-### 4) Minimal-change discipline
+### 4) Minimal-change discipline (Duck Ladder)
 
+Before introducing new constructs, stop at first rung that holds:
+
+1. No change needed (YAGNI)
+2. Reuse existing local helper/pattern
+3. Replace with stdlib/native
+4. Use already-installed dependency
+5. Shrink to smallest safe diff
+6. Only then add new code/abstraction
+
+Additional rules:
 - Prefer root-cause fixes in shared paths over symptom patches.
-- Prefer reusing existing patterns before adding new abstractions.
 - Prefer smallest safe diff that preserves correctness and safety.
 
 ### 5) Safety and integrity boundaries

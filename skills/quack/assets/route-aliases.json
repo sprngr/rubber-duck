@@ -1,0 +1,99 @@
+{
+  "version": 2,
+  "asset-type": "runtime-data",
+  "loading": "always (on intent match)",
+  "last-updated": "2026-07-20",
+  "notes": "High-signal alias registry for explicit quack routing. Normalize by lowercasing and collapsing internal whitespace before matching. On miss, quack asks one targeted disambiguation question. Precedence keywords help rank skills when multiple match.",
+  "precedence_keywords": {
+    "duck-risk": ["rollback", "breaking", "compatibility", "compat", "failure", "impact", "regression"],
+    "duck-simplify": ["overengineer", "complexity", "simpler", "too many", "bloated", "redundant"],
+    "duck-teach": ["why", "how", "what does", "explain", "teach me", "show me how"],
+    "duck-triage": ["test", "coverage", "should i test", "before pr", "test gaps"],
+    "duck-design": ["choose", "tradeoff", "approach", "option", "decision", "which"]
+  },
+  "routes": {
+    "duck-debug": {
+      "aliases": [
+        "debug",
+        "trace",
+        "investigate",
+        "where is this used",
+        "map callers"
+      ]
+    },
+    "duck-review": {
+      "aliases": [
+        "review",
+        "code review",
+        "review the diff"
+      ]
+    },
+    "duck-design": {
+      "aliases": [
+        "design",
+        "architecture",
+        "tradeoffs",
+        "help me choose"
+      ]
+    },
+    "duck-teach": {
+      "aliases": [
+        "explain",
+        "teach",
+        "show me",
+        "walk me through"
+      ]
+    },
+    "duck-triage": {
+      "aliases": [
+        "triage",
+        "test gaps",
+        "what should we test",
+        "bug severity"
+      ]
+    },
+    "duck-risk": {
+      "aliases": [
+        "risk",
+        "adverserial review",
+        "stress test",
+        "what could break",
+        "rollback risk"
+      ]
+    },
+    "duck-simplify": {
+      "aliases": [
+        "simplify",
+        "dedupe",
+        "dry",
+        "overengineer review",
+        "reduce complexity"
+      ]
+    },
+    "duck-patch": {
+      "aliases": [
+        "patch",
+        "fix",
+        "apply this fix",
+        "targeted edit"
+      ]
+    },
+    "duck-refactor": {
+      "aliases": [
+        "refactor",
+        "extract",
+        "rename across",
+        "move to another file",
+        "inline this"
+      ]
+    },
+    "duck-debt": {
+      "aliases": [
+        "debt",
+        "spike",
+        "what did we defer",
+        "todo review"
+      ]
+    }
+  }
+}

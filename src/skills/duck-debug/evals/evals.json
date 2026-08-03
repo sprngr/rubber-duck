@@ -1,0 +1,59 @@
+{
+  "skill_name": "duck-debug",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "My API endpoint returns 500 when the userId query param is missing from the request.",
+      "expected_output": "Asks 1-3 targeted clarifying questions (expected vs actual behavior, smallest repro trigger). Does not jump to fix. Identifies at least two competing hypotheses. First turn within ~8-12 lines.",
+      "assertions": [
+        "Asks at least one clarifying question before suggesting a fix",
+        "Does not provide patch-level code in first response",
+        "Output is approximately 8-12 lines, not excessively verbose",
+        "Identifies competing hypotheses or asks for evidence to distinguish them"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "trace where getUserById is used — map all callers and test coverage",
+      "expected_output": "Enters trace mode (read-only). Lists defs, refs, callers, tests with stable evidence IDs (E1, E2...). No fix suggestions. Ends with totals and coverage summary.",
+      "assertions": [
+        "Uses stable evidence IDs like E1, E2 in output",
+        "No fix suggestions or design recommendations in trace mode",
+        "Output includes fact-prefixed lines with file:line locations",
+        "Ends with totals line and coverage summary"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Debug this: our cron job runs at 2:30 AM but sometimes fires at 3:30 AM instead.",
+      "expected_output": "Recognizes time/scheduling domain. Requests domain contract inputs (scheduler expression, timezone source, failing timestamps). Lists at least two competing hypotheses from different failure classes (e.g., DST vs calendar arithmetic). Does not guess root cause.",
+      "assertions": [
+        "Requests domain-specific contract inputs (scheduler semantics, timezone, timestamps)",
+        "Lists at least two competing hypotheses",
+        "Does not claim root cause without evidence",
+        "Hypotheses are from different failure classes"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "This function is broken, fix it:\n\nfunction divide(a, b) {\n  return a / b;\n}",
+      "expected_output": "Asks what 'broken' means (expected vs actual behavior) rather than immediately patching. Does not provide patch code without understanding the bug first.",
+      "assertions": [
+        "Asks clarifying question about expected vs actual behavior",
+        "Does not provide a complete fix in first response",
+        "Does not assume what 'broken' means"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "I've been trying to reproduce this crash for 20 minutes and can't get it to happen again. The stack trace shows a null pointer in auth/session.ts:44.",
+      "expected_output": "After ~2 rounds of failed repro, considers redirecting to duck-triage. But given existing stack trace evidence, may continue one focused evidence round. States assumption about flaky behavior explicitly.",
+      "assertions": [
+        "Acknowledges difficulty of reproduction",
+        "Either redirects to duck-triage or justifies continuing with existing evidence",
+        "States assumptions explicitly about flaky behavior",
+        "References the stack trace evidence provided"
+      ]
+    }
+  ]
+}

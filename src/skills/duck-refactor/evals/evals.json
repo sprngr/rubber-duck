@@ -1,0 +1,46 @@
+{
+  "skill_name": "duck-refactor",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Extract the validation logic from handleOrder into a separate validateOrder function in the same file.",
+      "expected_output": "Traces references to handleOrder. Presents refactoring plan (operation, target, destination, files affected, verification). Requests execution approval before executing. Reports result.",
+      "assertions": [
+        "Traces references to target code before editing",
+        "Presents refactoring plan with operation/target/destination/files",
+        "Requests execution approval before executing",
+        "Reports verification result after completion"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Rename getUserById to findUserById across the entire codebase.",
+      "expected_output": "Maps all usages of getUserById across files (imports, calls, tests, types). Presents plan with file count. If >5 files, proposes splitting. Requests approval.",
+      "assertions": [
+        "Maps all usages across files before renaming",
+        "Lists affected files in refactoring plan",
+        "If >5 files affected, proposes splitting",
+        "Requests execution approval before proceeding"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Refactor the payment module to use a different architecture.",
+      "expected_output": "Recognizes this involves design decisions. Pauses and routes to duck-design first before restructuring. Does not make architecture decisions.",
+      "assertions": [
+        "Recognizes architecture decision is needed",
+        "Proposes handoff to duck-design before implementation",
+        "Does not make architecture decisions autonomously"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Just move utils.ts to a helpers/ directory.",
+      "expected_output": "Recognizes this is a simple file move without code restructuring. Redirects to duck-patch since no multi-file code changes are needed.",
+      "assertions": [
+        "Distinguishes simple file move from code restructuring",
+        "Suggests duck-patch as more appropriate skill for simple moves"
+      ]
+    }
+  ]
+}

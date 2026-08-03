@@ -1,0 +1,46 @@
+{
+  "skill_name": "duck-debt",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Show me all deferred work in this project.",
+      "expected_output": "Read-only ledger grouped by file. Each entry has file:line, tier (explicit/likely/weak), note, and ref. Totals line at end with breakdown by tier. No edits proposed.",
+      "assertions": [
+        "Output contains at least one entry in format '<file>:<line> [<tier>] — <note>'",
+        "Output ends with a totals line showing explicit/likely/weak counts",
+        "No edit or cleanup actions are performed, only reporting",
+        "Entries are grouped by file"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "duck debt strict mode — only show issue-linked entries",
+      "expected_output": "Ledger filtered to explicit tier only (entries with issue links like #123 or PROJECT-NNN). Strict mode totals line. If no issue-linked entries exist, reports clean ledger.",
+      "assertions": [
+        "Only entries with tier [explicit] appear in output",
+        "No [likely] or [weak] tier entries in output",
+        "Totals line uses strict format: 'totals: <N> entries (strict: issue-linked only)'",
+        "If no explicit entries, output contains 'Clean ledger'"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Audit deferred simplification debt in this project.",
+      "expected_output": "Skill asks one clarifying question about scope (which module/directory) before scanning. Does not produce ledger without scope clarification first.",
+      "assertions": [
+        "Asks at least one clarifying question about scope or module before scanning",
+        "Does not produce full ledger output before user answers scope question"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "List the TODO/FIXME/HACK entries in this repo and then clean them up for me.",
+      "expected_output": "Produces read-only ledger first. When asked to clean up, proposes handoff to duck-review then duck-patch rather than editing directly. Does not perform edits.",
+      "assertions": [
+        "Ledger output is produced as read-only",
+        "Cleanup request is redirected to duck-review and/or duck-patch",
+        "No direct edits are performed"
+      ]
+    }
+  ]
+}

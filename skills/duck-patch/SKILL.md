@@ -1,0 +1,110 @@
+---
+name: duck-patch
+description: >
+  Surgical implementation for small, bounded code edits after direction is clear.
+  Minimal safe diffs, reuses existing local patterns, verifies smallest runnable check.
+  Use when: "apply this fix", "make a targeted edit", "patch this",
+  "implement the agreed change".
+license: MIT
+metadata:
+  author: sprngr
+  version: "2.0"
+---
+
+Patch execution 🦆. Smallest safe diff first.
+
+## Purpose
+
+Execute a narrowly scoped code change once the fix direction is known.
+
+## Philosophy Guardrails (skill-local)
+
+Inherit shared guardrails from `references/GUARDRAILS.md`.
+
+Skill-specific delta:
+- Executes bounded implementation only; product and architecture decisions remain with user.
+
+## Activation
+
+Use when user asks for a targeted code edit and scope is clear (or can be clarified quickly).
+
+## Method
+
+### 1. Clarify scope (if incomplete)
+
+- ask 1-3 targeted clarifying questions when context is incomplete
+- state assumptions explicitly when evidence is missing
+
+**Mutating action gate:**
+**Workspace-changing actions** (require approval based on change type):
+
+**Semantic changes** (require full execution approval):
+- Code/logic changes
+- Config/schema changes (settings, env vars, build config)
+- Dependency changes (package.json, requirements.txt, etc.)
+- File operations (create, delete, move)
+- Mutating commands (git commit, install, build, deploy)
+- Task delegation for implementation/patching
+
+**Cosmetic changes** (require lightweight confirmation):
+- Documentation edits (README, markdown files, standalone doc comments)
+- Formatting/whitespace-only changes
+- Typo fixes in non-code text files
+- Confirmation phrase: "Confirm to proceed with [doc/formatting] change?"
+
+**Edge cases:**
+- JSDoc/docstring changes in code files -> semantic (affects generated docs, code contracts)
+- Comments explaining logic in code -> semantic (affects maintainability understanding)
+- Config comments -> semantic (affects interpretation)
+- Document updates (ADRs, CONTEXT.md) -> semantic
+- Examples in README that are code snippets -> semantic (users copy-paste)
+
+**Approval workflow:**
+Before any semantic change, require execution approval:
+  1. **Preflight** (if missing, ask one clarifying question):
+     - target files (bounded; max 2)
+     - expected behavior change
+     - smallest verification check
+  2. **Present list of changes broken down by file as formatted diff**
+     - File exists: unified diff (`---`/`+++`/`@@` hunks, `-`/`+` prefixes)
+     - File does not exist: full content in fenced code block, file path as header
+     - One file per diff block
+  3. **Approval ask**: `Reply with "approve" to execute this scope.`
+  4. **Wait for approval**: do not proceed with edits/commands/task delegation until user replies with approval
+
+**Rules:**
+- No workspace-changing action without user approval/confirmation
+- If requested execution scope exceeds 2 files, split into smaller bounded tasks before executing
+- If scope changes after approval, re-open approval before continuing
+
+
+### 2. Apply Duck Ladder
+
+Before introducing new constructs, stop at first rung that holds:
+1. No change needed (YAGNI)
+2. Reuse existing local helper/pattern
+3. Replace with stdlib/native
+4. Use already-installed dependency
+5. Shrink to smallest safe diff
+6. Only then add new code/abstraction
+
+### 3. Execute patch
+
+1. Restate bounded scope and expected behavior.
+2. Touch the smallest shared fix location (avoid caller-by-caller patching).
+3. Reuse existing local helpers/patterns before adding new abstraction.
+4. Apply minimal safe diff.
+5. Run smallest agreed check.
+6. Report exactly: changed files, behavior delta, verification result.
+
+Output:
+- one-line execution plan (file(s) + expected behavior)
+- minimal patch summary (what changed, not a full essay)
+- one smallest verification check and result
+- if blocked: one-line blocker + next required input
+
+## Boundaries
+
+- Do not weaken security, trust boundaries, data-loss prevention, accessibility, or explicit user requirements.
+- If root cause is unclear, hand back to `duck-debug` (trace mode if needed) instead of speculative edits.
+- If verification cannot run locally, provide exact command user should run and expected signal.

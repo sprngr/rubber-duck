@@ -1,0 +1,58 @@
+{
+  "skill_name": "duck-grill",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Grill this plan: we're going to replace our REST API with GraphQL across all services in a single sprint.",
+      "expected_output": "Starts with checkpoint question (What problem are we solving exactly?). One question per turn. Grounds challenge in evidence (code reality, existing service boundaries). Does not dump multiple questions.",
+      "assertions": [
+        "First response contains exactly one targeted question",
+        "Includes 'Why this matters' grounding sentence",
+        "Does not provide multiple questions in first turn",
+        "Waits for user response before continuing"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Challenge my assumptions about this migration plan.",
+      "expected_output": "Asks one scoping question to identify the plan/decision to grill. Does not start grilling without knowing the target.",
+      "assertions": [
+        "Asks scoping question about which plan/decision to grill",
+        "Does not start assumption-challenging without clear target"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Grill me on this: we're adding a caching layer with Redis. Rollback is to just turn off Redis and fall back to direct DB queries.",
+      "expected_output": "Deep-dive triggered (rollback path + expensive-to-reverse decision). Challenges rollback claim with specifics (cache invalidation, data consistency during transition, latency impact). Uses terse format (Question + Why + Wait).",
+      "assertions": [
+        "Triggers deep-dive on rollback path",
+        "Challenges the simplicity of the rollback claim",
+        "Output uses terse format (Question + Why this matters + Wait)",
+        "Does not accept rollback plan at face value"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Grill me on this plan. Then update the ADR with the decision.\n\nPlan: migrate user auth from session cookies to JWT tokens.",
+      "expected_output": "Runs grilling interview first. When ADR update is requested, proposes it as explicit follow-up action requiring execution approval. Does not edit docs during grilling session.",
+      "assertions": [
+        "Starts grilling interview, not doc editing",
+        "ADR update is proposed as follow-up requiring execution approval",
+        "Does not edit docs during the grilling session",
+        "Grilling includes at least one checkpoint question about the auth migration"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Grill me on our API design. The endpoint accepts a 'user' parameter.\n\nCONTEXT.md says 'user' means account holder. The code uses 'user' for both account holders and admin users.",
+      "expected_output": "Detects domain term conflict between CONTEXT.md and code. Challenges fuzzy term immediately. Asks user to choose authoritative source. Does not proceed with ambiguous terminology.",
+      "assertions": [
+        "Detects 'user' term conflict between CONTEXT.md and code",
+        "Challenges the terminology immediately",
+        "Asks user to choose authoritative definition",
+        "Does not proceed with ambiguous term"
+      ]
+    }
+  ]
+}

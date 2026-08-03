@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-server
+  labels:
+    app: api-server
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: api-server
+  template:
+    metadata:
+      labels:
+        app: api-server
+    spec:
+      containers:
+      - name: api
+        image: registry.example.com/api:v2.0.0
+        ports:
+        - containerPort: 8080
+        env:
+        - name: DB_HOST
+          value: "db.internal"
+        - name: REDIS_URL
+          value: "redis.internal:6379"
+        # RISK: no readiness probe — traffic routes before app ready
+        # RISK: no liveness probe — dead pods keep traffic
+        # RISK: no resource limits — single pod can starve node
+        # RISK: no rollback test — v2.0.0 schema migration assumed compatible

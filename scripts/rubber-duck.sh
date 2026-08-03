@@ -4,16 +4,16 @@ set -euo pipefail
 ACTION="install"
 TARGET="opencode"
 CLAUDE_MD=""
-CLAUDE_MODE_SET=0
-OPENCODE_MODE_SET=0
-COPILOT_MODE_SET=0
+PROJECT_SCOPE=0
 SKIP_SKILLS=0
-PROJECT_SKILLS=0
-SKILLS_SOURCE="https://github.com/sprngr/rubber-duck"
-SKILLS_CLI="skills@^1.5.14" # pinned npx CLI package spec
-SOURCE_MODE="auto" # auto|local|web
+SKIP_AGENTS_MD=0
+SKILLS_CLI="skills@^1.5.14"  # pinned npx CLI package spec
+SOURCE_MODE="auto"  # auto|local|web
+BRANCH="main"  # default branch
 RAW_BASE="https://raw.githubusercontent.com/sprngr/rubber-duck/main"
+SKILLS_SOURCE=""  # derived from --source after choose_source
 DRY_RUN=0
+EXTRAS=0
 
 SCRIPT_PATH="${0:-}"
 if [[ -z "${SCRIPT_PATH}" || "${SCRIPT_PATH}" == "-" || "${SCRIPT_PATH}" == "bash" || "${SCRIPT_PATH}" == "sh" ]]; then
@@ -29,7 +29,7 @@ LOCAL_POLICY_AGENTS_FILE=""
 REMOTE_AGENTS_PATH=""
 REMOTE_POLICY_PATH=""
 REMOTE_POLICY_AGENTS_PATH=""
-POLICY_MODE="managed_block" # managed_block|file
+POLICY_MODE="managed_block"  # managed_block|file
 
 MANAGED_START="<!-- RUBBER_DUCK_MANAGED_BLOCK START -->"
 MANAGED_END="<!-- RUBBER_DUCK_MANAGED_BLOCK END -->"
@@ -49,22 +49,29 @@ CLAUDE_PROJECT_POLICY_MD="CLAUDE.md"
 
 AGENT_FILES=(
   "rubber-duck.md"
-  "duck-simple.md"
-  "duck-reviewer.md"
-  "duck-investigator.md"
-  "duck-dry.md"
-  "duck-builder.md"
-  "duck-adversary.md"
+  "duckling.md"
 )
 
-REQUIRED_SKILLS=(
+# Default skills: the set declared in .claude-plugin/plugin.json.
+DEFAULT_SKILLS=(
   "duck-debt"
   "duck-debug"
   "duck-design"
-  "duck-explain"
+  "duck-patch"
+  "duck-refactor"
   "duck-review"
+  "duck-risk"
+  "duck-simplify"
   "duck-teach"
   "duck-triage"
+  "quack"
+)
+
+# Optional extras: installed only with --extras.
+EXTRAS_SKILLS=(
+  "duck-adapt"
+  "duck-grill"
+  "duck-tape"
 )
 
 usage() {
@@ -73,29 +80,29 @@ Usage:
   scripts/rubber-duck.sh [install|uninstall|status|doctor] [options]
 
 Options:
-  --opencode                        Use global opencode paths (~/.config/opencode/agents + ~/config/opencode/AGENTS.md)
-  --opencode-project                Use project opencode paths (.opencode/agents + AGENTS.md)
-  --copilot                         Use global Copilot paths (~/.copilot/agents + ~/.copilot/AGENTS.md)
-  --copilot-project                 Use project Copilot paths (.github/agents + AGENTS.md)
-  --claude                          Use global Claude paths (~/.claude/agents + ~/.claude/CLAUDE.md)
-  --claude-project                  Use project Claude paths (.claude/agents + CLAUDE.md)
+  --opencode                        Use opencode paths (default global; add --project for project scope)
+  --copilot                         Use Copilot paths (default global; add --project for project scope)
+  --claude                          Use Claude paths (default global; add --project for project scope)
+  --project                         Apply project scope to selected target (and skills, unless --skip-skills)
   --claude-md <path>                Claude target memory file path override
+  --branch <name>                   Branch to install from (default: main, auto-detects from URL)
   --skip-skills                     Skip npx skills add/remove/list
-  --project-skills                  Install skills to project scope (default is global via -g)
-  --skills-source <url-or-path>     Skills package source
-  --source <auto|local|web>         Artifact source (default: auto)
+  --skip-agents-md                  Skip AGENTS.md policy block install/remove
+  --source <auto|local|web>         Artifact + skills source (default: auto)
   --raw-base <url>                  Raw GitHub base for web source
   --dry-run                         Print planned actions only
+  --extras                          Also install extras skills (duck-adapt, duck-grill, duck-tape)
   -h, --help                        Show help
 
 Examples:
   scripts/rubber-duck.sh install --opencode
-  scripts/rubber-duck.sh install --opencode-project
-  scripts/rubber-duck.sh install --copilot
-  scripts/rubber-duck.sh install --copilot-project
-  scripts/rubber-duck.sh install --claude
-  scripts/rubber-duck.sh install --claude-project
+  scripts/rubber-duck.sh install --opencode --extras
+  scripts/rubber-duck.sh install --opencode --project
+  scripts/rubber-duck.sh install --copilot --project
+  scripts/rubber-duck.sh install --claude --project
+  scripts/rubber-duck.sh install --opencode --project --source local
   curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh | bash -s -- install --opencode
+  curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/v2-quackening/scripts/rubber-duck.sh | bash -s -- install --opencode --branch v2-quackening
 EOF
 }
 
@@ -116,57 +123,19 @@ fi
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --opencode)
-      if (( OPENCODE_MODE_SET == 1 )) && [[ "${TARGET}" != "opencode" ]]; then
-        err "cannot combine --opencode and --opencode-project"
-        exit 1
-      fi
       TARGET="opencode"
-      OPENCODE_MODE_SET=1
-      shift
-      ;;
-    --opencode-project)
-      if (( OPENCODE_MODE_SET == 1 )) && [[ "${TARGET}" != "opencode-project" ]]; then
-        err "cannot combine --opencode and --opencode-project"
-        exit 1
-      fi
-      TARGET="opencode-project"
-      OPENCODE_MODE_SET=1
       shift
       ;;
     --copilot)
-      if (( COPILOT_MODE_SET == 1 )) && [[ "${TARGET}" != "copilot" ]]; then
-        err "cannot combine --copilot and --copilot-project"
-        exit 1
-      fi
       TARGET="copilot"
-      COPILOT_MODE_SET=1
-      shift
-      ;;
-    --copilot-project)
-      if (( COPILOT_MODE_SET == 1 )) && [[ "${TARGET}" != "copilot-project" ]]; then
-        err "cannot combine --copilot and --copilot-project"
-        exit 1
-      fi
-      TARGET="copilot-project"
-      COPILOT_MODE_SET=1
       shift
       ;;
     --claude)
-      if (( CLAUDE_MODE_SET == 1 )) && [[ "${TARGET}" != "claude" ]]; then
-        err "cannot combine --claude and --claude-project"
-        exit 1
-      fi
       TARGET="claude"
-      CLAUDE_MODE_SET=1
       shift
       ;;
-    --claude-project)
-      if (( CLAUDE_MODE_SET == 1 )) && [[ "${TARGET}" != "claude-project" ]]; then
-        err "cannot combine --claude and --claude-project"
-        exit 1
-      fi
-      TARGET="claude-project"
-      CLAUDE_MODE_SET=1
+    --project)
+      PROJECT_SCOPE=1
       shift
       ;;
     --claude-md)
@@ -177,16 +146,16 @@ while [[ $# -gt 0 ]]; do
       SKIP_SKILLS=1
       shift
       ;;
-    --project-skills)
-      PROJECT_SKILLS=1
+    --skip-agents-md)
+      SKIP_AGENTS_MD=1
       shift
-      ;;
-    --skills-source)
-      SKILLS_SOURCE="${2:-}"
-      shift 2
       ;;
     --source)
       SOURCE_MODE="${2:-}"
+      shift 2
+      ;;
+    --branch)
+      BRANCH="${2:-}"
       shift 2
       ;;
     --raw-base)
@@ -195,6 +164,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --dry-run)
       DRY_RUN=1
+      shift
+      ;;
+    --extras)
+      EXTRAS=1
       shift
       ;;
     -h|--help)
@@ -209,29 +182,39 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [[ -n "${CLAUDE_MD}" && "${TARGET}" != "claude" && "${TARGET}" != "claude-project" ]]; then
-  err "--claude-md requires --claude or --claude-project"
+# Auto-detect branch from piped URL if not explicitly set
+if [[ "${BRANCH}" == "main" ]]; then
+  # Try to detect from common environment variables or process cmdline
+  if [[ -n "${BASH_SOURCE_URL:-}" ]] && [[ "${BASH_SOURCE_URL}" =~ githubusercontent\.com/[^/]+/[^/]+/([^/]+)/ ]]; then
+    DETECTED_BRANCH="${BASH_REMATCH[1]}"
+    if [[ "${DETECTED_BRANCH}" != "main" ]]; then
+      BRANCH="${DETECTED_BRANCH}"
+      log "Auto-detected branch: ${BRANCH}"
+    fi
+  fi
+fi
+
+# Update RAW_BASE based on branch
+RAW_BASE="https://raw.githubusercontent.com/sprngr/rubber-duck/${BRANCH}"
+if [[ "${BRANCH}" != "main" ]]; then
+  log "Using branch: ${BRANCH}"
+fi
+
+if [[ -n "${CLAUDE_MD}" && "${TARGET}" != "claude" ]]; then
+  err "--claude-md requires --claude"
   exit 1
 fi
 
 resolve_target() {
   case "${TARGET}" in
     opencode)
-      DEST_AGENTS_DIR="${OPENCODE_AGENTS_DIR}"
-      DEST_POLICY_MD="${OPENCODE_AGENTS_MD}"
-      POLICY_MODE="managed_block"
-      LOCAL_POLICY_FILE="${REPO_ROOT}/AGENTS.md"
-      if [[ -d "${REPO_ROOT}/dist/opencode/agents" ]]; then
-        LOCAL_AGENTS_DIR="${REPO_ROOT}/dist/opencode/agents"
+      if (( PROJECT_SCOPE == 1 )); then
+        DEST_AGENTS_DIR="${OPENCODE_PROJECT_AGENTS_DIR}"
+        DEST_POLICY_MD="${OPENCODE_PROJECT_AGENTS_MD}"
       else
-        LOCAL_AGENTS_DIR="${REPO_ROOT}/agents"
+        DEST_AGENTS_DIR="${OPENCODE_AGENTS_DIR}"
+        DEST_POLICY_MD="${OPENCODE_AGENTS_MD}"
       fi
-      REMOTE_POLICY_PATH="AGENTS.md"
-      REMOTE_AGENTS_PATH="dist/opencode/agents"
-      ;;
-    opencode-project)
-      DEST_AGENTS_DIR="${OPENCODE_PROJECT_AGENTS_DIR}"
-      DEST_POLICY_MD="${OPENCODE_PROJECT_AGENTS_MD}"
       POLICY_MODE="managed_block"
       LOCAL_POLICY_FILE="${REPO_ROOT}/AGENTS.md"
       if [[ -d "${REPO_ROOT}/dist/opencode/agents" ]]; then
@@ -243,21 +226,13 @@ resolve_target() {
       REMOTE_AGENTS_PATH="dist/opencode/agents"
       ;;
     copilot)
-      DEST_AGENTS_DIR="${COPILOT_AGENTS_DIR}"
-      DEST_POLICY_MD="${COPILOT_AGENTS_MD}"
-      POLICY_MODE="managed_block"
-      LOCAL_POLICY_FILE="${REPO_ROOT}/AGENTS.md"
-      if [[ -d "${REPO_ROOT}/dist/copilot/agents" ]]; then
-        LOCAL_AGENTS_DIR="${REPO_ROOT}/dist/copilot/agents"
+      if (( PROJECT_SCOPE == 1 )); then
+        DEST_AGENTS_DIR="${COPILOT_PROJECT_AGENTS_DIR}"
+        DEST_POLICY_MD="${COPILOT_PROJECT_AGENTS_MD}"
       else
-        LOCAL_AGENTS_DIR="${REPO_ROOT}/agents"
+        DEST_AGENTS_DIR="${COPILOT_AGENTS_DIR}"
+        DEST_POLICY_MD="${COPILOT_AGENTS_MD}"
       fi
-      REMOTE_POLICY_PATH="AGENTS.md"
-      REMOTE_AGENTS_PATH="dist/copilot/agents"
-      ;;
-    copilot-project)
-      DEST_AGENTS_DIR="${COPILOT_PROJECT_AGENTS_DIR}"
-      DEST_POLICY_MD="${COPILOT_PROJECT_AGENTS_MD}"
       POLICY_MODE="managed_block"
       LOCAL_POLICY_FILE="${REPO_ROOT}/AGENTS.md"
       if [[ -d "${REPO_ROOT}/dist/copilot/agents" ]]; then
@@ -269,20 +244,13 @@ resolve_target() {
       REMOTE_AGENTS_PATH="dist/copilot/agents"
       ;;
     claude)
-      DEST_AGENTS_DIR="${CLAUDE_AGENTS_DIR}"
-      DEST_POLICY_MD="${CLAUDE_MD:-${CLAUDE_POLICY_MD}}"
-      DEST_CLAUDE_AGENTS_MD="$(dirname -- "${DEST_POLICY_MD}")/AGENTS.md"
-      POLICY_MODE="file"
-      LOCAL_POLICY_FILE="${REPO_ROOT}/dist/claude/CLAUDE.md"
-      LOCAL_POLICY_AGENTS_FILE="${REPO_ROOT}/AGENTS.md"
-      LOCAL_AGENTS_DIR="${REPO_ROOT}/dist/claude/agents"
-      REMOTE_POLICY_PATH="dist/claude/CLAUDE.md"
-      REMOTE_POLICY_AGENTS_PATH="AGENTS.md"
-      REMOTE_AGENTS_PATH="dist/claude/agents"
-      ;;
-    claude-project)
-      DEST_AGENTS_DIR="${CLAUDE_PROJECT_AGENTS_DIR}"
-      DEST_POLICY_MD="${CLAUDE_MD:-${CLAUDE_PROJECT_POLICY_MD}}"
+      if (( PROJECT_SCOPE == 1 )); then
+        DEST_AGENTS_DIR="${CLAUDE_PROJECT_AGENTS_DIR}"
+        DEST_POLICY_MD="${CLAUDE_MD:-${CLAUDE_PROJECT_POLICY_MD}}"
+      else
+        DEST_AGENTS_DIR="${CLAUDE_AGENTS_DIR}"
+        DEST_POLICY_MD="${CLAUDE_MD:-${CLAUDE_POLICY_MD}}"
+      fi
       DEST_CLAUDE_AGENTS_MD="$(dirname -- "${DEST_POLICY_MD}")/AGENTS.md"
       POLICY_MODE="file"
       LOCAL_POLICY_FILE="${REPO_ROOT}/dist/claude/CLAUDE.md"
@@ -415,6 +383,7 @@ backup_md() {
 }
 
 upsert_managed_block() {
+  (( SKIP_AGENTS_MD == 1 )) && return 0
   local target="${1:-${DEST_POLICY_MD}}"
   local content_file="${2:-${TMP_DIR}/AGENTS.md}"
   if (( DRY_RUN == 1 )); then
@@ -432,6 +401,7 @@ upsert_managed_block() {
 }
 
 remove_managed_block() {
+  (( SKIP_AGENTS_MD == 1 )) && return 0
   local target="${1:-${DEST_POLICY_MD}}"
   if (( DRY_RUN == 1 )); then
     log "[dry-run] remove managed block from ${target}"
@@ -442,6 +412,7 @@ remove_managed_block() {
 }
 
 install_policy_file() {
+  (( SKIP_AGENTS_MD == 1 )) && return 0
   # Claude targets keep a two-file layout (CLAUDE.md -> @AGENTS.md include,
   # AGENTS.md -> policy). Upsert managed blocks into both so user-authored
   # content in either file is preserved instead of clobbered.
@@ -454,6 +425,7 @@ install_policy_file() {
 }
 
 remove_policy_file() {
+  (( SKIP_AGENTS_MD == 1 )) && return 0
   # Strip only our managed blocks; user content in these files is left intact.
   remove_managed_block "${DEST_POLICY_MD}"
   remove_managed_block "${DEST_CLAUDE_AGENTS_MD}"
@@ -498,31 +470,34 @@ uninstall_agents() {
 skills_install() {
   (( SKIP_SKILLS == 1 )) && return 0
   local scope=""
-  (( PROJECT_SKILLS == 0 )) && scope="-g"
+  local -a install_list=("${DEFAULT_SKILLS[@]}")
+  (( PROJECT_SCOPE == 0 )) && scope="-g"
+  (( EXTRAS == 1 )) && install_list+=("${EXTRAS_SKILLS[@]}")
   if (( DRY_RUN == 1 )); then
-    log "[dry-run] npx --yes ${SKILLS_CLI} add ${SKILLS_SOURCE} --skill ${REQUIRED_SKILLS[*]} ${scope}"
+    log "[dry-run] npx --yes ${SKILLS_CLI} add ${SKILLS_SOURCE} --skill ${install_list[*]} ${scope}"
     return
   fi
   if ! command -v npx >/dev/null 2>&1; then
     warn "npx not found; skipping skills install"
     return
   fi
-  npx --yes "${SKILLS_CLI}" add "${SKILLS_SOURCE}" --skill ${REQUIRED_SKILLS[*]} ${scope}
+  npx --yes "${SKILLS_CLI}" add "${SKILLS_SOURCE}" --skill ${install_list[*]} ${scope}
 }
 
 skills_uninstall() {
   (( SKIP_SKILLS == 1 )) && return 0
   local scope=""
-  (( PROJECT_SKILLS == 0 )) && scope="-g"
+  local -a all_skills=("${DEFAULT_SKILLS[@]}" "${EXTRAS_SKILLS[@]}")
+  (( PROJECT_SCOPE == 0 )) && scope="-g"
   if (( DRY_RUN == 1 )); then
-    log "[dry-run] npx --yes ${SKILLS_CLI} remove ${SKILLS_SOURCE} --skill ${REQUIRED_SKILLS[*]} ${scope}"
+    log "[dry-run] npx --yes ${SKILLS_CLI} remove ${SKILLS_SOURCE} --skill ${all_skills[*]} ${scope}"
     return
   fi
   if ! command -v npx >/dev/null 2>&1; then
     warn "npx not found; skipping skills uninstall"
     return
   fi
-  if ! npx --yes "${SKILLS_CLI}" remove "${SKILLS_SOURCE}" --skill ${REQUIRED_SKILLS[*]}  ${scope}; then
+  if ! npx --yes "${SKILLS_CLI}" remove "${SKILLS_SOURCE}" --skill ${all_skills[*]} ${scope}; then
     warn "skills remove failed; remove package manually if needed"
   fi
 }
@@ -534,13 +509,13 @@ skills_status() {
     return
   fi
   local list scope=""
-  local skill
-  local missing=0
-  (( PROJECT_SKILLS == 0 )) && scope="-g"
+  local skill missing=0
+  local -a extras_present=()
+  (( PROJECT_SCOPE == 0 )) && scope="-g"
   SKILLS_LIST_CMD=(npx --yes "${SKILLS_CLI}" list ${scope})
 
   if list="$(NO_COLOR=1 "${SKILLS_LIST_CMD[@]}" </dev/null 2>/dev/null)"; then
-    for skill in "${REQUIRED_SKILLS[@]}"; do
+    for skill in "${DEFAULT_SKILLS[@]}"; do
       if ! printf '%s' "${list}" | grep -Fq -- "${skill}"; then
         missing=1
         break
@@ -551,6 +526,12 @@ skills_status() {
     else
       log "skills: not detected (${SKILLS_SOURCE})"
     fi
+    for skill in "${EXTRAS_SKILLS[@]}"; do
+      if printf '%s' "${list}" | grep -Fq -- "${skill}"; then
+        extras_present+=("${skill}")
+      fi
+    done
+    log "skills extras (optional): ${#extras_present[@]}/${#EXTRAS_SKILLS[@]} present${extras_present[*]:+ ([${extras_present[*]}])}"
   else
     log "skills: unable to query (npx skills list failed)"
   fi
@@ -564,6 +545,7 @@ has_managed_block() {
 
 report_policy_block() {
   local target="$1" state="missing"
+  (( SKIP_AGENTS_MD == 1 )) && { log "AGENTS policy block (${target##*/}): skipped (--skip-agents-md)"; return 0; }
   has_managed_block "${target}" && state="present"
   log "AGENTS policy block (${target##*/}): ${state}"
 }
@@ -605,17 +587,33 @@ doctor() {
 resolve_target
 choose_source
 
+case "${EFFECTIVE_SOURCE}" in
+  local)
+    SKILLS_SOURCE="${REPO_ROOT}"
+    ;;
+  web|*)
+    if [[ "${BRANCH}" == "main" ]]; then
+      SKILLS_SOURCE="https://github.com/sprngr/rubber-duck"
+    else
+      SKILLS_SOURCE="https://github.com/sprngr/rubber-duck#${BRANCH}"
+    fi
+    ;;
+esac
+log "Skills source: ${SKILLS_SOURCE}"
+
 case "${ACTION}" in
   install)
     doctor
     prepare_sources
     install_agents
-    backup_md "${DEST_POLICY_MD}"
-    if [[ "${POLICY_MODE}" == "managed_block" ]]; then
-      upsert_managed_block
-    else
-      backup_md "${DEST_CLAUDE_AGENTS_MD}"
-      install_policy_file
+    if (( SKIP_AGENTS_MD == 0 )); then
+      backup_md "${DEST_POLICY_MD}"
+      if [[ "${POLICY_MODE}" == "managed_block" ]]; then
+        upsert_managed_block
+      else
+        backup_md "${DEST_CLAUDE_AGENTS_MD}"
+        install_policy_file
+      fi
     fi
     skills_install
     status
@@ -624,12 +622,14 @@ case "${ACTION}" in
     doctor
     prepare_sources
     uninstall_agents
-    backup_md "${DEST_POLICY_MD}"
-    if [[ "${POLICY_MODE}" == "managed_block" ]]; then
-      remove_managed_block
-    else
-      backup_md "${DEST_CLAUDE_AGENTS_MD}"
-      remove_policy_file
+    if (( SKIP_AGENTS_MD == 0 )); then
+      backup_md "${DEST_POLICY_MD}"
+      if [[ "${POLICY_MODE}" == "managed_block" ]]; then
+        remove_managed_block
+      else
+        backup_md "${DEST_CLAUDE_AGENTS_MD}"
+        remove_policy_file
+      fi
     fi
     skills_uninstall
     status

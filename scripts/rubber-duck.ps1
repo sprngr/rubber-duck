@@ -2,50 +2,45 @@ param(
   [ValidateSet("install","uninstall","status","doctor")]
   [string]$Action = "install",
   [switch]$OpenCode,
-  [switch]$OpenCodeProject,
   [switch]$Copilot,
-  [switch]$CopilotProject,
   [switch]$Claude,
-  [switch]$ClaudeProject,
+  [switch]$Project,
   [string]$ClaudeMd,
+  [string]$Branch = "main",
   [switch]$SkipSkills,
-  [switch]$ProjectSkills,
-  [string]$SkillsSource = "https://github.com/sprngr/rubber-duck",
+  [switch]$SkipAgentsMd,
+  [switch]$Extras,
   [ValidateSet("auto","local","web")]
   [string]$Source = "auto",
-  [string]$RawBase = "https://raw.githubusercontent.com/sprngr/rubber-duck/main"
+  [string]$RawBase = ""
 )
 
 function rubber-duck {
-# Parameters are declared once in the top-level param() block above and read
-# from script scope here (nested helper functions close over the same scope).
+# Parameters are declared in the top-level param() block and read from script scope here.
 $ErrorActionPreference = "Stop"
 
-# Pinned npx CLI package spec (not a flag; mirrors SKILLS_CLI in rubber-duck.sh)
+# Pinned npx CLI package spec (mirrors SKILLS_CLI in rubber-duck.sh)
 $SkillsCli = "skills@^1.5.14"
 
-if ($Claude -and $ClaudeProject) {
-  throw "Cannot combine -Claude and -ClaudeProject. Choose one."
+# SkillsSource derived from -Source after Resolve-Source
+$SkillsSource = ""
+
+if (-not $Claude -and -not [string]::IsNullOrWhiteSpace($ClaudeMd)) {
+  throw "-ClaudeMd requires -Claude."
 }
 
-if ($OpenCode -and $OpenCodeProject) {
-  throw "Cannot combine -OpenCode and -OpenCodeProject. Choose one."
+# Update RawBase based on branch
+if ([string]::IsNullOrWhiteSpace($RawBase)) {
+  $RawBase = "https://raw.githubusercontent.com/sprngr/rubber-duck/$Branch"
+}
+if ($Branch -ne "main") {
+  Write-Host "Using branch: $Branch"
 }
 
-if ($Copilot -and $CopilotProject) {
-  throw "Cannot combine -Copilot and -CopilotProject. Choose one."
-}
-
-if (-not $Claude -and -not $ClaudeProject -and -not [string]::IsNullOrWhiteSpace($ClaudeMd)) {
-  throw "-ClaudeMd requires -Claude or -ClaudeProject."
-}
-
-# When run via `iwr | iex` there is no backing script file, so
-# $MyInvocation.MyCommand.Path is null and ScriptDir/RepoRoot cannot be
-# resolved. Mirror the .sh running_piped logic: flag it and force web source,
-# since local artifact detection would otherwise use empty/broken paths.
-# Keep ScriptDir/RepoRoot as non-null placeholders so Join-Path never throws;
-# they are never used because Resolve-Source forces web when piped.
+# When run via `iwr | iex` there is no backing script file, so $MyInvocation.MyCommand.Path
+# is null and ScriptDir/RepoRoot cannot be resolved. Mirror the .sh running_piped logic:
+# flag it and force web source. Keep ScriptDir/RepoRoot as non-null placeholders so
+# Join-Path never throws; they are never used because Resolve-Source forces web when piped.
 $ScriptPath = $MyInvocation.MyCommand.Path
 $script:RunningPiped = [string]::IsNullOrWhiteSpace($ScriptPath)
 if ($script:RunningPiped) {
@@ -61,30 +56,36 @@ $LocalAgentsPolicyFile = $null
 $RemoteAgentsPath = $null
 $RemotePolicyPath = $null
 $RemoteAgentsPolicyPath = $null
-$PolicyMode = "managed_block" # managed_block|file
+$PolicyMode = "managed_block"  # managed_block|file
 
 $ManagedStart = "<!-- RUBBER_DUCK_MANAGED_BLOCK START -->"
 $ManagedEnd = "<!-- RUBBER_DUCK_MANAGED_BLOCK END -->"
 
-# Built agent filenames are identical across harnesses (<name>.md).
+# Built agent filenames are identical across harnesses (<name>.md)
 $AgentFiles = @(
   "rubber-duck.md",
-  "duck-simple.md",
-  "duck-reviewer.md",
-  "duck-investigator.md",
-  "duck-dry.md",
-  "duck-builder.md",
-  "duck-adversary.md"
+  "duckling.md"
 )
 
-$RequiredSkills = @(
+$DefaultSkills = @(
   "duck-debt",
   "duck-debug",
   "duck-design",
-  "duck-explain",
+  "duck-patch",
+  "duck-refactor",
   "duck-review",
+  "duck-risk",
+  "duck-simplify",
   "duck-teach",
-  "duck-triage"
+  "duck-triage",
+  "quack"
+)
+
+# Optional extras: installed only with -Extras.
+$ExtrasSkills = @(
+  "duck-adapt",
+  "duck-grill",
+  "duck-tape"
 )
 
 function Log($msg) { Write-Host $msg }
@@ -93,24 +94,13 @@ function Warn($msg) { Write-Warning $msg }
 function Resolve-Target {
   if ($OpenCode) {
     $script:Target = "opencode"
-    $script:DestAgentsDir = Join-Path $HOME ".config/opencode/agents"
-    $script:DestPolicyMd = Join-Path $HOME ".config/opencode/AGENTS.md"
-    $script:PolicyMode = "managed_block"
-    $script:LocalPolicyFile = Join-Path $RepoRoot "AGENTS.md"
-    if (Test-Path (Join-Path $RepoRoot "dist/opencode/agents")) {
-      $script:LocalAgentsDir = Join-Path $RepoRoot "dist/opencode/agents"
+    if ($Project) {
+      $script:DestAgentsDir = ".opencode/agents"
+      $script:DestPolicyMd = "AGENTS.md"
     } else {
-      $script:LocalAgentsDir = Join-Path $RepoRoot "agents"
+      $script:DestAgentsDir = Join-Path $HOME ".config/opencode/agents"
+      $script:DestPolicyMd = Join-Path $HOME ".config/opencode/AGENTS.md"
     }
-    $script:RemotePolicyPath = "AGENTS.md"
-    $script:RemoteAgentsPath = "dist/opencode/agents"
-    return
-  }
-
-  if ($OpenCodeProject) {
-    $script:Target = "opencode-project"
-    $script:DestAgentsDir = ".opencode/agents"
-    $script:DestPolicyMd = "AGENTS.md"
     $script:PolicyMode = "managed_block"
     $script:LocalPolicyFile = Join-Path $RepoRoot "AGENTS.md"
     if (Test-Path (Join-Path $RepoRoot "dist/opencode/agents")) {
@@ -125,8 +115,13 @@ function Resolve-Target {
 
   if ($Claude) {
     $script:Target = "claude"
-    $script:DestAgentsDir = Join-Path $HOME ".claude/agents"
-    $script:DestPolicyMd = if ([string]::IsNullOrWhiteSpace($ClaudeMd)) { (Join-Path $HOME ".claude/CLAUDE.md") } else { $ClaudeMd }
+    if ($Project) {
+      $script:DestAgentsDir = ".claude/agents"
+      $script:DestPolicyMd = if ([string]::IsNullOrWhiteSpace($ClaudeMd)) { "CLAUDE.md" } else { $ClaudeMd }
+    } else {
+      $script:DestAgentsDir = Join-Path $HOME ".claude/agents"
+      $script:DestPolicyMd = if ([string]::IsNullOrWhiteSpace($ClaudeMd)) { (Join-Path $HOME ".claude/CLAUDE.md") } else { $ClaudeMd }
+    }
     $script:DestClaudeAgentsMd = Join-Path (Split-Path -Parent $script:DestPolicyMd) "AGENTS.md"
     $script:PolicyMode = "file"
     $script:LocalPolicyFile = Join-Path $RepoRoot "dist/claude/CLAUDE.md"
@@ -140,8 +135,13 @@ function Resolve-Target {
 
   if ($Copilot) {
     $script:Target = "copilot"
-    $script:DestAgentsDir = Join-Path $HOME ".copilot/agents"
-    $script:DestPolicyMd = Join-Path $HOME ".copilot/AGENTS.md"
+    if ($Project) {
+      $script:DestAgentsDir = ".github/agents"
+      $script:DestPolicyMd = "AGENTS.md"
+    } else {
+      $script:DestAgentsDir = Join-Path $HOME ".copilot/agents"
+      $script:DestPolicyMd = Join-Path $HOME ".copilot/AGENTS.md"
+    }
     $script:PolicyMode = "managed_block"
     $script:LocalPolicyFile = Join-Path $RepoRoot "AGENTS.md"
     if (Test-Path (Join-Path $RepoRoot "dist/copilot/agents")) {
@@ -154,37 +154,7 @@ function Resolve-Target {
     return
   }
 
-  if ($CopilotProject) {
-    $script:Target = "copilot-project"
-    $script:DestAgentsDir = ".github/agents"
-    $script:DestPolicyMd = "AGENTS.md"
-    $script:PolicyMode = "managed_block"
-    $script:LocalPolicyFile = Join-Path $RepoRoot "AGENTS.md"
-    if (Test-Path (Join-Path $RepoRoot "dist/copilot/agents")) {
-      $script:LocalAgentsDir = Join-Path $RepoRoot "dist/copilot/agents"
-    } else {
-      $script:LocalAgentsDir = Join-Path $RepoRoot "agents"
-    }
-    $script:RemotePolicyPath = "AGENTS.md"
-    $script:RemoteAgentsPath = "dist/copilot/agents"
-    return
-  }
-
-  if ($ClaudeProject) {
-    $script:Target = "claude-project"
-    $script:DestAgentsDir = ".claude/agents"
-    $script:DestPolicyMd = if ([string]::IsNullOrWhiteSpace($ClaudeMd)) { "CLAUDE.md" } else { $ClaudeMd }
-    $script:DestClaudeAgentsMd = Join-Path (Split-Path -Parent $script:DestPolicyMd) "AGENTS.md"
-    $script:PolicyMode = "file"
-    $script:LocalPolicyFile = Join-Path $RepoRoot "dist/claude/CLAUDE.md"
-    $script:LocalAgentsPolicyFile = Join-Path $RepoRoot "AGENTS.md"
-    $script:LocalAgentsDir = Join-Path $RepoRoot "dist/claude/agents"
-    $script:RemotePolicyPath = "dist/claude/CLAUDE.md"
-    $script:RemoteAgentsPolicyPath = "AGENTS.md"
-    $script:RemoteAgentsPath = "dist/claude/agents"
-    return
-  }
-
+  # Default: opencode global
   $script:Target = "opencode"
   $script:DestAgentsDir = Join-Path $HOME ".config/opencode/agents"
   $script:DestPolicyMd = Join-Path $HOME ".config/opencode/AGENTS.md"
@@ -293,6 +263,7 @@ function Backup-Md([string]$Target) {
 }
 
 function Upsert-ManagedBlock([string]$Target, [string]$ContentFile) {
+  if ($SkipAgentsMd) { return }
   $parent = Split-Path -Parent $Target
   if (-not [string]::IsNullOrWhiteSpace($parent)) {
     New-Item -ItemType Directory -Force -Path $parent | Out-Null
@@ -306,6 +277,7 @@ function Upsert-ManagedBlock([string]$Target, [string]$ContentFile) {
 }
 
 function Remove-ManagedBlock([string]$Target) {
+  if ($SkipAgentsMd) { return }
   if (-not (Test-Path $Target)) { return }
   $current = Get-Content -Raw $Target
   $stripped = Strip-ManagedBlockText $current
@@ -313,6 +285,7 @@ function Remove-ManagedBlock([string]$Target) {
 }
 
 function Install-PolicyFile {
+  if ($SkipAgentsMd) { return }
   # Claude targets keep a two-file layout (CLAUDE.md -> @AGENTS.md include,
   # AGENTS.md -> policy). Upsert managed blocks into both so user-authored
   # content in either file is preserved instead of clobbered.
@@ -323,6 +296,7 @@ function Install-PolicyFile {
 }
 
 function Remove-PolicyFile {
+  if ($SkipAgentsMd) { return }
   # Strip only our managed blocks; user content in these files is left intact.
   Remove-ManagedBlock $DestPolicyMd
   Remove-ManagedBlock $DestClaudeAgentsMd
@@ -356,8 +330,10 @@ function Skills-Install {
     Warn "npx not found; skipping skills install"
     return
   }
-  $scope = if ($ProjectSkills) { @() } else { @("-g") }
-  $args = @("--yes", $SkillsCli, "add", $SkillsSource, "--skill") + $RequiredSkills + $scope
+  $installList = @() + $DefaultSkills
+  if ($Extras) { $installList += $ExtrasSkills }
+  $scope = if ($Project) { @() } else { @("-g") }
+  $args = @("--yes", $SkillsCli, "add", $SkillsSource, "--skill") + $installList + $scope
   & npx @args
 }
 
@@ -367,9 +343,10 @@ function Skills-Uninstall {
     Warn "npx not found; skipping skills uninstall"
     return
   }
-  $scope = if ($ProjectSkills) { @() } else { @("-g") }
+  $allSkills = @() + $DefaultSkills + $ExtrasSkills
+  $scope = if ($Project) { @() } else { @("-g") }
   try {
-    $args = @("--yes", $SkillsCli, "remove", $SkillsSource, "--skill") + $RequiredSkills + $scope
+    $args = @("--yes", $SkillsCli, "remove", $SkillsSource, "--skill") + $allSkills + $scope
     & npx @args
   } catch {
     Warn "skills remove failed; remove package manually if needed"
@@ -382,14 +359,14 @@ function Skills-Status {
     Log "skills: npx missing"
     return
   }
-  $scope = if ($ProjectSkills) { @() } else { @("-g") }
+  $scope = if ($Project) { @() } else { @("-g") }
   $previousNoColor = $env:NO_COLOR
   try {
     $env:NO_COLOR = "1"
     $args = @("--yes", $SkillsCli, "list") + $scope
     $list = & npx @args | Out-String
     $allPresent = $true
-    foreach ($skill in $RequiredSkills) {
+    foreach ($skill in $DefaultSkills) {
       if ($list.IndexOf($skill, [System.StringComparison]::Ordinal) -lt 0) {
         $allPresent = $false
         break
@@ -400,6 +377,14 @@ function Skills-Status {
     } else {
       Log "skills: not detected ($SkillsSource)"
     }
+    $extrasPresent = @()
+    foreach ($skill in $ExtrasSkills) {
+      if ($list.IndexOf($skill, [System.StringComparison]::Ordinal) -ge 0) {
+        $extrasPresent += $skill
+      }
+    }
+    $extrasSuffix = if ($extrasPresent.Count -gt 0) { " ([$($extrasPresent -join ', ')])" } else { "" }
+    Log "skills extras (optional): $($extrasPresent.Count)/$($ExtrasSkills.Count) present$extrasSuffix"
   } catch {
     Log "skills: unable to query (npx skills list failed)"
   } finally {
@@ -418,6 +403,7 @@ function Has-ManagedBlock([string]$Target) {
 }
 
 function Report-PolicyBlock([string]$Target) {
+  if ($SkipAgentsMd) { Log "AGENTS policy block ($(Split-Path -Leaf $Target)): skipped (-SkipAgentsMd)"; return }
   $state = if (Has-ManagedBlock $Target) { "present" } else { "missing" }
   Log "AGENTS policy block ($(Split-Path -Leaf $Target)): $state"
 }
@@ -456,17 +442,30 @@ function Doctor {
 try {
   Resolve-Target
   Resolve-Source
+  switch ($script:EffectiveSource) {
+    "local" { $SkillsSource = $RepoRoot }
+    default {
+      if ($Branch -eq "main") {
+        $SkillsSource = "https://github.com/sprngr/rubber-duck"
+      } else {
+        $SkillsSource = "https://github.com/sprngr/rubber-duck#$Branch"
+      }
+    }
+  }
+  Write-Host "Skills source: $SkillsSource"
   switch ($Action) {
     "install" {
       Doctor
       Download-Sources
       Install-Agents
-      Backup-Md $DestPolicyMd
-      if ($PolicyMode -eq "managed_block") {
-        Upsert-ManagedBlock $DestPolicyMd (Join-Path $script:TmpDir "AGENTS.md")
-      } else {
-        Backup-Md $DestClaudeAgentsMd
-        Install-PolicyFile
+      if (-not $SkipAgentsMd) {
+        Backup-Md $DestPolicyMd
+        if ($PolicyMode -eq "managed_block") {
+          Upsert-ManagedBlock $DestPolicyMd (Join-Path $script:TmpDir "AGENTS.md")
+        } else {
+          Backup-Md $DestClaudeAgentsMd
+          Install-PolicyFile
+        }
       }
       Skills-Install
       Status
@@ -475,12 +474,14 @@ try {
       Doctor
       Download-Sources
       Uninstall-Agents
-      Backup-Md $DestPolicyMd
-      if ($PolicyMode -eq "managed_block") {
-        Remove-ManagedBlock $DestPolicyMd
-      } else {
-        Backup-Md $DestClaudeAgentsMd
-        Remove-PolicyFile
+      if (-not $SkipAgentsMd) {
+        Backup-Md $DestPolicyMd
+        if ($PolicyMode -eq "managed_block") {
+          Remove-ManagedBlock $DestPolicyMd
+        } else {
+          Backup-Md $DestClaudeAgentsMd
+          Remove-PolicyFile
+        }
       }
       Skills-Uninstall
       Status

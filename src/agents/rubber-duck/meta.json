@@ -1,6 +1,6 @@
 {
   "name": "rubber-duck",
-  "description": "Rubber duck for code review, debugging, design, and testing.",
+  "description": "Rubber duck recommendation and rules governor. Enforces policy/safety gates with explicit routing via quack.",
   "harnesses": {
     "claude": {
       "tools": "Read, Glob, Grep, Edit, Write, Bash, Agent, Skill, AskUserQuestion",

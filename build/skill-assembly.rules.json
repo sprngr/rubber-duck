@@ -9,7 +9,9 @@
   "io": {
     "include": [
       "SKILL.md",
-      "references/**"
+      "references/**",
+      "assets/**",
+      "examples/**"
     ],
     "source_template": "src/skills/{skill}/",
     "output_template": "skills/{skill}/"
@@ -51,7 +53,7 @@
     ],
     "required_dir_file_sets": [
       {
-        "dirs_glob": "src/skills/duck-*",
+        "dirs_glob": "src/skills/*",
         "required_files": [
           "SKILL.md"
         ]
@@ -59,13 +61,14 @@
     ],
     "skill_groups": {
       "all_skills": [
+        "quack",
         "duck-debt",
         "duck-debug",
         "duck-design",
-        "duck-explain",
         "duck-review",
         "duck-teach",
-        "duck-triage"
+        "duck-triage",
+        "duck-tape"
       ],
       "skills_with_ladder": [
         "duck-debug",
@@ -73,14 +76,15 @@
         "duck-review"
       ],
       "skills_with_safety": [
+        "quack",
         "duck-debt",
         "duck-design",
-        "duck-explain",
         "duck-teach",
         "duck-triage"
       ],
       "skills_with_mutating_gate": [
-        "duck-debug"
+        "duck-debug",
+        "duck-tape"
       ]
     },
     "group_assertions": {
@@ -97,7 +101,18 @@
       "skills_with_mutating_gate": [
         "{{include: policy-snippets/mutating-action-gate.md}}"
       ]
-    }
+    },
+    "markdown_duplicate_heading_checks": [
+      {
+        "files_glob": "skills/*/SKILL.md",
+        "min_level": 2
+      }
+    ],
+    "markdown_asset_ref_checks": [
+      {
+        "files_glob": "skills/*/SKILL.md"
+      }
+    ]
   },
   "notes": [
     "Enforced by scripts/assemble-skills.sh in --check mode (including grouped assertions)."

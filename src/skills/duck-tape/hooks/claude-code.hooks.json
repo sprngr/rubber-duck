@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PreCompact": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/src/skills/duck-tape/hooks/extract-state.sh\""
+          }
+        ]
+      }
+    ]
+  }
+}

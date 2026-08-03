@@ -1,0 +1,48 @@
+{
+  "skill_name": "duck-triage",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Users report they can transfer money to themselves, causing duplicate balance entries. Triage this bug.",
+      "expected_output": "Classifies as P0/Critical (data loss / financial). Provides severity rationale. Suggests specific test to add (self-transfer rejection). Includes bug report format (title, repro, expected vs actual).",
+      "assertions": [
+        "Classifies severity as P0 or P1 (Critical/High)",
+        "Provides severity rationale mentioning data loss or financial impact",
+        "Includes at least one 'needs test:' line for self-transfer scenario",
+        "Includes bug report format with steps to reproduce"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "What tests should I add before merging this PR that adds email notification preferences?",
+      "expected_output": "Produces 1-3 'needs test:' lines. Covers happy path, boundary case (empty preferences), and error path (notification service down). Uses Duck Ladder (check existing coverage first).",
+      "assertions": [
+        "Produces at least 1 and at most 3 'needs test:' lines",
+        "Covers happy path scenario",
+        "Covers at least one error/boundary case",
+        "Checks for existing test coverage before suggesting new tests"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "There's a bug somewhere in the app but I'm not sure where.",
+      "expected_output": "Asks one targeted clarifying question about repro/spec (what behavior, what's expected, any logs). Includes 'missing evidence:' marker listing what's needed.",
+      "assertions": [
+        "Asks at least one clarifying question about reproduction",
+        "Includes 'missing evidence:' marker with needed artifacts",
+        "Does not classify severity without evidence"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "The icon on the settings page is misaligned by 2 pixels on mobile Safari.",
+      "expected_output": "Classifies as P3/Low or P2/Medium (cosmetic, edge case). Brief rationale. May suggest test or mark as backlog. Does not over-prioritize cosmetic issue.",
+      "assertions": [
+        "Classifies severity as P2 or P3 (Medium/Low)",
+        "Does not classify as P0 or P1",
+        "Provides brief severity rationale",
+        "Action recommendation is proportional (backlog or next iteration)"
+      ]
+    }
+  ]
+}

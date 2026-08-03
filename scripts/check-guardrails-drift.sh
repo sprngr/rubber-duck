@@ -11,7 +11,7 @@ fi
 
 failed=0
 
-for skill_dir in "$ROOT"/skills/duck-*; do
+for skill_dir in "$ROOT"/skills/*; do
   [ -d "$skill_dir" ] || continue
   vendored="$skill_dir/references/GUARDRAILS.md"
   if [ ! -f "$vendored" ]; then

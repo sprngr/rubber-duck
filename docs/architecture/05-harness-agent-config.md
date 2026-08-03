@@ -33,12 +33,12 @@ agents/<name>/
   meta.json    # shared identity + per-harness frontmatter
 ```
 
-`meta.json` schema:
+`meta.json` schema (illustrative example):
 
 ```json
 {
-  "name": "duck-simple",
-  "description": "Use for simplicity review to reduce overengineering, indirection, and unnecessary abstractions.",
+  "name": "duckling",
+  "description": "Delegation subagent that routes to active duck-* skills with explicit role/mode constraints.",
   "harnesses": {
     "claude":   { "tools": "Read, Glob, Grep, Skill" },
     "copilot": { "tools": "read,search,edit,execute,agent" },
@@ -55,7 +55,7 @@ agents/<name>/
 - `harnesses.<harness>` holds only that harness's frontmatter fields, rendered verbatim into its format.
 - Fields that happen to coincide across harnesses (e.g. `color`) stay per-harness — coincidental overlap is not shared semantics.
 
-The router follows the same model as every other agent (`body.md` + `meta.json`).
+The governor agent (`rubber-duck`) follows the same model as every other agent (`body.md` + `meta.json`). The delegated executor (`duckling`) follows the same model. The explicit router (`quack`) is implemented as a skill in `src/skills/quack/`.
 
 ## Build model
 

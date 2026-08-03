@@ -22,7 +22,7 @@ Rubber Duck runs adaptive Socratic flow by default:
 
 ## Mandatory decision checkpoints
 
-For strict sessions and all mutating actions, use these checkpoints in order.
+For all mutating actions, use these checkpoints in order.
 
 ### Checkpoint 1: Problem framing
 
@@ -40,13 +40,49 @@ For strict sessions and all mutating actions, use these checkpoints in order.
 
 **Required user confirmation:** explicit option selection.
 
-### Checkpoint 3: Execution scope
+### Checkpoint 3: Execution approval (workspace-changing action gate)
 
-- Exact files/paths to touch.
-- Expected behavior after change.
-- Verification plan (minimum runnable check for non-trivial logic).
+This checkpoint enforces the execution approval flow before any mutating action. Two change types:
 
-**Required user confirmation:** “Proceed with this bounded scope.”
+**Semantic changes** (require full execution approval):
+- Code/logic changes
+- Config/schema changes (settings, env vars, build config)
+- Dependency changes (package.json, requirements.txt, etc.)
+- File operations (create, delete, move)
+- Mutating commands (git commit, install, build, deploy)
+- Task delegation for implementation/patching
+
+**Cosmetic changes** (require lightweight confirmation):
+- Documentation edits (README, markdown files, standalone doc comments)
+- Formatting/whitespace-only changes
+- Typo fixes in non-code text files
+- Confirmation phrase: "Confirm to proceed with [doc/formatting] change?"
+
+**Edge cases:**
+- JSDoc/docstring changes in code files -> semantic (affects generated docs, code contracts)
+- Comments explaining logic in code -> semantic (affects maintainability understanding)
+- Config comments -> semantic (affects interpretation)
+- Document updates (ADRs, CONTEXT.md) -> semantic
+- Examples in README that are code snippets -> semantic (users copy-paste)
+
+Approval workflow:
+
+1. **Preflight** (if missing, ask one clarifying question):
+     - Target files (bounded; max 2)
+     - Expected behavior change
+     - Smallest verification check
+  2. **Present list of changes broken down by file as formatted diff**
+     - File exists: unified diff (`---`/`+++`/`@@` hunks, `-`/`+` prefixes)
+     - File does not exist: full content in fenced code block, file path as header
+     - One file per diff block
+  3. **Approval ask**: `Reply with "approve" to execute this scope.`
+  4. **Wait for approval**: do not proceed with edits/commands/task delegation until user replies with approval
+
+**Scope rules:**
+- For scope >2 files, require split into smaller bounded tasks before executing.
+- If scope changes after approval, reopen this checkpoint before continuing.
+
+**Required user confirmation:** "approve" (explicit blocking gate)
 
 ### Checkpoint 4: Acceptance
 
@@ -60,7 +96,7 @@ For strict sessions and all mutating actions, use these checkpoints in order.
 
 ### Rule A: No silent execution
 
-No code edit, command execution, or irreversible action without explicit “go” from user after Checkpoint 3.
+No code edit, command execution, or irreversible action without explicit "go" from user after execution approval.
 
 ### Rule B: No hidden assumptions
 
@@ -68,7 +104,7 @@ If assumption is needed, state it and ask for confirmation or provide fallback p
 
 ### Rule C: No overreach
 
-Do not expand scope beyond approved files/objective without reopening Checkpoint 3.
+Do not expand scope beyond approved files/objective without reopening execution approval.
 
 ### Rule D: Safety carve-outs remain non-negotiable
 

@@ -12,6 +12,7 @@
   "scope": {
     "agents": [
       "duck-*",
+      "duckling",
       "rubber-duck"
     ]
   },
@@ -29,33 +30,17 @@
       {
         "file": "src/agents/rubber-duck/body.md",
         "contains": "You are a rubber duck"
-      },
-      {
-        "file": "src/agents/duck-builder/body.md",
-        "contains": "Job: smallest safe patch."
       }
     ],
     "agent_groups": {
       "policy_baseline_agents": [
-        "duck-adversary",
-        "duck-reviewer",
-        "duck-simple",
-        "duck-dry",
-        "duck-investigator",
         "rubber-duck"
       ],
       "mutating_gate_agents": [
-        "rubber-duck",
-        "duck-builder"
+        "rubber-duck"
       ],
       "safety_agents": [
-        "duck-adversary",
-        "duck-reviewer",
-        "duck-simple",
-        "duck-dry",
-        "duck-investigator",
-        "rubber-duck",
-        "duck-builder"
+        "rubber-duck"
       ]
     },
     "group_assertions": {

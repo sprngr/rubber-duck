@@ -1,0 +1,57 @@
+{
+  "skill_name": "quack",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "quack (bare heartbeat invocation)",
+      "expected_output": "Bare quack heartbeat path. Emits one heartbeat line from assets/heartbeat.md. Emits full quick-help.md content verbatim. Ends with 'What would you like to route?' No ad-hoc quips.",
+      "assertions": [
+        "Contains a heartbeat line starting with '🦆 Ready.'",
+        "Contains quick-help content with available routes list",
+        "Ends with 'What would you like to route?'",
+        "Does not generate ad-hoc quips beyond heartbeat list"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "quack review this diff for security issues",
+      "expected_output": "Routes to duck-review. Emits 'Routing: duck-review.' Uses keyword precedence (review signal). Does not ask disambiguation question.",
+      "assertions": [
+        "Emits 'Routing: duck-review.' or similar routing confirmation",
+        "Does not ask disambiguation question",
+        "Routes to duck-review (not duck-risk despite 'security' keyword)"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "quack what could break in this rollback",
+      "expected_output": "Routes to duck-risk via keyword precedence (rollback signal). Emits 'Routing: duck-risk.' Does not route to duck-review or duck-design.",
+      "assertions": [
+        "Routes to duck-risk based on 'rollback' keyword precedence",
+        "Emits routing confirmation for duck-risk",
+        "Does not route to duck-review or duck-design"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "quack fix this bug via general",
+      "expected_output": "Parses override 'via general'. Routes to duck-patch with subagent_type=general. Emits 'Routing: duck-patch via general.'",
+      "assertions": [
+        "Parses 'via general' as subagent override",
+        "Routes to duck-patch (fix/patch alias)",
+        "Emits routing confirmation mentioning 'via general'"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "quack do something cool",
+      "expected_output": "Alias miss. Detects unknown intent. Asks one targeted disambiguation question listing available routes. Does not guess or auto-route.",
+      "assertions": [
+        "Does not auto-route to a skill",
+        "Asks one disambiguation question",
+        "Lists available route options in disambiguation",
+        "Waits for user clarification"
+      ]
+    }
+  ]
+}
