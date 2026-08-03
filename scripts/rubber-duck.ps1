@@ -20,7 +20,7 @@ function rubber-duck {
 $ErrorActionPreference = "Stop"
 
 # Pinned npx CLI package spec (mirrors SKILLS_CLI in rubber-duck.sh)
-$SkillsCli = "skills@^1.5.14"
+$SkillsCli = "skills@^1.5.21"
 
 # SkillsSource derived from -Source after Resolve-Source
 $SkillsSource = ""
