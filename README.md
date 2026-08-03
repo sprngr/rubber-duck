@@ -1,6 +1,6 @@
  # Rubber Duck 🦆
  
- Socratic assistant operating system for developers who want better quality decisions, not blind automation.
+ Socratic assistant operating system for developers who want better-quality decisions, not blind automation.
  
 [![License: MIT](https://img.shields.io/github/license/sprngr/rubber-duck?style=flat&color=blue)](./LICENSE)
 [![Stars](https://img.shields.io/github/stars/sprngr/rubber-duck?style=flat&color=yellow)](https://github.com/sprngr/rubber-duck/stargazers)
@@ -28,14 +28,14 @@
 
  I built Rubber Duck after noticing something in my own agent-assisted workflow: I could ship code faster, but I didn't always feel like I fully understood the decisions behind it.
 
- The same pattern kept showing up — the model would make implicit assumptions or design calls, and I'd only catch them later during review, cleanup, or when explaining the work to someone else. By then the rework cost was already paid.
+ The same pattern kept showing up — the model would make implicit assumptions or design calls, and I'd only catch them later during review, cleanup, or when explaining the work to someone else. By then, the rework cost was already paid.
 
- Rubber Duck flips that tradeoff. Instead of optimizing for output speed, it optimizes for decision quality:
+ Rubber Duck flips that trade-off. Instead of optimizing for output speed, it optimizes for decision quality:
 
  - **decision quality** over raw throughput
  - **developer understanding** over delegation
  - **safe, bounded change** over far-reaching edits
- - **reduced rework** over fast-wrong
+ - **reduced rework** over "fast-wrong"
 
  Core idea: keep humans in control and make reasoning explicit before execution.
 
@@ -69,8 +69,8 @@
 
  ## Who this is for
 
- - You want an assistant that helps you think more clearly, challenge assumptions, and keeps decision ownership with you — not the model.
- - You catch regressions in review more often than you'd like, and want to move that catch upstream.
+ - You want an assistant that helps you think more clearly, challenge assumptions, and keep decision ownership with you — not the model.
+ - You catch regressions in review more often than you'd like and want to move that catch upstream.
  - You work in codebases where a wrong assumption costs more than a slow turn.
  - You prefer explicit scope and approval over discovering what changed after the fact.
  - You want a durable thinking partner, not a one-shot code generator.
@@ -79,12 +79,12 @@
 
  - You want fully autonomous, end-to-end execution with minimal checkpoints or human involvement.
  - You measure assistant value primarily by tokens-per-second or LOC shipped per turn.
- - You find clarifying questions friction and prefer the agent to just do the thing.
+ - You find clarifying questions to be friction and prefer the agent to just do the thing.
  - You want a code generator, not a thinking partner.
 
  ## What this is not
 
- - **Not a code generator.** Rubber Duck patches and refactors, but always bounded, scoped, and approved. It will not produce a feature from a one-line prompt and ship it.
+ - **Not a code generator.** Rubber Duck patches and refactors, but its changes are always bounded, scoped, and approved. It will not produce a feature from a one-line prompt and ship it.
  - **Not an autonomous agent.** No background loops, no self-approving task chains, no "spin up three subagents and let them figure it out." Every mutating action stops at the approval gate.
  - **Not a linter or formatter.** It will not silently rewrite your codebase to its preferences. Suggestions surface as findings; you decide.
  - **Not a token compressor.** Terse language is a side effect of clear thinking, not the goal. For pure token reduction, [Caveman](https://github.com/JuliusBrussee/caveman) does that better.
@@ -93,7 +93,10 @@
  
  ## What to expect
  
- - More questions before work starts. Rubber Duck asks before it acts. First turn on a task is usually a clarifying question, not an edit.
+> [!IMPORTANT]  
+> Rubber Duck provides instructions and scripts, not hard system bounds. The LLM may still ignore constraints. YMMV.
+
+ - More questions before work starts. Rubber Duck asks before it acts. The first turn on a task is usually a clarifying question, not an edit.
    - Come with a plan and resources to ground it. Files touched, constraints, prior decisions in CONTEXT.md, related code. Evidence speeds the loop.
  - Smaller, bounded changes. Patches cap at 2 files, refactors at 5. Large work splits into approved scopes.
  - Explicit approval gates. No silent edits. Every mutating action stops at `Reply with "approve" to execute this scope.`
@@ -111,13 +114,7 @@ Two install paths. Full install options (flags, targets, uninstall) in [docs/MAN
 npx skills add https://github.com/sprngr/rubber-duck
 ```
 
-### Full agent system (installer)
-
-Project-scoped install (agents + skills to current repo):
-
-```bash
-scripts/rubber-duck.sh install --opencode --project --source local
-```
+### Full assistant operating system (agents + skills)
 
 **Bash (macOS/Linux):**
 
@@ -150,7 +147,7 @@ Rubber Duck runs two ways:
 
 - **As a subagent (on demand):** invoke from inside an existing session — `@agent-rubber-duck <prompt>` (Claude Code), `#runSubagent @rubber-duck <prompt>` (Copilot), `@🦆 <prompt>` (OpenCode).
 
-Agent must already be installed for your target. Delegation runs through `duckling` (the specialized subagent that enforces role/mode constraints and routes to active skills).
+The agent must already be installed for your target. Delegation runs through `duckling` (the specialized subagent that enforces role/mode constraints and routes to active skills).
 
  ### Step 1: heartbeat check
 
@@ -275,7 +272,7 @@ flowchart TD
 
 Rubber Duck is inspired by its [namesake](https://rubberduckdebugging.com/) and the practice of talking through a problem to find your own solution — except this one can talk back and ask sharp questions.
 
-Rubber Duck adopted terse language and a review structure inspired by [Caveman](https://github.com/JuliusBrussee/caveman) by Julius Brusse.
+Rubber Duck adopted terse language and a review structure inspired by [Caveman](https://github.com/JuliusBrussee/caveman) by Julius Brussee.
 
 Part of Rubber Duck's operating model adapts ideas from [Ponytail](https://github.com/DietrichGebert/ponytail) by Dietrich Gebert.
 
