@@ -46,7 +46,6 @@ Strict output specifications for duck-tape artifacts.
 ```markdown
 ## Open-Questions
 - <question> (date: <YYYY-MM-DD>)
-- <question> (date: <YYYY-MM-DD>) [resolved: <answer>]
 ```
 
 **Notes**

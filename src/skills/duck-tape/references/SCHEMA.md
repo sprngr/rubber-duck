@@ -114,7 +114,7 @@ Unresolved questions. Append new.
 Merge:
 - Append new questions.
 - Dedupe by question text (normalized whitespace).
-- No supersede. Resolved questions stay with `[resolved: <answer>]` marker.
+- Drop resolved questions at merge time. Resolution captured in Decisions or Notes.
 
 ### 7. Notes
 
@@ -159,7 +159,7 @@ Conflict = same key exists in existing and incoming with different values.
 - Decisions/Conventions/Glossary: incoming supersedes existing. Session content is newer truth.
 - Goals: incoming supersedes existing. Session content is newer truth.
 - Deferred-Debt: no conflict possible (append-only with status).
-- Open-Questions: no supersede. Incoming resolved marker updates existing question.
+- Open-Questions: no supersede. Resolved questions dropped at merge; resolution already captured in Decisions or Notes.
 - Notes: no conflict possible (append-only).
 
 ## Subsection Merge Rules

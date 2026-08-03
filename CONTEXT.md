@@ -233,9 +233,6 @@ When changing prompts/policy/tooling:
 ## Deferred-Debt
 
 ## Open-Questions
-- Update scripts/README.md CLI reference tables with --extras/-Extras flag? (date: 2026-08-01) [resolved: yes, see README Skills Sets section + CLI table rows]
-- Commit installer extras split changes? (date: 2026-08-01) [resolved: yes, commit 461d8a4]
-- Hash out larger holistic README overhaul plan? (date: 2026-08-01) [resolved: yes, landed in 0490b1b + 89be11f + 106d13b]
 
 ## Notes
 

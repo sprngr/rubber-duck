@@ -42,7 +42,6 @@
 
 ## Open-Questions
 - Should we support multi-region deployment? (date: 2025-01-15)
-- What is the acceptable cold-start time for serverless functions? (date: 2025-01-12) [resolved: under 200ms]
 
 ## Notes
 ### 2025-01-15 14:30
