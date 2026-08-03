@@ -3,7 +3,7 @@ name: duck-grill
 description: >
   Batched grilling interview (up to 3 questions at a time) to pressure-test plans against repo docs,
   domain language, and decision guardrails. Deep assumption/risk interrogation mode.
-  Use when: "grill me", "grill this plan", "stress-test decision", "challenge assumptions".
+  Use when: "grill this", "grill this plan", "challenge assumptions".
 license: MIT
 metadata:
   author: sprngr

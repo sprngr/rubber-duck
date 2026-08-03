@@ -257,7 +257,7 @@ flowchart TD
 - [Philosophy](./docs/architecture/01-philosophy.md)
 - [Agent + skill model](./docs/architecture/02-agent-skill-model.md)
 - [Adaptive Socratic policy](./docs/architecture/03-adaptive-socratic-policy.md)
-- [Validation prompt suite](./docs/validation/README.md)
+- [Validation suite](./validation/README.md)
 - [Operator manual](./docs/MANUAL.md)
 
 ### Prompt contracts

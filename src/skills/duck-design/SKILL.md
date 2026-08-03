@@ -3,8 +3,7 @@ name: duck-design
 description: >
   Socratic design discussion to evaluate approaches, identify tradeoffs,
   suggest alternatives, and challenge assumptions. Design matrix for option comparison.
-  Use when: "choose between approaches", "architecture tradeoffs",
-  "evaluate design options", "help me choose".
+  Use when: "choose between approaches", "architecture tradeoffs", "help me choose".
 license: MIT
 metadata:
   author: sprngr

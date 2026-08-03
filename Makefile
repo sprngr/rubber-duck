@@ -1,4 +1,7 @@
-.PHONY: build check check-guardrails build-skills check-skills build-agents check-agents build-harness check-harness
+.PHONY: build check check-guardrails build-skills check-skills build-agents check-agents build-harness check-harness validation
+
+validation:
+	python3 validation/run-validation-tests.py
 
 check-guardrails:
 	bash scripts/check-guardrails-drift.sh

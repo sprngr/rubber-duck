@@ -3,7 +3,7 @@ name: duck-risk
 description: >
   Adversarial risk review for failure modes, rollback safety, compatibility,
   and trust-boundary misuse. Identifies highest-impact risks and smallest safe mitigations.
-  Use when: "stress test this", "what could break", "rollback risk", "compat risk".
+  Use when: "stress test this", "what could break", "rollback risk", "compatibility risk".
 license: MIT
 metadata:
   author: sprngr

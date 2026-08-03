@@ -3,7 +3,7 @@ name: duck-debt
 description: >
   Read-only deferred-work ledger from TODO/FIXME/HACK/XXX comments.
   Broad mode (default) shows all entries; strict mode returns only issue-linked entries.
-  Use when: "duck debt", "what did we defer", "/duck-debt", "audit deferred work".
+  Use when: "duck debt", "what did we defer", "audit deferred work".
 license: MIT
 metadata:
   author: sprngr

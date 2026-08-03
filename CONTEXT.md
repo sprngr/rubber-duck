@@ -178,15 +178,20 @@ Skills use three routing patterns:
 **How to verify behavior**
 
 Validation docs:
-- `docs/validation/README.md`
-- Test suite: `docs/validation/test-prompts.json` (21 tests with id/area/prompt/expected_signals/severity/notes)
-- Test runner: `scripts/run-validation-tests.sh` (supports --filter/--severity/--interactive)
+- `validation/README.md`
+- `validation/CONTEXT.md`
+- Test suite: `validation/test-prompts.json` (31 tests with id/area/prompt/expected_signals/severity/fixture/follow_ups)
+- Test runner: `python3 validation/run-validation-tests.py` (supports --filter/--severity/--interactive/--sandbox/--keep-workspaces)
 
 Quick subset gate (must pass):
 - V02, V03, V04, V11, V12, V13, V14
 - fail if any Critical/High in subset fails
 
-Note: Test runner is skeleton; requires harness integration for automated execution
+Pass rate state (as of 2026-08-02):
+- Best run: 23/31 (74%)
+- Typical range: 18-23/31 (58-74%) due to LLM vocab non-determinism
+- Stable passes: 16 tests consistent across runs
+- Volatile: 15 tests pass/fail depending on wording variance
 
 **Session handoff expectation**
 
@@ -233,4 +238,4 @@ When changing prompts/policy/tooling:
 - Generated harness artifacts: `dist/{claude,opencode,copilot}/`
 - Global policy: `AGENTS.md`
 - Architecture docs: `docs/architecture/`
-- Validation suite: `docs/validation/` (test-prompts.json + run-validation-tests.sh)
+- Validation suite: `validation/` (test-prompts.json + run-validation-tests.py + fixtures/ + CONTEXT.md)

@@ -13,10 +13,10 @@ For full architecture and policy details, use the canonical docs linked below.
 - Harness config/build model: [docs/architecture/05-harness-agent-config.md](./architecture/05-harness-agent-config.md)
 - Skill assembly contract: [docs/architecture/06-skill-assembly-contract.md](./architecture/06-skill-assembly-contract.md)
 - Skill asset convention: [docs/architecture/07-skill-asset-convention.md](./architecture/07-skill-asset-convention.md)
-- Validation prompts: [docs/validation/README.md](./validation/README.md)
-- Validation runbook template: [docs/validation/README.md](./validation/README.md) (Runbook section)
-- Validation test suite: [docs/validation/test-prompts.json](./validation/test-prompts.json) (21 tests)
-- Test runner: [scripts/run-validation-tests.sh](../scripts/run-validation-tests.sh)
+- Validation suite: [validation/README.md](../validation/README.md)
+- Validation runbook template: [validation/README.md](../validation/README.md) (Runbook section)
+- Validation test suite: [validation/test-prompts.json](../validation/test-prompts.json) (31 tests)
+- Test runner: [validation/run-validation-tests.py](../validation/run-validation-tests.py)
 - Global operating policy: [AGENTS.md](../AGENTS.md)
 - Install/update/uninstall CLI reference: [scripts/README.md](../scripts/README.md)
 
@@ -259,7 +259,7 @@ Scenario: migrating from monolith cache to Redis-backed cache.
 
 - **Build artifacts**: `make build` (or `scripts/assemble-skills.sh` + `scripts/build-harness-artifacts.sh`)
 - **Check drift**: `make check` (or `scripts/check-guardrails-drift.sh`)
-- **Run validation tests**: `scripts/run-validation-tests.sh` (supports `--filter`, `--severity`, `--interactive`)
+- **Run validation tests**: `python3 validation/run-validation-tests.py` (supports `--filter`, `--severity`, `--interactive`)
 - **Quick subset gate**: V02, V03, V04, V11, V12, V13, V14 (must pass for Critical/High severity)
 
 ### CI validation

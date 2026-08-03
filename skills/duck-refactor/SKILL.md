@@ -3,7 +3,7 @@ name: duck-refactor
 description: >
   Multi-file code restructuring with reference tracking. Extract functions/classes,
   rename across codebase, move code between files, inline, convert patterns.
-  Use when: "refactor this", "extract this function", "rename X across codebase",
+  Use when: "refactor this", "extract this function", "rename this across codebase",
   "move this to another file", "inline this".
 license: MIT
 metadata:
@@ -32,7 +32,7 @@ Use when user asks to refactor, extract, rename across files, move code, inline,
 **Trigger phrases:**
 - "refactor this"
 - "extract this function/class/method"
-- "rename X across the codebase"
+- "rename this across the codebase"
 - "move this to another file"
 - "inline this function"
 - "convert this callback to promise"

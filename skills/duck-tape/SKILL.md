@@ -3,9 +3,9 @@ name: duck-tape
 description: >
   Two-tier session memory: compact into CONTEXT.md (persistent) and
   .duck-tape/<id>.state.md (working). Merge/dedupe fixed-schema sections,
-  append-only Notes, bootstrap from session content.
-  Use when: "/duck-tape", "compact session", "update CONTEXT.md",
-  "persist memory", "save session state", "checkpoint session",
+  append-only Notes, bootstrap from session content. Subcommands: merge,
+  resume, init, prune, migrate.
+  Use when: "duck-tape", "compact session", "update CONTEXT.md",
   "resume session".
 license: MIT
 metadata:

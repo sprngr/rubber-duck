@@ -56,7 +56,7 @@ Composition is user-driven, not enforced. Skills can be invoked sequentially or 
 
 ## Reading validation signals
 
-Rubber Duck ships a validation suite for behavior regression checks. See [docs/validation/README.md](./validation/README.md).
+Rubber Duck ships a validation suite for behavior regression checks. See [validation/README.md](../validation/README.md).
 
 Quick subset gate (must pass before release):
 - V02, V03, V04, V11, V12, V13, V14

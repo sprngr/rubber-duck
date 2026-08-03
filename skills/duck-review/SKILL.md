@@ -3,7 +3,7 @@ name: duck-review
 description: >
   Risk-first code review with terse, actionable findings in paste-ready format.
   One-line comments: location + problem + fix.
-  Use when: "review this", "code review", "review the diff", "/review".
+  Use when: "review this", "code review", "review the diff".
 license: MIT
 metadata:
   author: sprngr

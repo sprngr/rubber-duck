@@ -5,6 +5,15 @@ All notable changes to Rubber Duck will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- Validation suite hoisted from `docs/validation/` to top-level `validation/` — reflects expanded scope beyond documentation (executable runner, fixtures, multi-turn tests, bwrap sandbox)
+- Test runner moved from `scripts/run-validation-tests.py` to `validation/run-validation-tests.py`
+
+### Added
+- `validation/CONTEXT.md` — validation-specific context (purpose, structure, pass rate state, calibration approach)
+
 ## [v2.0.0] - 2026-08-02
 
 Major release: validation framework, UX standardization, agent consolidation, new skills, installer features, and documentation refinement.
