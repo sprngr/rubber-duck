@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Installer managed block upsert no longer accumulates extra blank lines above managed fences on repeated runs (bash and PowerShell).
 - PowerShell installer now detects script-file execution correctly for `-Source local` and no longer misclassifies it as piped `iwr|iex` mode.
 - PowerShell installer local-source file resolution now uses script-scoped variables, fixing null-path failures during local copy.
+- duck-tape hook JS behavioral test normalization now accepts compact stamp format (`YYYY-MM-DD-HHmm`) in state/marker assertions, and timestamp/stamp consistency parsing now accepts compact and separated minute formats. This removes false failures in `check-hooks-behavior`.
 
 ## [v2.0.1] - 2026-08-03
 

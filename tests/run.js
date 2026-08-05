@@ -16,7 +16,7 @@ function normalize(text, cwd, isState) {
   let result = text
   if (isState) {
     result = result.replace(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z/g, "__TIMESTAMP__")
-    result = result.replace(/\d{4}-\d{2}-\d{2}-\d{2}[:-]\d{2}/g, "__STAMP__")
+    result = result.replace(/\d{4}-\d{2}-\d{2}-(\d{2}[:-]\d{2}|\d{4})/g, "__STAMP__")
   }
   // Cwd path -> __CWD__ (replace all occurrences, handle both path formats).
   const cwdNormalized = cwd.replace(/\\/g, "/")
@@ -109,8 +109,9 @@ async function runTest() {
   if (stateTimestamp && stateStamp) {
     const tsDate = stateTimestamp.slice(0, 10)
     const tsTime = stateTimestamp.slice(11, 16)
-    const stampDate = stateStamp.slice(0, 10)
-    const stampTime = stateStamp.slice(11, 16).replace("-", ":")
+    const stampMatch = stateStamp.match(/^(\d{4}-\d{2}-\d{2})-(\d{2})(?::|-)?(\d{2})$/)
+    const stampDate = stampMatch?.[1]
+    const stampTime = stampMatch ? `${stampMatch[2]}:${stampMatch[3]}` : null
     if (tsDate === stampDate && tsTime === stampTime) {
       console.log("  PASS: timestamp/stamp consistency (Date nit fix)")
     } else {
