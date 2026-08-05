@@ -37,11 +37,13 @@ if ($Branch -ne "main") {
   Write-Host "Using branch: $Branch"
 }
 
-# When run via `iwr | iex` there is no backing script file, so $MyInvocation.MyCommand.Path
-# is null and ScriptDir/RepoRoot cannot be resolved. Mirror the .sh running_piped logic:
-# flag it and force web source. Keep ScriptDir/RepoRoot as non-null placeholders so
-# Join-Path never throws; they are never used because Resolve-Source forces web when piped.
-$ScriptPath = $MyInvocation.MyCommand.Path
+# When run via `iwr | iex` there is no backing script file path.
+# In function scope, $MyInvocation.MyCommand.Path can also be empty even for file execution.
+# Use script path variables first, then classify piped mode only if still empty.
+$ScriptPath = $PSCommandPath
+if ([string]::IsNullOrWhiteSpace($ScriptPath)) {
+  $ScriptPath = $MyInvocation.PSCommandPath
+}
 $script:RunningPiped = [string]::IsNullOrWhiteSpace($ScriptPath)
 if ($script:RunningPiped) {
   $ScriptDir = [System.IO.Path]::GetTempPath()
@@ -102,13 +104,13 @@ function Resolve-Target {
       $script:DestPolicyMd = Join-Path $HOME ".config/opencode/AGENTS.md"
     }
     $script:PolicyMode = "managed_block"
-    $script:LocalPolicyFile = Join-Path $RepoRoot "AGENTS.md"
+    $script:LocalPolicyFile = Join-Path $RepoRoot "dist/AGENTS.md"
     if (Test-Path (Join-Path $RepoRoot "dist/opencode/agents")) {
       $script:LocalAgentsDir = Join-Path $RepoRoot "dist/opencode/agents"
     } else {
       $script:LocalAgentsDir = Join-Path $RepoRoot "agents"
     }
-    $script:RemotePolicyPath = "AGENTS.md"
+    $script:RemotePolicyPath = "dist/AGENTS.md"
     $script:RemoteAgentsPath = "dist/opencode/agents"
     return
   }
@@ -125,10 +127,10 @@ function Resolve-Target {
     $script:DestClaudeAgentsMd = Join-Path (Split-Path -Parent $script:DestPolicyMd) "AGENTS.md"
     $script:PolicyMode = "file"
     $script:LocalPolicyFile = Join-Path $RepoRoot "dist/claude/CLAUDE.md"
-    $script:LocalAgentsPolicyFile = Join-Path $RepoRoot "AGENTS.md"
+    $script:LocalAgentsPolicyFile = Join-Path $RepoRoot "dist/AGENTS.md"
     $script:LocalAgentsDir = Join-Path $RepoRoot "dist/claude/agents"
     $script:RemotePolicyPath = "dist/claude/CLAUDE.md"
-    $script:RemoteAgentsPolicyPath = "AGENTS.md"
+    $script:RemoteAgentsPolicyPath = "dist/AGENTS.md"
     $script:RemoteAgentsPath = "dist/claude/agents"
     return
   }
@@ -143,13 +145,13 @@ function Resolve-Target {
       $script:DestPolicyMd = Join-Path $HOME ".copilot/AGENTS.md"
     }
     $script:PolicyMode = "managed_block"
-    $script:LocalPolicyFile = Join-Path $RepoRoot "AGENTS.md"
+    $script:LocalPolicyFile = Join-Path $RepoRoot "dist/AGENTS.md"
     if (Test-Path (Join-Path $RepoRoot "dist/copilot/agents")) {
       $script:LocalAgentsDir = Join-Path $RepoRoot "dist/copilot/agents"
     } else {
       $script:LocalAgentsDir = Join-Path $RepoRoot "agents"
     }
-    $script:RemotePolicyPath = "AGENTS.md"
+    $script:RemotePolicyPath = "dist/AGENTS.md"
     $script:RemoteAgentsPath = "dist/copilot/agents"
     return
   }
@@ -159,21 +161,21 @@ function Resolve-Target {
   $script:DestAgentsDir = Join-Path $HOME ".config/opencode/agents"
   $script:DestPolicyMd = Join-Path $HOME ".config/opencode/AGENTS.md"
   $script:PolicyMode = "managed_block"
-  $script:LocalPolicyFile = Join-Path $RepoRoot "AGENTS.md"
+  $script:LocalPolicyFile = Join-Path $RepoRoot "dist/AGENTS.md"
   if (Test-Path (Join-Path $RepoRoot "dist/opencode/agents")) {
     $script:LocalAgentsDir = Join-Path $RepoRoot "dist/opencode/agents"
   } else {
     $script:LocalAgentsDir = Join-Path $RepoRoot "agents"
   }
-  $script:RemotePolicyPath = "AGENTS.md"
+  $script:RemotePolicyPath = "dist/AGENTS.md"
   $script:RemoteAgentsPath = "dist/opencode/agents"
 }
 
 function Has-LocalSources {
-  if (-not (Test-Path $LocalPolicyFile)) { return $false }
-  if ($PolicyMode -eq "file" -and -not (Test-Path $LocalAgentsPolicyFile)) { return $false }
+  if (-not (Test-Path $script:LocalPolicyFile)) { return $false }
+  if ($script:PolicyMode -eq "file" -and -not (Test-Path $script:LocalAgentsPolicyFile)) { return $false }
   foreach ($f in $AgentFiles) {
-    if (-not (Test-Path (Join-Path $LocalAgentsDir $f))) { return $false }
+    if (-not (Test-Path (Join-Path $script:LocalAgentsDir $f))) { return $false }
   }
   return $true
 }
@@ -205,13 +207,13 @@ function Download-Sources {
 
   if ($script:EffectiveSource -eq "local") {
     if ($script:PolicyMode -eq "managed_block") {
-      Copy-Item -Force $LocalPolicyFile (Join-Path $script:TmpDir "AGENTS.md")
+      Copy-Item -Force $script:LocalPolicyFile (Join-Path $script:TmpDir "AGENTS.md")
     } else {
-      Copy-Item -Force $LocalPolicyFile (Join-Path $script:TmpDir "CLAUDE.md")
-      Copy-Item -Force $LocalAgentsPolicyFile (Join-Path $script:TmpDir "AGENTS.md")
+      Copy-Item -Force $script:LocalPolicyFile (Join-Path $script:TmpDir "CLAUDE.md")
+      Copy-Item -Force $script:LocalAgentsPolicyFile (Join-Path $script:TmpDir "AGENTS.md")
     }
     foreach ($f in $AgentFiles) {
-      Copy-Item -Force (Join-Path $LocalAgentsDir $f) (Join-Path $script:TmpDir $f)
+      Copy-Item -Force (Join-Path $script:LocalAgentsDir $f) (Join-Path $script:TmpDir $f)
     }
     Log "source: local ($RepoRoot)"
     return
@@ -271,8 +273,15 @@ function Upsert-ManagedBlock([string]$Target, [string]$ContentFile) {
   if (-not (Test-Path $Target)) { New-Item -ItemType File -Force -Path $Target | Out-Null }
   $current = if (Test-Path $Target) { Get-Content -Raw $Target } else { "" }
   $stripped = Strip-ManagedBlockText $current
+  $stripped = $stripped -replace "(\r?\n)+$",""
   $policy = Get-Content -Raw $ContentFile
-  $next = "$stripped`n$ManagedStart`n$policy`n$ManagedEnd`n"
+  $policy = $policy -replace "(\r?\n)+$",""
+  $parts = New-Object System.Collections.Generic.List[string]
+  if (-not [string]::IsNullOrWhiteSpace($stripped)) { $parts.Add($stripped) }
+  $parts.Add($ManagedStart)
+  if (-not [string]::IsNullOrEmpty($policy)) { $parts.Add($policy) }
+  $parts.Add($ManagedEnd)
+  $next = ($parts -join "`n") + "`n"
   Set-Content -Path $Target -Value $next
 }
 

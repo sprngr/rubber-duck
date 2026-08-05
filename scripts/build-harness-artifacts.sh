@@ -20,6 +20,8 @@ RULES_FILE="${REPO_ROOT}/build/agent-assembly.rules.json"
 
 SRC_AGENTS_DIR="${REPO_ROOT}/src/agents"
 POLICY_SNIPPETS_DIR="${REPO_ROOT}/src/shared/policy-snippets"
+SRC_AGENTS_POLICY_MD="${SRC_AGENTS_DIR}/AGENTS.md"
+DIST_AGENTS_POLICY_MD="${REPO_ROOT}/dist/AGENTS.md"
 
 CLAUDE_DIST_DIR="${REPO_ROOT}/dist/claude"
 CLAUDE_AGENT_DIR="${CLAUDE_DIST_DIR}/agents"
@@ -206,6 +208,11 @@ cat > "${CLAUDE_MD_TMP}" <<'EOF'
 @AGENTS.md
 EOF
 render_or_check_file "${CLAUDE_MD_TMP}" "${CLAUDE_MD_OUT}"
+
+# Build installer policy source at dist root.
+AGENTS_MD_TMP="${TMP_DIR}/AGENTS.md"
+render_body_markdown "${SRC_AGENTS_POLICY_MD}" "${AGENTS_MD_TMP}"
+render_or_check_file "${AGENTS_MD_TMP}" "${DIST_AGENTS_POLICY_MD}"
 
 # Render each agent for every harness: harness frontmatter + shared body.
 for name in "${CONFIG_AGENTS[@]}"; do

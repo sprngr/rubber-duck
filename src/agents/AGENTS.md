@@ -1,4 +1,3 @@
-<!-- RUBBER_DUCK_MANAGED_BLOCK START -->
 ## Load Project Context
 
 On session start, load `CONTEXT.md`:
@@ -205,4 +204,3 @@ TODO(<debt type>,#<issue>): <date> <decision needed> [resolved: <decision>]
 3. User creates issue, returns with issue number -> update marker: replace `spike` with `#<issue>`
 4. Investigation happens in issue tracker
 5. If TODO stays in code, update with `[resolved: <decision>]` when settled
-<!-- RUBBER_DUCK_MANAGED_BLOCK END -->

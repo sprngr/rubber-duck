@@ -30,7 +30,7 @@ For all mutating actions, use these checkpoints in order.
 - Scope boundaries.
 - Constraints and non-goals.
 
-**Required user confirmation:** “Yes, this is correct problem framing.”
+**Required user confirmation:** confirm or revise.
 
 ### Checkpoint 2: Solution selection
 

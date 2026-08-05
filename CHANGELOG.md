@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Installer policy source now uses built `dist/AGENTS.md` (generated from `src/agents/AGENTS.md`) for local and web installer flows.
+
+### Fixed
+- Installer managed block upsert no longer accumulates extra blank lines above managed fences on repeated runs (bash and PowerShell).
+- PowerShell installer now detects script-file execution correctly for `-Source local` and no longer misclassifies it as piped `iwr|iex` mode.
+- PowerShell installer local-source file resolution now uses script-scoped variables, fixing null-path failures during local copy.
+
 ## [v2.0.1] - 2026-08-03
 
 Patch release: duck-tape opencode plugin hook hardening.
