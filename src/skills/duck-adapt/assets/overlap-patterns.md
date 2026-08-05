@@ -41,7 +41,7 @@ Patterns for detecting semantic overlap between skill concepts and existing duck
 - "challenge my plan", "what am I missing", "stress test", "assumption review"
 
 ### duck-patch
-**Intent:** Bounded implementation (max 2 files)
+**Intent:** Bounded implementation (phase-gated scope)
 **Scope:** Surgical code edits, minimal safe diff
 **Signals:** "apply fix", "make targeted edit", "patch this", "implement agreed change"
 **Mutating:** Yes (requires execution approval)
@@ -50,7 +50,7 @@ Patterns for detecting semantic overlap between skill concepts and existing duck
 - "fix this", "edit these files", "apply change", "implement solution"
 
 ### duck-refactor
-**Intent:** Multi-file restructuring (max 5 files)
+**Intent:** Multi-file restructuring (phase-gated scope)
 **Scope:** Extract/rename/move/inline/pattern-convert
 **Signals:** "refactor this", "extract function", "rename across codebase", "move code"
 **Mutating:** Yes (requires execution approval)

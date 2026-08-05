@@ -40,8 +40,11 @@ Use this checklist to ensure complete philosophy integration during skill adapta
 - [ ] Approval gate with preflight (files + behavior + verification)
 - [ ] "Present list of changes" step before approval ask
 - [ ] Explicit "approve" token required (not "continue"/"go ahead")
-- [ ] Scope limit stated (max 2 files for patch, max 5 for refactor)
+- [ ] Preflight includes target phase (stubs/interfaces, wiring/integration, implementation)
+- [ ] Scope model states phase caps (6/4/2) and split behavior when cap exceeded
+- [ ] Objective review-fatigue triggers stated with changed lines (additions + deletions)
 - [ ] Scope-change detection and re-approval requirement
+- [ ] Re-approval between phases is required
 - [ ] "Wait for approval" blocking step before execution
 
 ## Socratic Flow

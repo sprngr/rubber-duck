@@ -61,7 +61,7 @@ Ask: "Which approach fits your requirements?"
    - Propose minimal safe diff
 
 5. Execution approval (BLOCKING GATE)
-    - Preflight: files (max 2), expected behavior, verification check
+    - Preflight: target phase (stubs/interfaces, wiring/integration, implementation), target files (bounded for selected phase), expected behavior, verification check
     - Present list of changes broken down by file as formatted diff
     - Approval ask: "Reply with 'approve' to execute this scope."
     - Wait for approval (do not proceed without explicit "approve")
@@ -272,13 +272,14 @@ Step 1: Clarify scope and expected behavior.
 4. Expected behavior after fix? (what should work that doesn't now)
 
 **After clarification:**
-- Scope: [bounded description, max 2 files]
+- Scope: [bounded phase scope]
 - Symptom: [specific observable problem]
 - Expected behavior: [one-sentence outcome]
 - Verification: [smallest check to confirm fix]
 
 **Execution approval:**
-- Files: [list, max 2]
+- Target phase: [Phase 1 stubs/interfaces | Phase 2 wiring/integration | Phase 3 implementation]
+- Files: [bounded list for selected phase]
 - Behavior change: [expected delta]
 - Verification: [how to test]
 

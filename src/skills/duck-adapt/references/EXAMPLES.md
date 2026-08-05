@@ -111,7 +111,11 @@ Ask: "Which issues should I fix? Reply with issue IDs (e.g., C1, H1)."
 For selected issues:
 
 **Preflight:**
-- Target files: [bounded list, max 2 per approval]
+- Target phase:
+  - Phase 1: stubs/interfaces
+  - Phase 2: wiring/integration
+  - Phase 3: concrete implementation
+- Target files: [bounded list for selected phase]
 - Expected behavior change: [what will work differently]
 - Verification check: [smallest test/command to confirm fix]
 
@@ -141,7 +145,7 @@ Output:
 - Do not broaden scope beyond approved files/issues
 - Do not weaken security, trust boundaries, data protection
 - If root cause unclear, hand to `duck-debug` for investigation
-- If fix requires >2 files per issue, split and request approval per batch
+- If fix exceeds phase cap or review-fatigue triggers, split and request approval per batch
 ```
 
 **Transformations applied:**

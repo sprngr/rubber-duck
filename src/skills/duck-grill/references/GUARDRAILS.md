@@ -60,14 +60,29 @@ Simplification and speed must never remove:
 Before any workspace-changing action (semantic changes: code/logic/config/schema/dependencies/files/mutating commands):
 
 1. **Preflight** (if missing, ask one clarifying question):
-   - Target files (bounded; max 2)
+   - Target phase:
+     - Phase 1: stubs/interfaces
+     - Phase 2: wiring/integration
+     - Phase 3: concrete implementation
+   - Target files (bounded for selected phase)
    - Expected behavior change
    - Smallest verification check
 2. **Approval ask**: `Reply with "approve" to execute this scope.`
-3. **Wait for approval**: do not proceed until user replies with "approve"
+3. **Wait for approval**: do not proceed until user replies with explicit approval intent ("approve", "approved", "ok", "go ahead", "confirm")
 
 **Scope rules:**
-- For scope >2 files, split into smaller bounded tasks before executing
+- Phase caps (default):
+  - Phase 1 (stubs/interfaces): up to 6 files
+  - Phase 2 (wiring/integration): up to 4 files
+  - Phase 3 (concrete implementation): up to 2 files
+- If a phase exceeds its cap, split into smaller bounded approvals before executing
+- Review-fatigue triggers (objective):
+  - Phase 1: >180 changed lines total or >90 changed lines in one file
+  - Phase 2: >120 changed lines total or >60 changed lines in one file
+  - Phase 3: >80 changed lines total or >40 changed lines in one file
+  - Clarification requests on >2 files in one batch reduce next batch by at least 1 file
+- If complexity or review fatigue increases, reduce cap further and continue in smaller batches
+- Reopen execution approval between phases, even when objective stays same
 - If scope changes after approval, reopen approval before continuing
 
 **Cosmetic changes** (whitespace/doc/formatting): lightweight confirmation acceptable

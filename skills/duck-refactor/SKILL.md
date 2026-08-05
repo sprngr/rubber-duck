@@ -70,7 +70,8 @@ Refactoring plan:
 - Operation: [extract function / rename / move / inline / convert]
 - Target: [current name/location]
 - Destination: [new name/location]
-- Files affected: [list, max 5; ask to split if more]
+- Target phase: [Phase 1 stubs/interfaces | Phase 2 wiring/integration | Phase 3 concrete implementation]
+- Files affected: [bounded list for selected phase]
 
 Changes:
 1. [file A]: [change description]
@@ -79,7 +80,7 @@ Changes:
 Verification: [tests to run, imports to check]
 ```
 
-If >5 files affected: "This refactoring touches N files. Split into smaller bounded refactorings?"
+If phase cap or review-fatigue trigger is exceeded: "This refactoring exceeds current phase bounds. Split into smaller bounded refactorings?"
 
 ### 4. Apply Duck Ladder
 
@@ -96,7 +97,8 @@ Ask: "Does existing code/pattern already solve this? Can we reuse instead of res
 ### 5. Require execution approval
 
 Before executing refactoring:
-- Target files (bounded; max 5 for refactoring, though still prefer ≤2)
+- Target phase (Phase 1/2/3)
+- Target files (bounded for selected phase)
 - Expected structural change (what moves where)
 - Verification plan (tests, imports, type checking)
 
@@ -139,7 +141,8 @@ Report: "Refactoring complete. Verification: [test results]. [N] files changed."
 - Just moving files without code changes -> use `duck-patch`
 
 **Scope limits:**
-- Prefer ≤5 files per refactoring (split larger refactorings)
+- Phase caps (default): Phase 1 up to 6 files, Phase 2 up to 4 files, Phase 3 up to 2 files
+- If phase caps or review-fatigue triggers are exceeded, split into smaller bounded approvals
 - If refactoring requires design decisions, pause and route to `duck-design` first
 - If refactoring reveals complexity issues, note for `duck-simplify` follow-up
 

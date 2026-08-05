@@ -18,7 +18,10 @@ Intent:
 - Execute smallest safe implementation patch in bounded scope.
 
 Constraints:
-- max 2 files
+- phase-gated scope with adaptive caps:
+  - Phase 1 (stubs/interfaces): up to 6 files
+  - Phase 2 (wiring/integration): up to 4 files
+  - Phase 3 (concrete implementation): up to 2 files
 - no scope expansion without renewed approval
 - preserve security/trust/data-loss/accessibility requirements
 
@@ -197,7 +200,7 @@ Refactoring operations:
 
 Constraints:
 - trace all references before refactoring (like debug trace mode)
-- max 5 files per refactoring (prefer ≤2; split if more)
+- phase-gated scope with adaptive caps (6/4/2 by phase); split when phase caps or review-fatigue triggers are exceeded
 - require execution approval with full change plan
 - distinguish from single-file patch and complexity reduction
 

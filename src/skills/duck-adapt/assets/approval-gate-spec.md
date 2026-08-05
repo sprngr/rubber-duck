@@ -48,9 +48,13 @@ Ensures user explicitly approves scope, expected behavior, and verification befo
 If any of these items is missing, ask ONE clarifying question and STOP:
 
 **Required preflight items:**
-1. **Target files** — Bounded list (max 2 for patch, max 5 for refactor)
-2. **Expected behavior change** — One-sentence description of what will work differently
-3. **Smallest verification check** — How to confirm the change works (command, test, manual check)
+1. **Target phase** — Select one:
+   - Phase 1: stubs/interfaces
+   - Phase 2: wiring/integration
+   - Phase 3: concrete implementation
+2. **Target files** — Bounded list for selected phase
+3. **Expected behavior change** — One-sentence description of what will work differently
+4. **Smallest verification check** — How to confirm the change works (command, test, manual check)
 
 **Example preflight:**
 ```markdown
@@ -111,13 +115,13 @@ Reply with "approve" to execute this scope.
 **Accepted approval tokens:**
 - ✅ "approve"
 - ✅ "approved"
-- ✅ "Approve"
+- ✅ "ok"
+- ✅ "go ahead"
+- ✅ "confirm"
 
 **NOT accepted as approval:**
 - ❌ "continue"
-- ❌ "go ahead"
 - ❌ "yes"
-- ❌ "ok"
 - ❌ "B" (from multi-choice)
 - ❌ Any other continuation signal
 
@@ -188,7 +192,11 @@ Use this template when adding approval gate to skill Method section:
 ### [Step N]: Execution approval
 
 **Preflight** (if any item missing, ask one clarifying question and stop):
-- Target files: [bounded list, max 2]
+- Target phase:
+  - Phase 1: stubs/interfaces
+  - Phase 2: wiring/integration
+  - Phase 3: concrete implementation
+- Target files: [bounded list for selected phase]
 - Expected behavior change: [one-sentence description]
 - Smallest verification check: [command or manual steps]
 
@@ -244,30 +252,33 @@ Return to preflight with new scope and request renewed approval.
 - Acceptable confirmations: "yes", "confirm", "ok", "go ahead", "approve"
 
 **Edge cases (count as SEMANTIC, not cosmetic):**
-- JSDoc/docstrings in code files -> semantic (affects generated docs)
-- Comments explaining logic -> semantic (affects maintainability)
-- Config comments -> semantic (affects interpretation)
-- Code examples in README -> semantic (users copy-paste)
+- JSDoc/docstrings in code files are semantic (affects generated docs)
+- Comments explaining logic are semantic (affects maintainability)
+- Config comments are semantic (affects interpretation)
+- Code examples in README are semantic (users copy-paste)
 
 ---
 
-## Scope Limit Rules
+## Scope Rules (Phase-Gated)
 
-**For patch-type skills:**
-- Max 2 files per approval
-- If scope requires >2 files, split into bounded tasks
-- Request approval per task
-
-**For refactor-type skills:**
-- Max 5 files per approval
-- If scope requires >5 files, split into bounded tasks
-- Request approval per task
-
-**Rationale:**
-- Bounded scope reduces blast radius
-- Easier to review and verify
-- Clearer rollback path
-- Forces minimal-change discipline
+- Phase caps (default):
+  - Phase 1 (stubs/interfaces): up to 6 files
+  - Phase 2 (wiring/integration): up to 4 files
+  - Phase 3 (concrete implementation): up to 2 files
+- If a phase exceeds its cap, split into smaller bounded approvals before executing.
+- Review-fatigue triggers (objective):
+  - Phase 1:
+    - If one approval exceeds 180 changed lines (additions + deletions) total, reduce phase cap by at least 1 file.
+    - If any single file exceeds 90 changed lines (additions + deletions), split that file into separate or smaller sequential approvals.
+  - Phase 2:
+    - If one approval exceeds 120 changed lines (additions + deletions) total, reduce phase cap by at least 1 file.
+    - If any single file exceeds 60 changed lines (additions + deletions), split that file into separate or smaller sequential approvals.
+  - Phase 3:
+    - If one approval exceeds 80 changed lines (additions + deletions) total, reduce phase cap by at least 1 file.
+    - If any single file exceeds 40 changed lines (additions + deletions), split that file into separate or smaller sequential approvals.
+  - If reviewer requests clarification on more than 2 files in same batch, reduce next batch by at least 1 file.
+- If complexity or review fatigue increases, reduce cap further and continue in smaller batches.
+- Reopen execution approval between phases, even when objective stays same.
 
 ---
 
@@ -321,7 +332,7 @@ Assistant: *edits those 2 files + discovers 3 more files need changes + edits th
 ```
 Assistant: "I'll fix issues #1, #2, #3. Approve all?"
 ```
-**Why wrong:** User should approve per bounded scope (max 2 files), not batch of arbitrary size
+**Why wrong:** User must approve per bounded phase scope, not batch of arbitrary size
 
 ---
 
@@ -418,7 +429,7 @@ Evidence -> Duck Ladder -> Preflight -> Present Changes -> Approval -> Execute -
 5. ✅ Wait for "approve" token (not "continue", "yes", "ok")
 6. ✅ Do not execute until "approve" received
 7. ✅ Scope change triggers return to step 1 (new approval required)
-8. ✅ Max 2 files for patch, max 5 for refactor (split if exceeded)
+8. ✅ Use phase-gated caps (6/4/2) and split when caps or fatigue triggers are exceeded
 9. ✅ Cosmetic changes use lightweight confirmation
 10. ✅ Refuse execution without bounded scope
 11. ✅ Never bypass for safety carve-out violations

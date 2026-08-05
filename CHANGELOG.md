@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Approval-gate UX lowered friction: semantic execution approval now accepts explicit intent tokens (`approve`, `approved`, `ok`, `go ahead`, `confirm`) instead of strict `approve` only.
 - Skill source guardrail alignment updated: `duck-adapt` and `duck-grill` now include shared clarify-first/philosophy snippets to satisfy baseline grouped assertions.
 - Execution approval policy now uses phase-gated batching for semantic changes: preflight phase selection (stubs/interfaces, wiring/integration, implementation), adaptive phase caps (6/4/2 files), objective review-fatigue thresholds using changed lines (additions + deletions), and mandatory re-approval between phases. Synced in source policy files and regenerated harness/skill artifacts.
+- Cross-skill policy consistency pass updated skill assets/runbooks/evals to remove fixed file-count gating and align mutating workflows to phase-gated execution approval (phase selection, adaptive caps, objective review-fatigue triggers, and re-approval between phases), including regenerated `skills/*` and `dist/*` artifacts.
 
 ### Fixed
 - Installer managed block upsert no longer accumulates extra blank lines above managed fences on repeated runs (bash and PowerShell).
