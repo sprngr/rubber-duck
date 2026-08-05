@@ -26,34 +26,45 @@ This section defines the system-level architecture and operating contracts for R
 - Skills install artifacts: [`skills/`](../../skills)
 - Global operating policy: [`src/agents/AGENTS.md`](../../src/agents/AGENTS.md)
 
-## AGENTS.md vs CONTEXT.md
+## Governance Boundaries
+
+### AGENTS.md vs CONTEXT.md
 
 `AGENTS.md` is rules and operating contract.  
 `CONTEXT.md` is project memory and decisions.
 
-### Functional split
-
 - **AGENTS.md**
-  - tells agent how to behave
+  - defines agent behavior constraints
   - safety gates, approval flow, style constraints, hard boundaries
-  - procedural policy and invariants
-  - normative: defines allowed behavior
-
+  - normative operating policy
 - **CONTEXT.md**
-  - tells agent what project already decided
-  - conventions, architecture notes, glossary, open questions, deferred debt
-  - factual and decision memory for consistency
-  - descriptive: documents current reality and intent
+  - records project decisions and conventions
+  - glossary, open questions, deferred debt, working memory
+  - descriptive project memory
 
-### Quick test
-
+Quick test:
 - “Must ask for `approve` before semantic edit” -> `AGENTS.md`
 - “Policy source moved to `dist/AGENTS.md` on 2026-08-04” -> `CONTEXT.md` (and maybe `CHANGELOG.md`)
 
-### Rule of thumb
+Rule of thumb:
+- If violation can create unsafe or unauthorized behavior, put it in `AGENTS.md`.
+- If it prevents re-derivation across sessions, put it in `CONTEXT.md`.
 
-- If violating it can create unsafe or unauthorized behavior, put it in `AGENTS.md`.
-- If it avoids re-deciding, renaming, or losing context, put it in `CONTEXT.md`.
+### CONTEXT.md vs CHANGELOG.md
+
+- **CONTEXT.md** tracks current project memory and active decisions for future sessions.
+- **CHANGELOG.md** tracks release-visible changes over time for consumers and maintainers.
+
+### CONTEXT.md vs ADRs
+
+- **CONTEXT.md** stores evolving memory and active decision context.
+- **ADRs / architecture docs** store durable architecture decisions with rationale and long-term reference value.
+
+### Source-of-truth vs generated artifacts
+
+- Edit source in `src/`.
+- Treat `skills/` and `dist/` as generated outputs.
+- Rebuild and verify after source changes (`make build`, `make check`).
 
 ## Installation and distribution
 

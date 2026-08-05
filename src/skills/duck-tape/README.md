@@ -148,6 +148,31 @@ Never prune fixed-schema sections via prune. Those merge only.
 - **Notes is the dump zone.** Freeform content goes here. Prune it when it stops being useful.
 - **Never infer Goals or Conventions.** These sections get entries only from explicit user decisions.
 
+### When CONTEXT.md should graduate to documented artifact
+
+`CONTEXT.md` is project memory for continuity.  
+It is not the long-term source of truth for team contracts.
+
+Promote entries from `CONTEXT.md` into durable docs when they become stable, reusable, or safety-critical.
+
+Graduate when any are true:
+- **Repeated dependency:** the same decision gets reused across sessions or contributors.
+- **Safety/authorization impact:** wrong interpretation can cause unsafe, unauthorized, or irreversible actions.
+- **External contract impact:** behavior affects API, schema, config, CLI, or user-visible behavior.
+- **Onboarding criticality:** new contributors must know this before changing code.
+- **Low expected churn:** decision is unlikely to change in near-term execution.
+
+Recommended destination:
+- **Behavior rules and execution constraints** -> project agent policy document
+- **Architecture decisions and tradeoffs** -> ADRs / architecture docs
+- **Developer workflow conventions** -> contribution or engineering playbook docs
+- **User/operator behavior** -> product README, runbooks, CLI docs
+- **Unsettled or transient context** -> keep in `CONTEXT.md` (Open-Questions/Notes) until stable
+
+Rule of thumb:
+- If violating it can create unsafe or unauthorized behavior, make it normative in policy/docs.
+- If it mainly prevents re-derivation between sessions, keep it in `CONTEXT.md`.
+
 ## Session State Schema
 
 State files use the Agent State schema:

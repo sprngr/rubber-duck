@@ -62,7 +62,7 @@ Merge:
 
 ### 3. Conventions
 
-Project conventions and patterns. Keyed by convention name.
+Project-local conventions and patterns, keyed by convention name; exclude agent operating policy (for example safety gates, approval workflow, and hard behavioral constraints).
 
 ```
 ## Conventions
