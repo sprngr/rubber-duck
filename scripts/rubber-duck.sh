@@ -413,7 +413,6 @@ upsert_managed_block() {
   {
     if [[ -s "${target}" ]]; then
       cat "${target}"
-      printf '\n'
     fi
     printf '%s\n' "${MANAGED_START}"
     cat "${content_file}"
