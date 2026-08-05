@@ -17,7 +17,7 @@ For full architecture and policy details, use the canonical docs linked below.
 - Validation runbook template: [validation/README.md](../validation/README.md) (Runbook section)
 - Validation test suite: [validation/test-prompts.json](../validation/test-prompts.json) (31 tests)
 - Test runner: [validation/run-validation-tests.py](../validation/run-validation-tests.py)
-- Global operating policy: [AGENTS.md](../AGENTS.md)
+- Global operating policy: [src/agents/AGENTS.md](../src/agents/AGENTS.md)
 - Install/update/uninstall CLI reference: [scripts/README.md](../scripts/README.md)
 
 ## System map

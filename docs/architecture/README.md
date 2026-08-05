@@ -24,7 +24,7 @@ This section defines the system-level architecture and operating contracts for R
   - [`src/agents/duckling/`](../../src/agents/duckling)
 - Skills source: [`src/skills/`](../../src/skills)
 - Skills install artifacts: [`skills/`](../../skills)
-- Global operating policy: [`AGENTS.md`](../../AGENTS.md)
+- Global operating policy: [`src/agents/AGENTS.md`](../../src/agents/AGENTS.md)
 
 ## Installation and distribution
 
