@@ -31,14 +31,14 @@ When Rubber Duck presents the approach choice, pick by signal:
 
 ## Scope discipline
 
-- `duck-patch`: max 2 files per scope. If scope exceeds 2 files, split into smaller bounded tasks before patching.
-- `duck-refactor`: max 5 files per scope. If scope exceeds 5 files, split into smaller bounded tasks before refactoring.
+- `duck-patch`: phase-gated scope applies. Default caps: Phase 1 up to 6 files, Phase 2 up to 4 files, Phase 3 up to 2 files.
+- `duck-refactor`: phase-gated scope applies. Split into smaller bounded approvals when phase caps or review-fatigue triggers are exceeded.
 - If scope changes after approval, the approval gate reopens. Re-confirm before continuing.
 - State scope explicitly at preflight: target files, expected behavior change, smallest verification check.
 
 ## Approval token discipline
 
-- Explicit "approve" token required for semantic changes. Not "continue", not "go ahead", not "yes".
+- Explicit approval intent required for semantic changes. Accept: "approve", "approved", "ok", "go ahead", "confirm". Do not accept "continue".
 - Cosmetic changes (doc-only, formatting, typos) use lightweight confirmation: "yes", "confirm", "ok" acceptable.
 - If asked to "run whatever commands and fix it", Rubber Duck refuses silent execution and restates bounded-approval requirements.
 - Approval is per-scope. New scope requires new approval.

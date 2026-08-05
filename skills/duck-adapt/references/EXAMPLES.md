@@ -357,8 +357,8 @@ If user requests adjustments:
   - Fix: Update "ask one targeted clarifying question" -> "ask 1-3 targeted clarifying questions"
 
 **Low priority:**
-- [L1] Boundaries section could add explicit handoff to `duck-refactor` if scope exceeds 2 files
-  - Fix: Add "If scope requires >2 files, hand to `duck-refactor` instead"
+- [L1] Boundaries section could add explicit handoff to `duck-refactor` when phase caps or review-fatigue triggers are exceeded
+  - Fix: Add "If scope exceeds current phase bounds, hand to `duck-refactor` instead"
 
 ### Overlap Analysis
 - Semantic overlap with: `duck-refactor` (40% — both implement code changes, but different scope limits)

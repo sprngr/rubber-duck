@@ -211,8 +211,8 @@ The agent must already be installed for your target. Delegation runs through `du
  - duck-debug — Socratic debugging (trace + root-cause)
  - duck-debt — deferred-work ledger (read-only)
  - duck-design — option/tradeoff evaluation
- - duck-patch — bounded fix (max 2 files)
- - duck-refactor — multi-file restructuring (max 5 files)
+ - duck-patch — bounded fix (phase-gated scope with adaptive caps)
+ - duck-refactor — multi-file restructuring (phase-gated scope with adaptive caps)
  - duck-review — risk-first code review
  - duck-risk — failure-mode/rollback stress test
  - duck-simplify — complexity reduction
