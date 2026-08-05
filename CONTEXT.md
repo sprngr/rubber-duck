@@ -19,12 +19,14 @@
 ## Decisions
 
 - **Policy authority split**: `AGENTS.md` is behavioral policy source of truth. `CONTEXT.md` stores project memory and decision history only. (date: 2026-08-04)
-- **Execution approval model adopted**: explicit `approve` token and bounded semantic scope are required for assistant-initiated semantic changes. Procedural details live in `AGENTS.md`. (date: 2026-08-01)
+- **Execution approval model updated**: explicit approval intent is required for assistant-initiated semantic changes; accepted intents are `approve`, `approved`, `ok`, `go ahead`, `confirm`, with bounded semantic scope unchanged. Procedural details live in `AGENTS.md`. (date: 2026-08-05)
 - **Diff format rule adopted**: existing files use unified diff; new files use full-content block; one file per block. Canonical examples are in `src/shared/references/diff-format-examples.md`. (date: 2026-08-01)
 - **Installer skill-set split**: default 11 skills + optional extras 3 (`duck-adapt`, `duck-grill`, `duck-tape`); uninstall removes all 14 to prevent orphans; status reports extras separately. (date: 2026-08-01)
 - **Validation suite expansion**: prompt validation moved to top-level `validation/` with fixtures and multi-turn coverage. (date: 2026-08-02)
 - **Validation baseline metrics captured**: suite size 31; best observed pass 23/31 (74%); typical range 18-23/31 due to wording variance; stable subset gate retained. (date: 2026-08-02)
 - **Installer policy source move**: installer policy source moved from repo-root `AGENTS.md` to built `dist/AGENTS.md`; source policy content comes from `src/agents/AGENTS.md`. (date: 2026-08-04)
+- **Assembly rules contract trimmed**: removed unenforced declarative keys from `build/agent-assembly.rules.json` and `build/skill-assembly.rules.json`; retained only actively enforced checks/invariants to reduce false-confidence surface. (date: 2026-08-05)
+- **Skill baseline assertion coverage expanded**: `build/skill-assembly.rules.json` `checks.skill_groups.all_skills` now covers all current source skills so baseline grouped assertions apply consistently. (date: 2026-08-05)
 - **Installer idempotence fix**: installer upsert no longer accumulates blank lines above managed block fences on repeated runs (bash + PowerShell). (date: 2026-08-04)
 - **PowerShell local-source fixes**: corrected script-file path detection and local-source variable scoping to prevent false piped-mode and null-path errors. (date: 2026-08-04)
 - **duck-tape recovery model**: Angle A/B model kept with auto pre-compact extraction and LLM-assisted resume synthesis; state rotation uses auto -> recovered -> manual eviction precedence with max 10 files. (date: 2026-08-01)

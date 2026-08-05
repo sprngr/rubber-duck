@@ -1,21 +1,6 @@
 {
   "version": 1,
   "phase": 1,
-  "artifact_target": {
-    "source_path": "src/agents",
-    "output_paths": [
-      "dist/claude",
-      "dist/opencode",
-      "dist/copilot"
-    ]
-  },
-  "scope": {
-    "agents": [
-      "duck-*",
-      "duckling",
-      "rubber-duck"
-    ]
-  },
   "checks": {
     "required_dir_file_sets": [
       {
@@ -55,8 +40,5 @@
         "{{include: policy-snippets/safety-carveouts.md}}"
       ]
     }
-  },
-  "notes": [
-    "Enforced by scripts/build-harness-artifacts.sh in --check mode."
-  ]
+  }
 }

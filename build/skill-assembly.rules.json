@@ -1,30 +1,7 @@
 {
   "version": 1,
   "phase": 1,
-  "artifact_target": {
-    "install_path": "skills",
-    "source_path": "src/skills",
-    "mode": "copy-through"
-  },
-  "io": {
-    "include": [
-      "SKILL.md",
-      "references/**",
-      "assets/**",
-      "examples/**"
-    ],
-    "source_template": "src/skills/{skill}/",
-    "output_template": "skills/{skill}/"
-  },
   "invariants": [
-    {
-      "id": "install-target",
-      "description": "Assembled artifacts must be written to skills/<name>/ for npx skills consumption."
-    },
-    {
-      "id": "parity",
-      "description": "skills/<name>/** must match assembled output from src/skills/<name>/**."
-    },
     {
       "id": "portability-no-repo-policy-refs",
       "description": "Skill text must not reference repo-coupled policy files.",
@@ -33,17 +10,6 @@
         "/mnt/",
         "/home/",
         "C:\\\\"
-      ]
-    },
-    {
-      "id": "guardrail-semantics",
-      "description": "Skill must include or reference guardrail semantics.",
-      "required_semantics": [
-        "decision ownership",
-        "ask-before-act",
-        "evidence-first",
-        "bounded approval",
-        "safety carve-outs"
       ]
     }
   ],
@@ -61,11 +27,17 @@
     ],
     "skill_groups": {
       "all_skills": [
+        "duck-adapt",
         "quack",
         "duck-debt",
         "duck-debug",
         "duck-design",
+        "duck-grill",
+        "duck-patch",
+        "duck-refactor",
         "duck-review",
+        "duck-risk",
+        "duck-simplify",
         "duck-teach",
         "duck-triage",
         "duck-tape"

@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Installer policy source now uses built `dist/AGENTS.md` (generated from `src/agents/AGENTS.md`) for local and web installer flows.
+- Build rules contracts simplified: removed unenforced keys from `build/agent-assembly.rules.json` and `build/skill-assembly.rules.json` to reduce dead declarative surface.
+- Skill assembly coverage expanded: `checks.skill_groups.all_skills` now includes all current source skills, so baseline grouped assertions apply consistently.
+- Approval-gate UX lowered friction: semantic execution approval now accepts explicit intent tokens (`approve`, `approved`, `ok`, `go ahead`, `confirm`) instead of strict `approve` only.
+- Skill source guardrail alignment updated: `duck-adapt` and `duck-grill` now include shared clarify-first/philosophy snippets to satisfy baseline grouped assertions.
 
 ### Fixed
 - Installer managed block upsert no longer accumulates extra blank lines above managed fences on repeated runs (bash and PowerShell).

@@ -103,13 +103,13 @@ Before every workspace-changing action, classify change type:
    - File does not exist: full content in fenced code block, file path as header
    - One file per diff block
 
-4. **Approval ask** (exact phrase required):
-   - `Reply with "approve" to execute this scope.`
+4. **Approval ask** (explicit approval intent required):
+   - `Reply with approval intent to execute this scope (ex: "approve", "ok", "confirm").`
 
 5. **WAIT for approval** (blocking gate):
-   - Do NOT proceed to step 5 until user replies with "approve"
-   - Do NOT interpret continuation signals ("continue", "B", "go ahead") as approval
-   - Require explicit "approve" token
+   - Do NOT proceed to step 6 until user replies with explicit approval intent
+   - Accept: "approve", "approved", "ok", "go ahead", "confirm"
+   - Do NOT interpret non-approval continuation signals ("continue", "B") as approval
 
 6. **Execute** (only after approval received)
 

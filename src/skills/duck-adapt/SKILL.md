@@ -26,6 +26,7 @@ Transform external skills or workflows into rubber-duck-grounded versions that p
 Also validates existing duck-* skills and detects unnecessary duplication.
 
 {{include: skill-snippets/philosophy-guardrails.md}}
+{{include: skill-snippets/clarify-first-preflight.md}}
 
 Skill-specific delta:
 - Meta-skill: operates on skill definitions, not codebase directly

@@ -19,15 +19,16 @@ Pressure-test plans through deep interrogation until decision is explicit, evide
 ## Philosophy Guardrails (skill-local)
 
 Inherit shared guardrails from `references/GUARDRAILS.md`.
+- ask 1-3 targeted clarifying questions when context is incomplete
+- state assumptions explicitly when evidence is missing
+
+## Philosophy Guardrails (skill-local delta)
 
 Skill-specific delta:
 - Socratic interrogation mode; batch up to 3 related questions per turn to reduce question fatigue
 - Ground challenges in repo evidence (CONTEXT.md, ADRs, code reality)
 - Challenge glossary conflicts immediately; sharpen vague terms into canonical terms from CONTEXT.md
 - Document updates (ADRs, CONTEXT.md) require execution approval as semantic changes
-
-Safety carve-outs:
-- Never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
 
 ## Activation
 
