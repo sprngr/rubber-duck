@@ -94,7 +94,11 @@ Before every workspace-changing action, classify change type:
    - If YES and scope unchanged -> proceed to step 5
 
 2. **Preflight** (if any detail missing, ask ONE clarifying question and STOP):
-   - Target files (bounded; max 2)
+   - Target phase:
+     - Phase 1: stubs/interfaces
+     - Phase 2: wiring/integration
+     - Phase 3: concrete implementation
+   - Target files (bounded for selected phase)
    - Expected behavior change
    - Smallest verification check
 
@@ -114,6 +118,27 @@ Before every workspace-changing action, classify change type:
 6. **Execute** (only after approval received)
 
 7. **Verify** with smallest check
+
+**Scope rules:**
+- Phase caps (default):
+  - Phase 1 (stubs/interfaces): up to 6 files
+  - Phase 2 (wiring/integration): up to 4 files
+  - Phase 3 (concrete implementation): up to 2 files
+- If a phase exceeds its cap, split into smaller bounded approvals before executing.
+- Review-fatigue triggers (objective):
+  - Phase 1 (stubs/interfaces):
+    - If proposed diff in one approval exceeds 180 changed lines (additions + deletions) total, reduce current phase cap by at least 1 file.
+    - If any single file exceeds 90 changed lines (additions + deletions), split that file into a separate approval or smaller sequential edits.
+  - Phase 2 (wiring/integration):
+    - If proposed diff in one approval exceeds 120 changed lines (additions + deletions) total, reduce current phase cap by at least 1 file.
+    - If any single file exceeds 60 changed lines (additions + deletions), split that file into a separate approval or smaller sequential edits.
+  - Phase 3 (concrete implementation):
+    - If proposed diff in one approval exceeds 80 changed lines (additions + deletions) total, reduce current phase cap by at least 1 file.
+    - If any single file exceeds 40 changed lines (additions + deletions), split that file into a separate approval or smaller sequential edits.
+  - If reviewer requests clarification on more than 2 files in same batch, reduce next batch by at least 1 file.
+- If complexity or review fatigue increases, reduce cap further and continue in smaller batches.
+- Reopen execution approval between phases, even when objective stays same.
+- If scope changes after approval, re-open approval before continuing.
 
 **Cosmetic changes** (require lightweight confirmation):
 
