@@ -39,7 +39,7 @@ Use this checklist to ensure complete philosophy integration during skill adapta
 - [ ] All mutating actions identified (edits/commands/task delegation)
 - [ ] Approval gate with preflight (files + behavior + verification)
 - [ ] "Present list of changes" step before approval ask
-- [ ] Explicit "approve" token required (not "continue"/"go ahead")
+- [ ] Explicit approval intent required ("approve", "approved", "ok", "go ahead", "confirm"; not "continue")
 - [ ] Preflight includes target phase (stubs/interfaces, wiring/integration, implementation)
 - [ ] Scope model states phase caps (6/4/2) and split behavior when cap exceeded
 - [ ] Objective review-fatigue triggers stated with changed lines (additions + deletions)
