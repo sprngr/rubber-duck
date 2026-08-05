@@ -26,6 +26,35 @@ This section defines the system-level architecture and operating contracts for R
 - Skills install artifacts: [`skills/`](../../skills)
 - Global operating policy: [`src/agents/AGENTS.md`](../../src/agents/AGENTS.md)
 
+## AGENTS.md vs CONTEXT.md
+
+`AGENTS.md` is rules and operating contract.  
+`CONTEXT.md` is project memory and decisions.
+
+### Functional split
+
+- **AGENTS.md**
+  - tells agent how to behave
+  - safety gates, approval flow, style constraints, hard boundaries
+  - procedural policy and invariants
+  - normative: defines allowed behavior
+
+- **CONTEXT.md**
+  - tells agent what project already decided
+  - conventions, architecture notes, glossary, open questions, deferred debt
+  - factual and decision memory for consistency
+  - descriptive: documents current reality and intent
+
+### Quick test
+
+- “Must ask for `approve` before semantic edit” -> `AGENTS.md`
+- “Policy source moved to `dist/AGENTS.md` on 2026-08-04” -> `CONTEXT.md` (and maybe `CHANGELOG.md`)
+
+### Rule of thumb
+
+- If violating it can create unsafe or unauthorized behavior, put it in `AGENTS.md`.
+- If it avoids re-deciding, renaming, or losing context, put it in `CONTEXT.md`.
+
 ## Installation and distribution
 
 Installation and distribution instructions live in the repository root [`README.md`](../../README.md) so users have a single entry point for setup guidance.
