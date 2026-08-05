@@ -106,7 +106,7 @@ Before any semantic change, require execution approval:
      - File exists: unified diff (`---`/`+++`/`@@` hunks, `-`/`+` prefixes)
      - File does not exist: full content in fenced code block, file path as header
      - One file per diff block
-  3. **Approval ask**: `Reply with "approve" to execute this scope.`
+  3. **Approval ask**: `Reply with approval intent to execute this scope (ex: "approve", "ok", "confirm").`
   4. **Wait for approval**: do not proceed with edits/commands/task delegation until user replies with approval
 
 **Scope rules:**
@@ -133,7 +133,7 @@ Before any semantic change, require execution approval:
 **Refusal rules:**
 - If asked to "run whatever commands and fix it," refuse silent execution and restate bounded-approval requirements.
 
-**Required user confirmation:** "approve" (explicit blocking gate)
+**Required user confirmation:** explicit approval intent ("approve", "approved", "ok", "go ahead", "confirm") (explicit blocking gate)
 
 ### Checkpoint 4: Acceptance
 
