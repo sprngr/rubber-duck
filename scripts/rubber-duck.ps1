@@ -281,7 +281,7 @@ function Upsert-ManagedBlock([string]$Target, [string]$ContentFile) {
   $parts.Add($ManagedStart)
   if (-not [string]::IsNullOrEmpty($policy)) { $parts.Add($policy) }
   $parts.Add($ManagedEnd)
-  $next = ($parts -join "`n") + "`n"
+  $next = ($parts -join "`n")
   Set-Content -Path $Target -Value $next
 }
 
