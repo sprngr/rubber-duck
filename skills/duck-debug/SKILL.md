@@ -218,13 +218,13 @@ Before any semantic change, require execution approval:
 - If a phase exceeds its cap, split into smaller bounded approvals before executing.
 - Review-fatigue triggers (objective):
   - Phase 1 (stubs/interfaces):
-    - If proposed diff in one approval exceeds 180 changed lines (additions + deletions) total, reduce current phase cap by at least 1 file.
+    - If proposed diff in one approval exceeds 180 changed lines (additions + deletions) total, reduce current phase cap by at least 1 file (minimum cap is 1 file).
     - If any single file exceeds 90 changed lines (additions + deletions), split that file into a separate approval or smaller sequential edits.
   - Phase 2 (wiring/integration):
-    - If proposed diff in one approval exceeds 120 changed lines (additions + deletions) total, reduce current phase cap by at least 1 file.
+    - If proposed diff in one approval exceeds 120 changed lines (additions + deletions) total, reduce current phase cap by at least 1 file (minimum cap is 1 file).
     - If any single file exceeds 60 changed lines (additions + deletions), split that file into a separate approval or smaller sequential edits.
   - Phase 3 (concrete implementation):
-    - If proposed diff in one approval exceeds 80 changed lines (additions + deletions) total, reduce current phase cap by at least 1 file.
+    - If proposed diff in one approval exceeds 80 changed lines (additions + deletions) total, reduce current phase cap by at least 1 file (minimum cap is 1 file).
     - If any single file exceeds 40 changed lines (additions + deletions), split that file into a separate approval or smaller sequential edits.
   - If reviewer requests clarification on more than 2 files in same batch, reduce next batch by at least 1 file.
 - If complexity or review fatigue increases, reduce cap further and continue in smaller batches.
