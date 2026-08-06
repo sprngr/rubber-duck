@@ -20,7 +20,6 @@ Classify bug severity and expose missing test coverage with smallest runnable ch
 
 Inherit shared guardrails from `references/GUARDRAILS.md`.
 
-
 Skill-specific delta:
 - Recommend severity and test direction; user decides implementation/test-writing actions.
 
@@ -34,7 +33,6 @@ Use for test coverage planning, bug severity triage, and pre-PR test recommendat
 
 - ask 1-3 targeted clarifying questions when context is incomplete
 - state assumptions explicitly when evidence is missing
-
 - Ask one targeted clarifying question about missing repro/spec first.
 
 If evidence is missing, include explicit marker:
@@ -110,7 +108,6 @@ Flag missing tests when:
 - Trivial one-liner with existing coverage may not need new test.
 - Never drop core safeguards for brevity:
 - never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
-
 
 ### 4. Output
 

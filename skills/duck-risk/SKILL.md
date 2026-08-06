@@ -20,7 +20,6 @@ Identify highest-impact correctness/reliability/security-adjacent risks and smal
 
 Inherit shared guardrails from `references/GUARDRAILS.md`.
 
-
 Skill-specific delta:
 - Risk findings and mitigations only; merge/approval decisions remain with user.
 
@@ -34,7 +33,6 @@ Use for adversarial review of proposal/change scope.
 
 - ask 1-3 targeted clarifying questions when context is incomplete
 - state assumptions explicitly when evidence is missing
-
 
 Required:
 - proposal/change scope or runtime path

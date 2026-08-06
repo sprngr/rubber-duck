@@ -21,7 +21,6 @@ Support code restructuring through bounded refactoring operations with explicit 
 
 Inherit shared guardrails from `references/GUARDRAILS.md`.
 
-
 Skill-specific delta:
 - Multi-file refactoring operations require execution approval with full reference tracking.
 - Distinguish from single-file patches and complexity reduction.
@@ -44,7 +43,6 @@ Use when user asks to refactor, extract, rename across files, move code, inline,
 
 - ask 1-3 targeted clarifying questions when context is incomplete
 - state assumptions explicitly when evidence is missing
-
 
 Ask one scoping question if any detail unclear:
 - What to extract/rename/move/inline?
@@ -93,7 +91,6 @@ Before proposing refactoring approach:
 4. Use already-installed dependency
 5. Shrink to smallest safe diff
 6. Only then add new code/abstraction
-
 
 Ask: "Does existing code/pattern already solve this? Can we reuse instead of restructure?"
 
@@ -150,4 +147,3 @@ Report: "Refactoring complete. Verification: [test results]. [N] files changed."
 - If refactoring reveals complexity issues, note for `duck-simplify` follow-up
 
 - never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
-

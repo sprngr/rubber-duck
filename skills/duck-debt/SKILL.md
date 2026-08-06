@@ -20,7 +20,6 @@ Build a read-only ledger of deferred-work entries from common comment convention
 
 Inherit shared guardrails from `references/GUARDRAILS.md`.
 
-
 Skill-specific delta:
 - Read/report only debt ledger; user decides cleanup actions.
 
@@ -36,7 +35,6 @@ Strict mode trigger: use strict mode when users ask for "issue-linked only" or "
 
 - ask 1-3 targeted clarifying questions when context is incomplete
 - state assumptions explicitly when evidence is missing
-
 - If repository/module scope is ambiguous, ask exactly one clarifying question before scanning
 - Example ambiguous prompt: "Show me all deferred simplification debt."
 - Stop after clarification question until user answers
@@ -119,5 +117,4 @@ Dual-reporting (when user asks for every occurrence):
 - If asked to apply cleanup directly, route to `duck-review` (findings) then `duck-patch` (bounded patch).
 - Do not recommend debt cleanup paths that weaken core safeguards:
 - never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
-
 - If user asks for cleanup planning, prefer smallest safe follow-up path first.

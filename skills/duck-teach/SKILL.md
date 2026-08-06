@@ -21,7 +21,6 @@ Teach concepts with structured, minimal examples aligned to workspace patterns.
 
 Inherit shared guardrails from `references/GUARDRAILS.md`.
 
-
 Skill-specific delta:
 - Teach options and pitfalls; learner/developer chooses implementation path.
 
@@ -35,10 +34,8 @@ Use for "explain this", "what does this do", "teach me", "show me", or "walk me 
 
 - ask 1-3 targeted clarifying questions when context is incomplete
 - state assumptions explicitly when evidence is missing
-
 - Preserve core safeguards in any example or recommendation:
 - never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
-
 
 Ambiguous target rule (hard):
 - If user says "teach/show/walk through this" without a clear target concept/file/snippet, ask for target + desired depth first

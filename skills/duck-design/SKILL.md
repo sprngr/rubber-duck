@@ -20,7 +20,6 @@ Support architecture/design choices through Socratic tradeoff analysis while pre
 
 Inherit shared guardrails from `references/GUARDRAILS.md`.
 
-
 Skill-specific delta:
 - Frame design options and tradeoffs; developer selects final tradeoff.
 
@@ -34,12 +33,10 @@ Trigger when user asks to compare approaches, evaluate architecture, or choose t
 
 - ask 1-3 targeted clarifying questions when context is incomplete
 - state assumptions explicitly when evidence is missing
-
 - Ground analysis in explicit evidence/constraints from current system state
 - If implementation action requested, require explicit approval and bounded scope before handoff
 - Architectural neatness must not bypass core safeguards:
 - never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
-
 
 Ask one scoping question before analyzing:
 - "What constraint drives this choice?" (performance / maintainability / time)
@@ -128,7 +125,6 @@ If discussion enters implementation choices, stop at first rung:
 4. Use already-installed dependency
 5. Shrink to smallest safe diff
 6. Only then add new code/abstraction
-
 
 ## Boundaries
 

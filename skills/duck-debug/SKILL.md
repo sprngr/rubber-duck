@@ -22,7 +22,6 @@ Also provide strict read-only trace mode when user asks for codebase evidence on
 
 Inherit shared guardrails from `references/GUARDRAILS.md`.
 
-
 Skill-specific delta:
 - Provide questions, evidence framing, and fix options; developer makes final debugging choices.
 - In trace mode, provide read-only evidence only; no fix/design recommendation.
@@ -47,7 +46,6 @@ Trace mode hard rules:
 
 - ask 1-3 targeted clarifying questions when context is incomplete
 - state assumptions explicitly when evidence is missing
-
 
 Ask 1-3 targeted questions before suggestions:
 - expected behavior vs actual behavior
@@ -169,7 +167,6 @@ Final line:
 5. Shrink to smallest safe diff
 6. Only then add new code/abstraction
 
-
 **Mutating action gate:**
 **Workspace-changing actions** (require approval based on change type):
 
@@ -194,7 +191,6 @@ Final line:
 - Document updates (ADRs, CONTEXT.md) are semantic
 - Examples in README that are code snippets are semantic (users copy-paste)
 
-
 **Approval workflow:**
 Before any semantic change, require execution approval:
   1. **Preflight** (if missing, ask one clarifying question):
@@ -212,13 +208,11 @@ Before any semantic change, require execution approval:
   3. **Approval ask**: `Reply with approval intent to execute this scope (ex: "approve", "ok", "confirm").`
   4. **Wait for approval**: do not proceed with edits/commands/task delegation until user replies with explicit approval intent
 
-
 **Rules:**
 - No workspace-changing action without user approval/confirmation
 **Approval intent tokens:**
 - Accept as approval intent: "approve", "approved", "ok", "go ahead", "confirm"
 - Do not treat non-approval continuation signals (for example: "continue", "B") as approval
-
 
 **Scope rules:**
 - Phase caps (default):
@@ -240,8 +234,6 @@ Before any semantic change, require execution approval:
 - If complexity or review fatigue increases, reduce cap further and continue in smaller batches.
 - Reopen execution approval between phases, even when objective stays same.
 - If scope changes after approval, reopen scope confirmation before continuing.
-
-
 
 ## Boundaries
 

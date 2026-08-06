@@ -120,7 +120,6 @@ render_body_with_includes() {
     include_path="$(resolve_policy_include_path_if_match "${line}")" || include_status=$?
     if (( include_status == 0 )); then
       render_body_with_includes "${include_path}" "${out}" "${next_stack}" || return 1
-      printf '\n' >> "${out}"
       continue
     fi
     if (( include_status == 2 )); then
