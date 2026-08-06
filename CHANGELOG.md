@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Assembly rules now assert approval-workflow snippet presence and include wiring to catch drift early.
 - Validation suite alignment: V14 now checks phase-cap boundary (not stale file-count premise), V30 reflects clear approval intent handling, and new V32/V33 cover missing phase selection preflight and re-approval between phases. Validation docs/context/runlog updated to V01-V33.
 - duck-tape session-id handling hardened: `/duck-tape` and `/duck-tape merge` now auto-generate `<YYYY-MM-DD-HHMM>` by default, ask only for explicit custom IDs, and issue one corrective prompt for invalid custom IDs.
+- Guardrails drift check now fails if any rendered `dist/**/*.md` artifact contains duplicate headings (markdown ATX `#`/`##`/... or bold `**...**` pseudo-headers) within a single file. Catches nested-include composition regressions where the same policy snippet gets rendered twice.
 
 ### Fixed
 
@@ -32,6 +33,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - PowerShell installer local-source file resolution now uses script-scoped variables, fixing null-path failures during local copy.
 - duck-tape hook JS behavioral test normalization now accepts compact stamp format (`YYYY-MM-DD-HHmm`) in state/marker assertions, and timestamp/stamp consistency parsing now accepts compact and separated minute formats. This removes false failures in `check-hooks-behavior`.
 - Nested include expansion no longer injects extra blank lines in generated markdown artifacts.
+- Rendered rubber-duck agent artifacts (`dist/*/agents/rubber-duck.md`) no longer duplicate the approval-workflow, scope-rules, and change-type sections. `src/agents/rubber-duck/body.md` no longer re-includes policy snippets that are already pulled in via the Safety Gates section.
+- AGENTS.md Layout section now correctly distinguishes `.github/` (tracked CI/workflow config) from `.agents/`, `.claude/`, `.opencode/` (untracked local harness install targets, populated by installers).
 
 ## [v2.0.1] - 2026-08-03
 
