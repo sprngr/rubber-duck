@@ -56,14 +56,18 @@ elif ! cmp -s "$managed_tmp" "$DIST_AGENTS"; then
   failed=1
 fi
 
-# Guard: no two consecutive identical bold-header lines in rendered dist artifacts.
-# Catches nested-include composition bugs (e.g. same snippet included twice).
+# Guard: no duplicate headings within a single rendered dist artifact.
+# Covers markdown ATX headings (#, ##, ###, ...) and bold-emphasis pseudo-headers
+# (**...** / **...:**). Catches nested-include composition bugs where the same
+# snippet is included more than once (adjacent or not).
 while IFS= read -r -d '' dist_file; do
   if ! awk '
-    /^\*\*.+\*\*:?[[:space:]]*$/ {
-      if ($0 == prev) { print FILENAME ":" NR ": consecutive duplicate header: " $0 > "/dev/stderr"; found=1 }
+    /^#+[[:space:]]+.+[[:space:]]*$/ || /^\*\*.+\*\*:?[[:space:]]*$/ {
+      if ($0 in seen) {
+        print FILENAME ":" NR ": duplicate heading (first at line " seen[$0] "): " $0 > "/dev/stderr"
+        found=1
+      } else { seen[$0] = NR }
     }
-    { prev = $0 }
     END { if (found) exit 1 }
   ' "$dist_file"; then
     failed=1
