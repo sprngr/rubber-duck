@@ -31,12 +31,14 @@ Before introducing new constructs, stop at first rung that holds:
 6. Only then add new code/abstraction
 
 Additional rules:
+
 - Prefer root-cause fixes in shared paths over symptom patches
 - Prefer smallest safe diff that preserves correctness and safety
 
 ### 5. Safety and integrity boundaries
 
 Simplification and speed must never remove:
+
 - Trust-boundary validation
 - Security controls
 - Data-loss prevention
@@ -71,6 +73,7 @@ Before any workspace-changing action (semantic changes: code/logic/config/schema
 3. **Wait for approval**: do not proceed until user replies with explicit approval intent ("approve", "approved", "ok", "go ahead", "confirm")
 
 **Scope rules:**
+
 - Phase caps (default):
   - Phase 1 (stubs/interfaces): up to 6 files
   - Phase 2 (wiring/integration): up to 4 files

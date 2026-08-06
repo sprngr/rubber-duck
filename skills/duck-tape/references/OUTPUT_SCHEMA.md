@@ -5,6 +5,7 @@ Strict output specifications for duck-tape artifacts.
 ## CONTEXT.md Output Rules
 
 ### Section headers
+
 - Always `## <Section>` (two hash marks, space, section name)
 - Section names are case-sensitive: `Goals`, `Decisions`, `Conventions`, `Glossary`, `Deferred-Debt`, `Open-Questions`, `Notes`
 - No markdown formatting in headers (no bold, no links)
@@ -12,30 +13,35 @@ Strict output specifications for duck-tape artifacts.
 ### Entry format by section
 
 **Goals**
+
 ```markdown
 ## Goals
 - **<name>**: <what we optimize for>
 ```
 
 **Decisions**
+
 ```markdown
 ## Decisions
 - **<name>**: <decision> (date: <YYYY-MM-DD>)
 ```
 
 **Conventions**
+
 ```markdown
 ## Conventions
 - **<name>**: <convention>
 ```
 
 **Glossary**
+
 ```markdown
 ## Glossary
 - **<term>**: <definition>
 ```
 
 **Deferred-Debt**
+
 ```markdown
 ## Deferred-Debt
 - TODO(<debt type>): <YYYY-MM-DD> <what deferred> [status: open|resolved]
@@ -43,12 +49,14 @@ Strict output specifications for duck-tape artifacts.
 ```
 
 **Open-Questions**
+
 ```markdown
 ## Open-Questions
 - <question> (date: <YYYY-MM-DD>)
 ```
 
 **Notes**
+
 ```markdown
 ## Notes
 ### <YYYY-MM-DD HH:MM>
@@ -56,6 +64,7 @@ Strict output specifications for duck-tape artifacts.
 ```
 
 ### Blank lines
+
 - One blank line between sections
 - No trailing blank lines at end of file
 - Entries within a section are contiguous (no blank lines between entries)
@@ -63,6 +72,7 @@ Strict output specifications for duck-tape artifacts.
 ## State File Output Rules
 
 ### Header format
+
 ```markdown
 # Agent State
 
@@ -71,6 +81,7 @@ Created: <ISO-8601>
 ```
 
 ### Section requirements
+
 - All sections present on first write
 - Empty sections use `None` marker
 - Position.Current is single line
@@ -84,6 +95,7 @@ Created: <ISO-8601>
 ## Changelog Output Rules
 
 ### Format
+
 ```markdown
 Changelog:
 - Added: <section> <key>
@@ -92,6 +104,7 @@ Changelog:
 ```
 
 ### Rules
+
 - One line per change
 - Section names match schema exactly
 - Key is the bold identifier (name/term)
@@ -102,12 +115,14 @@ Changelog:
 ## Rotation Rules
 
 ### State files
+
 - Max 10 files in `.duck-tape/`
 - Drop oldest by session ID (lexicographic order)
 
 ## Redaction Output Rules
 
 ### Detection output
+
 ```markdown
 Redaction: detected <count> potential secret(s) in <section>.
 Flagged: <type> at line <N>: <masked preview>
@@ -115,6 +130,7 @@ Action: user confirmation required before masking with <REDACTED>.
 ```
 
 ### Rules
+
 - Never show full secret value
 - Masked preview shows first 4 characters + `...`
 - Reject flagged content until user confirms

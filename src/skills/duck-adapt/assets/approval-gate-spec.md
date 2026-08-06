@@ -15,12 +15,14 @@ Ensures user explicitly approves scope, expected behavior, and verification befo
 ## Mutating Actions (Require Approval Gate)
 
 **Code changes:**
+
 - File edits (any text modification)
 - File creation
 - File deletion
 - File moves/renames
 
 **Commands:**
+
 - git commit, git push
 - npm install, pip install
 - Database migrations
@@ -28,10 +30,12 @@ Ensures user explicitly approves scope, expected behavior, and verification befo
 - Deploy commands
 
 **Task delegation:**
+
 - Delegating implementation work to subagent/skill
 - Any action that results in workspace changes
 
 **Non-mutating actions (No approval gate needed):**
+
 - File reading
 - Code analysis
 - grep/search
@@ -48,6 +52,7 @@ Ensures user explicitly approves scope, expected behavior, and verification befo
 If any of these items is missing, ask ONE clarifying question and STOP:
 
 **Required preflight items:**
+
 1. **Target phase** — Select one:
    - Phase 1: stubs/interfaces
    - Phase 2: wiring/integration
@@ -57,6 +62,7 @@ If any of these items is missing, ask ONE clarifying question and STOP:
 4. **Smallest verification check** — How to confirm the change works (command, test, manual check)
 
 **Example preflight:**
+
 ```markdown
 **Preflight:**
 - Target files: `src/auth.js`, `src/middleware/auth.js`
@@ -65,6 +71,7 @@ If any of these items is missing, ask ONE clarifying question and STOP:
 ```
 
 **If incomplete, ask:**
+
 - Missing files: "Which file(s) should I modify?"
 - Missing behavior: "What should change in the application behavior?"
 - Missing verification: "How should I verify the fix works?"
@@ -84,6 +91,7 @@ Before asking for approval, present the specific changes broken down by file:
 ```
 
 **Requirements:**
+
 - List each file with brief description of what changes
 - Show enough detail for user to scope the change before approving
 - Keep to one line per file
@@ -99,6 +107,7 @@ Reply with "approve" to execute this scope.
 ```
 
 **Variations NOT allowed:**
+
 - ❌ "Proceed?"
 - ❌ "Ready to execute?"
 - ❌ "Should I continue?"
@@ -113,6 +122,7 @@ Reply with "approve" to execute this scope.
 **Do NOT proceed to step 4 until user replies with "approve".**
 
 **Accepted approval tokens:**
+
 - ✅ "approve"
 - ✅ "approved"
 - ✅ "ok"
@@ -120,17 +130,20 @@ Reply with "approve" to execute this scope.
 - ✅ "confirm"
 
 **NOT accepted as approval:**
+
 - ❌ "continue"
 - ❌ "yes"
 - ❌ "B" (from multi-choice)
 - ❌ Any other continuation signal
 
 **If user provides non-approval response:**
+
 - Treat as scope clarification or question
 - Re-gather preflight if scope changed
 - Return to step 2 after clarification
 
 **Blocking behavior:**
+
 - Assistant must explicitly check for "approve" token
 - No execution on implicit continuation
 - No "I'll interpret 'yes' as approval"
@@ -140,12 +153,14 @@ Reply with "approve" to execute this scope.
 ### Step 5: Execute (Only After Approval Received)
 
 Proceed with the approved scope:
+
 1. Apply changes to approved files only
 2. Make expected behavior change
 3. Preserve existing patterns and style
 4. Apply Duck Ladder discipline (minimal safe diff)
 
 **During execution:**
+
 - Do NOT broaden scope
 - Do NOT touch additional files not in preflight
 - Do NOT change behavior beyond what was approved
@@ -155,12 +170,14 @@ Proceed with the approved scope:
 ### Step 6: Verify (Run Smallest Check)
 
 Run the agreed verification check:
+
 - Execute test command
 - Run manual verification steps
 - Check output/logs
 - Confirm expected behavior
 
 **Report result:**
+
 - ✅ Pass: "Verification passed: [evidence]"
 - ❌ Fail: "Verification failed: [error] — Rollback? Or investigate?"
 
@@ -171,12 +188,14 @@ Run the agreed verification check:
 **If scope changes during or after execution, return to step 1:**
 
 **Scope changes include:**
+
 - Need to touch additional files not in preflight
 - Behavior change broader than expected
 - New requirement discovered during execution
 - Verification revealed additional issues requiring fixes
 
 **When scope changes:**
+
 1. Stop current execution
 2. Present new scope (files + behavior + verification)
 3. Return to step 3 (approval ask)
@@ -230,6 +249,7 @@ Return to preflight with new scope and request renewed approval.
 ### Semantic Changes (Full 6-Step Approval)
 
 **What qualifies as semantic:**
+
 - Code/logic changes
 - Config/schema changes (settings, env vars, build config)
 - Dependency changes (package.json, requirements.txt)
@@ -242,16 +262,19 @@ Return to preflight with new scope and request renewed approval.
 ### Cosmetic Changes (Lightweight Confirmation)
 
 **What qualifies as cosmetic:**
+
 - Documentation edits (README, markdown files, standalone doc comments)
 - Formatting/whitespace-only changes
 - Typo fixes in non-code text files
 
 **Approval flow:** Lightweight confirmation
+
 - Present change briefly
 - Ask: "Confirm to proceed with [doc/formatting] change?"
 - Acceptable confirmations: "yes", "confirm", "ok", "go ahead", "approve"
 
 **Edge cases (count as SEMANTIC, not cosmetic):**
+
 - JSDoc/docstrings in code files are semantic (affects generated docs)
 - Comments explaining logic are semantic (affects maintainability)
 - Config comments are semantic (affects interpretation)
@@ -287,11 +310,13 @@ Return to preflight with new scope and request renewed approval.
 **When to refuse execution:**
 
 **"Run whatever commands and fix it"**
+
 - Refuse silent execution
 - Restate bounded-approval requirements
 - Ask for specific scope (files + behavior + verification)
 
 **Safety carve-out violations:**
+
 - Refuse to weaken trust-boundary validation
 - Refuse to bypass security controls
 - Refuse to skip data-loss prevention
@@ -307,31 +332,39 @@ I can suggest a safer alternative: [alternative approach]."
 ## Anti-Patterns to Avoid
 
 **❌ Implicit approval:**
+
 ```
 User: "continue"
 Assistant: *proceeds with execution*
 ```
+
 **Why wrong:** "continue" is not "approve" — could mean "continue the conversation"
 
 **❌ Skipping preflight:**
+
 ```
 Assistant: "I'll fix the auth bug. Approve?"
 User: "approve"
 Assistant: *edits 5 files*
 ```
+
 **Why wrong:** User didn't see files/behavior/verification before approving
 
 **❌ Scope creep:**
+
 ```
 [User approved 2 files]
 Assistant: *edits those 2 files + discovers 3 more files need changes + edits them without re-approval*
 ```
+
 **Why wrong:** Scope changed, requires return to step 1
 
 **❌ Batched approval:**
+
 ```
 Assistant: "I'll fix issues #1, #2, #3. Approve all?"
 ```
+
 **Why wrong:** User must approve per bounded phase scope, not batch of arbitrary size
 
 ---
@@ -406,6 +439,7 @@ Fix typo in README.md line 42: "authentification" -> "authentication"
 Execution approval gate and Duck Ladder work together:
 
 **Duck Ladder happens BEFORE approval ask:**
+
 1. Gather evidence
 2. Apply Duck Ladder (check 6 rungs)
 3. Identify minimal safe diff

@@ -45,6 +45,7 @@ For all mutating actions, use these checkpoints in order.
 This checkpoint enforces the execution approval flow before any mutating action. Two change types:
 
 **Semantic changes** (require full execution approval):
+
 - Code/logic changes
 - Config/schema changes (settings, env vars, build config)
 - Dependency changes (package.json, requirements.txt, etc.)
@@ -53,12 +54,14 @@ This checkpoint enforces the execution approval flow before any mutating action.
 - Task delegation for implementation/patching
 
 **Cosmetic changes** (require lightweight confirmation):
+
 - Documentation edits (README, markdown files, standalone doc comments)
 - Formatting/whitespace-only changes
 - Typo fixes in non-code text files
 - Confirmation phrase: "Confirm to proceed with [doc/formatting] change?"
 
 **Edge cases:**
+
 - JSDoc/docstring changes in code files are semantic (affects generated docs, code contracts)
 - Comments explaining logic in code are semantic (affects maintainability understanding)
 - Config comments are semantic (affects interpretation)
@@ -75,14 +78,15 @@ Approval workflow:
      - Target files (bounded for the selected phase)
      - Expected behavior change
      - Smallest verification check
-  2. **Present list of changes broken down by file as formatted diff**
+2. **Present list of changes broken down by file as formatted diff**
      - File exists: unified diff (`---`/`+++`/`@@` hunks, `-`/`+` prefixes)
      - File does not exist: full content in fenced code block, file path as header
      - One file per diff block
-  3. **Approval ask**: `Reply with "approve" to execute this scope.`
-  4. **Wait for approval**: do not proceed with edits/commands/task delegation until user replies with approval
+3. **Approval ask**: `Reply with "approve" to execute this scope.`
+4. **Wait for approval**: do not proceed with edits/commands/task delegation until user replies with approval
 
 **Scope rules:**
+
 - Phase caps (default):
   - Phase 1 (stubs/interfaces): up to 6 files
   - Phase 2 (wiring/integration): up to 4 files

@@ -17,6 +17,7 @@ Skill adapter 🦆. External skill -> duck philosophy.
 ## Purpose
 
 Transform external skills or workflows into rubber-duck-grounded versions that preserve intent while adding:
+
 - Socratic questioning flow
 - Evidence-first discipline
 - Duck Ladder minimal-change thinking
@@ -32,6 +33,7 @@ Inherit shared guardrails from `references/GUARDRAILS.md`.
 - state assumptions explicitly when evidence is missing
 
 Skill-specific delta:
+
 - Meta-skill: operates on skill definitions, not codebase directly
 - Output is skill draft, not implementation
 - Recommends skill rejection when overlap/duplication detected
@@ -39,6 +41,7 @@ Skill-specific delta:
 ## Activation
 
 Use when:
+
 - User provides external skill to adapt
 - User describes workflow/process to convert into skill
 - User asks to audit existing skill for philosophy compliance
@@ -51,16 +54,19 @@ Use when:
 Ask clarifying questions (up to 3) to establish:
 
 **For external skill adaptation:**
+
 - Input format: full skill markdown, workflow doc, or concept description?
 - Intent: what problem does this skill solve?
 - Scope: mutating actions (edits/commands) or non-mutating (analysis/advice)?
 - Target audience: what context does user expect?
 
 **For skill audit:**
+
 - Which skill to audit? (name or path)
 - Audit depth: quick compliance check or full overlap analysis?
 
 **For overlap detection:**
+
 - Skill concept summary
 - Expected workflow steps
 - Comparison against existing skills requested?
@@ -68,12 +74,14 @@ Ask clarifying questions (up to 3) to establish:
 ### 2. Evidence gathering
 
 **For external skill:**
+
 - Parse input: extract steps, constraints, outputs, examples
 - Identify decision points (where user choice matters)
 - Identify mutating actions (require approval gates)
 - Identify evidence gaps (where code/diff/log reading needed)
 
 **For skill audit:**
+
 - Read skill source from `src/skills/<name>/SKILL.md`
 - Check against philosophy guardrails
 - Check against prompt order standard (04-prompt-order-standard.md)
@@ -81,6 +89,7 @@ Ask clarifying questions (up to 3) to establish:
 - Check asset convention compliance (07-skill-asset-convention.md)
 
 **For overlap detection:**
+
 - Load existing skill summaries from `src/skills/*/SKILL.md` frontmatter
 - Compare intent, scope, workflow patterns
 - Identify semantic overlap vs complementary composition
@@ -88,6 +97,7 @@ Ask clarifying questions (up to 3) to establish:
 ### 3. Philosophy mapping
 
 Load philosophy assets:
+
 - `assets/philosophy-core.md` — Complete duck philosophy reference
 - `assets/socratic-patterns.md` — 10 transformation patterns (imperative->question, autopilot->approval, etc.)
 - `assets/approval-gate-spec.md` — 6-step execution approval specification
@@ -96,24 +106,28 @@ Load philosophy assets:
 Apply rubber-duck philosophy transformations using loaded patterns:
 
 **Decision ownership:**
+
 - Inject clarifying questions at decision points
 - Make user choice explicit ("Which option?" not "I'll pick X")
 - Surface tradeoffs before recommendations
 - Pattern: Imperative -> Question (socratic-patterns.md #1)
 
 **Evidence-first:**
+
 - Add evidence-gathering steps before conclusions
 - Map to codebase reading patterns (defs/refs/callers/tests)
 - Anchor claims in artifacts
 - Pattern: Black-Box -> Evidence-First (socratic-patterns.md #3)
 
 **Duck Ladder:**
+
 - Add minimal-change discipline to implementation steps
 - Insert 6-rung ladder check before "add new code" steps
 - Prefer root-cause fixes over symptom patches
 - Pattern: Complex -> Duck Ladder (socratic-patterns.md #6)
 
 **Execution approval:**
+
 - Identify all mutating actions (edits, commands, task delegation)
 - Insert 6-step approval gate (approval-gate-spec.md)
 - Add preflight (files + behavior + verification)
@@ -121,6 +135,7 @@ Apply rubber-duck philosophy transformations using loaded patterns:
 - Pattern: Autopilot -> Approval Gate (socratic-patterns.md #2)
 
 **Socratic flow:**
+
 - Convert imperative steps to questioning steps where appropriate
 - Add assumption surfacing
 - Add constraint challenge opportunities
@@ -131,6 +146,7 @@ Apply rubber-duck philosophy transformations using loaded patterns:
 Apply prompt order standard:
 
 **Skill sections (in order):**
+
 1. `## Purpose` — one-sentence intent + key transformations
 2. `## Philosophy Guardrails` — include standard + skill-specific delta
 3. `## Activation` — when to use, user signals
@@ -138,10 +154,12 @@ Apply prompt order standard:
 5. `## Boundaries` — constraints, handoffs, scope limits
 
 **Asset identification:**
+
 - `assets/` candidates: always-loaded data (checklists, templates, matrices)
 - `references/` candidates: conditional docs (examples, patterns, edge cases)
 
 **Frontmatter:**
+
 ```yaml
 ---
 name: duck-<name>
@@ -153,17 +171,20 @@ description: >
 ### 5. Overlap analysis
 
 Load overlap detection asset:
+
 - `assets/overlap-patterns.md` — Intent map for all 12 skills + scoring rules
 
 Check against existing skills using loaded patterns:
 
 **Overlap scoring (from overlap-patterns.md):**
+
 - **High overlap (>70% intent match):** Recommend rejection or merge
 - **Medium overlap (40-70%):** Suggest extension of existing skill
 - **Low overlap (<40%):** New skill viable if distinct value clear
 - **Complementary:** Composition pattern instead of new skill
 
 **Red flags (from overlap-patterns.md):**
+
 - Autopilot execution (no user decision points)
 - Silent implementation (no approval gates)
 - Black-box advice (no evidence grounding)
@@ -171,6 +192,7 @@ Check against existing skills using loaded patterns:
 - High duplication (>90% overlap)
 
 **Composition patterns (from overlap-patterns.md):**
+
 - debug->patch, review->risk->simplify, design->triage, teach->debug
 
 ### 6. Output generation
@@ -279,6 +301,7 @@ src/skills/duck-<name>/
 - Do not execute `make build-skills` automatically; user runs after approval
 
 **Handoffs:**
+
 - If user approves new skill -> "Run `make build-skills` to generate artifacts"
 - If audit reveals issues -> suggest `duck-patch` for small fixes or `duck-refactor` for restructuring
 - If overlap is high -> suggest using existing skill with explicit workflow

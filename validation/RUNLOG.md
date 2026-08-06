@@ -3,6 +3,7 @@
 Track validation outcomes across commits/releases.
 
 **Entry policy:**
+
 - Primary gate: quick subset (`V02, V03, V04, V11, V12, V13, V14`).
 - Record all quick-subset failures always.
 - If any extended checks fail, record those IDs too.
@@ -38,10 +39,12 @@ Track validation outcomes across commits/releases.
 - Verdict: PASS
 
 ### Quick subset
+
 - Passed: V02, V03, V04, V11, V12, V13, V14
 - Failed: none
 
 ### Notes
+
 - Hybrid matcher (substring + LLM judge fallback) stabilized vocabulary variance. Two consecutive runs 7/7. Judge uses neutral default opencode agent, evaluates behavior intent from test notes.
 
 ## 2026-07-21 — v2-quackening

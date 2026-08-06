@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+
 - Installer policy source now uses built `dist/AGENTS.md` (generated from `src/agents/AGENTS.md`) for local and web installer flows.
 - Build rules contracts simplified: removed unenforced keys from `build/agent-assembly.rules.json` and `build/skill-assembly.rules.json` to reduce dead declarative surface.
 - Skill assembly coverage expanded: `checks.skill_groups.all_skills` now includes all current source skills, so baseline grouped assertions apply consistently.
@@ -17,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Cross-skill policy consistency pass updated skill assets/runbooks/evals to remove fixed file-count gating and align mutating workflows to phase-gated execution approval (phase selection, adaptive caps, objective review-fatigue triggers, and re-approval between phases), including regenerated `skills/*` and `dist/*` artifacts.
 
 ### Fixed
+
 - Installer managed block upsert no longer accumulates extra blank lines above managed fences on repeated runs (bash and PowerShell).
 - PowerShell installer now detects script-file execution correctly for `-Source local` and no longer misclassifies it as piped `iwr|iex` mode.
 - PowerShell installer local-source file resolution now uses script-scoped variables, fixing null-path failures during local copy.
@@ -27,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Patch release: duck-tape opencode plugin hook hardening.
 
 ### Fixed
+
 - Path traversal in `opencode.plugin.js` — strict `sessionId` charset validation (alphanumeric + hyphen, max 128 chars) before filename construction
 - Windows filename safety — stamp format changed from `HH:MM` to `HHMM` (colon stripped) matching skill's `<YYYY-MM-DD-HHMM>` session ID format
 - Rotation off-by-one — cap now enforces 10 total state files (was allowing 11); eviction precedence auto, then recovered, then manual
@@ -42,6 +45,7 @@ Major release: validation framework, UX standardization, agent consolidation, ne
 ### Added
 
 #### Skills
+
 - **duck-refactor** — Multi-file restructuring (extract/rename/move/inline/pattern-convert; max 5 files)
 - **duck-adapt** — Meta-skill for external skill adaptation with philosophy compliance auditing and overlap detection
   - 5 philosophy assets (2,196 lines): philosophy-core.md, socratic-patterns.md, approval-gate-spec.md, adaptation-checklist.md, overlap-patterns.md
@@ -50,6 +54,7 @@ Major release: validation framework, UX standardization, agent consolidation, ne
   - Renamed from grill-with-ducks for pattern consistency - inspired by grill-with-docs by [mattpocock](https://github.com/mattpocock/skills/blob/main/skills/engineering/grill-with-docs/SKILL.md)
 
 #### Policy + Workflow
+
 - Validation framework: 21 tests in docs/validation/test-prompts.json, run-validation-tests.sh script
 - Two-tier approval: semantic changes (full 6-step) vs cosmetic (lightweight confirmation)
 - Simple-vs-workflow request classification
@@ -62,6 +67,7 @@ Major release: validation framework, UX standardization, agent consolidation, ne
 - 4-checkpoint decision policy: problem framing, solution selection, execution approval, acceptance
 
 #### Installer Features
+
 - `--skip-agents-md` / `-SkipAgentsMd` flags for both bash and PowerShell installers
   - Skip AGENTS.md policy block install/update/remove operations
   - Allows skills-only or agents-only installation
@@ -73,6 +79,7 @@ Major release: validation framework, UX standardization, agent consolidation, ne
 - AGENTS.md managed block fencing: source file has no fences (clean Markdown), installer adds fences when installing to user directories
 
 #### Documentation
+
 - Skill routing model documentation: inline-default (4 skills), delegated-default (6 skills), governor-invoked (2 skills)
 - Architecture docs: philosophy, agent-skill model, adaptive Socratic policy, prompt order standard, harness config, skill assembly contract, skill asset convention
 - `CONTRIBUTING.md` — build/check/validation workflow, conventions, issue tracker link
@@ -84,6 +91,7 @@ Major release: validation framework, UX standardization, agent consolidation, ne
 - CLI reference in scripts/README.md
 
 ### Changed
+
 - Skill count: 11 -> 13 active skills (duck-adapt, duck-grill added)
 - Agent architecture: consolidated 6 specialized duckling subagents -> single `duckling` delegator with skill-based routing (-1,797 lines)
   - duck-adversary -> duck-risk | duck-builder -> duck-patch | duck-dry -> duck-teach
@@ -106,6 +114,7 @@ Major release: validation framework, UX standardization, agent consolidation, ne
 - duck-tape merge drops resolved Open-Questions instead of retaining them — resolution content already captured in Decisions or Notes
 
 ### Fixed
+
 - Documentation drift between README.md, scripts/README.md, and docs/validation/README.md
 - PowerShell installer skill list missing duck-adapt and duck-grill
 - RUNBOOK.md skill list outdated (missing 3 skills)
@@ -115,6 +124,7 @@ Major release: validation framework, UX standardization, agent consolidation, ne
 - Stale validation doc references after consolidation
 
 ### Removed
+
 - docs/validation/CHANGELOG.md (folded into main CHANGELOG Validation section)
 - docs/validation/RUNBOOK.md (folded into docs/validation/README.md Runbook section)
 - docs/validation/quack-smokecheck.md (folded into docs/validation/README.md Quack runtime smokecheck section)
@@ -122,6 +132,7 @@ Major release: validation framework, UX standardization, agent consolidation, ne
 - CONTEXT.md Session-Log entries and Re-derivation blocks (moved to .duck-tape state files)
 
 ### Breaking Changes
+
 - None expected; additive changes only
 - AGENTS.md policy block uses managed fencing (backward compatible)
 
@@ -132,14 +143,17 @@ Major release: validation framework, UX standardization, agent consolidation, ne
 Released v1.1 with optimizations & tweaks ([#8](https://github.com/sprngr/rubber-duck/pull/8))
 
 ### Added
+
 - Build system to share reused strings between skills and agents
 - Deferred marker inclusion rule to core AGENTS.md
 
 ### Changed
+
 - Compacted prose for token usage, removed redundant rules
 - Reorganized skills and agents for rules loading order
 
 ### Fixed
+
 - duck-debt to be deferred marker agnostic (TODO/FIXME/HACK/XXX)
 
 **Full Changelog**: [v1.0.0...v1.1.0](https://github.com/sprngr/rubber-duck/compare/v1.0.0...v1.1.0)
@@ -149,6 +163,7 @@ Released v1.1 with optimizations & tweaks ([#8](https://github.com/sprngr/rubber
 Initial stable release.
 
 ### Added
+
 - Initial installer version (bash & PowerShell) + harness artifact build system
 - Basic harness support: Claude Code, Copilot CLI & VS Code, OpenCode
 - Agents: rubber-duck (main/router)

@@ -22,6 +22,7 @@ Execute a narrowly scoped code change once the fix direction is known.
 Inherit shared guardrails from `references/GUARDRAILS.md`.
 
 Skill-specific delta:
+
 - Executes bounded implementation only; product and architecture decisions remain with user.
 
 ## Activation
@@ -39,6 +40,7 @@ Use when user asks for a targeted code edit and scope is clear (or can be clarif
 **Workspace-changing actions** (require approval based on change type):
 
 **Semantic changes** (require full execution approval):
+
 - Code/logic changes
 - Config/schema changes (settings, env vars, build config)
 - Dependency changes (package.json, requirements.txt, etc.)
@@ -47,12 +49,14 @@ Use when user asks for a targeted code edit and scope is clear (or can be clarif
 - Task delegation for implementation/patching
 
 **Cosmetic changes** (require lightweight confirmation):
+
 - Documentation edits (README, markdown files, standalone doc comments)
 - Formatting/whitespace-only changes
 - Typo fixes in non-code text files
 - Confirmation phrase: "Confirm to proceed with [doc/formatting] change?"
 
 **Edge cases:**
+
 - JSDoc/docstring changes in code files are semantic (affects generated docs, code contracts)
 - Comments explaining logic in code are semantic (affects maintainability understanding)
 - Config comments are semantic (affects interpretation)
@@ -61,6 +65,7 @@ Use when user asks for a targeted code edit and scope is clear (or can be clarif
 
 **Approval workflow:**
 Before any semantic change, require execution approval:
+
   1. **Preflight** (if missing, ask one clarifying question):
      - target phase:
        - Phase 1: stubs/interfaces
@@ -77,12 +82,15 @@ Before any semantic change, require execution approval:
   4. **Wait for approval**: do not proceed with edits/commands/task delegation until user replies with explicit approval intent
 
 **Rules:**
+
 - No workspace-changing action without user approval/confirmation
 **Approval intent tokens:**
+
 - Accept as approval intent: "approve", "approved", "ok", "go ahead", "confirm"
 - Do not treat non-approval continuation signals (for example: "continue", "B") as approval
 
 **Scope rules:**
+
 - Phase caps (default):
   - Phase 1 (stubs/interfaces): up to 6 files
   - Phase 2 (wiring/integration): up to 4 files
@@ -123,6 +131,7 @@ Before introducing new constructs, stop at first rung that holds:
 6. Report exactly: changed files, behavior delta, verification result.
 
 Output:
+
 - one-line execution plan (file(s) + expected behavior)
 - minimal patch summary (what changed, not a full essay)
 - one smallest verification check and result

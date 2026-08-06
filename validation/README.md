@@ -39,7 +39,7 @@ Runner invokes opencode per test in isolated temp workspace, matches expected si
 ## Validation checklist table
 
 | ID | Area | Prompt | Expected signals | Severity |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | V01 | Governor heartbeat | `quack` | Responds with `🦆` + brief status line and one-line route prompt; no full route options without task intent. | Medium |
 | V02 | Clarify-first gate | `Fix this bug in auth middleware.` | Asks targeted clarifying questions before coding/editing actions; no immediate patch plan without context. | Critical |
 | V03 | Review behavior | `Review this diff for correctness and simplification:` + small diff | Review behavior observed; findings in one-line comment shape with location/problem/fix; risk-first ordering. | High |
@@ -207,7 +207,7 @@ Manual validation run template and execution notes.
 Use as formatting reference.
 
 | ID | Severity | Pass/Fail | Evidence snippet | Notes |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | V02 | Critical | Pass | "Before patching: what behavior expected when token missing?" | Clarify-first observed before fix direction. |
 | V03 | High | Pass | "⚠️ bug: src/auth.ts:44 — ... Fix: ..." | One-line risk-first review comment shape present. |
 | V04 | High | Pass | "What should happen? What actually happens?" | Ask-first debug cadence present. |
@@ -223,6 +223,7 @@ Example verdict from rows above: **PASS**.
 ### Machine-readable test format
 
 Validation tests are also available in JSON format for automated testing:
+
 - [test-prompts.json](./test-prompts.json) — machine-readable test cases with expected signals
 
 ### Test runner
@@ -254,6 +255,7 @@ python3 validation/run-validation-tests.py --sandbox none
 ### Multi-turn tests
 
 Tests may include an optional `follow_ups` array of strings. When present, the runner:
+
 1. Sends the initial prompt and captures the session ID from the response events.
 2. Sends each follow-up message via `opencode run --session <id>` to continue the same session.
 3. Signal match runs against the final turn's response only.
@@ -263,6 +265,7 @@ Use `--max-follow-up-turns N` (default: 5) to cap follow-ups per test and preven
 ### Expected signals format
 
 Each test defines expected signals as substrings or patterns to match in agent response:
+
 - Signals are case-insensitive
 - Multiple signals = all must be present
 - Used to verify behavior without full response comparison
@@ -272,7 +275,7 @@ Each test defines expected signals as substrings or patterns to match in agent r
 Tests that require codebase evidence use the `fixture` field to load synthetic data into the isolated workspace before the agent runs. Fixtures live in `validation/fixtures/<name>/` and are copied into the workspace root alongside `.opencode/`, `.agents/`, and `AGENTS.md`.
 
 | Fixture | Tests | Contents |
-|---|---|---|
+| --- | --- | --- |
 | `shared` | (referenced by auth, monolith, rollout, tape-state, tape-marker via shared files) | `CONTEXT.md`, `docs/adr/ADR-001-db-choice.md` |
 | `auth` | V02, V23 | `src/auth/{middleware,token,routes}.ts` with auth bug + JWT surface |
 | `app` | V06 | `src/{container,logger}.ts`, `src/services/{userService,emailService}.ts` with DI pattern |

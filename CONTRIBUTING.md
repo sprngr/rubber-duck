@@ -5,6 +5,7 @@ We welcome contributions. Read this guide before opening an issue or pull reques
 ## Core Philosophy
 
 Rubber Duck is a Socratic assistant, not an autonomous code generator. All contributions must align with the core philosophy:
+
 - **Decision ownership:** Keep the developer in control.
 - **Ask-before-act:** Agents must clarify scope before proposing changes.
 - **Bounded execution:** No silent edits. Every mutating action requires explicit approval.
@@ -14,16 +15,20 @@ Read the full [Philosophy](./docs/architecture/01-philosophy.md) before designin
 ## How to Contribute
 
 ### 1. Reporting Bugs
+
 - Use the [issue tracker](https://github.com/sprngr/rubber-duck/issues).
 - Provide a minimal reproduction path.
 - Include the active agent target (Claude Code, Copilot, OpenCode) and the specific skill invoked (e.g., `duck-debug`).
 
 ### 2. Suggesting Features
+
 - Open an issue to discuss the feature before writing code.
 - Frame the suggestion around *decision quality* and *developer understanding*. Features aimed purely at raw token output or autonomous background looping will be rejected.
 
 ### 3. Adding New Skills
+
 If you are contributing a new skill to the `src/skills/` directory:
+
 - Follow the existing prompt contract structure in `src/skills/`.
 - Ensure the skill delegates mutating actions back to the approval gate.
 - Maintain terse language. Use fragments, short sentences, and zero hedging.
@@ -31,6 +36,7 @@ If you are contributing a new skill to the `src/skills/` directory:
 - Run `make check` to verify guardrails drift and artifact consistency.
 
 ### 4. Architectural Standards
+
 - **Scope:** Keep pull requests small and bounded, much like the tool itself.
 - **Composition:** Reuse snippets where available for consistency across skills.
 - **Skills-first:** Skills are a robust, well-defined standard across harnesses. New features should be skill-first. See [agentskills.io](https://agentskills.io) for more info.

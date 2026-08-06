@@ -22,6 +22,7 @@ Support code restructuring through bounded refactoring operations with explicit 
 Inherit shared guardrails from `references/GUARDRAILS.md`.
 
 Skill-specific delta:
+
 - Multi-file refactoring operations require execution approval with full reference tracking.
 - Distinguish from single-file patches and complexity reduction.
 
@@ -30,6 +31,7 @@ Skill-specific delta:
 Use when user asks to refactor, extract, rename across files, move code, inline, or convert patterns.
 
 **Trigger phrases:**
+
 - "refactor this"
 - "extract this function/class/method"
 - "rename this across the codebase"
@@ -45,6 +47,7 @@ Use when user asks to refactor, extract, rename across files, move code, inline,
 - state assumptions explicitly when evidence is missing
 
 Ask one scoping question if any detail unclear:
+
 - What to extract/rename/move/inline?
 - Target destination (new file, existing file, new function name)?
 - Scope boundaries (this module, whole codebase)?
@@ -52,6 +55,7 @@ Ask one scoping question if any detail unclear:
 ### 2. Trace references and dependencies
 
 Use read-only evidence gathering (similar to `duck-debug` trace mode):
+
 - Locate all usages of target code
 - Map imports/exports
 - Identify callers and callees
@@ -65,6 +69,7 @@ Output: "Found N references across M files: [list]"
 Before any edits, present bounded plan:
 
 **Format:**
+
 ```
 Refactoring plan:
 - Operation: [extract function / rename / move / inline / convert]
@@ -97,12 +102,14 @@ Ask: "Does existing code/pattern already solve this? Can we reuse instead of res
 ### 5. Require execution approval
 
 Before executing refactoring:
+
 - Target phase (Phase 1/2/3)
 - Target files (bounded for selected phase)
 - Expected structural change (what moves where)
 - Verification plan (tests, imports, type checking)
 
 Use execution approval flow:
+
 - `Reply with "approve" to execute this refactoring.`
 - Wait for explicit approval
 - Do NOT proceed with multi-file refactoring without approval
@@ -110,6 +117,7 @@ Use execution approval flow:
 ### 6. Execute refactoring
 
 After approval:
+
 1. Make changes in order (definitions before usages, imports before code)
 2. Update imports/exports
 3. Maintain consistent formatting
@@ -118,6 +126,7 @@ After approval:
 ### 7. Verify refactoring
 
 Run verification plan:
+
 - Tests still pass
 - No broken imports
 - Type checker passes (if applicable)
@@ -135,12 +144,14 @@ Report: "Refactoring complete. Verification: [test results]. [N] files changed."
 - **vs duck-debug**: `duck-refactor` changes code; `duck-debug` only traces/investigates
 
 **What duck-refactor does NOT do:**
+
 - Single-file edits without restructuring -> use `duck-patch`
 - Complexity reduction as primary goal -> use `duck-simplify`
 - Architecture decisions -> use `duck-design`
 - Just moving files without code changes -> use `duck-patch`
 
 **Scope limits:**
+
 - Phase caps (default): Phase 1 up to 6 files, Phase 2 up to 4 files, Phase 3 up to 2 files
 - If phase caps or review-fatigue triggers are exceeded, split into smaller bounded approvals
 - If refactoring requires design decisions, pause and route to `duck-design` first

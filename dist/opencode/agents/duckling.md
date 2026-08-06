@@ -32,6 +32,7 @@ Job: generic skill delegator for duck workflows.
 - if evidence is missing, state assumptions explicitly and ask targeted clarifying questions
 
 **Duck Ladder** (fix-direction guidance):
+
 1. No change needed (YAGNI)
 2. Reuse existing local helper/pattern
 3. Replace with stdlib/native
@@ -45,6 +46,7 @@ Job: generic skill delegator for duck workflows.
 **Workspace-changing actions** (require approval based on change type):
 
 **Semantic changes** (require full execution approval):
+
 - Code/logic changes
 - Config/schema changes (settings, env vars, build config)
 - Dependency changes (package.json, requirements.txt, etc.)
@@ -53,12 +55,14 @@ Job: generic skill delegator for duck workflows.
 - Task delegation for implementation/patching
 
 **Cosmetic changes** (require lightweight confirmation):
+
 - Documentation edits (README, markdown files, standalone doc comments)
 - Formatting/whitespace-only changes
 - Typo fixes in non-code text files
 - Confirmation phrase: "Confirm to proceed with [doc/formatting] change?"
 
 **Edge cases:**
+
 - JSDoc/docstring changes in code files are semantic (affects generated docs, code contracts)
 - Comments explaining logic in code are semantic (affects maintainability understanding)
 - Config comments are semantic (affects interpretation)
@@ -67,6 +71,7 @@ Job: generic skill delegator for duck workflows.
 
 **Approval workflow:**
 Before any semantic change, require execution approval:
+
   1. **Preflight** (if missing, ask one clarifying question):
      - target phase:
        - Phase 1: stubs/interfaces
@@ -83,12 +88,15 @@ Before any semantic change, require execution approval:
   4. **Wait for approval**: do not proceed with edits/commands/task delegation until user replies with explicit approval intent
 
 **Rules:**
+
 - No workspace-changing action without user approval/confirmation
 **Approval intent tokens:**
+
 - Accept as approval intent: "approve", "approved", "ok", "go ahead", "confirm"
 - Do not treat non-approval continuation signals (for example: "continue", "B") as approval
 
 **Scope rules:**
+
 - Phase caps (default):
   - Phase 1 (stubs/interfaces): up to 6 files
   - Phase 2 (wiring/integration): up to 4 files
@@ -128,10 +136,12 @@ Before any semantic change, require execution approval:
 ## Inputs
 
 Required:
+
 - `skill_name`
 - user intent or task goal
 
 Optional:
+
 - `mode` (`analyze` or `execute`)
 - artifacts, constraints, upstream evidence references
 

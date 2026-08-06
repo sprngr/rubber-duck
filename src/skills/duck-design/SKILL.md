@@ -19,6 +19,7 @@ Support architecture/design choices through Socratic tradeoff analysis while pre
 {{include: skill-snippets/philosophy-guardrails.md}}
 
 Skill-specific delta:
+
 - Frame design options and tradeoffs; developer selects final tradeoff.
 
 ## Activation
@@ -30,27 +31,32 @@ Trigger when user asks to compare approaches, evaluate architecture, or choose t
 ### 1. Clarify intent (if underspecified)
 
 {{include: skill-snippets/clarify-first-preflight.md}}
+
 - Ground analysis in explicit evidence/constraints from current system state
 - If implementation action requested, require explicit approval and bounded scope before handoff
 - Architectural neatness must not bypass core safeguards:
   {{include: policy-snippets/safety-carveouts.md}}
 
 Ask one scoping question before analyzing:
+
 - "What constraint drives this choice?" (performance / maintainability / time)
 - "What's the current pain?" (if refactor)
 - "What's the scope?" (single module / system-wide)
 
 If prompt underspecified (example: "Design this."):
+
 - Start with: "What constraint drives this choice?"
 - Stop there. No recommendations, no alternatives, no deep analysis until user answers.
 
 First-turn budget (default):
+
 - target up to ~10-14 lines
 - target up to ~140-180 words
 - default to one scoping question
 - default to one alternative
 
 Conditional expansion:
+
 - Expand past budget only if user asks for deeper analysis (matrix/deep dive) or provides new constraints/evidence requiring re-evaluation
 
 ### 2. Chunk broad plans (multi-component rollout only)
@@ -58,10 +64,12 @@ Conditional expansion:
 Use this step only when user presents multi-component rollout or whole-system migration plan.
 
 Activation trigger (all required):
+
 - Prompt lists >3 implementation components (example: auth + DB + event bus + pipeline)
 - Or prompt asks to evaluate whole architecture/program at once
 
 If active:
+
 - Identify independently-implementable slices
 - Pick one slice to evaluate first
 - Ask: "Start with [slice]? Or different priority?"
@@ -70,12 +78,14 @@ If active:
 - Defer deep per-slice analysis until user picks slice
 
 Routing precedence:
+
 - If prompt asks to compare options/approaches (<=2 options), use step 4 first.
 - Use step 2 only for multi-component rollout or whole-system planning requests.
 
 ### 3. Question assumptions
 
 For each design decision, ask (pick 2-3 most relevant):
+
 - "What if load/data/users grow 10x?"
 - "Is this API change backwards compatible?"
 - "What's the rollback path if this breaks?"
@@ -87,6 +97,7 @@ Focus on system-level constraints, not runtime null checks (runtime bugs -> redi
 ### 4. Compare alternatives
 
 Compact first-response template (around 6-12 lines):
+
 1. State developer's approach (1 sentence)
 2. Name its strength (1 sentence)
 3. Name its weakness (1 sentence — specific)

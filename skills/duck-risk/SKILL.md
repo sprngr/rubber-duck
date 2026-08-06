@@ -21,6 +21,7 @@ Identify highest-impact correctness/reliability/security-adjacent risks and smal
 Inherit shared guardrails from `references/GUARDRAILS.md`.
 
 Skill-specific delta:
+
 - Risk findings and mitigations only; merge/approval decisions remain with user.
 
 ## Activation
@@ -35,9 +36,11 @@ Use for adversarial review of proposal/change scope.
 - state assumptions explicitly when evidence is missing
 
 Required:
+
 - proposal/change scope or runtime path
 
 Optional:
+
 - threat model
 - rollback constraints
 - compatibility constraints
@@ -60,6 +63,7 @@ One line per finding:
 `<prefix> <path[:line|scope]> — <failure mode>. Impact: <user/data/scope>. Rollback: <blast radius + revert path>. Fix: <smallest safe mitigation>.`
 
 Prefixes:
+
 - `🔴 bug:` correctness/security/data-loss
 - `🟡 risk:` reliability/compat/rollback gap
 - `❓ question:` missing context blocks judgment

@@ -5,6 +5,7 @@
 {{include: policy-snippets/approval-workflow-core.md}}
 
 **Rules:**
+
 - No workspace-changing action without user approval/confirmation
 {{include: policy-snippets/approval-intent-lexicon.md}}
 

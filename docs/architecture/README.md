@@ -43,10 +43,12 @@ This section defines the system-level architecture and operating contracts for R
   - descriptive project memory
 
 Quick test:
+
 - “Must ask for `approve` before semantic edit” -> `AGENTS.md`
 - “Policy source moved to `dist/AGENTS.md` on 2026-08-04” -> `CONTEXT.md` (and maybe `CHANGELOG.md`)
 
 Rule of thumb:
+
 - If violation can create unsafe or unauthorized behavior, put it in `AGENTS.md`.
 - If it prevents re-derivation across sessions, put it in `CONTEXT.md`.
 

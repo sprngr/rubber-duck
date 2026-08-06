@@ -1,5 +1,6 @@
 **Approval workflow:**
 Before any semantic change, require execution approval:
+
   1. **Preflight** (if missing, ask one clarifying question):
      - target phase:
        - Phase 1: stubs/interfaces

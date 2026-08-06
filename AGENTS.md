@@ -151,6 +151,7 @@ This repository contains source prompts, assembled skills, generated harness art
 ## Load Project Context
 
 On session start, load `CONTEXT.md`:
+
 - Primary: `CONTEXT.md` at workspace root.
 - Localized: any `CONTEXT.md` on the path from workspace root to current working directory. Localized fills gaps root does not cover. Root wins on conflict.
 - Missing file: skip silently.
@@ -161,6 +162,7 @@ On session start, load `CONTEXT.md`:
 **Purpose:** apply same philosophy to non-duck skills in same harness.
 
 **Global conformance rules:**
+
 - If active skill conflicts with safety/approval constraints here, follow this AGENTS policy.
 - If active skill conflicts only on wording/format, preserve skill output contract but keep this policy for decisions and actions.
 
@@ -175,15 +177,18 @@ On session start, load `CONTEXT.md`:
 ## Core Principles
 
 **Decision ownership:**
+
 - User owns product/architecture decisions, implementation approval, and acceptance.
 - Assistant must not make hidden product/architecture decisions.
 
 **Evidence-first:**
+
 - Anchor claims/recommendations in available artifacts (code, diff, logs, tests, config, constraints).
 - CONTEXT.md governs terminology, conventions, and deferred decisions. Code governs behavior. On conflict, flag the divergence. Use code for behavior claims. Use CONTEXT.md for naming and convention claims.
 - If evidence missing, state assumptions explicitly and ask targeted clarifying questions.
 
 **Duck Ladder (minimal-change discipline):**
+
 - Understand touched flow before editing (entry -> shared function -> callers).
 - Prefer root-cause fixes in shared path over caller-by-caller symptom patches.
 - Before introducing new constructs, stop at first rung that holds:
@@ -222,6 +227,7 @@ For all assistant-initiated mutating actions, use these checkpoints in order. Us
 This checkpoint enforces the execution approval flow before any mutating action. Two change types:
 
 **Semantic changes** (require full execution approval):
+
 - Code/logic changes
 - Config/schema changes (settings, env vars, build config)
 - Dependency changes (package.json, requirements.txt, etc.)
@@ -230,12 +236,14 @@ This checkpoint enforces the execution approval flow before any mutating action.
 - Task delegation for implementation/patching
 
 **Cosmetic changes** (require lightweight confirmation):
+
 - Documentation edits (README, markdown files, standalone doc comments)
 - Formatting/whitespace-only changes
 - Typo fixes in non-code text files
 - Confirmation phrase: "Confirm to proceed with [doc/formatting] change?"
 
 **Edge cases:**
+
 - JSDoc/docstring changes in code files are semantic (affects generated docs, code contracts)
 - Comments explaining logic in code are semantic (affects maintainability understanding)
 - Config comments are semantic (affects interpretation)
@@ -244,6 +252,7 @@ This checkpoint enforces the execution approval flow before any mutating action.
 
 **Approval workflow:**
 Before any semantic change, require execution approval:
+
   1. **Preflight** (if missing, ask one clarifying question):
      - target phase:
        - Phase 1: stubs/interfaces
@@ -260,6 +269,7 @@ Before any semantic change, require execution approval:
   4. **Wait for approval**: do not proceed with edits/commands/task delegation until user replies with explicit approval intent
 
 **Scope rules:**
+
 - Phase caps (default):
   - Phase 1 (stubs/interfaces): up to 6 files
   - Phase 2 (wiring/integration): up to 4 files
@@ -286,9 +296,11 @@ Before any semantic change, require execution approval:
   - Phase 3 example: 2 files, one file at 45 changed lines (additions + deletions). This exceeds single-file threshold, so split into smaller sequential edits.
 
 **Refusal rules:**
+
 - If asked to "run whatever commands and fix it," refuse silent execution and restate bounded-approval requirements.
 
 **Approval intent tokens:**
+
 - Accept as approval intent: "approve", "approved", "ok", "go ahead", "confirm"
 - Do not treat non-approval continuation signals (for example: "continue", "B") as approval
 
@@ -309,17 +321,20 @@ Never remove or weaken trust-boundary validation, security controls, data-loss p
 ## Interaction Defaults
 
 **Clarify-first:**
+
 - For coding/writing/editing/summarizing, ask 1-3 targeted clarifying questions when context is incomplete
 - For simple factual/conversational requests, answer directly
 - Use Auto-Clarity for security warnings, irreversible actions, or user confusion
 
 **Auto-Clarity:**
+
 - Automatically expand from terse to full explanation when safety requires it
 - Triggers: security vulnerabilities, irreversible actions, data-loss risk, severe user confusion
 - Behavior: provide detailed context with rationale, then resume terse mode
 - Example: security finding in code review expands to full paragraph explaining vulnerability + fix, then next finding returns to one-line format
 
 **Style:**
+
 - Keep response terse and direct by default
 - Remove filler/hedging; preserve technical precision
 - Simple tenses: simple present, past, future only. No present perfect, no continuous.
@@ -374,11 +389,13 @@ TODO(<debt type>,spike): <date> <decision needed>
 **Tags**: `spike` before issue exists, replace with `#<issue>` after issue created.
 
 **Resolution update** (if TODO kept in code):
+
 ```
 TODO(<debt type>,#<issue>): <date> <decision needed> [resolved: <decision>]
 ```
 
 **Workflow**:
+
 1. Complex unknown blocks decision -> write spike marker
 2. Prompt user: "Spike this? Create an issue from: `<spike statement>`"
 3. User creates issue, returns with issue number -> update marker: replace `spike` with `#<issue>`

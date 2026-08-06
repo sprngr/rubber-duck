@@ -26,43 +26,42 @@ For full architecture and policy details, use the canonical docs linked below.
 
 - [rubber-duck](../src/agents/rubber-duck)
 
- ### Explicit router skill [default]
- 
- - [quack](../src/skills/quack/SKILL.md) — alias-first intent resolver
- 
- ### Duckling subagent
- 
- - [duckling](../src/agents/duckling)
- 
- ### Skills (quack-routed, inline-default) [default]
- 
- - [duck-debug](../src/skills/duck-debug/SKILL.md) — trace + root-cause
- - [duck-debt](../src/skills/duck-debt/SKILL.md) — deferred-work ledger
- - [duck-design](../src/skills/duck-design/SKILL.md) — option/tradeoff
- - [duck-teach](../src/skills/duck-teach/SKILL.md) — structured teaching
- 
- ### Skills (quack-routed, delegated-default) [default]
- 
- - [duck-patch](../src/skills/duck-patch/SKILL.md) — bounded fix (phase-gated scope)
- - [duck-refactor](../src/skills/duck-refactor/SKILL.md) — restructuring (phase-gated scope)
- - [duck-review](../src/skills/duck-review/SKILL.md) — risk-first review
- - [duck-risk](../src/skills/duck-risk/SKILL.md) — failure modes
- - [duck-simplify](../src/skills/duck-simplify/SKILL.md) — complexity reduction
- - [duck-triage](../src/skills/duck-triage/SKILL.md) — test coverage + severity
- 
- ### Skills (governor-invoked, main session) [extras: --extras flag]
- 
- - [duck-adapt](../src/skills/duck-adapt/SKILL.md) — external skill adaptation + audit
- - [duck-grill](../src/skills/duck-grill/SKILL.md) — grilling interview
- - [duck-tape](../src/skills/duck-tape/SKILL.md) — two-tier session memory
+### Explicit router skill [default]
 
+- [quack](../src/skills/quack/SKILL.md) — alias-first intent resolver
+
+### Duckling subagent
+
+- [duckling](../src/agents/duckling)
+
+### Skills (quack-routed, inline-default) [default]
+
+- [duck-debug](../src/skills/duck-debug/SKILL.md) — trace + root-cause
+- [duck-debt](../src/skills/duck-debt/SKILL.md) — deferred-work ledger
+- [duck-design](../src/skills/duck-design/SKILL.md) — option/tradeoff
+- [duck-teach](../src/skills/duck-teach/SKILL.md) — structured teaching
+
+### Skills (quack-routed, delegated-default) [default]
+
+- [duck-patch](../src/skills/duck-patch/SKILL.md) — bounded fix (phase-gated scope)
+- [duck-refactor](../src/skills/duck-refactor/SKILL.md) — restructuring (phase-gated scope)
+- [duck-review](../src/skills/duck-review/SKILL.md) — risk-first review
+- [duck-risk](../src/skills/duck-risk/SKILL.md) — failure modes
+- [duck-simplify](../src/skills/duck-simplify/SKILL.md) — complexity reduction
+- [duck-triage](../src/skills/duck-triage/SKILL.md) — test coverage + severity
+
+### Skills (governor-invoked, main session) [extras: --extras flag]
+
+- [duck-adapt](../src/skills/duck-adapt/SKILL.md) — external skill adaptation + audit
+- [duck-grill](../src/skills/duck-grill/SKILL.md) — grilling interview
+- [duck-tape](../src/skills/duck-tape/SKILL.md) — two-tier session memory
 
 ## Routing cheat sheet
 
 Use `quack <intent>` for explicit routing with keyword-based precedence (risk/complexity/learning/test/design signals).
 
 | User signal | Start skill | Typical chain / Notes |
-|---|---|---|
+| --- | --- | --- |
 | "review this" + diff/code | `duck-review` | `duck-review` -> `duck-risk` (rollback/compat) -> `duck-simplify` (complexity) -> `duck-triage` (test gaps) |
 | "debug this" + complaint | `duck-debug` | `duck-debug` trace mode -> root-cause mode -> `duck-triage` (if repro weak) -> `duck-patch` (execution approval required) |
 | "design/tradeoffs" | `duck-design` | `duck-design` -> `duck-risk` (failure modes) -> `duck-triage` (test scenarios) |

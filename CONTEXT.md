@@ -65,7 +65,9 @@
 ## Notes
 
 ### 2026-08-02 14:30
+
 Current system shape snapshot:
+
 - Agent source: `src/agents/<name>/` (`meta.json` + `body.md`)
 - Skill source: `src/skills/*/SKILL.md` (14 active skills)
 - Generated artifacts: `skills/*/` and `dist/{claude,opencode,copilot}/`
@@ -73,11 +75,15 @@ Current system shape snapshot:
 - Validation suite: `validation/` with prompts, fixtures, and runner
 
 ### 2026-08-02 23:35
+
 Validation expansion and prompt/skill refinements landed. Validation remained volatile due to wording sensitivity, with stable subset coverage retained.
+
 - Baseline metrics: 31 total tests, best 23/31 (74%), typical 18-23/31.
 
 ### 2026-08-04 21:45
+
 Installer and policy-source updates:
+
 - Built `dist/AGENTS.md` now generated from `src/agents/AGENTS.md`.
 - Installers use `dist/AGENTS.md` as policy source in local and web flows.
 - Managed-block insertion idempotence fixed for bash and PowerShell.

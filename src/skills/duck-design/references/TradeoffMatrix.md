@@ -5,7 +5,7 @@ Comparison framework for multi-option design decisions.
 ## Standard Dimensions
 
 | Dimension | What to Evaluate |
-|-----------|------------------|
+| ----------- | ------------------ |
 | Complexity (build) | Lines of code, new dependencies, learning curve |
 | Complexity (maintain) | Debugging ease, upgrade path, documentation needs |
 | Performance | Latency, throughput, resource usage |
@@ -20,7 +20,7 @@ Each cell: "high" / "med" / "low" or brief rationale (≤10 words).
 Example:
 
 | Dimension | Option A: REST | Option B: GraphQL | Option C: gRPC |
-|-----------|----------------|-------------------|----------------|
+| ----------- | ---------------- | ------------------- | ---------------- |
 | Complexity (build) | Low (stdlib only) | Med (schema + resolvers) | High (protobuf + codegen) |
 | Complexity (maintain) | Low | Med (breaking schema changes) | Low (typed contracts) |
 | Performance | Med (overfetch) | Med (N+1 risk) | High (binary, HTTP/2) |

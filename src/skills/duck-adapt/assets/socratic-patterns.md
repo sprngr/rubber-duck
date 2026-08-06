@@ -7,11 +7,13 @@ Practical patterns for converting imperative/autopilot steps into Socratic quest
 ## Pattern 1: Imperative -> Question
 
 ### Before (Imperative)
+
 ```
 Step 3: Generate API endpoints from schema.
 ```
 
 ### After (Socratic)
+
 ```
 Step 3: Analyze schema and present endpoint options.
 
@@ -29,6 +31,7 @@ Ask: "Which approach fits your requirements?"
 ```
 
 **Pattern:**
+
 - Imperative "do X" -> Question "which X?" + options + tradeoffs
 
 ---
@@ -36,6 +39,7 @@ Ask: "Which approach fits your requirements?"
 ## Pattern 2: Autopilot -> Approval Gate
 
 ### Before (Autopilot)
+
 ```
 1. Scan code for issues
 2. Apply standard fixes
@@ -43,6 +47,7 @@ Ask: "Which approach fits your requirements?"
 ```
 
 ### After (Approval-Gated)
+
 ```
 1. Evidence gathering: Scan code and identify issues
    - Output: Issue list with locations, types, severity
@@ -77,6 +82,7 @@ Ask: "Which approach fits your requirements?"
 ```
 
 **Pattern:**
+
 - Autopilot steps -> Evidence gathering + presentation + user selection + approval gate + execution + user finalizes
 
 ---
@@ -84,11 +90,13 @@ Ask: "Which approach fits your requirements?"
 ## Pattern 3: Black-Box -> Evidence-First
 
 ### Before (Black-Box)
+
 ```
 Step 2: Identify the root cause of the bug.
 ```
 
 ### After (Evidence-First)
+
 ```
 Step 2: Gather evidence to narrow root cause.
 
@@ -116,6 +124,7 @@ Ask: "Which hypothesis should we investigate first?"
 ```
 
 **Pattern:**
+
 - Black-box "figure out X" -> Evidence sources + collection steps + summary + hypothesis generation + user chooses direction
 
 ---
@@ -123,11 +132,13 @@ Ask: "Which hypothesis should we investigate first?"
 ## Pattern 4: Single-Path -> Multi-Option
 
 ### Before (Single-Path)
+
 ```
 Step 3: Use a singleton pattern to manage state.
 ```
 
 ### After (Multi-Option)
+
 ```
 Step 3: Evaluate state management approaches.
 
@@ -164,6 +175,7 @@ Step 3: Evaluate state management approaches.
 ```
 
 **Pattern:**
+
 - Single recommendation -> Evidence analysis + multiple options + pros/cons + recommendation with rationale + user choice
 
 ---
@@ -171,11 +183,13 @@ Step 3: Evaluate state management approaches.
 ## Pattern 5: Assumption -> Explicit Check
 
 ### Before (Assumption)
+
 ```
 Step 2: Parse the JSON response.
 ```
 
 ### After (Explicit Check)
+
 ```
 Step 2: Parse the response with validation.
 
@@ -199,6 +213,7 @@ Step 2: Parse the response with validation.
 ```
 
 **Pattern:**
+
 - Hidden assumption -> Explicit assumption list + validation steps + failure handling + user choice on implementation
 
 ---
@@ -206,11 +221,13 @@ Step 2: Parse the response with validation.
 ## Pattern 6: Complex -> Duck Ladder
 
 ### Before (Complex)
+
 ```
 Step 4: Create a new abstraction layer for data access.
 ```
 
 ### After (Duck Ladder)
+
 ```
 Step 4: Apply Duck Ladder before adding abstraction.
 
@@ -250,6 +267,7 @@ Step 4: Apply Duck Ladder before adding abstraction.
 ```
 
 **Pattern:**
+
 - "Add new code" -> Duck Ladder check + evidence per rung + stop at first rung that holds + user confirms
 
 ---
@@ -257,11 +275,13 @@ Step 4: Apply Duck Ladder before adding abstraction.
 ## Pattern 7: Vague -> Bounded
 
 ### Before (Vague)
+
 ```
 Step 1: Fix the authentication issues.
 ```
 
 ### After (Bounded)
+
 ```
 Step 1: Clarify scope and expected behavior.
 
@@ -293,6 +313,7 @@ Step 1: Clarify scope and expected behavior.
 ```
 
 **Pattern:**
+
 - Vague task -> Clarifying questions + bounded scope + expected behavior + verification + approval gate
 
 ---
@@ -300,11 +321,13 @@ Step 1: Clarify scope and expected behavior.
 ## Pattern 8: Tell -> Show Options
 
 ### Before (Tell)
+
 ```
 Step 3: Use bcrypt for password hashing.
 ```
 
 ### After (Show Options)
+
 ```
 Step 3: Choose password hashing strategy.
 
@@ -344,6 +367,7 @@ Step 3: Choose password hashing strategy.
 ```
 
 **Pattern:**
+
 - "Use X" directive -> Context + multiple options + Duck Ladder check + recommendation with rationale + user choice
 
 ---
@@ -351,11 +375,13 @@ Step 3: Choose password hashing strategy.
 ## Pattern 9: Fix -> Understand Then Fix
 
 ### Before (Fix)
+
 ```
 Step 2: Change the API endpoint from POST to GET.
 ```
 
 ### After (Understand Then Fix)
+
 ```
 Step 2: Investigate why endpoint needs to change.
 
@@ -410,6 +436,7 @@ Step 2: Investigate why endpoint needs to change.
 ```
 
 **Pattern:**
+
 - Direct fix -> Evidence gathering + analysis + multiple options + questions + user input -> recommended fix + approval gate
 
 ---
@@ -417,11 +444,13 @@ Step 2: Investigate why endpoint needs to change.
 ## Pattern 10: Recommendation -> Exploration
 
 ### Before (Recommendation)
+
 ```
 Use microservices architecture for better scalability.
 ```
 
 ### After (Exploration)
+
 ```
 **Context:**
 - Current architecture: [monolith, modular monolith, distributed, etc.]
@@ -471,6 +500,7 @@ Use microservices architecture for better scalability.
 ```
 
 **Pattern:**
+
 - Direct recommendation -> Context gathering + problem clarification + multiple options + Duck Ladder + questions + user input -> tailored recommendation
 
 ---

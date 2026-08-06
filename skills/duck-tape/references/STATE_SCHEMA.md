@@ -40,6 +40,7 @@ Created: `<ISO-8601>`
 ### Header
 
 Metadata block. Fields:
+
 - `Session`: session ID (`<YYYY-MM-DD-HHMM>`)
 - `Cwd`: absolute path of working directory
 - `Repo/Branch`: `<repo>@<branch>` from git
@@ -54,11 +55,13 @@ Translation: one key per approved workflow -> CONTEXT.md **Decisions**. Verbatim
 ### Position
 
 Current state of work.
+
 - `Current`: one step in flight.
 - `Done`: ordered newest last.
 - `Remaining`: in order.
 
 Translation:
+
 - `Current` -> state-file-local. Not translated to CONTEXT.md. Next agent reads state file on resume.
 - `Done` -> state-file-local. Not translated to CONTEXT.md. Next agent reads state file on resume.
 - `Remaining` -> CONTEXT.md **Open-Questions**, one question per item.
@@ -92,7 +95,7 @@ Translation: none. Consumed by next agent directly from state file. Does not lan
 ## Translation Map (Rigid)
 
 | State section | CONTEXT.md target | Rule |
-|---|---|---|
+| --- | --- | --- |
 | Approved Workflow | Decisions | one key per approved workflow, verbatim text |
 | Position.Current | (none) | state-file-local, not translated |
 | Position.Done | (none) | state-file-local, not translated |

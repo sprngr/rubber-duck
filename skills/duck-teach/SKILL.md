@@ -22,6 +22,7 @@ Teach concepts with structured, minimal examples aligned to workspace patterns.
 Inherit shared guardrails from `references/GUARDRAILS.md`.
 
 Skill-specific delta:
+
 - Teach options and pitfalls; learner/developer chooses implementation path.
 
 ## Activation
@@ -34,15 +35,18 @@ Use for "explain this", "what does this do", "teach me", "show me", or "walk me 
 
 - ask 1-3 targeted clarifying questions when context is incomplete
 - state assumptions explicitly when evidence is missing
+
 - Preserve core safeguards in any example or recommendation:
 - never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
 
 Ambiguous target rule (hard):
+
 - If user says "teach/show/walk through this" without a clear target concept/file/snippet, ask for target + desired depth first
 - Do not invent or default to a topic
 - Stop after clarification request until user answers
 
 Required clarification prompt shape (when ambiguous):
+
 - Ask for target artifact (`concept | file path | function | snippet | command`) and desired depth (`show me` | `teach me` | `walk me through`)
 
 ### 2. Search codebase (if project-specific)
@@ -62,6 +66,7 @@ Required clarification prompt shape (when ambiguous):
 | "walk me through X" | Step-by-step numbered     | 5-8 steps |
 
 Conditional expansion:
+
 - Expand only when user asks for more depth
 - Or required constraints/safety context cannot fit default budget
 
@@ -85,6 +90,7 @@ Keep section labels explicit (`What`, `Why`, `Example`, `Pitfalls`, `See also`) 
 5. **See also** — workspace files or related patterns (links/paths)
 
 **Code conventions:**
+
 - Use workspace tech stack — don't default to a different language/framework
 - Prefer real project usage patterns over generic samples
 - Prefer ladder order: reuse local -> stdlib/native -> installed dep -> custom code last
@@ -92,11 +98,13 @@ Keep section labels explicit (`What`, `Why`, `Example`, `Pitfalls`, `See also`) 
 - Keep examples under 30 lines. Split complex examples into "minimal" and "complete"
 
 **Pitfalls format:**
+
 - Direct: what breaks, not "could be improved"
 - Short, imperative
 - No hedging: "X crashes because" not "X might crash"
 
 **See Also format:**
+
 - Prefer relative workspace paths; use external links only when needed
 
 ## Boundaries

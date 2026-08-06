@@ -29,10 +29,12 @@ Primary artifact source: [`src/agents/rubber-duck/`](../../src/agents/rubber-duc
 Convenience mode behavior:
 
 **Classification:**
+
 - **Simple requests** (governor handles): single factual questions, explain ≤10 lines, review ≤5 line diffs, term clarification
 - **Workflow requests** (suggest quack): multi-step processes, tradeoff analysis, design decisions, implementation, test planning
 
 **Routing flow:**
+
 - Explicit `quack` invocation always takes precedence
 - For workflow requests without `quack`: governor suggests `quack [intent]` but proceeds with convenience delegation if user continues
 - Convenience delegation does NOT bypass execution approval for workspace-changing actions
@@ -105,6 +107,7 @@ flowchart TD
 ```
 
 **Key updates from previous flow:**
+
 - Simple vs workflow classification explicit at S1_CLASSIFY
 - S2_SUGGEST_QUACK shows governor suggests but allows continuation
 - Checkpoint 3: Execution approval gate (S5) applies regardless of routing path (direct, quack, convenience)
@@ -116,6 +119,7 @@ flowchart TD
 Common multi-skill workflows for comprehensive analysis:
 
 **Review flow:**
+
 - `duck-review`: correctness, data integrity, performance findings
 - Add `duck-risk` when rollback/compatibility risk is central
 - Add `duck-simplify` for complexity/duplication signals
@@ -123,6 +127,7 @@ Common multi-skill workflows for comprehensive analysis:
 - Pattern: "Review this refactor for correctness, risk, and complexity"
 
 **Debug flow:**
+
 - `duck-debug` trace mode: locate evidence (defs, refs, callers, tests)
 - `duck-debug` root-cause mode: identify failure cause
 - Add `duck-triage` if repro weak
@@ -130,6 +135,7 @@ Common multi-skill workflows for comprehensive analysis:
 - Pattern: "Debug this endpoint failure then patch it"
 
 **Design flow:**
+
 - `duck-design`: evaluate options, tradeoffs, architecture decisions
 - Add `duck-risk` for failure/rollback/compat analysis
 - Add `duck-simplify` when complexity reduction is needed
@@ -137,11 +143,13 @@ Common multi-skill workflows for comprehensive analysis:
 - Pattern: "Design this migration and suggest test scenarios"
 
 **Teach flow:**
+
 - `duck-teach`: explain code/concept/pattern (includes concise explain mode and tutorial modes)
 - Escalate to `duck-debug`/`duck-review`/`duck-design` when issue type becomes clear
 - Pattern: "Explain this authentication flow, then help debug the token expiry issue"
 
 **Notes:**
+
 - Composition is user-driven (not enforced)
 - Skills can be invoked sequentially or combined in single request
 - Quack routing supports explicit chaining via natural language
