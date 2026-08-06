@@ -1,12 +1,36 @@
 **Scope rules:**
 
 - Phase caps (default):
-  - Phase 1 (stubs/interfaces): up to 6 files
+  - Phase 1 (stubs/skeleton/interfaces): up to 6 files
   - Phase 2 (wiring/integration): up to 4 files
   - Phase 3 (concrete implementation): up to 2 files
+
+- **Phase content constraints (hard gate):**
+  - **Phase 1 (stubs/skeleton/interfaces) must contain only:**
+    - file/module skeleton shape (folders, exports, section layout)
+    - type/interface declarations
+    - function/class signatures
+    - placeholder returns/errors/TODO markers
+    - minimal no-op wiring with no business logic
+  - **Phase 1 must not contain:**
+    - full feature/business logic
+    - side-effectful flows (DB/network/auth/file writes)
+    - complete UI behavior beyond placeholders
+  - **Phase 2 (wiring/integration) can contain:**
+    - route registration, DI/container wiring, module composition, event hookups
+    - adaptation glue between existing components
+  - **Phase 2 must not contain:**
+    - substantial new business logic blocks
+  - **Phase 3 (concrete implementation) contains:**
+    - business logic, algorithms, side effects, full behavior completion
+
+- **New-file bootstrap rule:**
+  - If scope introduces new feature files, first approval pass must be Phase 1 stubs/skeleton/interfaces only.
+  - Implement bodies in later Phase 2/3 approvals.
+  - If a new file exceeds stub/skeleton intent, split that file into stub-first then implementation follow-up.
 - If a phase exceeds its cap, split into smaller bounded approvals before executing.
 - Review-fatigue triggers (objective):
-  - Phase 1 (stubs/interfaces):
+  - Phase 1 (stubs/skeleton/interfaces):
     - If proposed diff in one approval exceeds 180 changed lines (additions + deletions) total, reduce current phase cap by at least 1 file (minimum cap is 1 file).
     - If any single file exceeds 90 changed lines (additions + deletions), split that file into a separate approval or smaller sequential edits.
   - Phase 2 (wiring/integration):

@@ -93,7 +93,7 @@ This checkpoint enforces the execution approval flow before any mutating action.
 
 {{include: policy-snippets/approval-intent-lexicon.md}}
 
-**Required user confirmation:** explicit approval intent ("approve", "approved", "ok", "go ahead", "confirm") (explicit blocking gate)
+**Required user confirmation:** explicit approval intent (explicit blocking gate)
 
 ### Checkpoint 4: Acceptance
 
