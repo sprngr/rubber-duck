@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Local pre-commit hook now runs `markdownlint-cli2` with broad markdown coverage and a pragmatic rule profile (`.markdownlint-cli2.yaml`) to enforce hygiene-first lint checks without blocking on full style normalization.
 - Assembly renderers now support nested embedded `{{include: ...}}` expansion in both skills and harness build pipelines.
 - Assembly rules now assert approval-workflow snippet presence and include wiring to catch drift early.
+- Validation suite alignment: V14 now checks phase-cap boundary (not stale file-count premise), V30 reflects clear approval intent handling, and new V32/V33 cover missing phase selection preflight and re-approval between phases. Validation docs/context/runlog updated to V01-V33.
 
 ### Fixed
 
