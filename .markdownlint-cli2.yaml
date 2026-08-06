@@ -1,0 +1,34 @@
+globs:
+  - "CONTRIBUTING.md"
+  - "CHANGELOG.md"
+  - "README.md"
+  - "AGENTS.md"
+  - "CONTEXT.md"
+  - "docs/**/*.md"
+  - "scripts/README.md"
+  - "src/**/*.md"
+  - "validation/**/*.md"
+
+ignores:
+  - "dist/**"
+  - "skills/**"
+  - "src/skills/**/evals/**"
+
+config:
+  MD013: false
+  MD033: false
+  MD041: false
+  MD007: false
+  MD022: false
+  MD023: false
+  MD024: false
+  MD026: false
+  MD029: false
+  MD031: false
+  MD032: false
+  MD036: false
+  MD040: false
+  MD060: false
+
+  # keep high-signal hygiene checks enabled:
+  # MD009 trailing spaces, MD012 multiple blanks, MD047 final newline
