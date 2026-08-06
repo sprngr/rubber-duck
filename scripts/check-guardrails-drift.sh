@@ -56,6 +56,20 @@ elif ! cmp -s "$managed_tmp" "$DIST_AGENTS"; then
   failed=1
 fi
 
+# Guard: no two consecutive identical bold-header lines in rendered dist artifacts.
+# Catches nested-include composition bugs (e.g. same snippet included twice).
+while IFS= read -r -d '' dist_file; do
+  if ! awk '
+    /^\*\*.+\*\*:?[[:space:]]*$/ {
+      if ($0 == prev) { print FILENAME ":" NR ": consecutive duplicate header: " $0 > "/dev/stderr"; found=1 }
+    }
+    { prev = $0 }
+    END { if (found) exit 1 }
+  ' "$dist_file"; then
+    failed=1
+  fi
+done < <(find "$ROOT/dist" -type f -name '*.md' -print0)
+
 if [ "$failed" -ne 0 ]; then
   echo "Guardrails drift check failed." >&2
   exit 1
