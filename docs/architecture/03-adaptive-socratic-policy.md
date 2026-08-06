@@ -82,7 +82,7 @@ Approval workflow:
      - File exists: unified diff (`---`/`+++`/`@@` hunks, `-`/`+` prefixes)
      - File does not exist: full content in fenced code block, file path as header
      - One file per diff block
-3. **Approval ask**: `Reply with "approve" to execute this scope.`
+3. **Approval ask**: `Approve this scope? (examples: approve/ok/confirm)`
 4. **Wait for approval**: do not proceed with edits/commands/task delegation until user replies with approval
 
 **Scope rules:**
@@ -111,7 +111,9 @@ Approval workflow:
 - Reopen execution approval between phases, even when objective stays same.
 - If scope changes after approval, reopen this checkpoint before continuing.
 
-**Required user confirmation:** "approve" (explicit blocking gate)
+**Approval intent notes:**
+- Examples are non-exhaustive. Any clear approval intent is accepted.
+- Do not treat non-approval continuation signals (for example: "continue", "B") as approval.
 
 ### Checkpoint 4: Acceptance
 
