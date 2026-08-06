@@ -31,6 +31,31 @@ Track validation outcomes across commits/releases.
 - <root cause or follow-up issue>
 ```
 
+## 2026-08-06 — phase-gated-validation-alignment
+
+- Commit: 7f49884
+- Runner: validation/run-validation-tests.py
+- Suite version: validation/README.md
+- Verdict: PASS (focused calibration subset)
+
+### Quick subset
+
+- Passed: V14, V30, V32, V33 (focused runs with `RUBBER_DUCK_MODEL=opencode/big-pickle`)
+- Failed: none (for focused subset)
+
+### Extended failures (optional)
+
+- Failed: none recorded in this session
+
+### Notes
+
+- Updated fixtures/docs for phase-gated policy semantics:
+  - V14 now checks Phase 3 cap boundary instead of stale file-count heuristic.
+  - V30 now validates clear approval intent (`yes go ahead`) opening the gate.
+  - Added V32 (missing phase selection in preflight) and V33 (re-approval between phases).
+- Copilot model route returned provider `UnknownError` in this environment; focused validation proceeded with `opencode/big-pickle`.
+- Matcher calibration required for V33 phrasing variance; substring mode confirmed expected behavior for the focused check.
+
 ## 2026-08-03 — v2-quackening
 
 - Commit: edfda56
