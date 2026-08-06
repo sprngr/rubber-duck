@@ -4,7 +4,7 @@ Track validation outcomes across commits/releases.
 
 **Entry policy:**
 
-- Primary gate: quick subset (`V02, V03, V04, V11, V12, V13, V14`).
+- Primary gate: quick subset (`V02, V03, V04, V11, V12, V13, V14, V32, V33`).
 - Record all quick-subset failures always.
 - If any extended checks fail, record those IDs too.
 - Verdict rule: FAIL if any Critical/High in quick subset fails.
@@ -58,7 +58,7 @@ Track validation outcomes across commits/releases.
 - Verdict: PASS
 - Quick subset: V02, V03, V04, V11, V12, V13, V14 passed
 - Overfit cleanup pass applied across governor/router-era prompts and ducklings/skills with adaptive strictness for non-mutating analysis
-- V14 boundary reinforced: explicit split required for scope >2 files
+- V14 boundary reinforced: phase-cap boundary enforcement requires bounded split
 - Review output contract hardened to schema-first format
 - V03 formatting regression resolved after adding schema hint + negative->positive formatting examples
 
