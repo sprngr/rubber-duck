@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Assembly renderers now support nested embedded `{{include: ...}}` expansion in both skills and harness build pipelines.
 - Assembly rules now assert approval-workflow snippet presence and include wiring to catch drift early.
 - Validation suite alignment: V14 now checks phase-cap boundary (not stale file-count premise), V30 reflects clear approval intent handling, and new V32/V33 cover missing phase selection preflight and re-approval between phases. Validation docs/context/runlog updated to V01-V33.
+- duck-tape session-id handling hardened: `/duck-tape` and `/duck-tape merge` now auto-generate `<YYYY-MM-DD-HHMM>` by default, ask only for explicit custom IDs, and issue one corrective prompt for invalid custom IDs.
 
 ### Fixed
 

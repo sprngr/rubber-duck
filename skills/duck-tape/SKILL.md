@@ -55,6 +55,11 @@ Scan session content for secrets/PII: API keys, passwords, tokens, connection st
 
 Write `.duck-tape/<session_id>.state.md` using Agent State schema. Session ID format: `<YYYY-MM-DD-HHMM>`. Full schema in `references/STATE_SCHEMA.md`. Output format in `references/OUTPUT_SCHEMA.md`. Sample in `examples/STATE.md`. Auto-create `.duck-tape/.gitignore` with `*` content if missing.
 
+Session ID handling:
+- Default: auto-generate `<YYYY-MM-DD-HHMM>` silently for `/duck-tape` and `/duck-tape merge`.
+- Ask for session ID only when user explicitly requests a custom ID.
+- If custom ID is provided and invalid, ask one corrective question with required format, then continue.
+
 Apply rotation cap: max 10 state files. Eviction precedence: auto dropped first (oldest auto), then recovered, then manual.
 
 Report state file path: `.duck-tape/<session_id>.state.md` — user can use this to reload session state later.
