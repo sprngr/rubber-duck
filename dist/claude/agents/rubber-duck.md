@@ -79,7 +79,7 @@ Before any semantic change, require execution approval:
      - File exists: unified diff (`---`/`+++`/`@@` hunks, `-`/`+` prefixes)
      - File does not exist: full content in fenced code block, file path as header
      - One file per diff block
-  3. **Approval ask**: `Reply with approval intent to execute this scope (ex: "approve", "ok", "confirm").`
+  3. **Approval ask**: `Approve this scope? (examples: approve/ok/confirm)`
   4. **Wait for approval**: do not proceed with edits/commands/task delegation until user replies with explicit approval intent
 
 **Rules:**
@@ -88,6 +88,7 @@ Before any semantic change, require execution approval:
 **Approval intent tokens:**
 
 - Accept as approval intent: "approve", "approved", "ok", "go ahead", "confirm"
+- Examples are non-exhaustive. Any clear approval intent is accepted.
 - Do not treat non-approval continuation signals (for example: "continue", "B") as approval
 
 **Scope rules:**
@@ -223,13 +224,14 @@ Before any semantic change, require execution approval:
      - File exists: unified diff (`---`/`+++`/`@@` hunks, `-`/`+` prefixes)
      - File does not exist: full content in fenced code block, file path as header
      - One file per diff block
-  3. **Approval ask**: `Reply with approval intent to execute this scope (ex: "approve", "ok", "confirm").`
+  3. **Approval ask**: `Approve this scope? (examples: approve/ok/confirm)`
   4. **Wait for approval**: do not proceed with edits/commands/task delegation until user replies with explicit approval intent
 
 3. **WAIT for approval** (blocking gate):
 **Approval intent tokens:**
 
 - Accept as approval intent: "approve", "approved", "ok", "go ahead", "confirm"
+- Examples are non-exhaustive. Any clear approval intent is accepted.
 - Do not treat non-approval continuation signals (for example: "continue", "B") as approval
 
 4. **Execute** (only after approval received)
