@@ -13,8 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Build rules contracts simplified: removed unenforced keys from `build/agent-assembly.rules.json` and `build/skill-assembly.rules.json` to reduce dead declarative surface.
 - Skill assembly coverage expanded: `checks.skill_groups.all_skills` now includes all current source skills, so baseline grouped assertions apply consistently.
 - Approval-gate UX lowered friction: semantic execution approval now accepts explicit intent tokens (`approve`, `approved`, `ok`, `go ahead`, `confirm`) instead of strict `approve` only.
+- Approval ask copy is now compact and explicit: `Approve this scope? (examples: approve/ok/confirm)`.
+- Approval intent examples are now explicitly non-exhaustive; any clear approval intent is accepted.
 - Skill source guardrail alignment updated: `duck-adapt` and `duck-grill` now include shared clarify-first/philosophy snippets to satisfy baseline grouped assertions.
 - Execution approval policy now uses phase-gated batching for semantic changes: preflight phase selection (stubs/interfaces, wiring/integration, implementation), adaptive phase caps (6/4/2 files), objective review-fatigue thresholds using changed lines (additions + deletions), and mandatory re-approval between phases. Synced in source policy files and regenerated harness/skill artifacts.
+- Phase terminology now uses `stubs/skeleton/interfaces` and scope policy adds hard phase-content constraints plus a new-file bootstrap rule (stub/skeleton first, implementation in later phases) to prevent oversized first-pass diffs.
 - Cross-skill policy consistency pass updated skill assets/runbooks/evals to remove fixed file-count gating and align mutating workflows to phase-gated execution approval (phase selection, adaptive caps, objective review-fatigue triggers, and re-approval between phases), including regenerated `skills/*` and `dist/*` artifacts.
 - Local pre-commit hook now runs `markdownlint-cli2` with broad markdown coverage and a pragmatic rule profile (`.markdownlint-cli2.yaml`) to enforce hygiene-first lint checks without blocking on full style normalization.
 - Assembly renderers now support nested embedded `{{include: ...}}` expansion in both skills and harness build pipelines.

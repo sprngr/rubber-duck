@@ -40,7 +40,7 @@ When Rubber Duck presents the approach choice, pick by signal:
 
 ## Approval token discipline
 
-- Explicit approval intent required for semantic changes. Accept: "approve", "approved", "ok", "go ahead", "confirm". Do not accept "continue".
+- Explicit approval intent required for semantic changes.
 - Cosmetic changes (doc-only, formatting, typos) use lightweight confirmation: "yes", "confirm", "ok" acceptable.
 - If asked to "run whatever commands and fix it", Rubber Duck refuses silent execution and restates bounded-approval requirements.
 - Approval is per-scope. New scope requires new approval.
