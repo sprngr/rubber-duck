@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Skill source guardrail alignment updated: `duck-adapt` and `duck-grill` now include shared clarify-first/philosophy snippets to satisfy baseline grouped assertions.
 - Execution approval policy now uses phase-gated batching for semantic changes: preflight phase selection (stubs/interfaces, wiring/integration, implementation), adaptive phase caps (6/4/2 files), objective review-fatigue thresholds using changed lines (additions + deletions), and mandatory re-approval between phases. Synced in source policy files and regenerated harness/skill artifacts.
 - Cross-skill policy consistency pass updated skill assets/runbooks/evals to remove fixed file-count gating and align mutating workflows to phase-gated execution approval (phase selection, adaptive caps, objective review-fatigue triggers, and re-approval between phases), including regenerated `skills/*` and `dist/*` artifacts.
+- Local pre-commit hook now runs `markdownlint-cli2` with broad markdown coverage and a pragmatic rule profile (`.markdownlint-cli2.yaml`) to enforce hygiene-first lint checks without blocking on full style normalization.
+- Assembly renderers now support nested embedded `{{include: ...}}` expansion in both skills and harness build pipelines.
+- Assembly rules now assert approval-workflow snippet presence and include wiring to catch drift early.
 
 ### Fixed
 
@@ -23,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - PowerShell installer now detects script-file execution correctly for `-Source local` and no longer misclassifies it as piped `iwr|iex` mode.
 - PowerShell installer local-source file resolution now uses script-scoped variables, fixing null-path failures during local copy.
 - duck-tape hook JS behavioral test normalization now accepts compact stamp format (`YYYY-MM-DD-HHmm`) in state/marker assertions, and timestamp/stamp consistency parsing now accepts compact and separated minute formats. This removes false failures in `check-hooks-behavior`.
+- Nested include expansion no longer injects extra blank lines in generated markdown artifacts.
 
 ## [v2.0.1] - 2026-08-03
 
