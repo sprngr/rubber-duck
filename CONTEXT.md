@@ -30,6 +30,9 @@
 - **Installer idempotence fix**: installer upsert no longer accumulates blank lines above managed block fences on repeated runs (bash + PowerShell). (date: 2026-08-04)
 - **PowerShell local-source fixes**: corrected script-file path detection and local-source variable scoping to prevent false piped-mode and null-path errors. (date: 2026-08-04)
 - **duck-tape recovery model**: Angle A/B model kept with auto pre-compact extraction and LLM-assisted resume synthesis; state rotation uses auto -> recovered -> manual eviction precedence with max 10 files. (date: 2026-08-01)
+- **Approval wording compacted with non-exhaustive intent note**: execution approval ask uses concise scope prompt with examples while policy clarifies examples are non-exhaustive and clear approval intent is accepted. (date: 2026-08-06)
+- **Phase 1 hard constraints adopted**: phase label is stubs/skeleton/interfaces and new-file bootstrap requires stub-first approvals before later implementation phases. (date: 2026-08-06)
+- **Validation gate semantics realigned**: V14 now enforces phase-cap boundary, V30 treats clear approval intent as valid, and V32/V33 cover missing phase preflight and phase re-approval. (date: 2026-08-06)
 
 ## Conventions
 
@@ -88,3 +91,11 @@ Installer and policy-source updates:
 - Installers use `dist/AGENTS.md` as policy source in local and web flows.
 - Managed-block insertion idempotence fixed for bash and PowerShell.
 - PowerShell `-Source local` execution/path handling fixed.
+
+### 2026-08-06 11:15
+
+Policy and validation alignment session completed in bounded approvals.
+
+- Source snippets now enforce phase-fit statement and hard phase-content constraints (stub/skeleton-first for new files).
+- Generated skills/dist rebuilt and synced; guardrails drift check passed after AGENTS managed-block sync.
+- Validation fixtures/docs updated to V01-V33 with focused calibration of V14/V30/V32/V33; runlog entry added.
