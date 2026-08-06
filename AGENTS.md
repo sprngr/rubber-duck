@@ -27,7 +27,8 @@ This repository contains source prompts, assembled skills, generated harness art
 - `docs/` - architecture and supporting documentation
 - `validation/` - prompt validation suite, fixtures, and runner
 - `tests/` - fixture-style behavior tests and expected outputs
-- `.agents/`, `.claude/`, `.opencode/`, `.github/` - harness/runtime config and integration files (not tracked)
+- `.github/` - tracked CI/workflow config
+- `.agents/`, `.claude/`, `.opencode/` - local harness install targets (untracked, populated by installers)
 - `build/` - assembly/check rules
 
 ## Tooling and Runtimes
