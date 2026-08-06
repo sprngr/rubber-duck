@@ -86,7 +86,7 @@ Classify each request to determine handling:
 
 Before every workspace-changing action, classify change type:
 
-**Semantic changes** (require full execution approval):
+{{include: policy-snippets/approval-change-types.md}}
 
 1. **STOP. Check approval state.**
    - Has user explicitly approved THIS specific scope (files + expected change + verification)?
@@ -94,55 +94,21 @@ Before every workspace-changing action, classify change type:
    - If YES and scope unchanged -> proceed to step 5
 
 2. **Preflight** (if any detail missing, ask ONE clarifying question and STOP):
-   - Target phase:
-     - Phase 1: stubs/interfaces
-     - Phase 2: wiring/integration
-     - Phase 3: concrete implementation
-   - Target files (bounded for selected phase)
-   - Expected behavior change
-   - Smallest verification check
-
-3. **Present list of changes broken down by file as formatted diff**
-   - File exists: unified diff (`---`/`+++`/`@@` hunks, `-`/`+` prefixes)
-   - File does not exist: full content in fenced code block, file path as header
-   - One file per diff block
-
-4. **Approval ask** (explicit approval intent required):
-   - `Reply with approval intent to execute this scope (ex: "approve", "ok", "confirm").`
+{{include: policy-snippets/approval-workflow-core.md}}
 
 5. **WAIT for approval** (blocking gate):
-   - Do NOT proceed to step 6 until user replies with explicit approval intent
-   - Accept: "approve", "approved", "ok", "go ahead", "confirm"
-   - Do NOT interpret non-approval continuation signals ("continue", "B") as approval
+{{include: policy-snippets/approval-intent-lexicon.md}}
 
 6. **Execute** (only after approval received)
 
 7. **Verify** with smallest check
 
 **Scope rules:**
-- Phase caps (default):
-  - Phase 1 (stubs/interfaces): up to 6 files
-  - Phase 2 (wiring/integration): up to 4 files
-  - Phase 3 (concrete implementation): up to 2 files
-- If a phase exceeds its cap, split into smaller bounded approvals before executing.
-- Review-fatigue triggers (objective):
-  - Phase 1 (stubs/interfaces):
-    - If proposed diff in one approval exceeds 180 changed lines (additions + deletions) total, reduce current phase cap by at least 1 file (minimum cap is 1 file).
-    - If any single file exceeds 90 changed lines (additions + deletions), split that file into a separate approval or smaller sequential edits.
-  - Phase 2 (wiring/integration):
-    - If proposed diff in one approval exceeds 120 changed lines (additions + deletions) total, reduce current phase cap by at least 1 file (minimum cap is 1 file).
-    - If any single file exceeds 60 changed lines (additions + deletions), split that file into a separate approval or smaller sequential edits.
-  - Phase 3 (concrete implementation):
-    - If proposed diff in one approval exceeds 80 changed lines (additions + deletions) total, reduce current phase cap by at least 1 file (minimum cap is 1 file).
-    - If any single file exceeds 40 changed lines (additions + deletions), split that file into a separate approval or smaller sequential edits.
-  - If reviewer requests clarification on more than 2 files in same batch, reduce next batch by at least 1 file.
+{{include: policy-snippets/approval-scope-rules.md}}
 - Phase examples (application):
   - Phase 1 example: 5 files, 170 changed lines (additions + deletions) total, max single file 80 changed lines (additions + deletions). This is within cap and thresholds, so one approval can proceed.
   - Phase 2 example: 4 files, 130 changed lines (additions + deletions) total. This exceeds phase total threshold, so split into 2 approvals before execution.
   - Phase 3 example: 2 files, one file at 45 changed lines (additions + deletions). This exceeds single-file threshold, so split into smaller sequential edits.
-- If complexity or review fatigue increases, reduce cap further and continue in smaller batches.
-- Reopen execution approval between phases, even when objective stays same.
-- If scope changes after approval, re-open approval before continuing.
 
 **Cosmetic changes** (require lightweight confirmation):
 
