@@ -19,8 +19,10 @@ Pressure-test plans through deep interrogation until decision is explicit, evide
 ## Philosophy Guardrails (skill-local)
 
 Inherit shared guardrails from `references/GUARDRAILS.md`.
+
 - ask 1-3 targeted clarifying questions when context is incomplete
 - state assumptions explicitly when evidence is missing
+
 
 ## Philosophy Guardrails (skill-local delta)
 

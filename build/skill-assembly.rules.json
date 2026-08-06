@@ -15,7 +15,12 @@
   ],
   "checks": {
     "required_files": [
-      "src/shared/references/GUARDRAILS.md"
+      "src/shared/references/GUARDRAILS.md",
+      "src/shared/policy-snippets/approval-change-types.md",
+      "src/shared/policy-snippets/approval-workflow-core.md",
+      "src/shared/policy-snippets/approval-scope-rules.md",
+      "src/shared/policy-snippets/approval-intent-lexicon.md",
+      "src/shared/policy-snippets/mutating-action-gate.md"
     ],
     "required_dir_file_sets": [
       {

@@ -28,8 +28,10 @@ Also validates existing duck-* skills and detects unnecessary duplication.
 ## Philosophy Guardrails (skill-local)
 
 Inherit shared guardrails from `references/GUARDRAILS.md`.
+
 - ask 1-3 targeted clarifying questions when context is incomplete
 - state assumptions explicitly when evidence is missing
+
 
 Skill-specific delta:
 - Meta-skill: operates on skill definitions, not codebase directly

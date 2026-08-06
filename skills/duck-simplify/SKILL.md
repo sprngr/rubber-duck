@@ -22,6 +22,7 @@ Find highest-value simplifications without weakening security, correctness, or e
 
 Inherit shared guardrails from `references/GUARDRAILS.md`.
 
+
 Skill-specific delta:
 - Complexity-reduction guidance only; final implementation decisions remain with user.
 
@@ -35,6 +36,7 @@ Use for complexity-minimization lens in review/design/debug contexts, including 
 
 - ask 1-3 targeted clarifying questions when context is incomplete
 - state assumptions explicitly when evidence is missing
+
 
 Required:
 - code/proposal scope

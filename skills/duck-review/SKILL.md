@@ -20,6 +20,7 @@ Review changed code with risk-first, actionable findings in paste-ready format.
 
 Inherit shared guardrails from `references/GUARDRAILS.md`.
 
+
 Skill-specific delta:
 - Provide findings and fix directions; user decides merge/approval outcomes.
 
@@ -33,6 +34,7 @@ Use when user asks to review diff/code/PR for issues and fix direction.
 
 - ask 1-3 targeted clarifying questions when context is incomplete
 - state assumptions explicitly when evidence is missing
+
 - If review context is ambiguous, ask one targeted clarifying question first.
 - Anchor each finding in explicit diff/code evidence.
 
@@ -45,6 +47,7 @@ When proposing fix direction, stop at first rung:
 4. Use already-installed dependency
 5. Shrink to smallest safe diff
 6. Only then add new code/abstraction
+
 
 ### 3. Review workflow
 

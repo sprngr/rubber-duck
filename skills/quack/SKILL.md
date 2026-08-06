@@ -22,8 +22,10 @@ Provide explicit user-controlled routing for workflow-like requests while preser
 
 Inherit shared guardrails from `references/GUARDRAILS.md`.
 
+
 - ask 1-3 targeted clarifying questions when context is incomplete
 - state assumptions explicitly when evidence is missing
+
 
 ## Activation
 

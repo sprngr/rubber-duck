@@ -2,6 +2,13 @@
   "version": 1,
   "phase": 1,
   "checks": {
+    "required_files": [
+      "src/shared/policy-snippets/approval-change-types.md",
+      "src/shared/policy-snippets/approval-workflow-core.md",
+      "src/shared/policy-snippets/approval-scope-rules.md",
+      "src/shared/policy-snippets/approval-intent-lexicon.md",
+      "src/shared/policy-snippets/mutating-action-gate.md"
+    ],
     "required_dir_file_sets": [
       {
         "dirs_glob": "src/agents/*",
@@ -15,6 +22,26 @@
       {
         "file": "src/agents/rubber-duck/body.md",
         "contains": "You are a rubber duck"
+      },
+      {
+        "file": "src/shared/policy-snippets/mutating-action-gate.md",
+        "contains": "{{include: policy-snippets/approval-change-types.md}}"
+      },
+      {
+        "file": "src/shared/policy-snippets/mutating-action-gate.md",
+        "contains": "{{include: policy-snippets/approval-workflow-core.md}}"
+      },
+      {
+        "file": "src/shared/policy-snippets/mutating-action-gate.md",
+        "contains": "{{include: policy-snippets/approval-scope-rules.md}}"
+      },
+      {
+        "file": "src/shared/policy-snippets/mutating-action-gate.md",
+        "contains": "{{include: policy-snippets/approval-intent-lexicon.md}}"
+      },
+      {
+        "file": "src/agents/AGENTS.md",
+        "contains": "{{include: policy-snippets/approval-workflow-core.md}}"
       }
     ],
     "agent_groups": {
