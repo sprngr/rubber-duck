@@ -72,9 +72,10 @@ Approval workflow:
 
 1. **Preflight** (if missing, ask one clarifying question):
      - Target phase:
-       - Phase 1: stubs/interfaces
+       - Phase 1: stubs/skeleton/interfaces
        - Phase 2: wiring/integration
        - Phase 3: concrete implementation
+     - Phase-fit statement (why this diff matches phase constraints)
      - Target files (bounded for the selected phase)
      - Expected behavior change
      - Smallest verification check
@@ -88,12 +89,36 @@ Approval workflow:
 **Scope rules:**
 
 - Phase caps (default):
-  - Phase 1 (stubs/interfaces): up to 6 files
+  - Phase 1 (stubs/skeleton/interfaces): up to 6 files
   - Phase 2 (wiring/integration): up to 4 files
   - Phase 3 (concrete implementation): up to 2 files
+
+- **Phase content constraints (hard gate):**
+  - **Phase 1 (stubs/skeleton/interfaces) must contain only:**
+    - file/module skeleton shape (folders, exports, section layout)
+    - type/interface declarations
+    - function/class signatures
+    - placeholder returns/errors/TODO markers
+    - minimal no-op wiring with no business logic
+  - **Phase 1 must not contain:**
+    - full feature/business logic
+    - side-effectful flows (DB/network/auth/file writes)
+    - complete UI behavior beyond placeholders
+  - **Phase 2 (wiring/integration) can contain:**
+    - route registration, DI/container wiring, module composition, event hookups
+    - adaptation glue between existing components
+  - **Phase 2 must not contain:**
+    - substantial new business logic blocks
+  - **Phase 3 (concrete implementation) contains:**
+    - business logic, algorithms, side effects, full behavior completion
+
+- **New-file bootstrap rule:**
+  - If scope introduces new feature files, first approval pass must be Phase 1 stubs/skeleton/interfaces only.
+  - Implement bodies in later Phase 2/3 approvals.
+  - If a new file exceeds stub/skeleton intent, split that file into stub-first then implementation follow-up.
 - If a phase exceeds its cap, split into smaller bounded approvals before executing.
 - Review-fatigue triggers (objective):
-  - Phase 1 (stubs/interfaces):
+  - Phase 1 (stubs/skeleton/interfaces):
     - If proposed diff in one approval exceeds 180 changed lines (additions + deletions) total, reduce current phase cap by at least 1 file (minimum cap is 1 file).
     - If any single file exceeds 90 changed lines (additions + deletions), split that file into a separate approval or smaller sequential edits.
   - Phase 2 (wiring/integration):
@@ -103,13 +128,9 @@ Approval workflow:
     - If proposed diff in one approval exceeds 80 changed lines (additions + deletions) total, reduce current phase cap by at least 1 file (minimum cap is 1 file).
     - If any single file exceeds 40 changed lines (additions + deletions), split that file into a separate approval or smaller sequential edits.
   - If reviewer requests clarification on more than 2 files in same batch, reduce next batch by at least 1 file.
-- Phase examples (application):
-  - Phase 1 example: 5 files, 170 changed lines (additions + deletions) total, max single file 80 changed lines (additions + deletions). This is within cap and thresholds, so one approval can proceed.
-  - Phase 2 example: 4 files, 130 changed lines (additions + deletions) total. This exceeds phase total threshold, so split into 2 approvals before execution.
-  - Phase 3 example: 2 files, one file at 45 changed lines (additions + deletions). This exceeds single-file threshold, so split into smaller sequential edits.
 - If complexity or review fatigue increases, reduce cap further and continue in smaller batches.
 - Reopen execution approval between phases, even when objective stays same.
-- If scope changes after approval, reopen this checkpoint before continuing.
+- If scope changes after approval, reopen scope confirmation before continuing.
 
 **Approval intent notes:**
 - Examples are non-exhaustive. Any clear approval intent is accepted.

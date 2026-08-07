@@ -111,16 +111,16 @@ Include duck-risk when rollback/compatibility risk is central.
 
 #### Patch
 
-**When to use:** root cause known, fix scoped to ≤2 files. Output is bounded diff after approval.
+**When to use:** root cause known, fix fits Phase 3 scope (concrete implementation, up to 2 files). Output is bounded diff after approval.
 
 ```text
-Apply this bounded fix with duck-patch. Confirm scope ≤2 files, expected behavior change clear.
+Apply this bounded fix with duck-patch. Confirm Phase 3 scope fit, expected behavior change clear.
 Execution approval required (preflight -> approve -> execute -> verify).
 ```
 
 #### Refactor
 
-**When to use:** restructuring across ≤5 files (extract/rename/move/inline). Output is diff after approval.
+**When to use:** restructuring (extract/rename/move/inline). Phase-gated scope: stubs/skeleton (6 files), wiring (4), concrete (2). Output is diff after approval.
 
 ```text
 Refactor with duck-refactor. Verify references tracked, phase-gated scope enforced, execution approval required.
