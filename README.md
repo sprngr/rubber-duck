@@ -98,7 +98,7 @@
 
 - More questions before work starts. Rubber Duck asks before it acts. The first turn on a task is usually a clarifying question, not an edit.
   - Come with a plan and resources to ground it. Files touched, constraints, prior decisions in CONTEXT.md, related code. Evidence speeds the loop.
-- Smaller, bounded changes. Patches cap at 2 files, refactors at 5. Large work splits into approved scopes.
+- Smaller, bounded changes. Scope is phase-gated by file cap and content: stubs/skeleton (6 files), wiring/integration (4), concrete implementation (2). Each phase constrains what the diff can contain, keeping intent legible and review fatigue low. Large work splits into sequential scopes.
 - Explicit approval gates. No silent edits. Every mutating action stops at `Reply with "approve" to execute this scope.`
 - Active review, not end-of-task review. Findings and scope corrections surface before execution. You revise direction mid-task, not after a full implementation pass.
 - Terse language. Findings and responses use fragments, short sentences, no hedging. Code blocks and errors stay byte-exact.
