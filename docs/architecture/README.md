@@ -24,7 +24,49 @@ This section defines the system-level architecture and operating contracts for R
   - [`src/agents/duckling/`](../../src/agents/duckling)
 - Skills source: [`src/skills/`](../../src/skills)
 - Skills install artifacts: [`skills/`](../../skills)
-- Global operating policy: [`AGENTS.md`](../../AGENTS.md)
+- Global operating policy: [`src/agents/AGENTS.md`](../../src/agents/AGENTS.md)
+
+## Governance Boundaries
+
+### AGENTS.md vs CONTEXT.md
+
+`AGENTS.md` is rules and operating contract.  
+`CONTEXT.md` is project memory and decisions.
+
+- **AGENTS.md**
+  - defines agent behavior constraints
+  - safety gates, approval flow, style constraints, hard boundaries
+  - normative operating policy
+- **CONTEXT.md**
+  - records project decisions and conventions
+  - glossary, open questions, deferred debt, working memory
+  - descriptive project memory
+
+Quick test:
+
+- “Must ask for `approve` before semantic edit” -> `AGENTS.md`
+- “Policy source moved to `dist/AGENTS.md` on 2026-08-04” -> `CONTEXT.md` (and maybe `CHANGELOG.md`)
+
+Rule of thumb:
+
+- If violation can create unsafe or unauthorized behavior, put it in `AGENTS.md`.
+- If it prevents re-derivation across sessions, put it in `CONTEXT.md`.
+
+### CONTEXT.md vs CHANGELOG.md
+
+- **CONTEXT.md** tracks current project memory and active decisions for future sessions.
+- **CHANGELOG.md** tracks release-visible changes over time for consumers and maintainers.
+
+### CONTEXT.md vs ADRs
+
+- **CONTEXT.md** stores evolving memory and active decision context.
+- **ADRs / architecture docs** store durable architecture decisions with rationale and long-term reference value.
+
+### Source-of-truth vs generated artifacts
+
+- Edit source in `src/`.
+- Treat `skills/` and `dist/` as generated outputs.
+- Rebuild and verify after source changes (`make build`, `make check`).
 
 ## Installation and distribution
 

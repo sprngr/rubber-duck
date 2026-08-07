@@ -5,12 +5,14 @@ Practical guidance for getting the most out of Rubber Duck. Builds on the [opera
 ## When to use quack vs convenience delegation
 
 **Use `quack <intent>` when:**
+
 - Request is workflow-like (debug, review, design, triage, patch, refactor).
 - You want explicit route selection before work starts.
 - Multiple skills may chain (e.g., review -> risk -> simplify).
 - You want a fresh subagent context for isolated analysis.
 
 **Use convenience delegation (no `quack`) when:**
+
 - Request is simple (single factual question, ≤10 lines explain, ≤5 line diff review).
 - You want conversational flow without route ceremony.
 - You are exploring and the intent is not yet clear.
@@ -22,7 +24,7 @@ Convenience delegation does not bypass execution approval. Workspace-changing ac
 When Rubber Duck presents the approach choice, pick by signal:
 
 | Signal | Conversational | Structured (quack) |
-|---|---|---|
+| --- | --- | --- |
 | Intent clarity | Vague, exploring | Clear, named task |
 | Scope | Unknown | Bounded |
 | Output expectation | Discussion, options | Findings, patch, review |
@@ -31,14 +33,14 @@ When Rubber Duck presents the approach choice, pick by signal:
 
 ## Scope discipline
 
-- `duck-patch`: max 2 files per scope. If scope exceeds 2 files, split into smaller bounded tasks before patching.
-- `duck-refactor`: max 5 files per scope. If scope exceeds 5 files, split into smaller bounded tasks before refactoring.
+- `duck-patch`: phase-gated scope applies. Default caps: Phase 1 up to 6 files, Phase 2 up to 4 files, Phase 3 up to 2 files.
+- `duck-refactor`: phase-gated scope applies. Split into smaller bounded approvals when phase caps or review-fatigue triggers are exceeded.
 - If scope changes after approval, the approval gate reopens. Re-confirm before continuing.
 - State scope explicitly at preflight: target files, expected behavior change, smallest verification check.
 
 ## Approval token discipline
 
-- Explicit "approve" token required for semantic changes. Not "continue", not "go ahead", not "yes".
+- Explicit approval intent required for semantic changes.
 - Cosmetic changes (doc-only, formatting, typos) use lightweight confirmation: "yes", "confirm", "ok" acceptable.
 - If asked to "run whatever commands and fix it", Rubber Duck refuses silent execution and restates bounded-approval requirements.
 - Approval is per-scope. New scope requires new approval.
@@ -46,7 +48,7 @@ When Rubber Duck presents the approach choice, pick by signal:
 ## Composition pattern selection
 
 | Goal | Pattern | Example prompt |
-|---|---|---|
+| --- | --- | --- |
 | Comprehensive review | review -> risk -> simplify | `quack review this refactor for correctness, risk, and complexity` |
 | Root-cause fix | debug -> patch | `quack debug this endpoint failure then patch it` |
 | Architecture + testing | design -> triage | `quack design this migration and suggest test scenarios` |
@@ -59,10 +61,12 @@ Composition is user-driven, not enforced. Skills can be invoked sequentially or 
 Rubber Duck ships a validation suite for behavior regression checks. See [validation/README.md](../validation/README.md).
 
 Quick subset gate (must pass before release):
+
 - V02, V03, V04, V11, V12, V13, V14
 - Fail if any Critical/High in subset fails
 
 Key signals to watch for in normal use:
+
 - **Clarify-first**: Rubber Duck asks targeted questions before coding/editing. If it jumps straight to implementation, that is a regression.
 - **Risk-first review**: findings ordered by risk. Security/correctness before style/simplification.
 - **No silent execution**: no code edits, commands, or task delegation without explicit approval.
@@ -75,14 +79,14 @@ Key signals to watch for in normal use:
 - **Governor-invoked skills** (adapt, grill): main session only. Not quack-routed.
 
 User override always wins. Explicit delegation request forces duckling delegation regardless of default policy.
- 
+
 ## Install status
 
 - **Default (11):** quack, duck-debt, duck-debug, duck-design, duck-patch, duck-refactor, duck-review, duck-risk, duck-simplify, duck-teach, duck-triage. Installed automatically.
 - **Extras (3, --extras flag):** duck-adapt, duck-grill, duck-tape. Optional.
 
 If a skill is unavailable, check install with `scripts/rubber-duck.sh status`. Extras require the `--extras` flag at install time.
- 
+
 ## Related docs
 
 - [Operator manual](./MANUAL.md) — routing cheat sheet, playbooks, failure modes.

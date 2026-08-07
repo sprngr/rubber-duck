@@ -21,6 +21,7 @@ Classify bug severity and expose missing test coverage with smallest runnable ch
 Inherit shared guardrails from `references/GUARDRAILS.md`.
 
 Skill-specific delta:
+
 - Recommend severity and test direction; user decides implementation/test-writing actions.
 
 ## Activation
@@ -33,14 +34,17 @@ Use for test coverage planning, bug severity triage, and pre-PR test recommendat
 
 - ask 1-3 targeted clarifying questions when context is incomplete
 - state assumptions explicitly when evidence is missing
+
 - Ask one targeted clarifying question about missing repro/spec first.
 
 If evidence is missing, include explicit marker:
+
 - `missing evidence:` with concise list (logs/repro steps/release window/affected scope)
 
 ### 2. Apply Duck Ladder (test planning)
 
 Before asking for new tests, check:
+
 1. Does behavior already have reliable coverage?
 2. Can existing test be extended instead of new file/suite?
 3. Smallest runnable check that fails on regression?
@@ -59,7 +63,7 @@ Before asking for new tests, check:
 **Bug severity classification:**
 
 | Level | Criteria | Action | Examples |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | 🔴 P0 — Critical | Data loss, security breach, all users blocked | Hotfix immediate | Wrong money sent, API auth bypass |
 | 🟠 P1 — High | Major feature broken, workaround exists | Sprint priority | Search broken for one locale |
 | 🟡 P2 — Medium | Partial feature broken, degraded UX | Next iteration | Icon misaligned, slow query |
@@ -69,6 +73,7 @@ Before asking for new tests, check:
 **For test coverage analysis:**
 
 Flag missing tests when:
+
 - Public API without tests
 - Side-effect functions without verification
 - Error paths (branch coverage, not just happy path)
@@ -76,6 +81,7 @@ Flag missing tests when:
 - Public interface without contract tests
 
 **Test quality checklist:**
+
 - [ ] Tests verify behavior, not implementation
 - [ ] Tests are deterministic (no random, no time dependency)
 - [ ] Tests are independent (no hidden ordering)
@@ -84,6 +90,7 @@ Flag missing tests when:
 - [ ] Error paths are tested ("throws", "rejects", "returns error")
 
 **Edge case discovery framework (check for every input/output):**
+
 - Empty (zero, "", [])
 - Null/undefined/missing
 - Single element (boundary)
@@ -94,6 +101,7 @@ Flag missing tests when:
 - Timeout/boundaries
 
 **Test scenarios to suggest:**
+
 - Happy path (one per feature)
 - First failure case
 - Boundary case (0, max, null, empty)
@@ -102,13 +110,13 @@ Flag missing tests when:
 - Regression case (if existing bug has a fix)
 
 **Minimum runnable check rule:**
+
 - Non-trivial logic change (branch/loop/parser/money/security path) should leave one runnable check:
   - one focused test, or
   - one assert-style self-check/demo if test framework path is heavy.
 - Trivial one-liner with existing coverage may not need new test.
 - Never drop core safeguards for brevity:
 - never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
-
 
 ### 4. Output
 
@@ -117,11 +125,13 @@ Severity + brief rationale + specific test to add.
 Include related test paths or explicit "needs test" when absent.
 
 **Formatting rule (deterministic):**
+
 - When proposing tests, use explicit `needs test:` prefix lines (one per scenario)
 - Default target: 1-3 `needs test:` lines based on risk/scope (use 3 only for high-risk or multi-surface changes)
 - For uncertainty cases, include one `missing evidence:` line with minimum artifacts needed to refine severity
 
 **Bug report format:**
+
 - One-line title: "Component: what fails"
 - Steps to reproduce (numbered, runnable)
 - Expected vs actual (one line each)
@@ -129,6 +139,7 @@ Include related test paths or explicit "needs test" when absent.
 - Related tests (paths) or "needs test"
 
 **Pre-PR vs In-PR:**
+
 - Pre-PR: suggest what to test (`duck-triage` scope)
 - In-PR: annotate missing tests inline (`duck-review` 🧪 test: prefix)
 

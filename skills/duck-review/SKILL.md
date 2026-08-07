@@ -21,6 +21,7 @@ Review changed code with risk-first, actionable findings in paste-ready format.
 Inherit shared guardrails from `references/GUARDRAILS.md`.
 
 Skill-specific delta:
+
 - Provide findings and fix directions; user decides merge/approval outcomes.
 
 ## Activation
@@ -33,6 +34,7 @@ Use when user asks to review diff/code/PR for issues and fix direction.
 
 - ask 1-3 targeted clarifying questions when context is incomplete
 - state assumptions explicitly when evidence is missing
+
 - If review context is ambiguous, ask one targeted clarifying question first.
 - Anchor each finding in explicit diff/code evidence.
 
@@ -69,17 +71,20 @@ One-line comment template:
 Keep comments paste-ready for PR threads.
 
 **Rule (schema-first, prose-flexible):**
+
 - Each finding line must start with approved prefix token
 - Each finding line must include location + problem + `Fix:` field
 - Only exception: Auto-Clarity for security/irreversible-risk comments; resume prefixed one-line format immediately after
 - Before final response, normalize any non-compliant finding to schema using strongest matching prefix (fallback `⚠️ bug:`)
 
 **Final self-check before send:**
+
 - If any finding line does not start with approved prefix token, rewrite before sending.
 - If any finding line is missing location or `Fix:`, rewrite before sending.
 - Never emit mixed formats (`- HIGH`, `- MED`, numbered bullets for findings).
 
 **Prefixes:**
+
 - `🔒 sec:` — security issue (injection, auth bypass, secrets, SSRF)
 - `⚠️ bug:` — correctness/data-loss behavior risk
 - `⚡ perf:` — performance concern (N+1, unnecessary alloc, bad complexity)
@@ -94,10 +99,12 @@ Keep comments paste-ready for PR threads.
 **Examples:**
 
 Good:
+
 - `🧪 test: src/auth/session.ts:88 — refresh-token expiry path untested. Fix: add test for expired refresh token returning 401.`
 - `🔒 sec: db/userRepo.ts:44 — SQL built from raw user input enables injection. Fix: parameterize query placeholders and bind values.`
 
 Bad -> Good:
+
 - bad: `- HIGH src/parseAge.ts:3 — invalid input becomes 0`
 - good: `⚠️ bug: src/parseAge.ts:3 — invalid input collapses to 0 via falsy check. Fix: use Number.isNaN(n) and throw on invalid age.`
 

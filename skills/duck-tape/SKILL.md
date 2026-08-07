@@ -31,6 +31,7 @@ Inherit shared guardrails from `references/GUARDRAILS.md`.
 - state assumptions explicitly when evidence is missing
 
 Skill-specific delta:
+
 - Persistent artifact safety: CONTEXT.md is long-lived and likely committed. Redaction is non-negotiable before any write.
 - Session state safety: `.duck-tape/<id>.state.md` is workspace-local but may be read by next agent. Redaction applies.
 - Rotation cap: max 10 state files in `.duck-tape/`. Eviction precedence: auto dropped first, then recovered, then manual.
@@ -54,6 +55,11 @@ Scan session content for secrets/PII: API keys, passwords, tokens, connection st
 
 Write `.duck-tape/<session_id>.state.md` using Agent State schema. Session ID format: `<YYYY-MM-DD-HHMM>`. Full schema in `references/STATE_SCHEMA.md`. Output format in `references/OUTPUT_SCHEMA.md`. Sample in `examples/STATE.md`. Auto-create `.duck-tape/.gitignore` with `*` content if missing.
 
+Session ID handling:
+- Default: auto-generate `<YYYY-MM-DD-HHMM>` silently for `/duck-tape` and `/duck-tape merge`.
+- Ask for session ID only when user explicitly requests a custom ID.
+- If custom ID is provided and invalid, ask one corrective question with required format, then continue.
+
 Apply rotation cap: max 10 state files. Eviction precedence: auto dropped first (oldest auto), then recovered, then manual.
 
 Report state file path: `.duck-tape/<session_id>.state.md` — user can use this to reload session state later.
@@ -65,6 +71,7 @@ Run only on merge signals. Skip for state-only mode.
 **Bootstrap** (CONTEXT.md missing): create CONTEXT.md with translated content from state file using rigid map in `references/STATE_SCHEMA.md`. Empty sections get scaffold from `examples/bootstrap-CONTEXT.md`. Generate TOC under title from the 8 section headers. Output format in `references/OUTPUT_SCHEMA.md`. Sample in `examples/CONTEXT.md`. Never infer Goals or Conventions entries.
 
 **Merge** (CONTEXT.md exists): translate from session state file using rigid map. Summarize translated content to persistent-context granularity (decision-level, not commit-level) before applying per-section merge rules. Refresh TOC only if the set of `##` section headings changes. Per-section merge rules in `references/SCHEMA.md`. Summary:
+
 - Goals/Decisions/Conventions/Glossary: dedupe by key, supersede on conflict, append new
 - Deferred-Debt: append-only with status markers
 - Open-Questions: append new, dedupe by text
@@ -73,6 +80,7 @@ Run only on merge signals. Skip for state-only mode.
 - Position.Current + Position.Done: state-file-local, not translated. Next agent reads state file on resume.
 
 Emit changelog per `references/OUTPUT_SCHEMA.md`. Sample in `examples/CHANGELOG.md`:
+
 - `Added: <section> <key>`
 - `Superseded: <section> <key> (<old> -> <new>)`
 - `Dropped: <section> <key> (<reason>)`
@@ -84,6 +92,7 @@ Drops require explicit reason. No silent removal.
 **Workspace-changing actions** (require approval based on change type):
 
 **Semantic changes** (require full execution approval):
+
 - Code/logic changes
 - Config/schema changes (settings, env vars, build config)
 - Dependency changes (package.json, requirements.txt, etc.)
@@ -92,45 +101,105 @@ Drops require explicit reason. No silent removal.
 - Task delegation for implementation/patching
 
 **Cosmetic changes** (require lightweight confirmation):
+
 - Documentation edits (README, markdown files, standalone doc comments)
 - Formatting/whitespace-only changes
 - Typo fixes in non-code text files
 - Confirmation phrase: "Confirm to proceed with [doc/formatting] change?"
 
 **Edge cases:**
-- JSDoc/docstring changes in code files -> semantic (affects generated docs, code contracts)
-- Comments explaining logic in code -> semantic (affects maintainability understanding)
-- Config comments -> semantic (affects interpretation)
-- Document updates (ADRs, CONTEXT.md) -> semantic
-- Examples in README that are code snippets -> semantic (users copy-paste)
+
+- JSDoc/docstring changes in code files are semantic (affects generated docs, code contracts)
+- Comments explaining logic in code are semantic (affects maintainability understanding)
+- Config comments are semantic (affects interpretation)
+- Document updates (ADRs, CONTEXT.md) are semantic
+- Examples in README that are code snippets are semantic (users copy-paste)
 
 **Approval workflow:**
 Before any semantic change, require execution approval:
+
   1. **Preflight** (if missing, ask one clarifying question):
-     - target files (bounded; max 2)
+     - target phase:
+       - Phase 1: stubs/skeleton/interfaces
+       - Phase 2: wiring/integration
+       - Phase 3: concrete implementation
+     - phase-fit statement (why this diff matches phase constraints)
+     - target files (bounded for selected phase)
      - expected behavior change
      - smallest verification check
   2. **Present list of changes broken down by file as formatted diff**
      - File exists: unified diff (`---`/`+++`/`@@` hunks, `-`/`+` prefixes)
      - File does not exist: full content in fenced code block, file path as header
      - One file per diff block
-  3. **Approval ask**: `Reply with "approve" to execute this scope.`
-  4. **Wait for approval**: do not proceed with edits/commands/task delegation until user replies with approval
+     - If any file violates phase constraints, split and re-propose before approval ask
+  3. **Approval ask**: `Approve this scope? (examples: approve/ok/confirm)`
+  4. **Wait for approval**: do not proceed with edits/commands/task delegation until user replies with explicit approval intent
 
 **Rules:**
-- No workspace-changing action without user approval/confirmation
-- If requested execution scope exceeds 2 files, split into smaller bounded tasks before executing
-- If scope changes after approval, re-open approval before continuing
 
+- No workspace-changing action without user approval/confirmation
+**Approval intent tokens:**
+
+- Accept as approval intent: "approve", "approved", "ok", "go ahead", "confirm", "yes"
+- Examples are non-exhaustive. Any clear approval intent is accepted.
+- Do not treat non-approval continuation signals (for example: "continue", "B") as approval
+
+**Scope rules:**
+
+- Phase caps (default):
+  - Phase 1 (stubs/skeleton/interfaces): up to 6 files
+  - Phase 2 (wiring/integration): up to 4 files
+  - Phase 3 (concrete implementation): up to 2 files
+
+- **Phase content constraints (hard gate):**
+  - **Phase 1 (stubs/skeleton/interfaces) must contain only:**
+    - file/module skeleton shape (folders, exports, section layout)
+    - type/interface declarations
+    - function/class signatures
+    - placeholder returns/errors/TODO markers
+    - minimal no-op wiring with no business logic
+  - **Phase 1 must not contain:**
+    - full feature/business logic
+    - side-effectful flows (DB/network/auth/file writes)
+    - complete UI behavior beyond placeholders
+  - **Phase 2 (wiring/integration) can contain:**
+    - route registration, DI/container wiring, module composition, event hookups
+    - adaptation glue between existing components
+  - **Phase 2 must not contain:**
+    - substantial new business logic blocks
+  - **Phase 3 (concrete implementation) contains:**
+    - business logic, algorithms, side effects, full behavior completion
+
+- **New-file bootstrap rule:**
+  - If scope introduces new feature files, first approval pass must be Phase 1 stubs/skeleton/interfaces only.
+  - Implement bodies in later Phase 2/3 approvals.
+  - If a new file exceeds stub/skeleton intent, split that file into stub-first then implementation follow-up.
+- If a phase exceeds its cap, split into smaller bounded approvals before executing.
+- Review-fatigue triggers (objective):
+  - Phase 1 (stubs/skeleton/interfaces):
+    - If proposed diff in one approval exceeds 180 changed lines (additions + deletions) total, reduce current phase cap by at least 1 file (minimum cap is 1 file).
+    - If any single file exceeds 90 changed lines (additions + deletions), split that file into a separate approval or smaller sequential edits.
+  - Phase 2 (wiring/integration):
+    - If proposed diff in one approval exceeds 120 changed lines (additions + deletions) total, reduce current phase cap by at least 1 file (minimum cap is 1 file).
+    - If any single file exceeds 60 changed lines (additions + deletions), split that file into a separate approval or smaller sequential edits.
+  - Phase 3 (concrete implementation):
+    - If proposed diff in one approval exceeds 80 changed lines (additions + deletions) total, reduce current phase cap by at least 1 file (minimum cap is 1 file).
+    - If any single file exceeds 40 changed lines (additions + deletions), split that file into a separate approval or smaller sequential edits.
+  - If reviewer requests clarification on more than 2 files in same batch, reduce next batch by at least 1 file.
+- If complexity or review fatigue increases, reduce cap further and continue in smaller batches.
+- Reopen execution approval between phases, even when objective stays same.
+- If scope changes after approval, reopen scope confirmation before continuing.
 
 **Preflight per operation:**
 
 State-only:
+
 - Target files: `.duck-tape/<id>.state.md`, `.duck-tape/.gitignore` (if missing)
 - Expected: write state file with Agent State schema
 - Verification: re-read state file, confirm Agent State sections present
 
 Merge:
+
 - Target files: `.duck-tape/<id>.state.md`, `.duck-tape/.gitignore` (if missing), `CONTEXT.md`
 - Expected: write state file, merge translated state into CONTEXT.md per schema rules
 - Verification: re-read both files, confirm changelog matches CONTEXT.md diff
@@ -195,6 +264,7 @@ If no state file exists and no transcript path in marker, report "compaction occ
 7. Confirm `hooks/extract-state.sh` (unix) or `hooks/extract-state.ps1` (Windows) is in project. For opencode, no shell script needed (plugin fetches via SDK). Also confirm `hooks/extract-raw.sh`/`.ps1` exists for LLM-assisted recovery on `/duck-tape resume`.
 
 **Preflight:**
+
 - Target file: harness-specific config path (max 1 file)
 - Expected: write hook config snippet to harness install path
 - Verification: re-read written file, confirm valid JSON or JS syntax
@@ -208,6 +278,7 @@ If no state file exists and no transcript path in marker, report "compaction occ
 3. Write culled file. Report what removed.
 
 **Preflight:**
+
 - Target file: `CONTEXT.md` (Notes section only)
 - Expected: remove user-selected Notes entries, fixed-schema sections untouched
 - Verification: re-read CONTEXT.md, confirm only Notes changed, confirm selected entries removed
@@ -234,6 +305,7 @@ Prune never touches fixed-schema sections.
 6. Get approval. Execute restructure. Generate TOC under title from the 8 section headers. Report what moved, what stayed above schema.
 
 **Preflight:**
+
 - Target file: `CONTEXT.md`
 - Expected: classify freeform content into schema sections, append missing headers, preserve unmatched content above schema
 - Verification: re-read CONTEXT.md, confirm all 7 headers present, confirm all original content accounted for (moved or left above schema)

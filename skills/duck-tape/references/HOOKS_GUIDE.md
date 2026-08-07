@@ -11,11 +11,13 @@ Pre-compact trigger for duck-tape. Writes `.duck-tape/.last-compact` marker and 
 ```
 
 Marker fields:
+
 - `cwd`: working directory at compaction time
 - `latest-state`: newest state file in `.duck-tape/` at compaction time
 - `transcript`: source transcript path (Claude Code, Copilot) or opencode snapshot path (`<id>-transcript.json`). Absent in older markers written before Angle B, or when transcript was unavailable at compaction time.
 
 State file `.duck-tape/<YYYY-MM-DD-HHMM>-auto.state.md` contains:
+
 - **Approved Workflow:** first user prompt (truncated 200 chars)
 - **Position:** last assistant text, all tool calls (cumulative)
 - **Decision Log:** assistant text matching decision patterns (APPROVED/DECIDED/CHOSE/DECISION), deduped, last 10. Catches explicit decisions only. Implicit decisions ("we're going with X") missed by pattern matching, captured by Angle B LLM synthesis.
@@ -49,6 +51,7 @@ State files share the 10-file rotation cap. Eviction precedence: auto dropped fi
 5. Skill reports position from new file.
 
 `extract-raw.sh`/`.ps1` supports three input formats:
+
 - Claude Code JSONL (message.role present)
 - Copilot JSONL (type:"user.message"/"assistant.message")
 - opencode JSON array (`{ info, parts }` shape, from `<id>-transcript.json` snapshot)
@@ -78,11 +81,13 @@ Recovery is reactive. Angle A (auto-checkpoint) is proactive. Both complement: A
 ### Claude Code
 
 **Unix (macOS/Linux):**
+
 1. Merge `hooks/claude-code.hooks.json` content into `.claude/settings.json` under `hooks` key. If `hooks` exists, add `PreCompact` as sibling.
 2. Confirm `src/skills/duck-tape/hooks/extract-state.sh` exists in project root.
 3. Run `/hooks` in Claude Code. Confirm `PreCompact` appears.
 
 **Windows:**
+
 1. Merge `hooks/claude-code.hooks.windows.json` content into `.claude/settings.json` under `hooks` key.
 2. Confirm `src/skills/duck-tape/hooks/extract-state.ps1` exists in project root.
 3. Run `/hooks` in Claude Code. Confirm `PreCompact` appears.
@@ -108,35 +113,42 @@ Run `/duck-tape init` for guided setup. Skill prompts for harness choice, writes
 ## Troubleshooting
 
 **Marker not written after compaction:**
+
 - Confirm hook config file in correct location per harness.
 - Confirm `extract-state.sh` is executable: `chmod +x src/skills/duck-tape/hooks/extract-state.sh`.
 - Check harness hook logs for errors.
 
 **State file not written (marker only):**
+
 - Bash: confirm `jq` installed and in PATH. If missing, script falls back to marker-only. Install jq or accept marker-only fallback.
 - Confirm transcript path passed to script via hook input (stdin JSON `transcript_path` for Claude Code, `transcriptPath` for Copilot).
 - opencode: confirm `client` and `sessionId` passed to plugin. If absent, plugin falls back to marker-only.
 
 **Marker written but skill does not resume:**
+
 - Skill checks `.duck-tape/.last-compact` on `/duck-tape resume`. Confirm file exists.
 - Confirm latest state file referenced in marker still exists in `.duck-tape/`.
 
 **opencode plugin not loading:**
+
 - Confirm file at `.opencode/plugins/duck-tape.js`.
 - Check for syntax errors in plugin file.
 - Restart opencode.
 
 **Claude Code hook not firing:**
+
 - Run `/hooks`. Confirm `PreCompact` listed with count.
 - Confirm `$CLAUDE_PROJECT_DIR` resolves correctly.
 - Check `.claude/settings.json` is valid JSON.
 
 **Copilot hook not firing:**
+
 - Confirm `.github/hooks/duck-tape.json` is valid JSON with `"version": 1`.
 - Confirm `preCompact` event name (camelCase).
 - Check hook timeout: default 10s. Increase if script slow.
 
 **Resume without transcript path in marker:**
+
 - Markers written before Angle B lack the `transcript` field. Angle B recovery cannot run without it.
 - Copilot transcript locations (for manual recovery if marker missing):
   - Windows: `C:\Users\<user>\AppData\Roaming\Code\User\workspaceStorage\<id>\GitHub.copilot-chat\transcripts\`
@@ -156,6 +168,7 @@ Run `/duck-tape init` for guided setup. Skill prompts for harness choice, writes
 ## Platform choice
 
 `bash` is not guaranteed on Windows. Two script variants ship per script type:
+
 - `extract-state.sh` — bash + jq. Auto-checkpoint extractor. Unix + Copilot cloud agent (Linux sandbox).
 - `extract-state.ps1` — PowerShell. Auto-checkpoint extractor. Windows desktop (Claude Code, Copilot CLI).
 - `extract-raw.sh` — bash + jq. Raw material extractor for LLM-assisted recovery. Unix + Copilot cloud agent.
@@ -170,6 +183,7 @@ No platform choice needed. Plugin fetches messages via SDK, extracts state, writ
 ### Claude Code
 
 Single `command` field, no platform branching. Two config files ship:
+
 - `claude-code.hooks.json` — unix, calls `extract-state.sh` via bash.
 - `claude-code.hooks.windows.json` — Windows, calls `extract-state.ps1` via powershell.
 

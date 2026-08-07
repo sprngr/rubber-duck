@@ -28,6 +28,7 @@ Second block in the file, directly under the title. Lists the 7 fixed sections w
 Heading is `## Contents` to match the fixed-section heading level. TOC is the only addition above Goals.
 
 Merge:
+
 - Bootstrap: generate TOC from the 7 section headers after first write.
 - Merge: regenerate TOC if the set of `##` section headings changes (rare). Otherwise leave existing TOC untouched.
 - Migrate: generate TOC after section headers appended to restructured file.
@@ -42,6 +43,7 @@ What the project optimizes for. Keyed by goal name.
 ```
 
 Merge:
+
 - Dedupe by name.
 - Supersede on conflict.
 - Append new.
@@ -56,13 +58,14 @@ Explicit decisions made in session. Keyed by decision name.
 ```
 
 Merge:
+
 - Dedupe by name.
 - On conflict: supersede. Old entry archived to changelog. New entry replaces.
 - Append new names.
 
 ### 3. Conventions
 
-Project conventions and patterns. Keyed by convention name.
+Project-local conventions and patterns, keyed by convention name; exclude agent operating policy (for example safety gates, approval workflow, and hard behavioral constraints).
 
 ```
 ## Conventions
@@ -70,6 +73,7 @@ Project conventions and patterns. Keyed by convention name.
 ```
 
 Merge:
+
 - Dedupe by name.
 - Supersede on conflict.
 - Append new.
@@ -84,6 +88,7 @@ Domain terms and definitions. Keyed by term.
 ```
 
 Merge:
+
 - Dedupe by term.
 - Supersede on conflict.
 - Append new.
@@ -99,6 +104,7 @@ Deferred work and decisions. Append-only with status markers.
 ```
 
 Merge:
+
 - Append new. Never modify existing entries except status update on resolution.
 - Status update: append resolution marker, keep original line.
 
@@ -112,6 +118,7 @@ Unresolved questions. Append new.
 ```
 
 Merge:
+
 - Append new questions.
 - Dedupe by question text (normalized whitespace).
 - Drop resolved questions at merge time. Resolution captured in Decisions or Notes.
@@ -127,6 +134,7 @@ User-defined freeform content. Timestamped append-only.
 ```
 
 Merge:
+
 - Append new timestamped block at end.
 - Never rewrite existing blocks.
 - Prune via `/duck-tape prune` only.
@@ -175,6 +183,7 @@ Top-level sections may contain `###` subsections for visual grouping. Subsection
 ## Missing Sections
 
 If existing CONTEXT.md lacks one or more schema sections:
+
 1. Abort merge.
 2. Report missing sections to user.
 3. Prompt: "CONTEXT.md lacks schema sections: <list>. Run /duck-tape migrate to add empty sections before merge."

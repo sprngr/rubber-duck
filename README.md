@@ -1,4 +1,4 @@
- # Rubber Duck 🦆
+# Rubber Duck 🦆
 
  Socratic assistant operating system for developers who want better-quality decisions, not blind automation.
 
@@ -13,18 +13,18 @@
 
 - **Is this for you?**
   - [Why](#why) + [Before / after](#before--after)
-   - [Who this is for](#who-this-is-for)
-   - [Who this is not for](#who-this-is-not-for)
-   - [What this is not](#what-this-is-not)
-   - [What to expect](#what-to-expect)
- - [Quick start](#quick-start)
+  - [Who this is for](#who-this-is-for)
+  - [Who this is not for](#who-this-is-not-for)
+  - [What this is not](#what-this-is-not)
+  - [What to expect](#what-to-expect)
+- [Quick start](#quick-start)
 - [Verify after install](#verify-after-install)
 - [Philosophy Guardrails](#philosophy-guardrails)
 - [Skills](#skills)
 - [Deep dive docs](#deep-dive-docs)
 - [Attribution](#attribution)
 
- ## Why
+## Why
 
  I built Rubber Duck after noticing something in my own agent-assisted workflow: I could ship code faster, but I didn't always feel like I fully understood the decisions behind it.
 
@@ -32,18 +32,18 @@
 
  Rubber Duck flips that trade-off. Instead of optimizing for output speed, it optimizes for decision quality:
 
- - **decision quality** over raw throughput
- - **developer understanding** over delegation
- - **safe, bounded change** over far-reaching edits
- - **reduced rework** over "fast-wrong"
+- **decision quality** over raw throughput
+- **developer understanding** over delegation
+- **safe, bounded change** over far-reaching edits
+- **reduced rework** over "fast-wrong"
 
  Core idea: keep humans in control and make reasoning explicit before execution.
 
- ### Before / after
+### Before / after
 
  Same task. Two outcomes.
 
- #### Without Rubber Duck
+#### Without Rubber Duck
 
  ```text
  You: Fix the auth middleware bug.
@@ -54,7 +54,7 @@
 
  You review later. The refactor wasn't asked for. The helper duplicates one in `lib/`. The actual bug fix is buried.
 
- #### With Rubber Duck
+#### With Rubber Duck
 
  ```text
  You: Fix the auth middleware bug.
@@ -67,44 +67,44 @@
 
  One file. One change. You saw the scope before any edit happened.
 
- ## Who this is for
+## Who this is for
 
- - You want an assistant that helps you think more clearly, challenge assumptions, and keep decision ownership with you — not the model.
- - You catch regressions in review more often than you'd like and want to move that catch upstream.
- - You work in codebases where a wrong assumption costs more than a slow turn.
- - You prefer explicit scope and approval over discovering what changed after the fact.
- - You want a durable thinking partner, not a one-shot code generator.
+- You want an assistant that helps you think more clearly, challenge assumptions, and keep decision ownership with you — not the model.
+- You catch regressions in review more often than you'd like and want to move that catch upstream.
+- You work in codebases where a wrong assumption costs more than a slow turn.
+- You prefer explicit scope and approval over discovering what changed after the fact.
+- You want a durable thinking partner, not a one-shot code generator.
 
- ## Who this is not for
+## Who this is not for
 
- - You want fully autonomous, end-to-end execution with minimal checkpoints or human involvement.
- - You measure assistant value primarily by tokens-per-second or LOC shipped per turn.
- - You find clarifying questions to be friction and prefer the agent to just do the thing.
- - You want a code generator, not a thinking partner.
+- You want fully autonomous, end-to-end execution with minimal checkpoints or human involvement.
+- You measure assistant value primarily by tokens-per-second or LOC shipped per turn.
+- You find clarifying questions to be friction and prefer the agent to just do the thing.
+- You want a code generator, not a thinking partner.
 
- ## What this is not
+## What this is not
 
- - **Not a code generator.** Rubber Duck patches and refactors, but its changes are always bounded, scoped, and approved. It will not produce a feature from a one-line prompt and ship it.
- - **Not an autonomous agent.** No background loops, no self-approving task chains, no "spin up three subagents and let them figure it out." Every mutating action stops at the approval gate.
- - **Not a linter or formatter.** It will not silently rewrite your codebase to its preferences. Suggestions surface as findings; you decide.
- - **Not a token compressor.** Terse language is a side effect of clear thinking, not the goal. For pure token reduction, [Caveman](https://github.com/JuliusBrussee/caveman) does that better.
- - **Not a YAGNI enforcer.** Rubber Duck applies a minimal-change ladder, but it will not refuse work that genuinely needs to exist. For pure "write less code" discipline, [Ponytail](https://github.com/DietrichGebert/ponytail) is more focused.
- - **Not a replacement for your judgment.** It frames options, surfaces risks, asks sharp questions. You make the call.
+- **Not a code generator.** Rubber Duck patches and refactors, but its changes are always bounded, scoped, and approved. It will not produce a feature from a one-line prompt and ship it.
+- **Not an autonomous agent.** No background loops, no self-approving task chains, no "spin up three subagents and let them figure it out." Every mutating action stops at the approval gate.
+- **Not a linter or formatter.** It will not silently rewrite your codebase to its preferences. Suggestions surface as findings; you decide.
+- **Not a token compressor.** Terse language is a side effect of clear thinking, not the goal. For pure token reduction, [Caveman](https://github.com/JuliusBrussee/caveman) does that better.
+- **Not a YAGNI enforcer.** Rubber Duck applies a minimal-change ladder, but it will not refuse work that genuinely needs to exist. For pure "write less code" discipline, [Ponytail](https://github.com/DietrichGebert/ponytail) is more focused.
+- **Not a replacement for your judgment.** It frames options, surfaces risks, asks sharp questions. You make the call.
 
- ## What to expect
+## What to expect
 
 > [!IMPORTANT]
 > Rubber Duck provides instructions and scripts, not hard system bounds. The LLM may still ignore constraints. YMMV.
 
- - More questions before work starts. Rubber Duck asks before it acts. The first turn on a task is usually a clarifying question, not an edit.
-   - Come with a plan and resources to ground it. Files touched, constraints, prior decisions in CONTEXT.md, related code. Evidence speeds the loop.
- - Smaller, bounded changes. Patches cap at 2 files, refactors at 5. Large work splits into approved scopes.
- - Explicit approval gates. No silent edits. Every mutating action stops at `Reply with "approve" to execute this scope.`
- - Active review, not end-of-task review. Findings and scope corrections surface before execution. You revise direction mid-task, not after a full implementation pass.
- - Terse language. Findings and responses use fragments, short sentences, no hedging. Code blocks and errors stay byte-exact.
- - Slower per-turn, faster per-feature. Each turn does less, but rework drops. Net velocity improves when wrong assumptions cost more than slow turns.
+- More questions before work starts. Rubber Duck asks before it acts. The first turn on a task is usually a clarifying question, not an edit.
+  - Come with a plan and resources to ground it. Files touched, constraints, prior decisions in CONTEXT.md, related code. Evidence speeds the loop.
+- Smaller, bounded changes. Scope is phase-gated by file cap and content: stubs/skeleton (6 files), wiring/integration (4), concrete implementation (2). Each phase constrains what the diff can contain, keeping intent legible and review fatigue low. Large work splits into sequential scopes.
+- Explicit approval gates. No silent edits. Every mutating action stops at `Reply with "approve" to execute this scope.`
+- Active review, not end-of-task review. Findings and scope corrections surface before execution. You revise direction mid-task, not after a full implementation pass.
+- Terse language. Findings and responses use fragments, short sentences, no hedging. Code blocks and errors stay byte-exact.
+- Slower per-turn, faster per-feature. Each turn does less, but rework drops. Net velocity improves when wrong assumptions cost more than slow turns.
 
- ## Quick start
+## Quick start
 
 Upgrading from v1.x? See [migration guide](./docs/migration-v2.md).
 
@@ -132,12 +132,12 @@ $p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.co
 
 Replace `<target>` / `<Target>` with: `claude`, `copilot`, or `opencode`. Add `--project` / `-Project` for project scope. See [docs/MANUAL.md](./docs/MANUAL.md) for skip flags, extras, and all CLI options.
 
- ## Verify after install
+## Verify after install
 
  <details>
  <summary>Expand for install verification steps</summary>
 
- ### Step 0: Enable Rubber Duck Agent
+### Step 0: Enable Rubber Duck Agent
 
 Rubber Duck runs two ways:
 
@@ -151,7 +151,7 @@ Rubber Duck runs two ways:
 
 The agent must already be installed for your target. Delegation runs through `duckling` (the specialized subagent that enforces role/mode constraints and routes to active skills).
 
- ### Step 1: heartbeat check
+### Step 1: heartbeat check
 
  ```text
  quack
@@ -159,7 +159,7 @@ The agent must already be installed for your target. Delegation runs through `du
 
  Expected: random heartbeat line (e.g., `🦆 Waddling in. I run on breadcrumbs and bad assumptions.`), followed by quick-help listing available routes, then `What would you like to route?`.
 
- ### Step 2: review behavior check
+### Step 2: review behavior check
 
  ```text
  quack review this snippet for correctness and simplification:
@@ -171,7 +171,7 @@ The agent must already be installed for your target. Delegation runs through `du
 
  Expected: `Routing: duck-review.` then risk-aware findings first (e.g., NaN-to-0 coercion loses invalid input signal), concrete fix direction, no silent code edits. Runs via duckling subagent (delegated-default).
 
- ### Step 3: debug behavior check
+### Step 3: debug behavior check
 
  ```text
  quack debug this: my endpoint returns 500 when userId is missing.
@@ -181,7 +181,7 @@ The agent must already be installed for your target. Delegation runs through `du
 
  </details>
 
- ## Philosophy Guardrails
+## Philosophy Guardrails
 
  <details>
  <summary>Expand for guardrails</summary>
@@ -198,32 +198,32 @@ The agent must already be installed for your target. Delegation runs through `du
 
  </details>
 
-  ## Skills
+## Skills
 
  <details>
  <summary>Expand for full skill list + routing diagram</summary>
 
   Rubber Duck packages 14 skills: 11 default + 3 extras.
 
- ### Default skills (installed automatically)
+### Default skills (installed automatically)
 
- - quack — explicit route control
- - duck-debug — Socratic debugging (trace + root-cause)
- - duck-debt — deferred-work ledger (read-only)
- - duck-design — option/tradeoff evaluation
- - duck-patch — bounded fix (max 2 files)
- - duck-refactor — multi-file restructuring (max 5 files)
- - duck-review — risk-first code review
- - duck-risk — failure-mode/rollback stress test
- - duck-simplify — complexity reduction
- - duck-teach — structured teaching (explain/show/teach/walk)
- - duck-triage — test coverage + bug severity
+- quack — explicit route control
+- duck-debug — Socratic debugging (trace + root-cause)
+- duck-debt — deferred-work ledger (read-only)
+- duck-design — option/tradeoff evaluation
+- duck-patch — bounded fix (phase-gated scope with adaptive caps)
+- duck-refactor — multi-file restructuring (phase-gated scope with adaptive caps)
+- duck-review — risk-first code review
+- duck-risk — failure-mode/rollback stress test
+- duck-simplify — complexity reduction
+- duck-teach — structured teaching (explain/show/teach/walk)
+- duck-triage — test coverage + bug severity
 
- ### Extras (require --extras flag)
+### Extras (require --extras flag)
 
- - duck-adapt — external skill adaptation + philosophy audit
- - duck-grill — batched grilling interview
- - duck-tape — two-tier session memory (CONTEXT.md + state files). Run `/duck-tape init` to install hook.
+- duck-adapt — external skill adaptation + philosophy audit
+- duck-grill — batched grilling interview
+- duck-tape — two-tier session memory (CONTEXT.md + state files). Run `/duck-tape init` to install hook.
 
  Install extras: `scripts/rubber-duck.sh install --<target> --extras`
 
@@ -251,12 +251,12 @@ flowchart TD
 
  </details>
 
- ## Deep dive docs
+## Deep dive docs
 
  <details>
  <summary>Expand for doc links</summary>
 
- ### Start here
+### Start here
 
 - [Architecture index](./docs/architecture/README.md)
 - [Philosophy](./docs/architecture/01-philosophy.md)
@@ -270,11 +270,11 @@ flowchart TD
 
 - Router + duckling subagents (source markdown): [`src/agents/`](./src/agents)
 - Skills (source markdown): [`src/skills/`](./src/skills)
- - Skills (bundled artifacts for install): [`skills/`](./skills)
+- Skills (bundled artifacts for install): [`skills/`](./skills)
 
  </details>
 
- ## Attribution
+## Attribution
 
 Rubber Duck is inspired by its [namesake](https://rubberduckdebugging.com/) and the practice of talking through a problem to find your own solution — except this one can talk back and ask sharp questions.
 
