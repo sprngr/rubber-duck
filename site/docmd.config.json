@@ -1,0 +1,7 @@
+{
+  "title": "Rubber Duck",
+  "description": "Socratic AI assistant — evidence-first, bounded, safe.",
+  "url": "https://sprngr.github.io/rubber-duck",
+  "src": "./content",
+  "out": "./dist"
+}
