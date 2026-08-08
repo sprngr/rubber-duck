@@ -1,4 +1,4 @@
-.PHONY: build check check-guardrails build-skills check-skills build-agents check-agents build-harness check-harness validation
+.PHONY: build check check-guardrails build-skills check-skills build-agents check-agents build-harness check-harness build-site check-site validation
 
 validation:
 	python3 validation/run-validation-tests.py
@@ -21,6 +21,15 @@ check-skills:
 build-agents: build-harness
 
 check-agents: check-harness
+
+build-site:
+	node site/scripts/sync-docs.mjs
+	node site/scripts/build-catalogue.mjs
+	cd site && npm install && npm run build
+
+check-site:
+	node site/scripts/sync-docs.mjs
+	@echo "TODO(site): 2026-08-06 add real drift check (--check flag) once sync stabilizes"
 
 build: build-skills build-agents
 

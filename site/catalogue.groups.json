@@ -1,0 +1,22 @@
+{
+  "groups": [
+    {
+      "id": "analysis",
+      "title": "Analysis",
+      "description": "Think, review, question.",
+      "skills": ["duck-design", "duck-debug", "duck-review", "duck-risk", "duck-triage", "duck-teach", "duck-grill"]
+    },
+    {
+      "id": "action",
+      "title": "Action",
+      "description": "Mutating changes.",
+      "skills": ["duck-patch", "duck-refactor", "duck-simplify"]
+    },
+    {
+      "id": "meta",
+      "title": "Meta",
+      "description": "Routing, adaptation, memory.",
+      "skills": ["quack", "duck-adapt", "duck-tape", "duck-debt"]
+    }
+  ]
+}

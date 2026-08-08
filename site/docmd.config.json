@@ -1,0 +1,10 @@
+{
+  "title": "Rubber Duck",
+  "url": "https://sprngr.github.io/rubber-duck",
+  "src": "./content",
+  "out": "./dist",
+  "theme": {
+    "name": "retro",
+    "appearance": "system"
+  }
+}
