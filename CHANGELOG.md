@@ -5,17 +5,6 @@ All notable changes to Rubber Duck will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
-### Changed
-
-- Execution approval policy now treats documentation/planning edits as semantic changes by default (same bounded preflight/diff/approval flow as code), while keeping typo-only fixes in non-code text files as cosmetic lightweight confirmations.
-- Policy source, architecture policy doc, and skill guardrail references were aligned to the same docs-as-semantic rule with the typo-only exception.
-- Validation suite expanded and calibrated for this policy:
-  - Added V34 (documentation/planning semantic gate) and V35 (typo-only cosmetic exception).
-  - Updated validation fixture `rollout` ADR typo seed and matcher signals for stable behavior checks under `opencode/big-pickle`.
-  - Updated validation docs/context metadata from V01-V33 to V01-V35.
-
 ## [v2.1.0] - 2026-08-06
 
 ### Changed
@@ -35,7 +24,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Assembly rules now assert approval-workflow snippet presence and include wiring to catch drift early.
 - Validation suite alignment: V14 now checks phase-cap boundary (not stale file-count premise), V30 reflects clear approval intent handling, and new V32/V33 cover missing phase selection preflight and re-approval between phases. Validation docs/context/runlog updated to V01-V33.
 - duck-tape session-id handling hardened: `/duck-tape` and `/duck-tape merge` now auto-generate `<YYYY-MM-DD-HHMM>` by default, ask only for explicit custom IDs, and issue one corrective prompt for invalid custom IDs.
-- Guardrails drift check now fails if any rendered `dist/**/*.md` artifact contains duplicate headings (markdown ATX `#`/`##`/... or bold `**...**` pseudo-headers) within a single file. Catches nested-include composition regressions where the same policy snippet gets rendered twice.
+- Guardrails drift check now fails if any rendered `dist/**/*.md` artifact contains duplicate headings (markdown ATX `#`/`##`/... or bold `**...**` pseudo-headers) within a single file. Catches nested-include composition regressions where the same policy snippet gets rendered twice.\
+- Execution approval policy now treats documentation/planning edits as semantic changes by default (same bounded preflight/diff/approval flow as code), while keeping typo-only fixes in non-code text files as cosmetic lightweight confirmations.
+- Policy source, architecture policy doc, and skill guardrail references were aligned to the same docs-as-semantic rule with the typo-only exception.
+- Validation suite expanded and calibrated for this policy:
+  - Added V34 (documentation/planning semantic gate) and V35 (typo-only cosmetic exception).
+  - Updated validation fixture `rollout` ADR typo seed and matcher signals for stable behavior checks.
+  - Updated validation docs/context metadata from V01-V33 to V01-V35.
 
 ### Fixed
 
