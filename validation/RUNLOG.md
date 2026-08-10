@@ -88,3 +88,28 @@ Track validation outcomes across commits/releases.
 - V03 formatting regression resolved after adding schema hint + negative->positive formatting examples
 
 Full validation history: see git log for `docs/validation/CHANGELOG.md` (file deleted in this refactor; history preserved in git).
+
+## 2026-08-10 — 2.1.0-doc-phasing
+
+- Commit: aa31001
+- Runner: validation/run-validation-tests.py (hybrid matcher)
+- Suite version: validation/README.md
+- Verdict: PASS (focused policy checks)
+
+### Quick subset
+
+- Passed: not run (focused run only)
+- Failed: not run
+
+### Extended failures (optional)
+
+- Failed: none
+
+### Notes
+
+- Added validation coverage for documentation/planning approval semantics:
+  - V34 verifies documentation/planning edits are treated as semantic and require full execution approval flow.
+  - V35 verifies typo-only non-code text edits stay cosmetic with lightweight confirmation.
+- Focused verification run passed with tool-capable route:
+  - `RUBBER_DUCK_MODEL=opencode/big-pickle python3 validation/run-validation-tests.py --filter=V34,V35`
+  - Result: Passed 2, Failed 0, Errored 0.

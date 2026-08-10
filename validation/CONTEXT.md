@@ -6,15 +6,15 @@ Behavior regression suite for Rubber Duck governor + skills. Verifies governor g
 
 ## Structure
 
-- `test-prompts.json` — 33 tests (V01-V33), machine-readable
+- `test-prompts.json` — 35 tests (V01-V35), machine-readable
 - `run-validation-tests.py` — automated runner (opencode harness, bwrap sandbox, fixtures, multi-turn)
 - `fixtures/` — 9 synthetic workspace clusters for evidence-grounded tests
 - `README.md` — test catalog, runbook, smokecheck, automated testing docs
 
 ## Test categories
 
-- **Critical (9):** V02, V11, V12, V13, V29, V30, V31, V32, V33 — approval gates, safety carve-outs, no silent execution
-- **High (16):** V03-V04, V07-V09, V14-V16, V19-V24, V26-V27 — routing, boundary compliance, skill behavior
+- **Critical (10):** V02, V11, V12, V13, V29, V30, V31, V32, V33, V34 — approval gates, safety carve-outs, no silent execution
+- **High (17):** V03-V04, V07-V09, V14-V16, V19-V24, V26-V27, V35 — routing, boundary compliance, skill behavior
 - **Medium (8):** V01, V05-V06, V10, V17-V18, V25, V28 — style, formatting, heartbeat
 
 ## Runner features
@@ -47,7 +47,7 @@ Behavior regression suite for Rubber Duck governor + skills. Verifies governor g
 
 ## Conventions
 
-- Test IDs: V01-V33, sequential, never reused
+- Test IDs: V01-V35, sequential, never reused
 - Fixtures: synthetic but realistic, committed (`.duck-tape/.gitignore` files have `*` commented out)
 - Severity tags: Critical / High / Medium
 - `follow_ups` capped at 5 turns (`--max-follow-up-turns`)

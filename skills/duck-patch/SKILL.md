@@ -42,6 +42,7 @@ Use when user asks for a targeted code edit and scope is clear (or can be clarif
 **Semantic changes** (require full execution approval):
 
 - Code/logic changes
+- Documentation/planning changes (README, markdown docs, ADRs, CONTEXT.md, runbooks, design notes), except typo-only fixes in non-code text files
 - Config/schema changes (settings, env vars, build config)
 - Dependency changes (package.json, requirements.txt, etc.)
 - File operations (create, delete, move)
@@ -50,10 +51,9 @@ Use when user asks for a targeted code edit and scope is clear (or can be clarif
 
 **Cosmetic changes** (require lightweight confirmation):
 
-- Documentation edits (README, markdown files, standalone doc comments)
 - Formatting/whitespace-only changes
 - Typo fixes in non-code text files
-- Confirmation phrase: "Confirm to proceed with [doc/formatting] change?"
+- Confirmation phrase: "Confirm to proceed with formatting/typo-only change?"
 
 **Edge cases:**
 

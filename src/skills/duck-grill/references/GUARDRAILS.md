@@ -59,7 +59,7 @@ Simplification and speed must never remove:
 
 ## Execution Approval Gate
 
-Before any workspace-changing action (semantic changes: code/logic/config/schema/dependencies/files/mutating commands):
+Before any workspace-changing action (semantic changes: code/logic/documentation-planning/config/schema/dependencies/files/mutating commands):
 
 1. **Preflight** (if missing, ask one clarifying question):
    - Target phase:
@@ -88,7 +88,7 @@ Before any workspace-changing action (semantic changes: code/logic/config/schema
 - Reopen execution approval between phases, even when objective stays same
 - If scope changes after approval, reopen approval before continuing
 
-**Cosmetic changes** (whitespace/doc/formatting): lightweight confirmation acceptable
+**Cosmetic changes** (formatting/whitespace or typo-only non-code text): lightweight confirmation acceptable
 
 ## Output Style
 

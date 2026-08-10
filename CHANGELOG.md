@@ -5,6 +5,17 @@ All notable changes to Rubber Duck will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- Execution approval policy now treats documentation/planning edits as semantic changes by default (same bounded preflight/diff/approval flow as code), while keeping typo-only fixes in non-code text files as cosmetic lightweight confirmations.
+- Policy source, architecture policy doc, and skill guardrail references were aligned to the same docs-as-semantic rule with the typo-only exception.
+- Validation suite expanded and calibrated for this policy:
+  - Added V34 (documentation/planning semantic gate) and V35 (typo-only cosmetic exception).
+  - Updated validation fixture `rollout` ADR typo seed and matcher signals for stable behavior checks under `opencode/big-pickle`.
+  - Updated validation docs/context metadata from V01-V33 to V01-V35.
+
 ## [v2.1.0] - 2026-08-06
 
 ### Changed
