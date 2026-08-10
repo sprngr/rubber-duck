@@ -270,7 +270,7 @@ Return to preflight with new scope and request renewed approval.
 **Approval flow:** Lightweight confirmation
 
 - Present change briefly
-- Ask: "Confirm to proceed with formatting/typo-only change?"
+- Ask: "Confirm to proceed with [formatting/typo] change?"
 - Acceptable confirmations: "yes", "confirm", "ok", "go ahead", "approve"
 
 **Edge cases (count as SEMANTIC, not cosmetic):**

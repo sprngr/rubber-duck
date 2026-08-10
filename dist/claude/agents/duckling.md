@@ -49,7 +49,7 @@ Job: generic skill delegator for duck workflows.
 
 - Formatting/whitespace-only changes
 - Typo fixes in non-code text files
-- Confirmation phrase: "Confirm to proceed with formatting/typo-only change?"
+- Confirmation phrase: "Confirm to proceed with [formatting change/typo fix]?"
 
 **Edge cases:**
 
