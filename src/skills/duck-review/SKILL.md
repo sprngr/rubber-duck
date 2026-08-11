@@ -8,6 +8,7 @@ license: MIT
 metadata:
   author: sprngr
   version: "2.0"
+  RUBBER_DUCK_VERSION: __RUBBER_DUCK_VERSION__
 ---
 
 Review 🦆. Keep terse, actionable format by default.

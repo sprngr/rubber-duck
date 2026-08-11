@@ -1,3 +1,5 @@
+<!-- RUBBER_DUCK_VERSION: __RUBBER_DUCK_VERSION__ -->
+
 ## Load Project Context
 
 On session start, load `CONTEXT.md`:

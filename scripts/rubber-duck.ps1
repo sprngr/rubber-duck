@@ -82,6 +82,7 @@ $RemoteAgentsPath = $null
 $RemotePolicyPath = $null
 $RemoteAgentsPolicyPath = $null
 $PolicyMode = "managed_block"  # managed_block|file
+$script:CanonicalVersion = "unknown"
 
 $ManagedStart = "<!-- RUBBER_DUCK_MANAGED_BLOCK START -->"
 $ManagedEnd = "<!-- RUBBER_DUCK_MANAGED_BLOCK END -->"
@@ -115,6 +116,13 @@ $ExtrasSkills = @(
 
 function Log($msg) { Write-Host $msg }
 function Warn($msg) { Write-Warning $msg }
+
+function Get-VersionFromFile([string]$Path) {
+  if (-not (Test-Path $Path)) { return $null }
+  $m = Select-String -Path $Path -Pattern 'RUBBER_DUCK_VERSION:\s*(v[0-9]+\.[0-9]+\.[0-9]+)' | Select-Object -First 1
+  if ($null -eq $m) { return $null }
+  return $m.Matches[0].Groups[1].Value
+}
 
 function Resolve-Target {
   if ($OpenCode) {
@@ -226,6 +234,8 @@ function Download-Sources {
     foreach ($f in $AgentFiles) {
       Copy-Item -Force (Join-Path $script:LocalAgentsDir $f) (Join-Path $script:TmpDir $f)
     }
+    $v = Get-VersionFromFile (Join-Path $script:TmpDir "AGENTS.md")
+    if (-not [string]::IsNullOrWhiteSpace($v)) { $script:CanonicalVersion = $v }
     Log "source: local ($RepoRoot)"
     return
   }
@@ -239,6 +249,8 @@ function Download-Sources {
   foreach ($f in $AgentFiles) {
     Invoke-WebRequest -UseBasicParsing -Uri "$RawBase/$($script:RemoteAgentsPath)/$f" -OutFile (Join-Path $script:TmpDir $f)
   }
+  $v = Get-VersionFromFile (Join-Path $script:TmpDir "AGENTS.md")
+  if (-not [string]::IsNullOrWhiteSpace($v)) { $script:CanonicalVersion = $v }
   Log "source: web ($RawBase)"
 }
 
@@ -429,9 +441,12 @@ function Report-PolicyBlock([string]$Target) {
 }
 
 function Status {
+  $v = Get-VersionFromFile $DestPolicyMd
+  if (-not [string]::IsNullOrWhiteSpace($v)) { $script:CanonicalVersion = $v }
   Log "target: $Target"
   Log "agents_dir: $DestAgentsDir"
   Log "policy_md: $DestPolicyMd"
+  Log "version: $script:CanonicalVersion"
   $installed = 0
   foreach ($f in $AgentFiles) {
     if (Test-Path (Join-Path $DestAgentsDir $f)) { $installed++ }

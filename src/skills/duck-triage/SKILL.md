@@ -8,6 +8,7 @@ license: MIT
 metadata:
   author: sprngr
   version: "2.0"
+  RUBBER_DUCK_VERSION: __RUBBER_DUCK_VERSION__
 ---
 
 Test coverage and bug triage 🦆. Find what tests miss. Classify what bugs matter. Keep language terse and practical.
