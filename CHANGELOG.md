@@ -5,17 +5,6 @@ All notable changes to Rubber Duck will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
-### Changed
-
-- Installer CLIs now require explicit harness target selection. Bash requires exactly one of `--opencode`, `--copilot`, `--claude`. PowerShell requires exactly one of `-OpenCode`, `-Copilot`, `-Claude`.
-- Installer CLIs now reject conflicting scope flags (`--project` + `--global`, `-Project` + `-Global`) for consistent cross-shell behavior.
-- Installer docs updated to reflect explicit target requirement and target/scope constraints in `scripts/README.md`.
-
-### Fixed
-
-- PowerShell installer target-resolution fallback no longer defaults implicitly to global opencode paths.
 
 ## [v2.1.0] - 2026-08-06
 
@@ -43,6 +32,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added V34 (documentation/planning semantic gate) and V35 (typo-only cosmetic exception).
   - Updated validation fixture `rollout` ADR typo seed and matcher signals for stable behavior checks.
   - Updated validation docs/context metadata from V01-V33 to V01-V35.
+- Installer CLIs now require explicit harness target selection. Bash requires exactly one of `--opencode`, `--copilot`, `--claude`. PowerShell requires exactly one of `-OpenCode`, `-Copilot`, `-Claude`.
+- Installer CLIs now reject conflicting scope flags (`--project` + `--global`, `-Project` + `-Global`) for consistent cross-shell behavior.
+- Installer docs updated to reflect explicit target requirement and target/scope constraints in `scripts/README.md`.
+- Add versioning flag to embed into skills and AGENTS policy, keeping it in sync back to the release.
 
 ### Fixed
 
@@ -53,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Nested include expansion no longer injects extra blank lines in generated markdown artifacts.
 - Rendered rubber-duck agent artifacts (`dist/*/agents/rubber-duck.md`) no longer duplicate the approval-workflow, scope-rules, and change-type sections. `src/agents/rubber-duck/body.md` no longer re-includes policy snippets that are already pulled in via the Safety Gates section.
 - AGENTS.md Layout section now correctly distinguishes `.github/` (tracked CI/workflow config) from `.agents/`, `.claude/`, `.opencode/` (untracked local harness install targets, populated by installers).
+- PowerShell installer target-resolution fallback no longer defaults implicitly to global opencode paths.
 
 ## [v2.0.1] - 2026-08-03
 
