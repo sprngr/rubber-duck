@@ -37,6 +37,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Installer docs updated to reflect explicit target requirement and target/scope constraints in `scripts/README.md`.
 - Add versioning flag to embed into skills and AGENTS policy, keeping it in sync back to the release.
 
+#### Skills
+
+- Skill metadata version format now matches `RUBBER_DUCK_VERSION` style (unquoted `vX.Y.Z`): `version` changed from `"2.0"` to `v2.0.0` for `duck-adapt`, `duck-debt`, `duck-debug`, `duck-design`, `duck-grill`, `duck-patch`, `duck-refactor`, `duck-review`, `duck-risk`, `duck-simplify`, `duck-tape`, `duck-teach`, `duck-triage`, and `quack`.
+
 ### Fixed
 
 - Installer managed block upsert no longer accumulates extra blank lines above managed fences on repeated runs (bash and PowerShell).

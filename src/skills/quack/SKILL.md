@@ -7,7 +7,7 @@ description: >
 license: MIT
 metadata:
   author: sprngr
-  version: "2.0"
+  version: v2.1.0
   RUBBER_DUCK_VERSION: __RUBBER_DUCK_VERSION__
 ---
 
@@ -59,13 +59,15 @@ Use only when user explicitly invokes `quack`; do not auto-activate from inferre
 12. **Route execution** (explicit skill name or alias match):
      - Load role instructions from `assets/subagent-runbook.md` for resolved skill
      - If inline-default policy AND no user override:
-       - execute skill inline
-       - emit `Routing: <skill>.` only
+       - execute skill inline first
+       - if execution fails, ask one corrective question and stop
+       - emit `Routing: <skill>.` only after inline execution step completes
      - Otherwise (delegated-default OR user override):
-       - launch `task` with `subagent_type=<effective_subagent>` (determined in step 6, defaults to `duckling`)
+       - launch `task` with `subagent_type=<effective_subagent>` (determined in step 6, defaults to `duckling`) first
        - pass `skill_name=<resolved_skill>` parameter
-       - emit `Routing: <skill> via <subagent>.` if user override supplied, else `Routing: <skill>.`
        - if dispatch fails, ask one corrective question and stop
+       - emit `Routing: <skill> via <subagent>.` if user override supplied, else `Routing: <skill>.` only after dispatch succeeds
+     - Do not stop at routing text alone when execution path is available.
 13. **Alias miss (disambiguation):**
     - Detect intent fragment and ask one targeted question:
       - debug-ish (error/fail/trace/stack/broken): `Need one detail: is this debug, trace, or review?`
