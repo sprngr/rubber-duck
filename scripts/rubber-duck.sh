@@ -2,9 +2,12 @@
 set -euo pipefail
 
 ACTION="install"
-TARGET="opencode"
+TARGET=""
+SEEN_TARGET_COUNT=0
 CLAUDE_MD=""
-PROJECT_SCOPE=0
+PROJECT_SCOPE=1
+SEEN_PROJECT=0
+SEEN_GLOBAL=0
 SKIP_SKILLS=0
 SKIP_AGENTS_MD=0
 SKILLS_CLI="skills@^1.5.21"  # pinned npx CLI package spec
@@ -80,9 +83,10 @@ Usage:
   scripts/rubber-duck.sh [install|uninstall|status|doctor] [options]
 
 Options:
-  --opencode                        Use opencode paths (default global; add --project for project scope)
-  --copilot                         Use Copilot paths (default global; add --project for project scope)
-  --claude                          Use Claude paths (default global; add --project for project scope)
+  --opencode                        Use opencode paths (required: pick exactly one target)
+  --copilot                         Use Copilot paths (required: pick exactly one target)
+  --claude                          Use Claude paths (required: pick exactly one target)
+  --global                          Apply global scope to selected target (and skills, unless --skip-skills)
   --project                         Apply project scope to selected target (and skills, unless --skip-skills)
   --claude-md <path>                Claude target memory file path override
   --branch <name>                   Branch to install from (default: main, auto-detects from URL)
@@ -98,9 +102,9 @@ Examples:
   scripts/rubber-duck.sh install --opencode
   scripts/rubber-duck.sh install --opencode --extras
   scripts/rubber-duck.sh install --opencode --project
-  scripts/rubber-duck.sh install --copilot --project
-  scripts/rubber-duck.sh install --claude --project
-  scripts/rubber-duck.sh install --opencode --project --source local
+  scripts/rubber-duck.sh install --copilot --global
+  scripts/rubber-duck.sh install --claude --skip-skills
+  scripts/rubber-duck.sh install --opencode --source local
   curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh | bash -s -- install --opencode
   curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/v2-quackening/scripts/rubber-duck.sh | bash -s -- install --opencode --branch v2-quackening
 EOF
@@ -124,18 +128,27 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --opencode)
       TARGET="opencode"
+      SEEN_TARGET_COUNT=$((SEEN_TARGET_COUNT + 1))
       shift
       ;;
     --copilot)
       TARGET="copilot"
+      SEEN_TARGET_COUNT=$((SEEN_TARGET_COUNT + 1))
       shift
       ;;
     --claude)
       TARGET="claude"
+      SEEN_TARGET_COUNT=$((SEEN_TARGET_COUNT + 1))
       shift
       ;;
     --project)
       PROJECT_SCOPE=1
+      SEEN_PROJECT=1
+      shift
+      ;;
+    --global)
+      PROJECT_SCOPE=0
+      SEEN_GLOBAL=1
       shift
       ;;
     --claude-md)
@@ -181,6 +194,22 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+if (( SEEN_TARGET_COUNT == 0 )); then
+  err "must specify exactly one target: --opencode, --copilot, or --claude"
+  usage
+  exit 1
+fi
+
+if (( SEEN_TARGET_COUNT > 1 )); then
+  err "cannot combine multiple targets; choose exactly one: --opencode, --copilot, or --claude"
+  exit 1
+fi
+
+if (( SEEN_PROJECT == 1 && SEEN_GLOBAL == 1 )); then
+  err "cannot combine --project and --global"
+  exit 1
+fi
 
 # Auto-detect branch from piped URL if not explicitly set
 if [[ "${BRANCH}" == "main" ]]; then
