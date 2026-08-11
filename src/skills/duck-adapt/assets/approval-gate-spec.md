@@ -251,6 +251,7 @@ Return to preflight with new scope and request renewed approval.
 **What qualifies as semantic:**
 
 - Code/logic changes
+- Documentation/planning changes (README, markdown docs, ADRs, CONTEXT.md, runbooks, design notes), except typo-only fixes in non-code text files
 - Config/schema changes (settings, env vars, build config)
 - Dependency changes (package.json, requirements.txt)
 - File operations (create, delete, move)
@@ -263,14 +264,13 @@ Return to preflight with new scope and request renewed approval.
 
 **What qualifies as cosmetic:**
 
-- Documentation edits (README, markdown files, standalone doc comments)
 - Formatting/whitespace-only changes
 - Typo fixes in non-code text files
 
 **Approval flow:** Lightweight confirmation
 
 - Present change briefly
-- Ask: "Confirm to proceed with [doc/formatting] change?"
+- Ask: "Confirm to proceed with [formatting/typo] change?"
 - Acceptable confirmations: "yes", "confirm", "ok", "go ahead", "approve"
 
 **Edge cases (count as SEMANTIC, not cosmetic):**
@@ -464,7 +464,7 @@ Evidence -> Duck Ladder -> Preflight -> Present Changes -> Approval -> Execute -
 6. ✅ Do not execute until "approve" received
 7. ✅ Scope change triggers return to step 1 (new approval required)
 8. ✅ Use phase-gated caps (6/4/2) and split when caps or fatigue triggers are exceeded
-9. ✅ Cosmetic changes use lightweight confirmation
+9. ✅ Cosmetic changes are limited to formatting/whitespace and typo-only non-code text fixes
 10. ✅ Refuse execution without bounded scope
 11. ✅ Never bypass for safety carve-out violations
 

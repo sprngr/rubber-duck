@@ -20,6 +20,6 @@ Canary stage skipped to hit Q2 deadline.
 
 - Pro: faster than canary (hours vs days)
 - Pro: zero downtime if schema compatible
-- Con: breaking API contract requires all clients update simultaneously
+- Con: breaking API contract requires all clients update simultanously
 - Con: schema migration not reversible (ALTER TABLE without default)
 - Con: v1/v2 pods coexist during rollout — Redis session format incompatible

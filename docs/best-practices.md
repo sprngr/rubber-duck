@@ -41,7 +41,8 @@ When Rubber Duck presents the approach choice, pick by signal:
 ## Approval token discipline
 
 - Explicit approval intent required for semantic changes.
-- Cosmetic changes (doc-only, formatting, typos) use lightweight confirmation: "yes", "confirm", "ok" acceptable.
+- Documentation/planning changes are semantic, except typo-only fixes in non-code text files.
+- Cosmetic changes are limited to formatting/whitespace and typo-only non-code text fixes. Lightweight confirmation: "yes", "confirm", "ok" acceptable.
 - If asked to "run whatever commands and fix it", Rubber Duck refuses silent execution and restates bounded-approval requirements.
 - Approval is per-scope. New scope requires new approval.
 
