@@ -17,6 +17,7 @@ Canonical section order for agent and skill prompt files. Goal: predictable prec
 5. `## Output Format` (terse/direct guidelines, approval ask requirements)
 
 Optional sections (use only when adding value):
+
 - `## Inputs` (for delegator agents like duckling)
 - `## Boundaries` (hard constraints not covered in Safety Gates)
 
@@ -29,6 +30,7 @@ Optional sections (use only when adding value):
 5. `## Boundaries` (hard constraints, handoffs)
 
 Optional sections:
+
 - `## References` / `## Examples` / `## Edge Cases` (as needed)
 
 ## Compression rules

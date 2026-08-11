@@ -15,11 +15,11 @@
     {
       "id": 2,
       "prompt": "Rename getUserById to findUserById across the entire codebase.",
-      "expected_output": "Maps all usages of getUserById across files (imports, calls, tests, types). Presents plan with file count. If >5 files, proposes splitting. Requests approval.",
+      "expected_output": "Maps all usages of getUserById across files (imports, calls, tests, types). Presents plan with target phase and file count. If phase caps or review-fatigue triggers are exceeded, proposes splitting. Requests approval.",
       "assertions": [
         "Maps all usages across files before renaming",
         "Lists affected files in refactoring plan",
-        "If >5 files affected, proposes splitting",
+        "If phase caps or review-fatigue triggers are exceeded, proposes splitting",
         "Requests execution approval before proceeding"
       ]
     },

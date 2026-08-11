@@ -20,6 +20,7 @@ Execute a narrowly scoped code change once the fix direction is known.
 {{include: skill-snippets/philosophy-guardrails.md}}
 
 Skill-specific delta:
+
 - Executes bounded implementation only; product and architecture decisions remain with user.
 
 ## Activation
@@ -50,6 +51,7 @@ Before introducing new constructs, stop at first rung that holds:
 6. Report exactly: changed files, behavior delta, verification result.
 
 Output:
+
 - one-line execution plan (file(s) + expected behavior)
 - minimal patch summary (what changed, not a full essay)
 - one smallest verification check and result

@@ -7,12 +7,14 @@ Two-tier memory system for AI agent sessions. Tier 1 persists long-term context 
 Not every session deserves permanent context. State files capture the full picture for recovery. CONTEXT.md holds only what advances the project long-term.
 
 **Tier 1 — `CONTEXT.md`** (persistent, repo-tracked)
+
 - Long-term memory across sessions
 - 7 fixed schema sections with deterministic merge rules
 - Committed to version control
 - Merged from state files only on explicit merge signals
 
 **Tier 2 — `.duck-tape/<id>.state.md`** (working, not committed)
+
 - Short-term session state
 - Agent State schema with position tracking, decisions, facts
 - Auto-ignored (`.gitignore` created automatically)
@@ -108,6 +110,7 @@ Good context hygiene keeps CONTEXT.md useful. Bad hygiene turns it into noise.
 ### When to merge
 
 Merge into CONTEXT.md when the session produced:
+
 - **Decisions** that constrain future work (architecture choices, API contracts, naming conventions)
 - **Conventions** that other contributors need to follow
 - **Glossary terms** that recur across sessions
@@ -115,6 +118,7 @@ Merge into CONTEXT.md when the session produced:
 - **Deferred debt** with concrete revisit triggers
 
 Skip merge when the session was:
+
 - Exploratory research with no conclusions
 - Debugging that resolved without lasting impact
 - Conversational (teaching, explaining, brainstorming without decisions)
@@ -123,6 +127,7 @@ Skip merge when the session was:
 ### When to prune
 
 Prune Notes entries when:
+
 - The observation is stale (older decision superseded it)
 - The detail is available elsewhere (code, docs, tickets)
 - The entry is pure scratch-work (derivation steps you don't need to revisit)
@@ -147,6 +152,34 @@ Never prune fixed-schema sections via prune. Those merge only.
 - **Supersede, don't accumulate.** When a decision changes, the old entry is replaced. The changelog records what changed.
 - **Notes is the dump zone.** Freeform content goes here. Prune it when it stops being useful.
 - **Never infer Goals or Conventions.** These sections get entries only from explicit user decisions.
+
+### When CONTEXT.md should graduate to documented artifact
+
+`CONTEXT.md` is project memory for continuity.  
+It is not the long-term source of truth for team contracts.
+
+Promote entries from `CONTEXT.md` into durable docs when they become stable, reusable, or safety-critical.
+
+Graduate when any are true:
+
+- **Repeated dependency:** the same decision gets reused across sessions or contributors.
+- **Safety/authorization impact:** wrong interpretation can cause unsafe, unauthorized, or irreversible actions.
+- **External contract impact:** behavior affects API, schema, config, CLI, or user-visible behavior.
+- **Onboarding criticality:** new contributors must know this before changing code.
+- **Low expected churn:** decision is unlikely to change in near-term execution.
+
+Recommended destination:
+
+- **Behavior rules and execution constraints** -> project agent policy document
+- **Architecture decisions and tradeoffs** -> ADRs / architecture docs
+- **Developer workflow conventions** -> contribution or engineering playbook docs
+- **User/operator behavior** -> product README, runbooks, CLI docs
+- **Unsettled or transient context** -> keep in `CONTEXT.md` (Open-Questions/Notes) until stable
+
+Rule of thumb:
+
+- If violating it can create unsafe or unauthorized behavior, make it normative in policy/docs.
+- If it mainly prevents re-derivation between sessions, keep it in `CONTEXT.md`.
 
 ## Session State Schema
 
@@ -180,6 +213,7 @@ Created: <ISO-8601>
 ```
 
 The state file translates into CONTEXT.md via a rigid map:
+
 - Approved Workflow + Decision Log → **Decisions**
 - Position.Remaining → **Open-Questions**
 - Established Facts → **Glossary**

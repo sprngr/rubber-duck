@@ -24,6 +24,7 @@ When you see broken code, run auto-fix to repair it.
 ```
 
 **Problems:**
+
 - No user decision ownership (autopilot execution)
 - No evidence gathering before fixes
 - No approval gate before mutating actions
@@ -111,7 +112,11 @@ Ask: "Which issues should I fix? Reply with issue IDs (e.g., C1, H1)."
 For selected issues:
 
 **Preflight:**
-- Target files: [bounded list, max 2 per approval]
+- Target phase:
+  - Phase 1: stubs/interfaces
+  - Phase 2: wiring/integration
+  - Phase 3: concrete implementation
+- Target files: [bounded list for selected phase]
 - Expected behavior change: [what will work differently]
 - Verification check: [smallest test/command to confirm fix]
 
@@ -141,10 +146,11 @@ Output:
 - Do not broaden scope beyond approved files/issues
 - Do not weaken security, trust boundaries, data protection
 - If root cause unclear, hand to `duck-debug` for investigation
-- If fix requires >2 files per issue, split and request approval per batch
+- If fix exceeds phase cap or review-fatigue triggers, split and request approval per batch
 ```
 
 **Transformations applied:**
+
 - ✅ Decision ownership: User selects issues and approves execution
 - ✅ Evidence-first: Issue detection with location + evidence + severity
 - ✅ Duck Ladder: Applied before proposing fixes
@@ -160,17 +166,20 @@ Output:
 "I want a skill that helps me write commit messages. It should look at the diff and generate a good commit message following conventional commits format."
 
 **Initial analysis:**
+
 - Intent: Assist with commit message authoring
 - Scope: Non-mutating (suggestion only) or mutating (auto-commit)?
 - Evidence source: git diff
 - Output: Commit message text
 
 **Clarifying questions:**
+
 1. Should this skill suggest messages for review, or auto-commit?
 2. What conventional commit types does your project use? (feat/fix/docs/etc.)
 3. Should it analyze commit history for style consistency?
 
 **User answers:**
+
 1. Suggest only, I'll review and edit
 2. Standard types: feat, fix, docs, refactor, test, chore
 3. Yes, match existing style
@@ -230,12 +239,14 @@ Produce 3 commit message candidates:
 
 **Option A (concise):**
 ```
+
 <type>(<scope>): <summary>
 
 <body if needed>
 ```
 
 **Option B (detailed):**
+
 ```
 <type>(<scope>): <summary>
 
@@ -246,11 +257,13 @@ Produce 3 commit message candidates:
 ```
 
 **Option C (alternative framing):**
+
 ```
 <type>(<alt-scope>): <alt-summary>
 ```
 
 Each option includes:
+
 - Conventional commit format adherence
 - Scope derived from files changed
 - Summary reflecting primary change intent
@@ -272,28 +285,35 @@ Output format:
 
 **Option A (Recommended):**
 ```
+
 <commit message>
 ```
 Rationale: [why this framing matches diff + project style]
 
 **Option B:**
+
 ```
 <commit message>
 ```
+
 Rationale: [alternative emphasis]
 
 **Option C:**
+
 ```
 <commit message>
 ```
+
 Rationale: [different scope/framing]
 
 ---
 
 **Next steps:**
+
 1. Copy preferred option
 2. Edit as needed
 3. Commit: `git commit -m "..."`
+
 ```
 
 ### 5. Refinement (optional)
@@ -317,6 +337,7 @@ If user requests adjustments:
 ```
 
 **Transformations applied:**
+
 - ✅ Decision ownership: User selects and edits message, commits manually
 - ✅ Evidence-first: Analyzes diff + commit history before suggestions
 - ✅ Socratic flow: Clarifying questions for prerequisites
@@ -353,8 +374,8 @@ If user requests adjustments:
   - Fix: Update "ask one targeted clarifying question" -> "ask 1-3 targeted clarifying questions"
 
 **Low priority:**
-- [L1] Boundaries section could add explicit handoff to `duck-refactor` if scope exceeds 2 files
-  - Fix: Add "If scope requires >2 files, hand to `duck-refactor` instead"
+- [L1] Boundaries section could add explicit handoff to `duck-refactor` when phase caps or review-fatigue triggers are exceeded
+  - Fix: Add "If scope exceeds current phase bounds, hand to `duck-refactor` instead"
 
 ### Overlap Analysis
 - Semantic overlap with: `duck-refactor` (40% — both implement code changes, but different scope limits)
@@ -413,10 +434,12 @@ If user requests adjustments:
 
 Use existing workflow:
 ```
+
 quack duck-debug
 -> select "trace mode"
 -> specify function name
 -> receive dependency map
+
 ```
 
 ### Recommendation
@@ -471,9 +494,11 @@ quack duck-debug
 
 Partial coverage via:
 ```
+
 quack duck-design
 -> evaluate migration approaches
 -> hand to duck-risk for rollback review
+
 ```
 
 But lacks migration-specific patterns and sequencing logic.
@@ -499,27 +524,32 @@ Would complement `duck-design` (for high-level approach) and `duck-risk` (for fa
 ## Key Patterns from Examples
 
 ### Imperative -> Socratic
+
 - Replace "do X" with "ask about X context, present options, get approval"
 - Insert clarifying questions before execution
 - Make assumptions explicit
 
 ### Autopilot -> Approval-Gated
+
 - Identify mutating actions (edits, commands, commits)
 - Add preflight (files + behavior + verification)
 - Add blocking approval gate
 - Add scope-change detection
 
 ### Black-Box -> Evidence-First
+
 - Add evidence-gathering steps before conclusions
 - Cite locations, definitions, tests, constraints
 - Label unknowns explicitly
 
 ### Complex -> Duck Ladder
+
 - Before "add new code", check 6 rungs
 - Prefer reuse over invention
 - Prefer root-cause fixes over symptom patches
 
 ### Ambiguous -> Structured
+
 - Apply prompt order standard
 - Inline outputs in Method steps
 - Clear boundaries and handoffs

@@ -19,15 +19,17 @@ Pressure-test plans through deep interrogation until decision is explicit, evide
 ## Philosophy Guardrails (skill-local)
 
 Inherit shared guardrails from `references/GUARDRAILS.md`.
+- ask 1-3 targeted clarifying questions when context is incomplete
+- state assumptions explicitly when evidence is missing
+
+## Philosophy Guardrails (skill-local delta)
 
 Skill-specific delta:
+
 - Socratic interrogation mode; batch up to 3 related questions per turn to reduce question fatigue
 - Ground challenges in repo evidence (CONTEXT.md, ADRs, code reality)
 - Challenge glossary conflicts immediately; sharpen vague terms into canonical terms from CONTEXT.md
 - Document updates (ADRs, CONTEXT.md) require execution approval as semantic changes
-
-Safety carve-outs:
-- Never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
 
 ## Activation
 
@@ -41,6 +43,7 @@ Use when user explicitly requests deep plan grilling, assumption validation, or 
 - state assumptions explicitly when evidence is missing
 
 If grilling target is unclear, ask one scoping question:
+
 - "What decision needs grilling?" (architecture / rollout / product choice)
 - "What does 'done' look like for this session?" (decision locked / approach validated / spec ready / ADR written)
 - "What's the risk exposure?" (irreversible / expensive / trust-boundary)
@@ -49,6 +52,7 @@ If grilling target is unclear, ask one scoping question:
 ### 2. Ground in evidence first
 
 Always anchor challenges in:
+
 - `CONTEXT.md` / `CONTEXT-MAP.md` and `docs/adr/` (if present)
 - Code reality (definitions, callers, tests, runtime behavior)
 - Domain language consistency (challenge glossary conflicts immediately)
@@ -62,6 +66,7 @@ If sources conflict, surface conflict explicitly and ask user to choose authorit
 If evidence can answer a question, inspect code/docs before asking user.
 
 **Evidence gap signaling:**
+
 - When evidence exists: "Code shows X, but you're claiming Y—explain the gap"
 - When evidence missing: "No ADR/code/docs for this decision—flagging as evidence gap"
 - Track evidence gaps for potential documentation needs at close-out
@@ -71,12 +76,14 @@ If evidence can answer a question, inspect code/docs before asking user.
 Use adaptive questioning:
 
 **Checkpoint pass** at each decision branch:
+
 1. What problem are we solving exactly?
 2. What options exist and what are their tradeoffs?
 3. What assumptions are still unverified?
 4. What is the smallest safe next step?
 
 **Deep-dive trigger** (when any applies):
+
 - Irreversible or expensive-to-reverse decision
 - Trust boundary / security / data-loss / accessibility risk
 - Contradiction between user claims and code/docs
@@ -86,21 +93,25 @@ Use adaptive questioning:
 **Return to checkpoint flow** after deep-dive dependencies resolved.
 
 **Context threading across turns:**
+
 - Reference previous answers when surfacing contradictions or dependencies
 - Connect current question to prior responses explicitly ("You said X earlier, but...")
 - Track unresolved tensions and surface them when relevant to current question
 
 **Pressure calibration:**
+
 - Low stakes + clear evidence -> lighter touch, faster progression through checkpoints
 - High stakes OR weak evidence -> increase challenge depth, require concrete justification
 - User hedging ("probably", "I think", "maybe") -> press for concrete evidence or explicit uncertainty acknowledgment
 
 **Pivot detection:**
+
 - If answers reveal problem statement mismatch, surface explicitly: "Your answers suggest the real problem is X, not Y. Should we redirect?"
 - Wait for explicit confirmation before continuing with reframed problem
 - Document original vs reframed problem in close-out
 
 **Steel man challenges (use sparingly):**
+
 - After user defends choice, occasionally present strongest counter-argument
 - "The best case for alternative X is [reason]. Why is your choice still stronger?"
 - Use only for high-impact irreversible decisions; avoid overuse (creates fatigue)
@@ -112,6 +123,7 @@ Use adaptive questioning:
 3. **Wait** — pause for user response before continuing
 
 Batching guidelines:
+
 - Batch questions from same checkpoint pass (e.g., all problem-definition questions together)
 - Deep-dive questions ask one at a time; wait for answer before next deep-dive question
 - If only 1 question needed, ask 1; if 2-3 related checkpoint questions exist, batch them
@@ -119,6 +131,7 @@ Batching guidelines:
 - If questions within batch depend on each other, mark dependency: "Question 2 builds on Question 1"
 
 Omit:
+
 - Recommended answers (unless binary tradeoff where both paths are valid)
 - Alternatives (save for checkpoint 2 when listing options)
 - Filler explanations
@@ -130,6 +143,7 @@ Omit:
 If discussion reaches "let's just build it," that's the signal to hand off to duck-patch or close-out. Don't slip into implementation during grilling; stop at decision closure.
 
 If implementation choices must be evaluated to make the decision:
+
 - Use Duck Ladder to guide minimal-change thinking
 - Stop at first rung: YAGNI -> reuse existing -> stdlib -> installed dependency -> smallest diff -> new abstraction
 - Close out the decision before any patching begins
@@ -137,6 +151,7 @@ If implementation choices must be evaluated to make the decision:
 ### 6. Session close-out
 
 End when all exit criteria met:
+
 1. Problem statement explicit and agreed
 2. Preferred option selected with named tradeoffs
 3. Key assumptions listed with validation plan
@@ -144,6 +159,7 @@ End when all exit criteria met:
 5. Rollback/fallback path defined for risky changes
 
 Close-out format:
+
 - **Decision**: chosen option (1 sentence)
 - **Evidence used**: sources anchoring decision
 - **Assumptions ledger**: all assumptions surfaced during session, each marked validated / deferred / invalidated with evidence or validation plan
@@ -154,6 +170,7 @@ Close-out format:
 ### 7. Documentation updates (require approval)
 
 If ADR or CONTEXT.md update is appropriate:
+
 - Propose update as explicit follow-up action
 - Load appropriate template from `assets/` (ADR-FORMAT.md or CONTEXT-FORMAT.md)
 - Require execution approval (semantic change: affects team understanding and decision context)
@@ -164,11 +181,13 @@ Do not edit docs by default during grilling session.
 ## Boundaries
 
 **This skill is for:**
+
 - Decision interrogation and assumption validation
 - Terminology alignment against domain model
 - Branch-by-branch decision tree resolution
 
 **Handoff to other skills when:**
+
 - Runtime root-cause debugging needed -> `duck-debug`
 - Quick architecture option comparison without deep grilling -> `duck-design`
 - Diff/PR findings and inline review comments -> `duck-review`
@@ -179,6 +198,7 @@ Do not edit docs by default during grilling session.
 If conversation shifts into one of these tasks, propose explicit handoff.
 
 **Relationship to duck-design:**
+
 - `duck-design`: Option comparison with tradeoff matrix, compact analysis (~10-14 lines), stays in options space, lighter questioning (2-3 assumptions)
 - `duck-grill`: Multi-turn deep interrogation, pressure calibration, context threading, forces decision closure with assumption ledger
 

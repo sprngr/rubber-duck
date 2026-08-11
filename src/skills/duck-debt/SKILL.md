@@ -19,6 +19,7 @@ Build a read-only ledger of deferred-work entries from common comment convention
 {{include: skill-snippets/philosophy-guardrails.md}}
 
 Skill-specific delta:
+
 - Read/report only debt ledger; user decides cleanup actions.
 
 ## Activation
@@ -32,6 +33,7 @@ Strict mode trigger: use strict mode when users ask for "issue-linked only" or "
 ### 1. Clarify scope (if ambiguous)
 
 {{include: skill-snippets/clarify-first-preflight.md}}
+
 - If repository/module scope is ambiguous, ask exactly one clarifying question before scanning
 - Example ambiguous prompt: "Show me all deferred simplification debt."
 - Stop after clarification question until user answers
@@ -45,6 +47,7 @@ Search repo for deferred-work comment signals: `TODO|FIXME|HACK|XXX`
 Ignore generated/vendor paths (`node_modules`, `.git`, build outputs).
 
 Signal conventions:
+
 - `TODO` — general deferred work
 - `FIXME` — known issue
 - `HACK` — temporary workaround
@@ -52,6 +55,7 @@ Signal conventions:
 - `spike` — investigation spike from `TODO(<debt type>,spike)` marker
 
 Issue-link detection:
+
 - `#<number>` (e.g., `#123`)
 - `<PROJECT>-<number>` (e.g., `ENG-42`)
 - issue URL
@@ -59,11 +63,13 @@ Issue-link detection:
 ### 3. Classify entries
 
 Count only active deferred-work comment signals with concrete deferred work content:
+
 - Count signals in code and docs artifacts (including ADR/policy/runbooks) as active by default
 - Treat only obvious teaching/reference samples as non-active (fenced examples labeled "example", "template", or "sample")
 - If scope contains only mentions/examples and no active entries, report scoped zero findings
 
 Tier classification:
+
 - `explicit` — signal includes issue link
 - `spike` — `TODO(<debt type>,spike)` marker (no issue link yet, intentional investigation)
 - `likely` — `FIXME` or `HACK` without issue link
@@ -74,6 +80,7 @@ If a spike entry gains an issue link (becomes `TODO(<debt type>,#<issue>)`), cla
 In strict mode, include only `explicit` entries (spike entries excluded — no issue link).
 
 For borderline matches, validate:
+
 1. Context: code comment vs docs/examples/templates/meta-text
 2. Actionability: concrete deferred work exists (not informational note only)
 3. Reference signal: issue-linked or not
@@ -104,6 +111,7 @@ Scoped no-entries:
 `No deferred-work entries in <scope>. Clean ledger.`
 
 Dual-reporting (when user asks for every occurrence):
+
 1. `active deferred-work entries`
 2. `reference occurrences` (explicitly labeled non-active)
 

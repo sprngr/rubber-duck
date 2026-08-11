@@ -17,7 +17,7 @@ For full architecture and policy details, use the canonical docs linked below.
 - Validation runbook template: [validation/README.md](../validation/README.md) (Runbook section)
 - Validation test suite: [validation/test-prompts.json](../validation/test-prompts.json) (31 tests)
 - Test runner: [validation/run-validation-tests.py](../validation/run-validation-tests.py)
-- Global operating policy: [AGENTS.md](../AGENTS.md)
+- Global operating policy: [src/agents/AGENTS.md](../src/agents/AGENTS.md)
 - Install/update/uninstall CLI reference: [scripts/README.md](../scripts/README.md)
 
 ## System map
@@ -26,50 +26,49 @@ For full architecture and policy details, use the canonical docs linked below.
 
 - [rubber-duck](../src/agents/rubber-duck)
 
- ### Explicit router skill [default]
- 
- - [quack](../src/skills/quack/SKILL.md) — alias-first intent resolver
- 
- ### Duckling subagent
- 
- - [duckling](../src/agents/duckling)
- 
- ### Skills (quack-routed, inline-default) [default]
- 
- - [duck-debug](../src/skills/duck-debug/SKILL.md) — trace + root-cause
- - [duck-debt](../src/skills/duck-debt/SKILL.md) — deferred-work ledger
- - [duck-design](../src/skills/duck-design/SKILL.md) — option/tradeoff
- - [duck-teach](../src/skills/duck-teach/SKILL.md) — structured teaching
- 
- ### Skills (quack-routed, delegated-default) [default]
- 
- - [duck-patch](../src/skills/duck-patch/SKILL.md) — bounded fix (max 2 files)
- - [duck-refactor](../src/skills/duck-refactor/SKILL.md) — restructuring (max 5 files)
- - [duck-review](../src/skills/duck-review/SKILL.md) — risk-first review
- - [duck-risk](../src/skills/duck-risk/SKILL.md) — failure modes
- - [duck-simplify](../src/skills/duck-simplify/SKILL.md) — complexity reduction
- - [duck-triage](../src/skills/duck-triage/SKILL.md) — test coverage + severity
- 
- ### Skills (governor-invoked, main session) [extras: --extras flag]
- 
- - [duck-adapt](../src/skills/duck-adapt/SKILL.md) — external skill adaptation + audit
- - [duck-grill](../src/skills/duck-grill/SKILL.md) — grilling interview
- - [duck-tape](../src/skills/duck-tape/SKILL.md) — two-tier session memory
+### Explicit router skill [default]
 
+- [quack](../src/skills/quack/SKILL.md) — alias-first intent resolver
+
+### Duckling subagent
+
+- [duckling](../src/agents/duckling)
+
+### Skills (quack-routed, inline-default) [default]
+
+- [duck-debug](../src/skills/duck-debug/SKILL.md) — trace + root-cause
+- [duck-debt](../src/skills/duck-debt/SKILL.md) — deferred-work ledger
+- [duck-design](../src/skills/duck-design/SKILL.md) — option/tradeoff
+- [duck-teach](../src/skills/duck-teach/SKILL.md) — structured teaching
+
+### Skills (quack-routed, delegated-default) [default]
+
+- [duck-patch](../src/skills/duck-patch/SKILL.md) — bounded fix (phase-gated scope)
+- [duck-refactor](../src/skills/duck-refactor/SKILL.md) — restructuring (phase-gated scope)
+- [duck-review](../src/skills/duck-review/SKILL.md) — risk-first review
+- [duck-risk](../src/skills/duck-risk/SKILL.md) — failure modes
+- [duck-simplify](../src/skills/duck-simplify/SKILL.md) — complexity reduction
+- [duck-triage](../src/skills/duck-triage/SKILL.md) — test coverage + severity
+
+### Skills (governor-invoked, main session) [extras: --extras flag]
+
+- [duck-adapt](../src/skills/duck-adapt/SKILL.md) — external skill adaptation + audit
+- [duck-grill](../src/skills/duck-grill/SKILL.md) — grilling interview
+- [duck-tape](../src/skills/duck-tape/SKILL.md) — two-tier session memory
 
 ## Routing cheat sheet
 
 Use `quack <intent>` for explicit routing with keyword-based precedence (risk/complexity/learning/test/design signals).
 
 | User signal | Start skill | Typical chain / Notes |
-|---|---|---|
+| --- | --- | --- |
 | "review this" + diff/code | `duck-review` | `duck-review` -> `duck-risk` (rollback/compat) -> `duck-simplify` (complexity) -> `duck-triage` (test gaps) |
 | "debug this" + complaint | `duck-debug` | `duck-debug` trace mode -> root-cause mode -> `duck-triage` (if repro weak) -> `duck-patch` (execution approval required) |
 | "design/tradeoffs" | `duck-design` | `duck-design` -> `duck-risk` (failure modes) -> `duck-triage` (test scenarios) |
 | "explain this" | `duck-teach` | explain mode; escalate to `duck-debug`/`duck-review`/`duck-design` when issue type emerges |
 | "teach me/how works" | `duck-teach` | tutorial modes; escalate when troubleshooting needed |
-| "patch this/apply fix" | `duck-patch` | bounded fix (max 2 files); requires execution approval (preflight -> approve -> execute -> verify) |
-| "refactor/extract/rename" | `duck-refactor` | multi-file restructuring (max 5 files); requires execution approval |
+| "patch this/apply fix" | `duck-patch` | bounded fix (phase-gated scope); requires execution approval (preflight -> approve -> execute -> verify) |
+| "refactor/extract/rename" | `duck-refactor` | multi-file restructuring (phase-gated scope); requires execution approval |
 | "what could break/rollback risk" | `duck-risk` | failure modes, rollback safety, compatibility; often follows `duck-review` |
 | "simplify/dedupe/overengineered" | `duck-simplify` | complexity reduction; dry mode (read-only) available |
 | "what to test/test coverage" | `duck-triage` | test gaps, bug severity; review handoff for inline PR comments |
@@ -112,19 +111,19 @@ Include duck-risk when rollback/compatibility risk is central.
 
 #### Patch
 
-**When to use:** root cause known, fix scoped to ≤2 files. Output is bounded diff after approval.
+**When to use:** root cause known, fix fits Phase 3 scope (concrete implementation, up to 2 files). Output is bounded diff after approval.
 
 ```text
-Apply this bounded fix with duck-patch. Confirm scope ≤2 files, expected behavior change clear.
+Apply this bounded fix with duck-patch. Confirm Phase 3 scope fit, expected behavior change clear.
 Execution approval required (preflight -> approve -> execute -> verify).
 ```
 
 #### Refactor
 
-**When to use:** restructuring across ≤5 files (extract/rename/move/inline). Output is diff after approval.
+**When to use:** restructuring (extract/rename/move/inline). Phase-gated scope: stubs/skeleton (6 files), wiring (4), concrete (2). Output is diff after approval.
 
 ```text
-Refactor with duck-refactor. Verify references tracked, max 5 files, execution approval required.
+Refactor with duck-refactor. Verify references tracked, phase-gated scope enforced, execution approval required.
 ```
 
 #### Risk
@@ -239,9 +238,9 @@ Scenario: migrating from monolith cache to Redis-backed cache.
 - **Simplification suggestion hides a security/correctness issue**
   - Fix: surface risk-first finding first; simplification second if still needed
 - **Scope exceeds patch boundary**
-  - Fix: split into smaller bounded tasks before patching (max 2 files for `duck-patch`)
+  - Fix: split into smaller bounded tasks before patching (phase-gated caps for `duck-patch`)
 - **Scope exceeds refactor boundary**
-  - Fix: split into smaller bounded tasks before refactoring (max 5 files for `duck-refactor`)
+  - Fix: split into smaller bounded tasks before refactoring (phase-gated caps for `duck-refactor`)
 - **Execution approval bypassed or unclear**
   - Fix: enforce 6-step workflow (preflight -> approval ask -> wait -> execute -> verify -> scope-change-check)
 - **Cosmetic vs semantic changes confused**

@@ -3,15 +3,17 @@
 Usage: `quack <intent>`
 
 Examples:
-  - `quack review this diff`
-  - `quack trace where this is used`
-  - `quack what could break in this rollout`
-  - `quack simplify this module`
-  - `quack fix this bug`
+
+- `quack review this diff`
+- `quack trace where this is used`
+- `quack what could break in this rollout`
+- `quack simplify this module`
+- `quack fix this bug`
 
 Output:
-  - `Routing: <skill>.` — matched and routing
-  - `Need one detail: <question>` — needs clarification
+
+- `Routing: <skill>.` — matched and routing
+- `Need one detail: <question>` — needs clarification
 
 ## Available routes
 

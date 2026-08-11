@@ -21,6 +21,7 @@ src/skills/<skill-name>/
 **Purpose:** Data files loaded automatically during skill execution.
 
 **Examples:**
+
 - `quack/assets/heartbeat.md` — status quips (always loaded on bare `quack`)
 - `quack/assets/quick-help.md` — usage guide (always loaded on bare `quack`)
 - `quack/assets/route-aliases.json` — alias registry (always loaded on intent match)
@@ -33,6 +34,7 @@ src/skills/<skill-name>/
 **Purpose:** Documentation, examples, patterns loaded conditionally.
 
 **Examples:**
+
 - `duck-design/references/TradeoffMatrix.md` — matrix framework (loaded for multi-option decisions)
 - `duck-design/references/DesignPatterns.md` — pattern catalog (loaded when symptom matches)
 - `duck-design/references/Example.md` — walkthrough examples (informational, rarely loaded)
@@ -72,19 +74,21 @@ Content starts here...
 
 ## Loading Convention
 
-### In SKILL.md Method section:
+### In SKILL.md Method section
 
 **Always-loaded (assets/):**
+
 ```markdown
 1. Load `assets/route-aliases.json` and attempt case-insensitive match.
 ```
 
 **Conditionally-loaded (references/):**
+
 ```markdown
 If prefix choice unclear or reviewer needs wording examples, load `references/review-comment-examples.md`.
 ```
 
-### Reference section (optional):
+### Reference section (optional)
 
 Skills may include a References section listing available conditional assets:
 

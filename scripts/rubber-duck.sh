@@ -216,13 +216,13 @@ resolve_target() {
         DEST_POLICY_MD="${OPENCODE_AGENTS_MD}"
       fi
       POLICY_MODE="managed_block"
-      LOCAL_POLICY_FILE="${REPO_ROOT}/AGENTS.md"
+      LOCAL_POLICY_FILE="${REPO_ROOT}/dist/AGENTS.md"
       if [[ -d "${REPO_ROOT}/dist/opencode/agents" ]]; then
         LOCAL_AGENTS_DIR="${REPO_ROOT}/dist/opencode/agents"
       else
         LOCAL_AGENTS_DIR="${REPO_ROOT}/agents"
       fi
-      REMOTE_POLICY_PATH="AGENTS.md"
+      REMOTE_POLICY_PATH="dist/AGENTS.md"
       REMOTE_AGENTS_PATH="dist/opencode/agents"
       ;;
     copilot)
@@ -234,13 +234,13 @@ resolve_target() {
         DEST_POLICY_MD="${COPILOT_AGENTS_MD}"
       fi
       POLICY_MODE="managed_block"
-      LOCAL_POLICY_FILE="${REPO_ROOT}/AGENTS.md"
+      LOCAL_POLICY_FILE="${REPO_ROOT}/dist/AGENTS.md"
       if [[ -d "${REPO_ROOT}/dist/copilot/agents" ]]; then
         LOCAL_AGENTS_DIR="${REPO_ROOT}/dist/copilot/agents"
       else
         LOCAL_AGENTS_DIR="${REPO_ROOT}/agents"
       fi
-      REMOTE_POLICY_PATH="AGENTS.md"
+      REMOTE_POLICY_PATH="dist/AGENTS.md"
       REMOTE_AGENTS_PATH="dist/copilot/agents"
       ;;
     claude)
@@ -254,10 +254,10 @@ resolve_target() {
       DEST_CLAUDE_AGENTS_MD="$(dirname -- "${DEST_POLICY_MD}")/AGENTS.md"
       POLICY_MODE="file"
       LOCAL_POLICY_FILE="${REPO_ROOT}/dist/claude/CLAUDE.md"
-      LOCAL_POLICY_AGENTS_FILE="${REPO_ROOT}/AGENTS.md"
+      LOCAL_POLICY_AGENTS_FILE="${REPO_ROOT}/dist/AGENTS.md"
       LOCAL_AGENTS_DIR="${REPO_ROOT}/dist/claude/agents"
       REMOTE_POLICY_PATH="dist/claude/CLAUDE.md"
-      REMOTE_POLICY_AGENTS_PATH="AGENTS.md"
+      REMOTE_POLICY_AGENTS_PATH="dist/AGENTS.md"
       REMOTE_AGENTS_PATH="dist/claude/agents"
       ;;
     *)
@@ -365,6 +365,20 @@ strip_managed_block() {
   mv "${tmp}" "${target}"
 }
 
+trim_trailing_blank_lines() {
+  local target="$1"
+  local tmp
+  tmp="$(mktemp)"
+  awk '
+    { lines[NR] = $0 }
+    $0 ~ /[^[:space:]]/ { last = NR }
+    END {
+      for (i = 1; i <= last; i++) print lines[i]
+    }
+  ' "${target}" > "${tmp}"
+  mv "${tmp}" "${target}"
+}
+
 backup_md() {
   local target="$1"
   local backup
@@ -393,11 +407,18 @@ upsert_managed_block() {
   mkdir -p "$(dirname -- "${target}")"
   touch "${target}"
   strip_managed_block "${target}"
+  trim_trailing_blank_lines "${target}"
+  local tmp_out
+  tmp_out="$(mktemp)"
   {
-    printf '\n%s\n' "${MANAGED_START}"
+    if [[ -s "${target}" ]]; then
+      cat "${target}"
+    fi
+    printf '%s\n' "${MANAGED_START}"
     cat "${content_file}"
     printf '%s\n' "${MANAGED_END}"
-  } >> "${target}"
+  } > "${tmp_out}"
+  mv "${tmp_out}" "${target}"
 }
 
 remove_managed_block() {

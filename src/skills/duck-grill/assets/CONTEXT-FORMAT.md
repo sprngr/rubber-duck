@@ -54,6 +54,7 @@ Use this template for project-level domain language glossary and system map.
 ## Keep it current
 
 Update CONTEXT.md when:
+
 - Terminology changes during grilling/design sessions
 - New component boundaries emerge
 - Constraints shift (new regulation, platform choice, etc.)

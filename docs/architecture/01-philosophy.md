@@ -35,6 +35,7 @@ Before introducing new constructs, stop at first rung that holds:
 6. Only then add new code/abstraction
 
 Additional rules:
+
 - Prefer root-cause fixes in shared paths over symptom patches.
 - Prefer smallest safe diff that preserves correctness and safety.
 

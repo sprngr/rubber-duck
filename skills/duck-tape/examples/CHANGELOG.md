@@ -1,6 +1,7 @@
 # Changelog Examples
 
 ## Successful merge
+
 ```
 Changelog:
 - Added: Decisions auth strategy
@@ -10,11 +11,13 @@ Changelog:
 ```
 
 ## No changes
+
 ```
 No changes to CONTEXT.md.
 ```
 
 ## With redaction
+
 ```
 Changelog:
 - Added: Notes 2025-01-15 14:30

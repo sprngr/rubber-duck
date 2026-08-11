@@ -7,6 +7,8 @@
 # Do not include local dev install files
 .agents
 .opencode
+.claude
+node_modules
 skills-lock.json
 AGENTS.md.bak.*
 *-skill-check-report.html

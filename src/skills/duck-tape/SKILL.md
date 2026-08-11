@@ -28,6 +28,7 @@ Preserve fidelity, keep interruption low.
 {{include: skill-snippets/clarify-first-preflight.md}}
 
 Skill-specific delta:
+
 - Persistent artifact safety: CONTEXT.md is long-lived and likely committed. Redaction is non-negotiable before any write.
 - Session state safety: `.duck-tape/<id>.state.md` is workspace-local but may be read by next agent. Redaction applies.
 - Rotation cap: max 10 state files in `.duck-tape/`. Eviction precedence: auto dropped first, then recovered, then manual.
@@ -51,6 +52,11 @@ Scan session content for secrets/PII: API keys, passwords, tokens, connection st
 
 Write `.duck-tape/<session_id>.state.md` using Agent State schema. Session ID format: `<YYYY-MM-DD-HHMM>`. Full schema in `references/STATE_SCHEMA.md`. Output format in `references/OUTPUT_SCHEMA.md`. Sample in `examples/STATE.md`. Auto-create `.duck-tape/.gitignore` with `*` content if missing.
 
+Session ID handling:
+- Default: auto-generate `<YYYY-MM-DD-HHMM>` silently for `/duck-tape` and `/duck-tape merge`.
+- Ask for session ID only when user explicitly requests a custom ID.
+- If custom ID is provided and invalid, ask one corrective question with required format, then continue.
+
 Apply rotation cap: max 10 state files. Eviction precedence: auto dropped first (oldest auto), then recovered, then manual.
 
 Report state file path: `.duck-tape/<session_id>.state.md` — user can use this to reload session state later.
@@ -62,6 +68,7 @@ Run only on merge signals. Skip for state-only mode.
 **Bootstrap** (CONTEXT.md missing): create CONTEXT.md with translated content from state file using rigid map in `references/STATE_SCHEMA.md`. Empty sections get scaffold from `examples/bootstrap-CONTEXT.md`. Generate TOC under title from the 8 section headers. Output format in `references/OUTPUT_SCHEMA.md`. Sample in `examples/CONTEXT.md`. Never infer Goals or Conventions entries.
 
 **Merge** (CONTEXT.md exists): translate from session state file using rigid map. Summarize translated content to persistent-context granularity (decision-level, not commit-level) before applying per-section merge rules. Refresh TOC only if the set of `##` section headings changes. Per-section merge rules in `references/SCHEMA.md`. Summary:
+
 - Goals/Decisions/Conventions/Glossary: dedupe by key, supersede on conflict, append new
 - Deferred-Debt: append-only with status markers
 - Open-Questions: append new, dedupe by text
@@ -70,6 +77,7 @@ Run only on merge signals. Skip for state-only mode.
 - Position.Current + Position.Done: state-file-local, not translated. Next agent reads state file on resume.
 
 Emit changelog per `references/OUTPUT_SCHEMA.md`. Sample in `examples/CHANGELOG.md`:
+
 - `Added: <section> <key>`
 - `Superseded: <section> <key> (<old> -> <new>)`
 - `Dropped: <section> <key> (<reason>)`
@@ -83,11 +91,13 @@ Drops require explicit reason. No silent removal.
 **Preflight per operation:**
 
 State-only:
+
 - Target files: `.duck-tape/<id>.state.md`, `.duck-tape/.gitignore` (if missing)
 - Expected: write state file with Agent State schema
 - Verification: re-read state file, confirm Agent State sections present
 
 Merge:
+
 - Target files: `.duck-tape/<id>.state.md`, `.duck-tape/.gitignore` (if missing), `CONTEXT.md`
 - Expected: write state file, merge translated state into CONTEXT.md per schema rules
 - Verification: re-read both files, confirm changelog matches CONTEXT.md diff
@@ -152,6 +162,7 @@ If no state file exists and no transcript path in marker, report "compaction occ
 7. Confirm `hooks/extract-state.sh` (unix) or `hooks/extract-state.ps1` (Windows) is in project. For opencode, no shell script needed (plugin fetches via SDK). Also confirm `hooks/extract-raw.sh`/`.ps1` exists for LLM-assisted recovery on `/duck-tape resume`.
 
 **Preflight:**
+
 - Target file: harness-specific config path (max 1 file)
 - Expected: write hook config snippet to harness install path
 - Verification: re-read written file, confirm valid JSON or JS syntax
@@ -165,6 +176,7 @@ If no state file exists and no transcript path in marker, report "compaction occ
 3. Write culled file. Report what removed.
 
 **Preflight:**
+
 - Target file: `CONTEXT.md` (Notes section only)
 - Expected: remove user-selected Notes entries, fixed-schema sections untouched
 - Verification: re-read CONTEXT.md, confirm only Notes changed, confirm selected entries removed
@@ -191,6 +203,7 @@ Prune never touches fixed-schema sections.
 6. Get approval. Execute restructure. Generate TOC under title from the 8 section headers. Report what moved, what stayed above schema.
 
 **Preflight:**
+
 - Target file: `CONTEXT.md`
 - Expected: classify freeform content into schema sections, append missing headers, preserve unmatched content above schema
 - Verification: re-read CONTEXT.md, confirm all 7 headers present, confirm all original content accounted for (moved or left above schema)

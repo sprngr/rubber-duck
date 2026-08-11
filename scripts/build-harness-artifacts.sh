@@ -20,6 +20,8 @@ RULES_FILE="${REPO_ROOT}/build/agent-assembly.rules.json"
 
 SRC_AGENTS_DIR="${REPO_ROOT}/src/agents"
 POLICY_SNIPPETS_DIR="${REPO_ROOT}/src/shared/policy-snippets"
+SRC_AGENTS_POLICY_MD="${SRC_AGENTS_DIR}/AGENTS.md"
+DIST_AGENTS_POLICY_MD="${REPO_ROOT}/dist/AGENTS.md"
 
 CLAUDE_DIST_DIR="${REPO_ROOT}/dist/claude"
 CLAUDE_AGENT_DIR="${CLAUDE_DIST_DIR}/agents"
@@ -70,8 +72,6 @@ render_or_check_file() {
 render_body_markdown() {
   local src="$1"
   local out="$2"
-  local line=""
-  local include_status=0
 
   if [[ ! -f "${src}" ]]; then
     printf 'ERROR: missing body source file: %s\n' "${src}" >&2
@@ -80,27 +80,12 @@ render_body_markdown() {
 
   mkdir -p "$(dirname -- "${out}")"
   : > "${out}"
-
-  while IFS= read -r line || [[ -n "${line}" ]]; do
-    include_status=0
-    append_policy_include_if_match "${line}" "${out}" || include_status=$?
-    if (( include_status == 0 )); then
-      continue
-    fi
-    if (( include_status == 2 )); then
-      rm -f "${out}"
-      return 1
-    fi
-
-    printf '%s\n' "${line}" >> "${out}"
-  done < "${src}"
-
+  render_body_with_includes "${src}" "${out}" "" || { rm -f "${out}"; return 1; }
   return 0
 }
 
-append_policy_include_if_match() {
+resolve_policy_include_path_if_match() {
   local line="$1"
-  local out="$2"
 
   if [[ "${line}" =~ ^[[:space:]]*\{\{include:[[:space:]]*policy-snippets/([^[:space:]\}]+)[[:space:]]*\}\}[[:space:]]*$ ]]; then
     local snippet_name="${BASH_REMATCH[1]}"
@@ -109,12 +94,40 @@ append_policy_include_if_match() {
       printf 'ERROR: missing policy snippet: %s\n' "${snippet_path}" >&2
       return 2
     fi
-    cat "${snippet_path}" >> "${out}"
-    printf '\n' >> "${out}"
+    printf '%s\n' "${snippet_path}"
     return 0
   fi
 
   return 1
+}
+
+render_body_with_includes() {
+  local src="$1"
+  local out="$2"
+  local stack="${3:-}"
+  local line=""
+  local include_path=""
+  local include_status=0
+
+  if [[ "|${stack}|" == *"|${src}|"* ]]; then
+    printf 'ERROR: include cycle detected: %s\n' "${src}" >&2
+    return 1
+  fi
+  local next_stack="${stack}|${src}"
+
+  while IFS= read -r line || [[ -n "${line}" ]]; do
+    include_status=0
+    include_path="$(resolve_policy_include_path_if_match "${line}")" || include_status=$?
+    if (( include_status == 0 )); then
+      render_body_with_includes "${include_path}" "${out}" "${next_stack}" || return 1
+      continue
+    fi
+    if (( include_status == 2 )); then
+      return 2
+    fi
+
+    printf '%s\n' "${line}" >> "${out}"
+  done < "${src}"
 }
 
 # Render Claude frontmatter from a meta.json into out. Field order:
@@ -206,6 +219,11 @@ cat > "${CLAUDE_MD_TMP}" <<'EOF'
 @AGENTS.md
 EOF
 render_or_check_file "${CLAUDE_MD_TMP}" "${CLAUDE_MD_OUT}"
+
+# Build installer policy source at dist root.
+AGENTS_MD_TMP="${TMP_DIR}/AGENTS.md"
+render_body_markdown "${SRC_AGENTS_POLICY_MD}" "${AGENTS_MD_TMP}"
+render_or_check_file "${AGENTS_MD_TMP}" "${DIST_AGENTS_POLICY_MD}"
 
 # Render each agent for every harness: harness frontmatter + shared body.
 for name in "${CONFIG_AGENTS[@]}"; do

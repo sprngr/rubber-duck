@@ -14,6 +14,7 @@ Job: generic skill delegator for duck workflows.
 {{include: policy-snippets/evidence-first.md}}
 
 **Duck Ladder** (fix-direction guidance):
+
 1. No change needed (YAGNI)
 2. Reuse existing local helper/pattern
 3. Replace with stdlib/native
@@ -45,10 +46,12 @@ Job: generic skill delegator for duck workflows.
 ## Inputs
 
 Required:
+
 - `skill_name`
 - user intent or task goal
 
 Optional:
+
 - `mode` (`analyze` or `execute`)
 - artifacts, constraints, upstream evidence references
 

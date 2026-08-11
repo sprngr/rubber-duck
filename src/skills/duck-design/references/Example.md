@@ -8,22 +8,26 @@ End-to-end examples showing expected `duck-design` behavior.
 
 ### Conversation
 
-#### User
+### User
+
 ```text
 I need to add notifications to my app. Should I use WebSockets or polling?
 ```
 
 #### Agent (Step 1: Clarify Intent)
+
 ```text
 What constraint drives this choice most: performance, maintainability, or time to ship?
 ```
 
-#### User
+### User
+
 ```text
 Time to ship is critical. We launch in 2 weeks.
 ```
 
 #### Agent (Step 4: Compare Alternatives)
+
 ```text
 Your options: WebSockets vs polling.
 
@@ -46,12 +50,14 @@ Which outcome matters most here, given your constraints?
 Which outcome matters most here, given your constraints?
 ```
 
-#### User
+### User
+
 ```text
 Polling for now. We can upgrade later if users complain about latency.
 ```
 
 #### Agent (Step 7: Confirm Decision)
+
 ```text
 Chosen: polling with the existing REST endpoint.
 
@@ -60,7 +66,8 @@ Accepted tradeoff: higher latency and request volume in exchange for faster deli
 Document this as ADR?
 ```
 
-#### User
+### User
+
 ```text
 No, just implement it.
 ```
@@ -69,12 +76,14 @@ No, just implement it.
 
 ## Edge Case: Broad Plan Chunking
 
-#### User
+### User
+
 ```text
 Design a new microservices architecture. We need API gateway, service mesh, event bus, observability, and CI/CD pipeline.
 ```
 
 #### Agent (Step 2: Chunk Broad Plans)
+
 ```text
 What constraint drives this program most: delivery speed, risk reduction, or long-term maintainability?
 
@@ -92,12 +101,14 @@ Slices:
 Start with API gateway, or different priority?
 ```
 
-#### User
+### User
+
 ```text
 API gateway first.
 ```
 
 #### Agent (Step 1: Clarify Intent)
+
 ```text
 What constraint drives gateway choice most: performance, security, or operational simplicity?
 ```
@@ -110,12 +121,14 @@ _Session continues with focused API gateway design discussion._
 
 ### Case A: Compare Two Options (Step 4)
 
-#### User
+### User
+
 ```text
 Compare modular monolith vs two microservices for current checkout + inventory domains.
 ```
 
 #### Agent
+
 ```text
 What constraint drives this choice most: delivery speed, reliability, or team ownership?
 
@@ -132,12 +145,14 @@ Which outcome matters most here, given your constraints?
 
 ### Case B: Multi-Component Rollout (Step 2)
 
-#### User
+### User
+
 ```text
 Plan full migration: auth rewrite, DB migration, event bus, new analytics pipeline, and service decomposition. Evaluate architecture.
 ```
 
 #### Agent
+
 ```text
 What constraint drives this program most: risk reduction, delivery speed, or long-term maintainability?
 
@@ -159,12 +174,14 @@ Start with slice 1, or different priority?
 
 ## Edge Case: Validation Failure (Redirect)
 
-#### User
+### User
+
 ```text
 My cache keeps returning stale data. How should I design cache invalidation?
 ```
 
 #### Agent (Boundary Check)
+
 ```text
 This is runtime bug signal; redirect to duck-debug for runtime investigation.
 
@@ -179,12 +196,14 @@ After cache logic is confirmed, return here to evaluate invalidation strategy (T
 
 ## Edge Case: Underspecified Prompt (Clarify Only)
 
-#### User
+### User
+
 ```text
 Design this.
 ```
 
 #### Agent
+
 ```text
 What constraint drives this choice?
 ```

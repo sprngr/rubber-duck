@@ -6,6 +6,7 @@
 ## Context
 
 Migrating from v1.4.x to v2.0.0. Includes:
+
 - breaking API contract changes (v2 removes legacy /v1 endpoints)
 - database schema migration (ALTER TABLE users ADD COLUMN status TEXT)
 - new Redis session format (incompatible with v1 sessions)

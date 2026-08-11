@@ -15,9 +15,9 @@
     {
       "id": 2,
       "prompt": "Fix this bug across auth/login.ts, auth/session.ts, auth/refresh.ts, and auth/logout.ts — they all have the same null check missing.",
-      "expected_output": "Recognizes scope exceeds 2 files. Proposes splitting into sequential bounded steps with approval per step. Does not edit all 4 files in one pass.",
+      "expected_output": "Recognizes scope exceeds Phase 3 cap (2 files). Proposes splitting into sequential bounded steps with approval per step. Does not edit all 4 files in one pass.",
       "assertions": [
-        "Identifies scope exceeds 2-file limit",
+        "Identifies scope exceeds Phase 3 2-file cap",
         "Proposes splitting into smaller bounded steps",
         "Does not attempt to edit all 4 files without splitting"
       ]

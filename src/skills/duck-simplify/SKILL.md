@@ -21,6 +21,7 @@ Find highest-value simplifications without weakening security, correctness, or e
 {{include: skill-snippets/philosophy-guardrails.md}}
 
 Skill-specific delta:
+
 - Complexity-reduction guidance only; final implementation decisions remain with user.
 
 ## Activation
@@ -34,12 +35,15 @@ Use for complexity-minimization lens in review/design/debug contexts, including 
 {{include: skill-snippets/clarify-first-preflight.md}}
 
 Required:
+
 - code/proposal scope
 
 Dry-mode required:
+
 - two or more candidate scopes with suspected semantic duplication
 
 Optional:
+
 - constraints (deadline, readability norms, team preference)
 
 If constraints unclear, ask one targeted clarifying question.
@@ -63,6 +67,7 @@ One line per finding:
 `<prefix> <path[:line|scope]> — <complexity cost>. Fix: <smaller shape>.`
 
 Prefixes:
+
 - `🪶 yagni:` abstraction/config not justified yet
 - `📚 stdlib:` custom code replaceable by standard library
 - `🧱 native:` dependency/custom layer replaceable by platform feature
@@ -82,6 +87,7 @@ One line per finding:
 `<prefix> <path[:line|scopeA<->scopeB]> — <duplicated behavior + drift risk>. Diverges when: <future change trigger>. Extract start: <path:line>. Fix: <extraction boundary>.`
 
 Dry-mode prefixes:
+
 - `🟡 risk:` meaningful duplication likely to diverge
 - `🔵 nit:` minor duplication worth cleanup
 - `❓ question:` missing context blocks extraction choice

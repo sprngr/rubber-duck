@@ -21,7 +21,7 @@ make check
 ## Build Targets (Make)
 
 | Target | Purpose |
-|---|---|
+| --- | --- |
 | `make check-guardrails` | Verify no drift between canonical and vendored guardrails |
 | `make build-skills` | Assemble skills from `src/skills/*` into `skills/*` |
 | `make check-skills` | Verify assembled skills are up to date |
@@ -80,7 +80,7 @@ Contract details (rules schema, drift controls, invariants): [docs/architecture/
 ## Commands
 
 | Command | Purpose |
-|---|---|
+| --- | --- |
 | `install` | Install/update agents, managed policy file, and skills package |
 | `uninstall` | Remove installed agents, remove managed policy file, remove skills package |
 | `status` | Show installed agent count, policy state, and skills state |
@@ -91,7 +91,7 @@ Contract details (rules schema, drift controls, invariants): [docs/architecture/
 Use Bash CLI for Linux/macOS and shell-based CI.
 
 | Flag | Type | Description |
-|---|---|---|
+| --- | --- | --- |
 | `--claude` | switch | Use Claude paths (default global; add `--project` for project scope) |
 | `--copilot` | switch | Use Copilot paths (default global; add `--project` for project scope) |
 | `--opencode` | switch | Use opencode paths (default global; add `--project` for project scope) |
@@ -111,7 +111,7 @@ Use Bash CLI for Linux/macOS and shell-based CI.
 Use PowerShell CLI for Windows-native environments.
 
 | Parameter | Type | Description |
-|---|---|---|
+| --- | --- | --- |
 | `-Action install\|uninstall\|status\|doctor` | value | Operation to execute |
 | `-Claude` | switch | Use Claude paths (default global; add `-Project` for project scope) |
 | `-Copilot` | switch | Use Copilot paths (default global; add `-Project` for project scope) |
@@ -137,6 +137,9 @@ chmod +x .githooks/pre-commit
 ```
 
 Hook runs:
+
+- `markdownlint-cli2` (via `npx`)
+- broad scope with pragmatic rule profile (hygiene-first, style rules staged)
 - `scripts/check-guardrails-drift.sh`
 - `scripts/assemble-skills.sh --check`
 - `scripts/build-harness-artifacts.sh --check`

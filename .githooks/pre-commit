@@ -4,6 +4,9 @@ set -euo pipefail
 ROOT="$(git rev-parse --show-toplevel)"
 cd "$ROOT"
 
+echo "[pre-commit] linting markdown"
+npx --yes markdownlint-cli2
+
 echo "[pre-commit] checking guardrails drift"
 bash scripts/check-guardrails-drift.sh
 

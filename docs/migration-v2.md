@@ -7,7 +7,7 @@ v2 consolidates agents, renames skills, trims aliases, and changes the debt-mark
 v1 shipped 6 specialized duckling subagents. v2 collapses them into a single `duckling` delegator that routes to skills.
 
 | v1.x subagent | v2 successor |
-|---|---|
+| --- | --- |
 | duck-adversary | duck-risk |
 | duck-builder | duck-patch |
 | duck-dry | duck-teach |

@@ -30,7 +30,7 @@ Use these prompts to trigger this skill and keep routing crisp.
 ## vs duck-design
 
 | Dimension | duck-design | duck-grill |
-|-----------|-------------|------------------|
+| ----------- | ------------- | ------------------ |
 | **Mode** | Option comparison | Multi-turn deep interrogation |
 | **Output** | Tradeoff matrix, 2-4 options | Batched questions (up to 3), assumption ledger |
 | **Depth** | Lighter questioning (2-3 assumptions) | Pressure calibration, context threading, steel man |
@@ -40,6 +40,7 @@ Use these prompts to trigger this skill and keep routing crisp.
 ## Hybrid session shape example
 
 **Turn 1 (Checkpoint batch):**
+
 1. What exact problem are we solving?
 2. What does 'done' look like for this decision?
 3. What options are on the table?
@@ -49,23 +50,28 @@ Use these prompts to trigger this skill and keep routing crisp.
 - User: "Need async event integration for orders. Done = decision locked with rollback path. Options: polling, webhooks, message queue."
 
 **Turn 2 (Deep-dive, one at a time):**
+
 - Question: "This is expensive to reverse — what's rollback path for message queue option?"
 - User: "Can fall back to polling if queue fails."
 
 **Turn 3 (Context threading):**
+
 - Question: "You said 'fall back to polling' — but earlier you ruled polling out as too slow. That's a contradiction. Which constraint is negotiable: speed or rollback simplicity?"
 - User: "Speed matters more. Rollback should be feature-flag cutover to standby polling process, accepting temporary slowdown."
 
 **Turn 4 (Evidence gap signaling):**
+
 - Question: "Code shows current retry logic in order service, but you claim new queue approach supersedes it. No ADR documents this decision — flagging as evidence gap. What was the decision rationale?"
 - User: "Current retry logic is stale; queue handles retries natively."
 
 **Turn 5 (Pressure calibration - user hedging):**
+
 - User: "Queue *probably* handles our order volume..."
 - Question: "Probably? This is a payment-critical path — data loss risk. Show me capacity specs or flag this as unvalidated assumption."
 - User: "Fair — flagging as unvalidated. Need load test before commit."
 
 **Turn 6 (Pivot detection):**
+
 - Question: "Your answers suggest the real problem is 'we lack observability to validate queue capacity', not 'choose integration pattern'. Should we redirect to establishing metrics first?"
 - User: "No — stick with integration choice, but add observability as prerequisite in rollout plan."
 
@@ -84,22 +90,26 @@ Use these prompts to trigger this skill and keep routing crisp.
 ## Domain language pressure-test example
 
 **Turn 1:**
+
 - Question: "You said 'user' — do you mean account holder, end customer, or admin user?"
 - Why this matters: Order service uses all three, and retry logic differs per role.
 
 **Turn 2:**
+
 - Question: "CONTEXT.md defines 'user' as account holder. Does that match your intent here?"
 - Why this matters: If not, we need to update glossary before designing integration.
 
 **User response**: "Yes, account holder."
 
 **Turn 3:**
+
 - Question: "Does webhook option preserve account holder identity through retry?"
 - Why this matters: Current webhook impl strips user context on retry (see `webhooks/retry.ts:44`).
 
 ## Batching example (checkpoint questions)
 
 **Turn 1 (batched checkpoint questions):**
+
 1. What constraint drives this choice — performance, maintainability, or time-to-ship?
 2. Who needs to approve this before rollout?
 3. What's the current pain you're solving?
@@ -107,6 +117,7 @@ Use these prompts to trigger this skill and keep routing crisp.
 (These can be answered in any order)
 
 **Turn 2 (deep-dive questions stay sequential):**
+
 - Question 1: "You chose microservices for 'maintainability' — but your team is 3 people. How does operational complexity of 5 services improve maintainability over a modular monolith?"
 - (Wait for answer before asking next deep-dive question)
 
@@ -126,10 +137,12 @@ Use these prompts to trigger this skill and keep routing crisp.
 ## Pressure calibration example
 
 **Low stakes + clear evidence (lighter touch):**
+
 - Question: "Code shows retry logic in `AuthService.authenticate()` already handles this. Rollback path?"
 - (Quick, moves on fast)
 
 **High stakes + hedging (increase pressure):**
+
 - User: "The API *probably* handles retries..."
 - Question: "Probably? This is a payment endpoint — data loss risk. Show me the retry code or flag this as unvalidated assumption requiring load test."
 - (Demands concrete evidence or explicit uncertainty acknowledgment)
@@ -137,9 +150,11 @@ Use these prompts to trigger this skill and keep routing crisp.
 ## Context threading example
 
 **Turn 1:**
+
 - Question: "What's your rollback plan?"
 - User: "Manual config revert"
 
 **Turn 3 (referencing Turn 1):**
+
 - Question: "You said 'manual config revert' earlier — but your timeline mentions schema migration. How does manual revert handle schema changes? That's a contradiction."
 - (Surfaces tension between previous answers)
