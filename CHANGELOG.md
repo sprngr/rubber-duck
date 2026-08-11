@@ -40,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Skills
 
 - Skill metadata version format now matches `RUBBER_DUCK_VERSION` style (unquoted `vX.Y.Z`): `version` changed from `"2.0"` to `v2.0.0` for `duck-adapt`, `duck-debt`, `duck-debug`, `duck-design`, `duck-grill`, `duck-patch`, `duck-refactor`, `duck-review`, `duck-risk`, `duck-simplify`, `duck-tape`, `duck-teach`, `duck-triage`, and `quack`.
+- Fix confusing instructions causing `quack` to stall after routing.
 
 ### Fixed
 
