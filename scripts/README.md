@@ -92,9 +92,10 @@ Use Bash CLI for Linux/macOS and shell-based CI.
 
 | Flag | Type | Description |
 | --- | --- | --- |
-| `--claude` | switch | Use Claude paths (default global; add `--project` for project scope) |
-| `--copilot` | switch | Use Copilot paths (default global; add `--project` for project scope) |
-| `--opencode` | switch | Use opencode paths (default global; add `--project` for project scope) |
+| `--claude` | switch | Use Claude paths (required target; pick exactly one of `--claude/--copilot/--opencode`) |
+| `--copilot` | switch | Use Copilot paths (required target; pick exactly one of `--claude/--copilot/--opencode`) |
+| `--opencode` | switch | Use opencode paths (required target; pick exactly one of `--claude/--copilot/--opencode`) |
+| `--global`  | switch | Apply global scope to selected target (and skills, unless `--skip-skills`) |
 | `--project` | switch | Apply project scope to selected target (and skills, unless `--skip-skills`) |
 | `--claude-md <path>` | value | Claude target `CLAUDE.md` path override (default for `--claude`; project default when `--project` also set) |
 | `--branch <name>` | value | Branch to install from (default: `main`, auto-detects from URL when piped) |
@@ -113,9 +114,10 @@ Use PowerShell CLI for Windows-native environments.
 | Parameter | Type | Description |
 | --- | --- | --- |
 | `-Action install\|uninstall\|status\|doctor` | value | Operation to execute |
-| `-Claude` | switch | Use Claude paths (default global; add `-Project` for project scope) |
-| `-Copilot` | switch | Use Copilot paths (default global; add `-Project` for project scope) |
-| `-OpenCode` | switch | Use opencode paths (default global; add `-Project` for project scope) |
+| `-Claude` | switch | Use Claude paths (required target; pick exactly one of `-Claude/-Copilot/-OpenCode`) |
+| `-Copilot` | switch | Use Copilot paths (required target; pick exactly one of `-Claude/-Copilot/-OpenCode`) |
+| `-OpenCode` | switch | Use opencode paths (required target; pick exactly one of `-Claude/-Copilot/-OpenCode`) |
+| `-Global` | switch | Apply global scope to selected target (and skills, unless `-SkipSkills`) |
 | `-Project` | switch | Apply project scope to selected target (and skills, unless `-SkipSkills`) |
 | `-ClaudeMd <path>` | value | Claude target `CLAUDE.md` path override (default for `-Claude`; project default when `-Project` also set) |
 | `-Branch <name>` | value | Branch to install from (default: `main`) |
@@ -144,31 +146,28 @@ Hook runs:
 - `scripts/assemble-skills.sh --check`
 - `scripts/build-harness-artifacts.sh --check`
 
-### Mode and Flag Constraints
+### Mode and Flag Constraints & Target Path Behavior
 
-- `--claude-md` / `-ClaudeMd` requires `--claude` / `-Claude`.
-- `--project` / `-Project` applies to whichever target flag is set (opencode, copilot, or claude). No target = opencode global.
-- `--source` drives both artifact and skills source. `--skills-source` / `-SkillsSource` removed; installer derives skills source from `--source` + `--branch`.
-
-### Target Path Behavior
-
+- Target selection:
+  - exactly one target flag is required:
+    - Bash: `--opencode` or `--copilot` or `--claude`
+    - PowerShell: `-OpenCode` or `-Copilot` or `-Claude`
+  - multiple target flags in one command are invalid
 - Claude target:
-  - installs full duck set (router + ducklings)
-  - global (default): writes/removes managed `~/.claude/CLAUDE.md` and sibling `~/.claude/AGENTS.md`
-  - project (`--claude --project` / `-Claude -Project`): writes/removes managed project `CLAUDE.md` and sibling `AGENTS.md`
+  - global (`--claude --global` / `-Claude -Global`): writes/removes managed `~/.claude/CLAUDE.md` and sibling `~/.claude/AGENTS.md`
+  - project (default) (`--claude --project` / `-Claude -Project`): writes/removes managed project `CLAUDE.md` and sibling `AGENTS.md`
   - backups before mutation:
     - `CLAUDE.md.bak.<YYYYmmdd-HHMMSS>`
     - `AGENTS.md.bak.<YYYYmmdd-HHMMSS>`
+  - Options:
+    - `--claude-md` / `-ClaudeMd` requires `--claude` / `-Claude`.
 - Copilot target:
-  - global (default): uses `~/.copilot/agents` + `~/.copilot/AGENTS.md`
-  - project (`--copilot --project` / `-Copilot -Project`): uses `.github/agents` + project-root `AGENTS.md`
+  - global (`--copilot --global` / `-Copilot -Global`): uses `~/.copilot/agents` + `~/.copilot/AGENTS.md`
+  - project (default) (`--copilot --project` / `-Copilot -Project`): uses `.github/agents` + project-root `AGENTS.md`
+  - backup before mutation: `AGENTS.md.bak.<YYYYmmdd-HHMMSS>`
 - OpenCode target:
-  - installs full duck set (router + ducklings)
-  - global (default): uses `~/.config/opencode/agents` + `~/.config/opencode/AGENTS.md`
-  - project (`--opencode --project` / `-OpenCode -Project`): uses `.opencode/agents` + project-root `AGENTS.md`
-
-- OpenCode targets:
-  - use managed block markers in AGENTS.md
+  - global (`--opencode --global` / `-OpenCode -Global`): uses `~/.config/opencode/agents` + `~/.config/opencode/AGENTS.md`
+  - project (default) (`--opencode --project` / `-OpenCode -Project`): uses `.opencode/agents` + project-root `AGENTS.md`
   - backup before mutation: `AGENTS.md.bak.<YYYYmmdd-HHMMSS>`
 
 ### Installation Behavior
@@ -176,8 +175,7 @@ Hook runs:
 - Installer supports web invocation:
   - Bash: `curl .../scripts/rubber-duck.sh | bash -s -- <command>`
   - PowerShell: download script then execute.
-- Skills install default: global (`npx skills add <source> -y -g`).
-- Project scope for both target and skills via `--project` (bash) / `-Project` (PowerShell). Skills scope follows target scope unless `--skip-skills` / `-SkipSkills`.
+- Skills install default: project (`npx skills add <source> -y`).
 
 ### Skills Sets
 

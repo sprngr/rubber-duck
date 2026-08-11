@@ -4,7 +4,8 @@ param(
   [switch]$OpenCode,
   [switch]$Copilot,
   [switch]$Claude,
-  [switch]$Project,
+  [switch]$Global,
+  [switch]$Project = $true,
   [string]$ClaudeMd,
   [string]$Branch = "main",
   [switch]$SkipSkills,
@@ -15,7 +16,29 @@ param(
   [string]$RawBase = ""
 )
 
+$ProjectSpecified = $MyInvocation.BoundParameters.ContainsKey("Project")
+$GlobalSpecified = $MyInvocation.BoundParameters.ContainsKey("Global")
+$TargetFlags = @($OpenCode, $Copilot, $Claude) | Where-Object { $_ }
+$TargetCount = $TargetFlags.Count
+
 function rubber-duck {
+# Exactly one target is required.
+if ($TargetCount -eq 0) {
+  throw "Must specify exactly one target: -OpenCode, -Copilot, or -Claude."
+}
+if ($TargetCount -gt 1) {
+  throw "Cannot combine multiple targets. Choose exactly one: -OpenCode, -Copilot, or -Claude."
+}
+
+# Scope flags are mutually exclusive.
+if ($ProjectSpecified -and $GlobalSpecified) {
+  throw "Cannot combine -Project and -Global."
+}
+
+# Project default, global override
+if ($Global) {
+  $Project = $false;
+}
 # Parameters are declared in the top-level param() block and read from script scope here.
 $ErrorActionPreference = "Stop"
 
@@ -156,19 +179,7 @@ function Resolve-Target {
     return
   }
 
-  # Default: opencode global
-  $script:Target = "opencode"
-  $script:DestAgentsDir = Join-Path $HOME ".config/opencode/agents"
-  $script:DestPolicyMd = Join-Path $HOME ".config/opencode/AGENTS.md"
-  $script:PolicyMode = "managed_block"
-  $script:LocalPolicyFile = Join-Path $RepoRoot "dist/AGENTS.md"
-  if (Test-Path (Join-Path $RepoRoot "dist/opencode/agents")) {
-    $script:LocalAgentsDir = Join-Path $RepoRoot "dist/opencode/agents"
-  } else {
-    $script:LocalAgentsDir = Join-Path $RepoRoot "agents"
-  }
-  $script:RemotePolicyPath = "dist/AGENTS.md"
-  $script:RemoteAgentsPath = "dist/opencode/agents"
+  throw "Internal error: target resolution reached fallback unexpectedly."
 }
 
 function Has-LocalSources {
