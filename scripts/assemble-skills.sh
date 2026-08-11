@@ -18,6 +18,9 @@ OUT_ROOT="${REPO_ROOT}/skills"
 CANONICAL_GUARDRAILS="${REPO_ROOT}/src/shared/references/GUARDRAILS.md"
 SKILL_SNIPPETS_ROOT="${REPO_ROOT}/src/shared/skill-snippets"
 POLICY_SNIPPETS_ROOT="${REPO_ROOT}/src/shared/policy-snippets"
+VERSION_FILE="${REPO_ROOT}/VERSION"
+VERSION_TOKEN="__RUBBER_DUCK_VERSION__"
+VERSION_VALUE=""
 
 # rsync mirrors src/skills/ -> skills/ for raw assets.
 # --checksum: compare file content (not mtime+size). Matches cmp-based check semantics.
@@ -41,6 +44,26 @@ if [[ ! -f "${CANONICAL_GUARDRAILS}" ]]; then
   printf 'ERROR: missing canonical guardrails: %s\n' "${CANONICAL_GUARDRAILS}" >&2
   exit 1
 fi
+
+load_version() {
+  if [[ ! -f "${VERSION_FILE}" ]]; then
+    printf 'ERROR: missing VERSION file: %s\n' "${VERSION_FILE}" >&2
+    return 1
+  fi
+  VERSION_VALUE="$(tr -d '\r\n' < "${VERSION_FILE}")"
+  if [[ ! "${VERSION_VALUE}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    printf 'ERROR: invalid VERSION format: %s (expected vX.Y.Z)\n' "${VERSION_VALUE}" >&2
+    return 1
+  fi
+}
+
+replace_version_tokens_in_file() {
+  local target="$1"
+  local tmp
+  tmp="$(mktemp)"
+  awk -v token="${VERSION_TOKEN}" -v value="${VERSION_VALUE}" '{ gsub(token, value); print }' "${target}" > "${tmp}"
+  mv "${tmp}" "${target}"
+}
 
 # ===== Render pipeline ({{include}} resolution) =====
 
@@ -114,6 +137,7 @@ render_skill_markdown() {
   : > "${out}"
 
   render_markdown_with_includes "${src}" "${out}" "" || { rm -f "${out}"; return 1; }
+  replace_version_tokens_in_file "${out}"
   return 0
 }
 
@@ -318,6 +342,8 @@ inject_or_check_guardrails() {
 # ===== Main =====
 
 failed=0
+
+load_version || exit 1
 
 if (( CHECK_ONLY == 1 )); then
   load_deny_tokens "${RULES_FILE}" || exit 1

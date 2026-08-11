@@ -49,6 +49,7 @@ Examples:
 Notes:
 
 - Requires `jq` at build/check time.
+- Requires root `VERSION` file (`vX.Y.Z`) as canonical release value for generated artifacts.
 - Check mode validates guardrails drift before artifact freshness checks.
 - Agent source-of-truth is `src/agents/*`.
 - Model details (per-harness metadata, renderer boundary, adding a new harness): [docs/architecture/05-harness-agent-config.md](../docs/architecture/05-harness-agent-config.md).
@@ -176,6 +177,7 @@ Hook runs:
   - Bash: `curl .../scripts/rubber-duck.sh | bash -s -- <command>`
   - PowerShell: download script then execute.
 - Skills install default: project (`npx skills add <source> -y`).
+- `status` reports canonical version parsed from managed AGENTS artifact marker.
 
 ### Skills Sets
 

@@ -5,6 +5,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CANONICAL="$ROOT/src/shared/references/GUARDRAILS.md"
 REPO_AGENTS="$ROOT/AGENTS.md"
 DIST_AGENTS="$ROOT/dist/AGENTS.md"
+VERSION_FILE="$ROOT/VERSION"
 MANAGED_START="<!-- RUBBER_DUCK_MANAGED_BLOCK START -->"
 MANAGED_END="<!-- RUBBER_DUCK_MANAGED_BLOCK END -->"
 
@@ -18,6 +19,16 @@ if [ ! -f "$REPO_AGENTS" ]; then
 fi
 if [ ! -f "$DIST_AGENTS" ]; then
   echo "Missing dist AGENTS file: $DIST_AGENTS" >&2
+  exit 1
+fi
+if [ ! -f "$VERSION_FILE" ]; then
+  echo "Missing VERSION file: $VERSION_FILE" >&2
+  exit 1
+fi
+
+VERSION_VALUE="$(tr -d '\r\n' < "$VERSION_FILE")"
+if ! printf '%s' "$VERSION_VALUE" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
+  echo "Invalid VERSION format: $VERSION_VALUE (expected vX.Y.Z)" >&2
   exit 1
 fi
 
@@ -53,6 +64,11 @@ if ! awk -v start="$MANAGED_START" -v end="$MANAGED_END" '
   failed=1
 elif ! cmp -s "$managed_tmp" "$DIST_AGENTS"; then
   echo "Drift detected: managed block in AGENTS.md differs from dist/AGENTS.md" >&2
+  failed=1
+fi
+
+if ! grep -Fq "RUBBER_DUCK_VERSION: ${VERSION_VALUE}" "$DIST_AGENTS"; then
+  echo "Drift detected: dist/AGENTS.md version marker does not match VERSION (${VERSION_VALUE})" >&2
   failed=1
 fi
 

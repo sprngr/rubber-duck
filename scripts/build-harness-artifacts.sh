@@ -22,6 +22,9 @@ SRC_AGENTS_DIR="${REPO_ROOT}/src/agents"
 POLICY_SNIPPETS_DIR="${REPO_ROOT}/src/shared/policy-snippets"
 SRC_AGENTS_POLICY_MD="${SRC_AGENTS_DIR}/AGENTS.md"
 DIST_AGENTS_POLICY_MD="${REPO_ROOT}/dist/AGENTS.md"
+VERSION_FILE="${REPO_ROOT}/VERSION"
+VERSION_TOKEN="__RUBBER_DUCK_VERSION__"
+VERSION_VALUE=""
 
 CLAUDE_DIST_DIR="${REPO_ROOT}/dist/claude"
 CLAUDE_AGENT_DIR="${CLAUDE_DIST_DIR}/agents"
@@ -44,28 +47,63 @@ enforce_rule_checks() {
     --group-file-template 'src/agents/{item}/body.md'
 }
 
+load_version() {
+  if [[ ! -f "${VERSION_FILE}" ]]; then
+    printf 'ERROR: missing VERSION file: %s\n' "${VERSION_FILE}" >&2
+    return 1
+  fi
+  VERSION_VALUE="$(tr -d '\r\n' < "${VERSION_FILE}")"
+  if [[ ! "${VERSION_VALUE}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    printf 'ERROR: invalid VERSION format: %s (expected vX.Y.Z)\n' "${VERSION_VALUE}" >&2
+    return 1
+  fi
+}
+
+replace_version_tokens_to_file() {
+  local src="$1"
+  local out="$2"
+  local line=""
+  : > "${out}"
+  while IFS= read -r line || [[ -n "${line}" ]]; do
+    printf '%s\n' "${line//${VERSION_TOKEN}/${VERSION_VALUE}}" >> "${out}"
+  done < "${src}"
+}
+
 if (( CHECK_ONLY == 1 )); then
   enforce_rule_checks "${RULES_FILE}" "${REPO_ROOT}" || exit 1
 fi
+load_version || exit 1
 
 render_or_check_file() {
   local tmp_path="$1"
   local out_path="$2"
+  local rendered_path="${tmp_path}"
+  local tokenized_tmp=""
+
+  if grep -Fq "${VERSION_TOKEN}" "${tmp_path}"; then
+    tokenized_tmp="$(mktemp)"
+    replace_version_tokens_to_file "${tmp_path}" "${tokenized_tmp}"
+    rendered_path="${tokenized_tmp}"
+  fi
 
   if (( CHECK_ONLY == 1 )); then
     if [[ ! -f "${out_path}" ]]; then
+      [[ -n "${tokenized_tmp}" ]] && rm -f "${tokenized_tmp}"
       printf 'MISSING: %s\n' "${out_path}" >&2
       return 1
     fi
-    if ! cmp -s "${out_path}" "${tmp_path}"; then
+    if ! cmp -s "${out_path}" "${rendered_path}"; then
+      [[ -n "${tokenized_tmp}" ]] && rm -f "${tokenized_tmp}"
       printf 'STALE: %s\n' "${out_path}" >&2
       return 1
     fi
+    [[ -n "${tokenized_tmp}" ]] && rm -f "${tokenized_tmp}"
     printf 'Checked: %s\n' "${out_path}"
     return 0
   fi
 
-  cp -f "${tmp_path}" "${out_path}"
+  cp -f "${rendered_path}" "${out_path}"
+  [[ -n "${tokenized_tmp}" ]] && rm -f "${tokenized_tmp}"
   printf 'Built: %s\n' "${out_path}"
 }
 

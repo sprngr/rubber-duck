@@ -33,6 +33,7 @@ REMOTE_AGENTS_PATH=""
 REMOTE_POLICY_PATH=""
 REMOTE_POLICY_AGENTS_PATH=""
 POLICY_MODE="managed_block"  # managed_block|file
+CANONICAL_VERSION="unknown"
 
 MANAGED_START="<!-- RUBBER_DUCK_MANAGED_BLOCK START -->"
 MANAGED_END="<!-- RUBBER_DUCK_MANAGED_BLOCK END -->"
@@ -114,6 +115,12 @@ log() { printf '%s\n' "$*"; }
 warn() { printf 'WARN: %s\n' "$*"; }
 err() { printf 'ERROR: %s\n' "$*" >&2; }
 timestamp() { date +%Y%m%d-%H%M%S; }
+
+extract_version_from_file() {
+  local source_file="$1"
+  [[ -f "${source_file}" ]] || return 1
+  awk 'match($0, /RUBBER_DUCK_VERSION:[[:space:]]*(v[0-9]+\.[0-9]+\.[0-9]+)/, m) { print m[1]; exit 0 }' "${source_file}"
+}
 
 if [[ $# -gt 0 ]]; then
   case "$1" in
@@ -355,6 +362,9 @@ prepare_sources() {
     for f in "${AGENT_FILES[@]}"; do
       cp -f "${LOCAL_AGENTS_DIR}/${f}" "${TMP_DIR}/${f}"
     done
+    if v="$(extract_version_from_file "${TMP_DIR}/AGENTS.md" 2>/dev/null)"; then
+      CANONICAL_VERSION="${v}"
+    fi
     log "source: local (${REPO_ROOT})"
     return
   fi
@@ -369,6 +379,9 @@ prepare_sources() {
   for f in "${AGENT_FILES[@]}"; do
     curl -fsSL "${RAW_BASE}/${REMOTE_AGENTS_PATH}/${f}" -o "${TMP_DIR}/${f}"
   done
+  if v="$(extract_version_from_file "${TMP_DIR}/AGENTS.md" 2>/dev/null)"; then
+    CANONICAL_VERSION="${v}"
+  fi
   log "source: web (${RAW_BASE})"
 }
 
@@ -601,9 +614,13 @@ report_policy_block() {
 }
 
 status() {
+  if v="$(extract_version_from_file "${DEST_POLICY_MD}" 2>/dev/null)"; then
+    CANONICAL_VERSION="${v}"
+  fi
   log "target: ${TARGET}"
   log "agents_dir: ${DEST_AGENTS_DIR}"
   log "policy_md: ${DEST_POLICY_MD}"
+  log "version: ${CANONICAL_VERSION}"
   local installed=0
   for f in "${AGENT_FILES[@]}"; do
     [[ -f "${DEST_AGENTS_DIR}/${f}" ]] && installed=$((installed + 1))
