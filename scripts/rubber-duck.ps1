@@ -94,7 +94,7 @@ function rubber-duck {
     }
     if ($syncTargets.Count -eq 0) {
       Write-Host "sync: no enabled targets in manifest"
-      return
+      if (-not $Prune) { return }
     }
     foreach ($t in $syncTargets) {
       $args = @("-File", $SyncScriptPath, "-Action", "install", "-Harness", $t, "-Source", $Source, "-Branch", $Branch, "-RawBase", $RawBase)

@@ -395,16 +395,18 @@ PY
       exit 0
     fi
   fi
-  for T in "${SYNC_TARGETS[@]}"; do
-    CMD=(bash "${SCRIPT_PATH}" install --harness "${T}" --source "${SOURCE_MODE}" --branch "${BRANCH}" --raw-base "${RAW_BASE}")
-    if (( PROJECT_SCOPE == 1 )); then CMD+=(--project); else CMD+=(--global); fi
-    (( SKIP_SKILLS == 1 )) && CMD+=(--skip-skills)
-    (( SKIP_AGENTS_MD == 1 )) && CMD+=(--skip-agents-md)
-    (( EXTRAS == 1 )) && CMD+=(--extras)
-    (( DRY_RUN == 1 )) && CMD+=(--dry-run)
-    (( ALLOW_UNTRUSTED_SOURCE == 1 )) && CMD+=(--allow-untrusted-source)
-    "${CMD[@]}"
-  done
+  if (( ${#SYNC_TARGETS[@]} > 0 )); then
+    for T in "${SYNC_TARGETS[@]}"; do
+      CMD=(bash "${SCRIPT_PATH}" install --harness "${T}" --source "${SOURCE_MODE}" --branch "${BRANCH}" --raw-base "${RAW_BASE}")
+      if (( PROJECT_SCOPE == 1 )); then CMD+=(--project); else CMD+=(--global); fi
+      (( SKIP_SKILLS == 1 )) && CMD+=(--skip-skills)
+      (( SKIP_AGENTS_MD == 1 )) && CMD+=(--skip-agents-md)
+      (( EXTRAS == 1 )) && CMD+=(--extras)
+      (( DRY_RUN == 1 )) && CMD+=(--dry-run)
+      (( ALLOW_UNTRUSTED_SOURCE == 1 )) && CMD+=(--allow-untrusted-source)
+      "${CMD[@]}"
+    done
+  fi
   if (( PRUNE == 1 )); then
     for T in opencode copilot claude; do
       if [[ -z "${SYNC_TARGET_SET[${T}]+x}" ]]; then
