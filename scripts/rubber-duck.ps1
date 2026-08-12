@@ -584,8 +584,8 @@ function Skills-Install {
   $installList = @() + $DefaultSkills
   if ($Extras) { $installList += $ExtrasSkills }
   $scope = if ($Project) { @() } else { @("-g") }
-  $args = @("--yes", $SkillsCli, "add", $SkillsSource, "--skill") + $installList + $scope
-  & npx @args
+  $cliArgs = @("--yes", $SkillsCli, "add", $SkillsSource, "--skill") + $installList + $scope
+  & npx @cliArgs
 }
 
 function Skills-Uninstall {
@@ -603,8 +603,8 @@ function Skills-Uninstall {
   $allSkills = @() + $DefaultSkills + $ExtrasSkills
   $scope = if ($Project) { @() } else { @("-g") }
   try {
-    $args = @("--yes", $SkillsCli, "remove", $SkillsSource, "--skill") + $allSkills + $scope
-    & npx @args
+    $cliArgs = @("--yes", $SkillsCli, "remove", $SkillsSource, "--skill") + $allSkills + $scope
+    & npx @cliArgs
   } catch {
     Warn "skills remove failed; remove package manually if needed"
   }
@@ -620,8 +620,8 @@ function Skills-Status {
   $previousNoColor = $env:NO_COLOR
   try {
     $env:NO_COLOR = "1"
-    $args = @("--yes", $SkillsCli, "list") + $scope
-    $list = & npx @args | Out-String
+    $cliArgs = @("--yes", $SkillsCli, "list") + $scope
+    $list = & npx @cliArgs | Out-String
     $allPresent = $true
     foreach ($skill in $DefaultSkills) {
       if ($list.IndexOf($skill, [System.StringComparison]::Ordinal) -lt 0) {
