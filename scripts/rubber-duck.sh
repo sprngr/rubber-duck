@@ -16,7 +16,7 @@ SKIP_AGENTS_MD=0
 SKILLS_CLI="skills@^1.5.21"  # pinned npx CLI package spec
 SOURCE_MODE="auto"  # auto|local|web
 BRANCH="main"  # default branch
-RAW_BASE="https://raw.githubusercontent.com/sprngr/rubber-duck/main"
+RAW_BASE=""  # default computed after branch resolution unless set via --raw-base
 SKILLS_SOURCE=""  # derived from --source after choose_source
 DRY_RUN=0
 EXTRAS=0
@@ -102,6 +102,7 @@ Options:
   --prune                           With sync: remove managed targets not in manifest
   --dry-run                         Print planned actions only
   --extras                          Also install extras skills (duck-adapt, duck-grill, duck-tape)
+  --allow-untrusted-source          Skip rawBase allowlist check (dangerous; forks/custom mirrors)
   -h, --help                        Show help
 
 Examples:
@@ -124,6 +125,86 @@ log() { printf '%s\n' "$*"; }
 warn() { printf 'WARN: %s\n' "$*"; }
 err() { printf 'ERROR: %s\n' "$*" >&2; }
 timestamp() { date +%Y%m%d-%H%M%S; }
+
+# Exact rawBase prefix required unless --allow-untrusted-source is set.
+ALLOWED_RAW_BASE_PREFIX="https://raw.githubusercontent.com/sprngr/rubber-duck"
+ALLOW_UNTRUSTED_SOURCE=0
+
+# Compute SHA-256 of a file, print "sha256:<hex>". Returns 1 on error.
+compute_sha256() {
+  local file="$1" hash=""
+  [[ -f "${file}" ]] || return 1
+  if command -v sha256sum >/dev/null 2>&1; then
+    hash=$(sha256sum "${file}" | awk '{print $1}')
+  elif command -v shasum >/dev/null 2>&1; then
+    hash=$(shasum -a 256 "${file}" | awk '{print $1}')
+  else
+    return 1
+  fi
+  [[ -n "${hash}" ]] && printf 'sha256:%s\n' "${hash}"
+}
+
+# Validate rawBase against ALLOWED_RAW_BASE_PREFIX. Skip check for local mode.
+# Honor ALLOW_UNTRUSTED_SOURCE override. Returns 0 if allowed, 1 otherwise.
+check_rawbase_allowed() {
+  local raw_base="$1" mode="$2"
+  [[ "${mode}" == "local" ]] && return 0
+  (( ALLOW_UNTRUSTED_SOURCE == 1 )) && { warn "rawBase allowlist bypassed: ${raw_base}"; return 0; }
+  [[ "${raw_base}" == "${ALLOWED_RAW_BASE_PREFIX}"* ]] && return 0
+  return 1
+}
+
+# Verify artifact file matches manifest pin.
+# Returns 0 on match, 1 on mismatch (with err message), 2 if pin missing.
+verify_pin() {
+  local artifact_path="$1" local_file="$2"
+  [[ -z "${artifact_path}" || -z "${local_file}" ]] && return 2
+  [[ -f "${MANIFEST_PATH:-}" ]] || return 2
+  local expected
+  expected=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d.get('pins',{}).get(sys.argv[2],''))" "${MANIFEST_PATH}" "${artifact_path}" 2>/dev/null || printf '')
+  [[ -z "${expected}" ]] && return 2
+  [[ -f "${local_file}" ]] || return 1
+  local actual
+  actual=$(compute_sha256 "${local_file}") || return 1
+  if [[ "${actual}" != "${expected}" ]]; then
+    err "pin mismatch for ${artifact_path}: expected ${expected}, got ${actual}"
+    return 1
+  fi
+  return 0
+}
+
+# Write pins block into manifest. Remaining args: artifact_path=sha256_hash pairs.
+write_pins() {
+  local manifest_path="$1"
+  shift
+  (( $# == 0 )) && return 0
+  require_cmd python3
+  python3 - "${manifest_path}" "$@" <<'PY'
+import json, sys, pathlib
+path = sys.argv[1]
+p = pathlib.Path(path)
+data = {}
+if p.exists():
+    try: data = json.loads(p.read_text(encoding="utf-8") or "{}")
+    except Exception: data = {}
+pins = data.setdefault("pins", {})
+for pair in sys.argv[2:]:
+    if "=" in pair:
+        k, v = pair.split("=", 1)
+        pins[k] = v
+p.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+PY
+}
+
+# Warn when lastAppliedVersion is newer than sourceRef being installed.
+warn_on_downgrade() {
+  local last_applied="$1" incoming="$2"
+  [[ -z "${last_applied}" || "${last_applied}" == "v0.0.0" || "${last_applied}" == "${incoming}" ]] && return 0
+  local newer
+  newer=$(printf '%s\n%s\n' "${last_applied}" "${incoming}" | sort -V | tail -1)
+  [[ "${newer}" == "${last_applied}" ]] && warn "downgrade: manifest lastAppliedVersion ${last_applied} > incoming ${incoming}"
+  return 0
+}
 
 extract_version_from_file() {
   local source_file="$1"
@@ -200,6 +281,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --prune)
       PRUNE=1
+      shift
+      ;;
+    --allow-untrusted-source)
+      ALLOW_UNTRUSTED_SOURCE=1
       shift
       ;;
     --dry-run)
@@ -288,6 +373,7 @@ if [[ "${ACTION}" == "sync" ]]; then
     err "sync requires file-backed execution (not piped)"
     exit 1
   fi
+  check_rawbase_allowed "${RAW_BASE}" "${SOURCE_MODE}" || { err "rawBase not in allowlist: ${RAW_BASE}. Use --allow-untrusted-source to override."; exit 1; }
   command -v python3 >/dev/null 2>&1 || { err "required command missing: python3"; exit 1; }
   mapfile -t SYNC_TARGETS < <(
     python3 - "${MANIFEST_PATH}" <<'PY'
@@ -316,6 +402,7 @@ PY
     (( SKIP_AGENTS_MD == 1 )) && CMD+=(--skip-agents-md)
     (( EXTRAS == 1 )) && CMD+=(--extras)
     (( DRY_RUN == 1 )) && CMD+=(--dry-run)
+    (( ALLOW_UNTRUSTED_SOURCE == 1 )) && CMD+=(--allow-untrusted-source)
     "${CMD[@]}"
   done
   if (( PRUNE == 1 )); then
@@ -326,6 +413,7 @@ PY
         CMD+=(--skip-skills)
         (( SKIP_AGENTS_MD == 1 )) && CMD+=(--skip-agents-md)
         (( DRY_RUN == 1 )) && CMD+=(--dry-run)
+        (( ALLOW_UNTRUSTED_SOURCE == 1 )) && CMD+=(--allow-untrusted-source)
         "${CMD[@]}"
       fi
     done
@@ -346,8 +434,10 @@ if [[ "${BRANCH}" == "main" ]]; then
   fi
 fi
 
-# Update RAW_BASE based on branch
-RAW_BASE="https://raw.githubusercontent.com/sprngr/rubber-duck/${BRANCH}"
+# Default RAW_BASE from branch if not explicitly set via --raw-base
+if [[ -z "${RAW_BASE}" ]]; then
+  RAW_BASE="https://raw.githubusercontent.com/sprngr/rubber-duck/${BRANCH}"
+fi
 if [[ "${BRANCH}" != "main" ]]; then
   log "Using branch: ${BRANCH}"
 fi
@@ -776,6 +866,11 @@ doctor() {
 manifest_update_target() {
   local op="$1" target_name="$2"
   (( DRY_RUN == 1 )) && { log "[dry-run] manifest ${op} ${target_name} -> ${MANIFEST_PATH}"; return 0; }
+  local prior_version=""
+  if [[ -f "${MANIFEST_PATH}" ]] && command -v python3 >/dev/null 2>&1; then
+    prior_version=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d.get('source',{}).get('lastAppliedVersion',''))" "${MANIFEST_PATH}" 2>/dev/null || printf '')
+  fi
+  warn_on_downgrade "${prior_version}" "${CANONICAL_VERSION}"
   require_cmd python3
   mkdir -p "$(dirname -- "${MANIFEST_PATH}")"
   python3 - "${MANIFEST_PATH}" "${op}" "${target_name}" "${PROJECT_SCOPE}" "${SKIP_AGENTS_MD}" "${SKIP_SKILLS}" "${EXTRAS}" "${EFFECTIVE_SOURCE}" "${BRANCH}" "${RAW_BASE}" "${CANONICAL_VERSION}" <<'PY'
@@ -820,11 +915,23 @@ for TARGET in "${TARGETS[@]}"; do
   esac
   log "Skills source: ${SKILLS_SOURCE}"
 
+  check_rawbase_allowed "${RAW_BASE}" "${EFFECTIVE_SOURCE}" || { err "rawBase not in allowlist: ${RAW_BASE}. Use --allow-untrusted-source to override."; exit 1; }
+
   case "${ACTION}" in
     install)
       doctor
       prepare_sources
       install_agents
+      for pin_f in "${AGENT_FILES[@]}"; do
+        pin_rc=0; verify_pin "${REMOTE_AGENTS_PATH}/${pin_f}" "${TMP_DIR}/${pin_f}" || pin_rc=$?
+        (( pin_rc == 1 )) && exit 1
+      done
+      if (( SKIP_AGENTS_MD == 0 )); then
+        pin_policy="${TMP_DIR}/AGENTS.md"
+        [[ "${POLICY_MODE}" == "file" ]] && pin_policy="${TMP_DIR}/CLAUDE.md"
+        pin_rc=0; verify_pin "${REMOTE_POLICY_PATH}" "${pin_policy}" || pin_rc=$?
+        (( pin_rc == 1 )) && exit 1
+      fi
       if (( SKIP_AGENTS_MD == 0 )); then
         backup_md "${DEST_POLICY_MD}"
         if [[ "${POLICY_MODE}" == "managed_block" ]]; then
@@ -837,6 +944,16 @@ for TARGET in "${TARGETS[@]}"; do
       skills_install
       status
       manifest_update_target "install" "${TARGET}"
+      PIN_PAIRS=()
+      for pin_f in "${AGENT_FILES[@]}"; do
+        pin_h=$(compute_sha256 "${TMP_DIR}/${pin_f}") && PIN_PAIRS+=("${REMOTE_AGENTS_PATH}/${pin_f}=${pin_h}")
+      done
+      if (( SKIP_AGENTS_MD == 0 )); then
+        pin_policy="${TMP_DIR}/AGENTS.md"
+        [[ "${POLICY_MODE}" == "file" ]] && pin_policy="${TMP_DIR}/CLAUDE.md"
+        pin_h=$(compute_sha256 "${pin_policy}") && PIN_PAIRS+=("${REMOTE_POLICY_PATH}=${pin_h}")
+      fi
+      write_pins "${MANIFEST_PATH}" "${PIN_PAIRS[@]}"
       ;;
     uninstall)
       doctor

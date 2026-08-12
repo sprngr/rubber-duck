@@ -14,6 +14,7 @@ param(
   [switch]$Extras,
   [switch]$DryRun,
   [switch]$Prune,
+  [switch]$AllowUntrustedSource,
   [ValidateSet("auto","local","web")]
   [string]$Source = "auto",
   [string]$RawBase = ""
@@ -76,6 +77,9 @@ function rubber-duck {
     if ([string]::IsNullOrWhiteSpace($SyncScriptPath)) {
       throw "sync requires file-backed execution (not piped)."
     }
+    if (-not (Test-RawBaseAllowed $RawBase $Source)) {
+      throw "rawBase not in allowlist: $RawBase. Use -AllowUntrustedSource to override."
+    }
     $manifest = Get-Content -Raw $ManifestPath | ConvertFrom-Json -AsHashtable
     $syncTargets = @()
     $syncTargetSet = @{}
@@ -99,6 +103,7 @@ function rubber-duck {
       if ($SkipAgentsMd) { $args += "-SkipAgentsMd" }
       if ($Extras) { $args += "-Extras" }
       if ($DryRun) { $args += "-DryRun" }
+      if ($AllowUntrustedSource) { $args += "-AllowUntrustedSource" }
       & pwsh @args
       if ($LASTEXITCODE -ne 0) { throw "sync install failed for target: $t" }
     }
@@ -109,6 +114,7 @@ function rubber-duck {
           if ($Project) { $args += "-Project" } else { $args += "-Global" }
           if ($SkipAgentsMd) { $args += "-SkipAgentsMd" }
           if ($DryRun) { $args += "-DryRun" }
+          if ($AllowUntrustedSource) { $args += "-AllowUntrustedSource" }
           & pwsh @args
           if ($LASTEXITCODE -ne 0) { throw "sync prune uninstall failed for target: $t" }
         }
@@ -211,6 +217,73 @@ $ExtrasSkills = @(
 
 function Log($msg) { Write-Host $msg }
 function Warn($msg) { Write-Warning $msg }
+
+# Exact rawBase prefix required unless -AllowUntrustedSource is set.
+$AllowedRawBasePrefix = "https://raw.githubusercontent.com/sprngr/rubber-duck"
+
+# Compute SHA-256 of a file, return "sha256:<hex>". Returns $null on error.
+function Get-Sha256([string]$Path) {
+  if (-not (Test-Path $Path)) { return $null }
+  $h = (Get-FileHash -Algorithm SHA256 -Path $Path).Hash.ToLowerInvariant()
+  return "sha256:$h"
+}
+
+# Validate rawBase against $AllowedRawBasePrefix. Skip check for local mode.
+# Honor -AllowUntrustedSource override. Returns $true if allowed, $false otherwise.
+function Test-RawBaseAllowed([string]$RawBaseUrl, [string]$Mode) {
+  if ($Mode -eq "local") { return $true }
+  if ($AllowUntrustedSource) {
+    Warn "rawBase allowlist bypassed: $RawBaseUrl"
+    return $true
+  }
+  return $RawBaseUrl.StartsWith($AllowedRawBasePrefix)
+}
+
+# Verify artifact file matches manifest pin.
+# Returns 0 on match, 1 on mismatch, 2 if pin missing.
+function Test-Pin([string]$ArtifactPath, [string]$LocalFile) {
+  if ([string]::IsNullOrWhiteSpace($ArtifactPath) -or [string]::IsNullOrWhiteSpace($LocalFile)) { return 2 }
+  $mp = if ($Project) { ".rubber-duck/manifest.json" } else { (Join-Path $HOME ".config/rubber-duck/manifest.json") }
+  if (-not (Test-Path $mp)) { return 2 }
+  $expected = ""
+  try {
+    $data = Get-Content -Raw $mp | ConvertFrom-Json -AsHashtable
+    if ($data -and $data.ContainsKey("pins") -and $data["pins"].ContainsKey($ArtifactPath)) {
+      $expected = [string]$data["pins"][$ArtifactPath]
+    }
+  } catch { }
+  if ([string]::IsNullOrWhiteSpace($expected)) { return 2 }
+  if (-not (Test-Path $LocalFile)) { return 1 }
+  $actual = Get-Sha256 $LocalFile
+  if ($actual -ne $expected) {
+    Write-Host "ERROR: pin mismatch for ${ArtifactPath}: expected $expected, got $actual"
+    return 1
+  }
+  return 0
+}
+
+# Write pins block into manifest. $Pairs is hashtable of artifactPath -> sha256:<hex>.
+function Write-Pins([string]$ManifestPath, [hashtable]$Pairs) {
+  if ($null -eq $Pairs -or $Pairs.Count -eq 0) { return }
+  $data = @{}
+  if (Test-Path $ManifestPath) {
+    try { $data = Get-Content -Raw $ManifestPath | ConvertFrom-Json -AsHashtable } catch { $data = @{} }
+  }
+  if ($null -eq $data) { $data = @{} }
+  if (-not $data.ContainsKey("pins") -or $null -eq $data["pins"]) { $data["pins"] = @{} }
+  foreach ($k in $Pairs.Keys) { $data["pins"][$k] = $Pairs[$k] }
+  $data | ConvertTo-Json -Depth 10 | Set-Content -Path $ManifestPath
+}
+
+# Warn when lastAppliedVersion is newer than sourceRef being installed.
+function Warn-OnDowngrade([string]$LastApplied, [string]$Incoming) {
+  if ([string]::IsNullOrWhiteSpace($LastApplied) -or $LastApplied -eq "v0.0.0" -or $LastApplied -eq $Incoming) { return }
+  try {
+    $la = [version]($LastApplied.TrimStart('v'))
+    $inc = [version]($Incoming.TrimStart('v'))
+    if ($la -gt $inc) { Warn "downgrade: manifest lastAppliedVersion $LastApplied > incoming $Incoming" }
+  } catch { }
+}
 
 function Get-VersionFromFile([string]$Path) {
   if (-not (Test-Path $Path)) { return $null }
@@ -634,6 +707,11 @@ function Update-ManifestTarget([string]$Operation, [string]$TargetName) {
     return
   }
   $ManifestPath = if ($Project) { ".rubber-duck/manifest.json" } else { (Join-Path $HOME ".config/rubber-duck/manifest.json") }
+  $priorVersion = ""
+  if (Test-Path $ManifestPath) {
+    try { $priorVersion = [string](Get-Content -Raw $ManifestPath | ConvertFrom-Json -AsHashtable)["source"]["lastAppliedVersion"] } catch { }
+  }
+  Warn-OnDowngrade $priorVersion $script:CanonicalVersion
   $ManifestParent = Split-Path -Parent $ManifestPath
   if (-not [string]::IsNullOrWhiteSpace($ManifestParent)) {
     New-Item -ItemType Directory -Force -Path $ManifestParent | Out-Null
@@ -684,11 +762,24 @@ try {
       }
     }
     Write-Host "Skills source: $SkillsSource"
+    if (-not (Test-RawBaseAllowed $RawBase $script:EffectiveSource)) {
+      throw "rawBase not in allowlist: $RawBase. Use -AllowUntrustedSource to override."
+    }
     switch ($Action) {
       "install" {
         Doctor
         Download-Sources
         Install-Agents
+        foreach ($pinF in $AgentFiles) {
+          $pinRc = Test-Pin "$($script:RemoteAgentsPath)/$pinF" (Join-Path $script:TmpDir $pinF)
+          if ($pinRc -eq 1) { throw "pin verification failed" }
+        }
+        if (-not $SkipAgentsMd) {
+          $pinPolicyTmp = Join-Path $script:TmpDir "AGENTS.md"
+          if ($PolicyMode -eq "file") { $pinPolicyTmp = Join-Path $script:TmpDir "CLAUDE.md" }
+          $pinRc = Test-Pin $script:RemotePolicyPath $pinPolicyTmp
+          if ($pinRc -eq 1) { throw "pin verification failed" }
+        }
         if (-not $SkipAgentsMd) {
           Backup-Md $DestPolicyMd
           if ($PolicyMode -eq "managed_block") {
@@ -701,6 +792,19 @@ try {
         Skills-Install
         Status
         Update-ManifestTarget "install" $script:Target
+        $pinManifestPath = if ($Project) { ".rubber-duck/manifest.json" } else { (Join-Path $HOME ".config/rubber-duck/manifest.json") }
+        $pinPairs = @{}
+        foreach ($pinF in $AgentFiles) {
+          $h = Get-Sha256 (Join-Path $script:TmpDir $pinF)
+          if ($h) { $pinPairs["$($script:RemoteAgentsPath)/$pinF"] = $h }
+        }
+        if (-not $SkipAgentsMd) {
+          $pinPolicyTmp = Join-Path $script:TmpDir "AGENTS.md"
+          if ($PolicyMode -eq "file") { $pinPolicyTmp = Join-Path $script:TmpDir "CLAUDE.md" }
+          $h = Get-Sha256 $pinPolicyTmp
+          if ($h) { $pinPairs[$script:RemotePolicyPath] = $h }
+        }
+        Write-Pins $pinManifestPath $pinPairs
       }
       "uninstall" {
         Doctor
