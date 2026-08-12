@@ -153,7 +153,7 @@ This repository contains source prompts, assembled skills, generated harness art
 
 ## Load Project Context
 
-On session start, load `CONTEXT.md`:
+On session start, load `CONTEXT.md` if not already loaded:
 
 - Primary: `CONTEXT.md` at workspace root.
 - Localized: any `CONTEXT.md` on the path from workspace root to current working directory. Localized fills gaps root does not cover. Root wins on conflict.

@@ -36,6 +36,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Installer CLIs now reject conflicting scope flags (`--project` + `--global`, `-Project` + `-Global`) for consistent cross-shell behavior.
 - Installer docs updated to reflect explicit target requirement and target/scope constraints in `scripts/README.md`.
 - Add versioning flag to embed into skills and AGENTS policy, keeping it in sync back to the release.
+- Installer parity pass expanded PowerShell behavior to match Bash for dry-run workflows:
+  - Added `-DryRun` support across mutating installer paths (backup, managed-block upsert/remove, agent install/uninstall, skills install/uninstall, doctor directory creation, manifest updates).
+  - Sync recursion now propagates dry-run and relevant installer flags to nested install/uninstall calls.
+- Branch-selection parity improved across shells:
+  - PowerShell now auto-detects non-`main` branch from raw GitHub URL context (`BASH_SOURCE_URL`) when `-Branch` remains default `main`, mirroring Bash branch-detection intent.
+- Installer CLI reference docs (`scripts/README.md`) were aligned with current behavior:
+  - Added/updated `sync`, harness selector (`--harness` / `-Harness`), prune (`--prune` / `-Prune`), and dry-run (`--dry-run` / `-DryRun`) coverage.
+  - Updated target-selection constraints to reflect harness-list mode, legacy single-target mode, and no-mixing rules.
+  - Documented manifest-driven sync behavior and manifest paths for project/global scope.
 
 #### Skills
 
