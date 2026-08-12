@@ -1,4 +1,4 @@
-.PHONY: build check check-guardrails build-skills check-skills build-agents check-agents build-harness check-harness validation
+.PHONY: build check check-guardrails build-skills check-skills build-agents check-agents build-harness check-harness check-installer validation
 
 validation:
 	python3 validation/run-validation-tests.py
@@ -25,3 +25,6 @@ check-agents: check-harness
 build: build-skills build-agents
 
 check: check-skills check-agents
+
+check-installer:
+	bash tests/run-installer.sh

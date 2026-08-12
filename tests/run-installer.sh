@@ -1,0 +1,115 @@
+#!/usr/bin/env bash
+# Installer behavioral tests: fresh install, reinstall, sync, prune, allowlist.
+# Runs the real bash installer against local dist/, in isolated tmp workspaces.
+set -euo pipefail
+
+script_dir="$(cd "$(dirname "$0")" && pwd)"
+repo_root="$(cd "$script_dir/.." && pwd)"
+sh_installer="$repo_root/scripts/rubber-duck.sh"
+
+failures=0
+tests_run=0
+
+setup_workspace() {
+  local ws
+  ws="$(mktemp -d -t rd-installer-test.XXXXXX)"
+  echo "$ws"
+}
+
+teardown_workspace() {
+  local ws="$1"
+  [[ -n "$ws" && -d "$ws" && "$ws" == /tmp/* ]] && rm -rf "$ws"
+}
+
+run_test() {
+  local name="$1" fn="$2"
+  tests_run=$((tests_run + 1))
+  local ws
+  ws="$(setup_workspace)"
+  local rc=0
+  ( cd "$ws" && "$fn" "$ws" >/dev/null 2>&1 ) || rc=$?
+  teardown_workspace "$ws"
+  if [[ $rc -eq 0 ]]; then
+    printf 'ok  %s\n' "$name"
+  else
+    printf 'FAIL %s\n' "$name"
+    failures=$((failures + 1))
+  fi
+}
+
+# Fresh install writes pins block populated with sha256 entries.
+test_fresh_install_writes_pins() {
+  bash "$sh_installer" install --opencode --source local --skip-skills --project || return 1
+  [[ -f .rubber-duck/manifest.json ]] || return 1
+  python3 -c '
+import json, sys
+d = json.load(open(".rubber-duck/manifest.json"))
+pins = d.get("pins", {})
+if len(pins) < 3: sys.exit(1)
+if not all(v.startswith("sha256:") for v in pins.values()): sys.exit(1)
+'
+}
+
+# Reinstall against same source: pins verify silently and are unchanged.
+test_reinstall_pins_verify() {
+  bash "$sh_installer" install --opencode --source local --skip-skills --project || return 1
+  local before after
+  before=$(python3 -c 'import json; d=json.load(open(".rubber-duck/manifest.json")); print(sorted(d.get("pins",{}).items()))')
+  bash "$sh_installer" install --opencode --source local --skip-skills --project || return 1
+  after=$(python3 -c 'import json; d=json.load(open(".rubber-duck/manifest.json")); print(sorted(d.get("pins",{}).items()))')
+  [[ "$before" == "$after" ]] || return 1
+}
+
+# Tampered pin in manifest triggers mismatch abort on reinstall.
+test_tampered_artifact_mismatch() {
+  bash "$sh_installer" install --opencode --source local --skip-skills --project || return 1
+  python3 -c '
+import json
+p = ".rubber-duck/manifest.json"
+d = json.load(open(p))
+key = next(iter(d["pins"]))
+d["pins"][key] = "sha256:deadbeef"
+open(p, "w").write(json.dumps(d, indent=2, sort_keys=True) + "\n")
+'
+  # Reinstall must abort with mismatch (exit non-zero)
+  if bash "$sh_installer" install --opencode --source local --skip-skills --project 2>/dev/null; then
+    return 1
+  fi
+}
+
+# Install opencode, edit manifest to disable opencode + enable claude, sync prune.
+test_sync_round_trip() {
+  bash "$sh_installer" install --opencode --source local --skip-skills --project || return 1
+  [[ -f .opencode/agents/rubber-duck.md ]] || return 1
+  python3 -c '
+import json
+p = ".rubber-duck/manifest.json"
+d = json.load(open(p))
+d["targets"]["opencode"]["enabled"] = False
+d["targets"]["claude"] = {"enabled": True, "scope": "project", "installAgentsMd": True, "installSkills": False, "extras": False}
+open(p, "w").write(json.dumps(d, indent=2, sort_keys=True) + "\n")
+'
+  bash "$sh_installer" sync --project --prune --source local --skip-skills || return 1
+  [[ -f .claude/agents/rubber-duck.md ]] || return 1
+  [[ ! -f .opencode/agents/rubber-duck.md ]] || return 1
+}
+
+# Non-allowlisted rawBase blocked; --allow-untrusted-source warns and bypasses.
+test_rawbase_allowlist() {
+  if bash "$sh_installer" install --opencode --source web --raw-base "https://evil.example/foo" --skip-skills --project 2>/dev/null; then
+    return 1
+  fi
+  local out
+  out=$(bash "$sh_installer" install --opencode --source web --raw-base "https://evil.example/foo" --skip-skills --project --allow-untrusted-source 2>&1 || true)
+  echo "$out" | grep -q "allowlist bypassed" || return 1
+}
+
+# --- Test runner ---
+run_test "fresh install writes pins"        test_fresh_install_writes_pins
+run_test "reinstall verifies pins silently" test_reinstall_pins_verify
+run_test "tampered artifact mismatch"       test_tampered_artifact_mismatch
+run_test "sync round-trip"                  test_sync_round_trip
+run_test "rawBase allowlist"                test_rawbase_allowlist
+
+printf '\n%d/%d passed, %d failed\n' "$((tests_run - failures))" "$tests_run" "$failures"
+exit $((failures > 0 ? 1 : 0))
