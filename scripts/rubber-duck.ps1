@@ -713,6 +713,11 @@ function Update-ManifestTarget([string]$Operation, [string]$TargetName) {
   $manifest = @{}
   if (Test-Path $ManifestPath) {
     try { $manifest = Get-Content -Raw $ManifestPath | ConvertFrom-Json -AsHashtable } catch { $manifest = @{} }
+  } else {
+    $templatePath = Join-Path $RepoRoot ".rubber-duck/manifest.template.json"
+    if (Test-Path $templatePath) {
+      try { $manifest = Get-Content -Raw $templatePath | ConvertFrom-Json -AsHashtable } catch { $manifest = @{} }
+    }
   }
   if ($null -eq $manifest) { $manifest = @{} }
   if (-not $manifest.ContainsKey("schemaVersion")) { $manifest["schemaVersion"] = 1 }

@@ -875,7 +875,8 @@ manifest_update_target() {
   warn_on_downgrade "${prior_version}" "${CANONICAL_VERSION}"
   require_cmd python3
   mkdir -p "$(dirname -- "${MANIFEST_PATH}")"
-  python3 - "${MANIFEST_PATH}" "${op}" "${target_name}" "${PROJECT_SCOPE}" "${SKIP_AGENTS_MD}" "${SKIP_SKILLS}" "${EXTRAS}" "${EFFECTIVE_SOURCE}" "${BRANCH}" "${RAW_BASE}" "${CANONICAL_VERSION}" <<'PY'
+  local template_path="${REPO_ROOT}/.rubber-duck/manifest.template.json"
+  python3 - "${MANIFEST_PATH}" "${op}" "${target_name}" "${PROJECT_SCOPE}" "${SKIP_AGENTS_MD}" "${SKIP_SKILLS}" "${EXTRAS}" "${EFFECTIVE_SOURCE}" "${BRANCH}" "${RAW_BASE}" "${CANONICAL_VERSION}" "${template_path}" <<'PY'
 import json, sys, pathlib
 path, op, target = sys.argv[1], sys.argv[2], sys.argv[3]
 project_scope = sys.argv[4] == "1"
@@ -883,11 +884,17 @@ skip_agents_md = sys.argv[5] == "1"
 skip_skills = sys.argv[6] == "1"
 extras = sys.argv[7] == "1"
 effective_source, branch, raw_base, version = sys.argv[8], sys.argv[9], sys.argv[10], sys.argv[11]
+template_path = sys.argv[12] if len(sys.argv) > 12 else ""
 p = pathlib.Path(path)
 data = {}
 if p.exists():
     try: data = json.loads(p.read_text(encoding="utf-8") or "{}")
     except Exception: data = {}
+elif template_path:
+    tp = pathlib.Path(template_path)
+    if tp.exists():
+        try: data = json.loads(tp.read_text(encoding="utf-8"))
+        except Exception: data = {}
 data.setdefault("schemaVersion", 1)
 data["source"] = {"mode": effective_source, "sourceRef": branch, "rawBase": raw_base, "lastAppliedVersion": version}
 targets = data.setdefault("targets", {})

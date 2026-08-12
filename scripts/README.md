@@ -191,6 +191,8 @@ Hook runs:
 - Installer supports web invocation:
   - Bash: `curl .../scripts/rubber-duck.sh | bash -s -- <command>`
   - PowerShell: download script then execute.
+- Piped web installs may set the `BASH_SOURCE_URL` env var to the raw script URL. Both installers auto-detect the branch from that URL when `--branch` / `-Branch` is not explicitly set, so fork/branch installs via `curl | bash` pick up the correct branch automatically.
+- Fresh install seeds the manifest from `.rubber-duck/manifest.template.json` when running against a local checkout; web installs use built-in defaults.
 - Skills install default: project (`npx skills add <source> -y`).
 - `status` reports canonical version parsed from managed AGENTS artifact marker.
 - `sync` behavior:
