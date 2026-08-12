@@ -111,6 +111,7 @@ Use Bash CLI for Linux/macOS and shell-based CI.
 | `--prune` | switch | With `sync`, uninstall managed targets not enabled in manifest |
 | `--dry-run` | switch | Print planned actions without writing |
 | `--extras` | switch | Also install extras skills (duck-adapt, duck-grill, duck-tape) |
+| `--allow-untrusted-source` | switch | Skip `rawBase` allowlist check (dangerous; forks/custom mirrors) |
 | `-h`, `--help` | switch | Show help |
 
 ## PowerShell CLI (`scripts/rubber-duck.ps1`)
@@ -135,6 +136,7 @@ Use PowerShell CLI for Windows-native environments.
 | `-Prune` | switch | With `sync`, uninstall managed targets not enabled in manifest |
 | `-DryRun` | switch | Print planned actions without writing |
 | `-Extras` | switch | Also install extras skills (duck-adapt, duck-grill, duck-tape) |
+| `-AllowUntrustedSource` | switch | Skip `rawBase` allowlist check (dangerous; forks/custom mirrors) |
 
 ## Notes
 
@@ -197,6 +199,25 @@ Hook runs:
     - global: `~/.config/rubber-duck/manifest.json`
   - installs/updates enabled targets
   - with `--prune` / `-Prune`, uninstalls managed targets not enabled in manifest
+
+### Manifest & Security
+
+- Manifest paths:
+  - project: `.rubber-duck/manifest.json`
+  - global: `~/.config/rubber-duck/manifest.json`
+- `sync` reads manifest from the scope you invoke it with. Run `sync --project` / `-Project` from the project root that owns the manifest.
+- `rawBase` allowlist:
+  - default requires exact prefix `https://raw.githubusercontent.com/sprngr/rubber-duck`
+  - override with `--allow-untrusted-source` / `-AllowUntrustedSource` (emits warning; use for forks/mirrors)
+  - `sync` re-checks the allowlist before running per-target installs
+- Artifact pinning (SHA-256):
+  - `install` writes `pins` block with hashes of installed agent files and policy artifact
+  - subsequent `install` and `sync` verify each fetched artifact against the pin; mismatch aborts with `pin mismatch for <path>`
+  - fresh install with no prior pins passes silently
+- Version downgrade:
+  - warns when the manifest's `lastAppliedVersion` is newer than the incoming release
+  - warning only; does not block the install
+- Multi-target install (`--harness "opencode,claude"` / multi-target `-Harness`) shares one `source` block in the manifest. Mixing `--source local` and `--source web` across a single invocation results in last-wins for the `source` block; artifact `pins` are per-artifact and remain accurate.
 
 ### Skills Sets
 

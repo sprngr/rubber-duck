@@ -169,25 +169,25 @@ function rubber-duck {
       if (-not $Prune) { return }
     }
     foreach ($t in $syncTargets) {
-      $args = @("-File", $SyncScriptPath, "-Action", "install", "-Harness", $t, "-Source", $Source, "-Branch", $Branch, "-RawBase", $RawBase)
-      if ($Project) { $args += "-Project" } else { $args += "-Global" }
-      if ($SkipSkills) { $args += "-SkipSkills" }
-      if ($SkipAgentsMd) { $args += "-SkipAgentsMd" }
-      if ($Extras) { $args += "-Extras" }
-      if ($DryRun) { $args += "-DryRun" }
-      if ($AllowUntrustedSource) { $args += "-AllowUntrustedSource" }
-      & pwsh @args
+      $syncArgs = @("-File", $SyncScriptPath, "-Action", "install", "-Harness", $t, "-Source", $Source, "-Branch", $Branch, "-RawBase", $RawBase)
+      if ($Project) { $syncArgs += "-Project" } else { $syncArgs += "-Global" }
+      if ($SkipSkills) { $syncArgs += "-SkipSkills" }
+      if ($SkipAgentsMd) { $syncArgs += "-SkipAgentsMd" }
+      if ($Extras) { $syncArgs += "-Extras" }
+      if ($DryRun) { $syncArgs += "-DryRun" }
+      if ($AllowUntrustedSource) { $syncArgs += "-AllowUntrustedSource" }
+      & pwsh @syncArgs
       if ($LASTEXITCODE -ne 0) { throw "sync install failed for target: $t" }
     }
     if ($Prune) {
       foreach ($t in @("opencode","copilot","claude")) {
         if (-not $syncTargetSet.ContainsKey($t)) {
-          $args = @("-File", $SyncScriptPath, "-Action", "uninstall", "-Harness", $t, "-Source", $Source, "-Branch", $Branch, "-RawBase", $RawBase, "-SkipSkills")
-          if ($Project) { $args += "-Project" } else { $args += "-Global" }
-          if ($SkipAgentsMd) { $args += "-SkipAgentsMd" }
-          if ($DryRun) { $args += "-DryRun" }
-          if ($AllowUntrustedSource) { $args += "-AllowUntrustedSource" }
-          & pwsh @args
+          $syncArgs = @("-File", $SyncScriptPath, "-Action", "uninstall", "-Harness", $t, "-Source", $Source, "-Branch", $Branch, "-RawBase", $RawBase, "-SkipSkills")
+          if ($Project) { $syncArgs += "-Project" } else { $syncArgs += "-Global" }
+          if ($SkipAgentsMd) { $syncArgs += "-SkipAgentsMd" }
+          if ($DryRun) { $syncArgs += "-DryRun" }
+          if ($AllowUntrustedSource) { $syncArgs += "-AllowUntrustedSource" }
+          & pwsh @syncArgs
           if ($LASTEXITCODE -ne 0) { throw "sync prune uninstall failed for target: $t" }
         }
       }
@@ -286,6 +286,16 @@ $ExtrasSkills = @(
   "duck-grill",
   "duck-tape"
 )
+
+# Ensure directory exists; in dry-run mode warn without creating.
+function Ensure-Dir([string]$Path, [string]$Label) {
+  if ([string]::IsNullOrWhiteSpace($Path)) { return }
+  if ($DryRun) {
+    if (-not (Test-Path $Path)) { Warn "doctor: $Label missing, would create: $Path" }
+  } else {
+    New-Item -ItemType Directory -Force -Path $Path | Out-Null
+  }
+}
 
 function Get-VersionFromFile([string]$Path) {
   if (-not (Test-Path $Path)) { return $null }
@@ -675,28 +685,10 @@ function Status {
 function Doctor {
   Resolve-Target
   Resolve-Source
-  if ($DryRun) {
-    if (-not (Test-Path $DestAgentsDir)) { Warn "doctor: agents dir missing, would create: $DestAgentsDir" }
-  } else {
-    New-Item -ItemType Directory -Force -Path $DestAgentsDir | Out-Null
-  }
-  $policyParent = Split-Path -Parent $DestPolicyMd
-  if (-not [string]::IsNullOrWhiteSpace($policyParent)) {
-    if ($DryRun) {
-      if (-not (Test-Path $policyParent)) { Warn "doctor: policy parent missing, would create: $policyParent" }
-    } else {
-      New-Item -ItemType Directory -Force -Path $policyParent | Out-Null
-    }
-  }
+  Ensure-Dir $DestAgentsDir "agents dir"
+  Ensure-Dir (Split-Path -Parent $DestPolicyMd) "policy parent"
   if ($PolicyMode -eq "file") {
-    $agentsParent = Split-Path -Parent $DestClaudeAgentsMd
-    if (-not [string]::IsNullOrWhiteSpace($agentsParent)) {
-      if ($DryRun) {
-        if (-not (Test-Path $agentsParent)) { Warn "doctor: policy parent missing, would create: $agentsParent" }
-      } else {
-        New-Item -ItemType Directory -Force -Path $agentsParent | Out-Null
-      }
-    }
+    Ensure-Dir (Split-Path -Parent $DestClaudeAgentsMd) "policy parent"
   }
   Log "doctor: ok"
 }

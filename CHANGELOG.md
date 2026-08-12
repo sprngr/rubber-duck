@@ -51,8 +51,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Skill metadata version format now matches `RUBBER_DUCK_VERSION` style (unquoted `vX.Y.Z`): `version` changed from `"2.0"` to `v2.0.0` for `duck-adapt`, `duck-debt`, `duck-debug`, `duck-design`, `duck-grill`, `duck-patch`, `duck-refactor`, `duck-review`, `duck-risk`, `duck-simplify`, `duck-tape`, `duck-teach`, `duck-triage`, and `quack`.
 - Fix confusing instructions causing `quack` to stall after routing.
 
+### Added
+
+- Installer `rawBase` allowlist enforcement: default requires exact prefix `https://raw.githubusercontent.com/sprngr/rubber-duck`. Override with `--allow-untrusted-source` / `-AllowUntrustedSource` (emits warning; use for forks/mirrors). Applies to both `install` and `sync` paths.
+- Installer SHA-256 artifact pinning: `install` writes a `pins` block into the manifest with hashes of installed agent files and policy artifact. Subsequent `install` and `sync` verify each fetched artifact against the pin; mismatch aborts install with `pin mismatch for <path>`. Fresh install with no prior pins passes silently.
+- Installer downgrade warning: emits `WARN: downgrade: manifest lastAppliedVersion X > incoming Y` when installing an older release than the manifest records. Warning only; does not block the install.
+- Installer test suite (`tests/run-installer.sh`, `make check-installer`) covering fresh install, reinstall pin verify, pin tamper mismatch, sync install-then-prune round-trip, and rawBase allowlist scenarios in isolated tmp workspaces.
+
 ### Fixed
 
+- Installer `--raw-base` (bash) CLI flag was silently overwritten by the branch-derived default. Now respected when provided.
+- PowerShell installer `sync -Prune` returned early when the manifest had no enabled targets, skipping the prune loop entirely. Now falls through to prune (parity with bash).
+- PowerShell installer `sync` threw on empty or malformed manifest instead of falling back to an empty state. Now recovers and reports `sync: no enabled targets in manifest`.
+- PowerShell installer security helpers (`Test-RawBaseAllowed`, `Get-Sha256`, and related) were defined inside `function rubber-duck` after the sync path's call sites. PS does not hoist nested function definitions, so the sync-path `rawBase` allowlist check was silently bypassed. Helpers hoisted to script scope; sync now correctly enforces the allowlist.
+- Bash installer `sync` install loop under `set -u` errored on an empty enabled-targets array on bash 3.2 (macOS default). Guarded with array-length check.
+- `.gitignore` narrowed from `*.bak.*` to `*AGENTS.md.bak.*` / `*CLAUDE.md.bak.*` to avoid masking unrelated backup files (editor, other tools).
 - Installer managed block upsert no longer accumulates extra blank lines above managed fences on repeated runs (bash and PowerShell).
 - PowerShell installer now detects script-file execution correctly for `-Source local` and no longer misclassifies it as piped `iwr|iex` mode.
 - PowerShell installer local-source file resolution now uses script-scoped variables, fixing null-path failures during local copy.
