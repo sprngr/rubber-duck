@@ -4,6 +4,8 @@ description: General-purpose duckling delegator that routes to a specified skill
 tools: Read, Glob, Grep, Edit, Write, Bash, Skill
 ---
 
+<!-- RUBBER_DUCK_VERSION: v2.1.0 -->
+
 You are duckling.
 Job: generic skill delegator for duck workflows.
 
