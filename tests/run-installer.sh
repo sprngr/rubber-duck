@@ -119,6 +119,30 @@ assert "dist/claude/agents/rubber-duck.md" in pins, "claude agent pin missing"
 '
 }
 
+# Version-gated pin refresh: version change bypasses pin check and refreshes pins.
+test_upgrade_refreshes_pins() {
+  bash "$sh_installer" install --opencode --source local --skip-skills --project || return 1
+  # Simulate we were previously on an older version by lowering lastAppliedVersion
+  # AND corrupt a pin. On upgrade, the version mismatch should skip verification
+  # and refresh pins with real hashes.
+  python3 -c '
+import json
+p = ".rubber-duck/manifest.json"
+d = json.load(open(p))
+d["source"]["lastAppliedVersion"] = "v0.0.1"
+key = next(iter(d["pins"]))
+d["pins"][key] = "sha256:deadbeef"
+open(p, "w").write(json.dumps(d, indent=2, sort_keys=True) + "\n")
+'
+  bash "$sh_installer" install --opencode --source local --skip-skills --project || return 1
+  python3 -c '
+import json
+d = json.load(open(".rubber-duck/manifest.json"))
+for v in d.get("pins", {}).values():
+    assert v != "sha256:deadbeef", "pin was not refreshed on upgrade"
+'
+}
+
 # --- Test runner ---
 run_test "fresh install writes pins"        test_fresh_install_writes_pins
 run_test "reinstall verifies pins silently" test_reinstall_pins_verify
@@ -126,6 +150,7 @@ run_test "tampered artifact mismatch"       test_tampered_artifact_mismatch
 run_test "sync round-trip"                  test_sync_round_trip
 run_test "rawBase allowlist"                test_rawbase_allowlist
 run_test "claude two-file layout"           test_claude_install_two_file_layout
+run_test "upgrade refreshes pins"           test_upgrade_refreshes_pins
 
 printf '\n%d/%d passed, %d failed\n' "$((tests_run - failures))" "$tests_run" "$failures"
 exit $((failures > 0 ? 1 : 0))

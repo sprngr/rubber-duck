@@ -206,6 +206,14 @@ warn_on_downgrade() {
   return 0
 }
 
+# Read prior lastAppliedVersion from manifest. Prints empty string when missing.
+read_prior_version() {
+  local mp="$1"
+  [[ -f "${mp}" ]] || { printf ''; return; }
+  command -v python3 >/dev/null 2>&1 || { printf ''; return; }
+  python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d.get('source',{}).get('lastAppliedVersion',''))" "${mp}" 2>/dev/null || printf ''
+}
+
 extract_version_from_file() {
   local source_file="$1"
   [[ -f "${source_file}" ]] || return 1
@@ -869,9 +877,7 @@ manifest_update_target() {
   local op="$1" target_name="$2"
   (( DRY_RUN == 1 )) && { log "[dry-run] manifest ${op} ${target_name} -> ${MANIFEST_PATH}"; return 0; }
   local prior_version=""
-  if [[ -f "${MANIFEST_PATH}" ]] && command -v python3 >/dev/null 2>&1; then
-    prior_version=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d.get('source',{}).get('lastAppliedVersion',''))" "${MANIFEST_PATH}" 2>/dev/null || printf '')
-  fi
+  prior_version=$(read_prior_version "${MANIFEST_PATH}")
   warn_on_downgrade "${prior_version}" "${CANONICAL_VERSION}"
   require_cmd python3
   mkdir -p "$(dirname -- "${MANIFEST_PATH}")"
@@ -931,15 +937,20 @@ for TARGET in "${TARGETS[@]}"; do
       doctor
       prepare_sources
       install_agents
-      for pin_f in "${AGENT_FILES[@]}"; do
-        pin_rc=0; verify_pin "${REMOTE_AGENTS_PATH}/${pin_f}" "${TMP_DIR}/${pin_f}" || pin_rc=$?
-        (( pin_rc == 1 )) && exit 1
-      done
-      if (( SKIP_AGENTS_MD == 0 )); then
-        pin_policy="${TMP_DIR}/AGENTS.md"
-        [[ "${POLICY_MODE}" == "file" ]] && pin_policy="${TMP_DIR}/CLAUDE.md"
-        pin_rc=0; verify_pin "${REMOTE_POLICY_PATH}" "${pin_policy}" || pin_rc=$?
-        (( pin_rc == 1 )) && exit 1
+      pin_prior_version=$(read_prior_version "${MANIFEST_PATH}")
+      if [[ -n "${pin_prior_version}" && "${pin_prior_version}" != "${CANONICAL_VERSION}" ]]; then
+        log "pin refresh on version change ${pin_prior_version} -> ${CANONICAL_VERSION}"
+      else
+        for pin_f in "${AGENT_FILES[@]}"; do
+          pin_rc=0; verify_pin "${REMOTE_AGENTS_PATH}/${pin_f}" "${TMP_DIR}/${pin_f}" || pin_rc=$?
+          (( pin_rc == 1 )) && exit 1
+        done
+        if (( SKIP_AGENTS_MD == 0 )); then
+          pin_policy="${TMP_DIR}/AGENTS.md"
+          [[ "${POLICY_MODE}" == "file" ]] && pin_policy="${TMP_DIR}/CLAUDE.md"
+          pin_rc=0; verify_pin "${REMOTE_POLICY_PATH}" "${pin_policy}" || pin_rc=$?
+          (( pin_rc == 1 )) && exit 1
+        fi
       fi
       if (( SKIP_AGENTS_MD == 0 )); then
         backup_md "${DEST_POLICY_MD}"

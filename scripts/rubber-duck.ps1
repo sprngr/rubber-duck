@@ -93,6 +93,12 @@ function Warn-OnDowngrade([string]$LastApplied, [string]$Incoming) {
   } catch { }
 }
 
+# Read prior lastAppliedVersion from manifest. Returns "" when missing/unreadable.
+function Read-PriorVersion([string]$ManifestPath) {
+  if (-not (Test-Path $ManifestPath)) { return "" }
+  try { return [string](Get-Content -Raw $ManifestPath | ConvertFrom-Json -AsHashtable)["source"]["lastAppliedVersion"] } catch { return "" }
+}
+
 function rubber-duck {
   $LegacyTargets = @()
   if ($OpenCode) { $LegacyTargets += "opencode" }
@@ -701,10 +707,7 @@ function Update-ManifestTarget([string]$Operation, [string]$TargetName) {
     return
   }
   $ManifestPath = if ($Project) { ".rubber-duck/manifest.json" } else { (Join-Path $HOME ".config/rubber-duck/manifest.json") }
-  $priorVersion = ""
-  if (Test-Path $ManifestPath) {
-    try { $priorVersion = [string](Get-Content -Raw $ManifestPath | ConvertFrom-Json -AsHashtable)["source"]["lastAppliedVersion"] } catch { }
-  }
+  $priorVersion = Read-PriorVersion $ManifestPath
   Warn-OnDowngrade $priorVersion $script:CanonicalVersion
   $ManifestParent = Split-Path -Parent $ManifestPath
   if (-not [string]::IsNullOrWhiteSpace($ManifestParent)) {
@@ -769,15 +772,21 @@ try {
         Doctor
         Download-Sources
         Install-Agents
-        foreach ($pinF in $AgentFiles) {
-          $pinRc = Test-Pin "$($script:RemoteAgentsPath)/$pinF" (Join-Path $script:TmpDir $pinF)
-          if ($pinRc -eq 1) { throw "pin verification failed" }
-        }
-        if (-not $SkipAgentsMd) {
-          $pinPolicyTmp = Join-Path $script:TmpDir "AGENTS.md"
-          if ($PolicyMode -eq "file") { $pinPolicyTmp = Join-Path $script:TmpDir "CLAUDE.md" }
-          $pinRc = Test-Pin $script:RemotePolicyPath $pinPolicyTmp
-          if ($pinRc -eq 1) { throw "pin verification failed" }
+        $pinManifestPathForCheck = if ($Project) { ".rubber-duck/manifest.json" } else { (Join-Path $HOME ".config/rubber-duck/manifest.json") }
+        $pinPriorVersion = Read-PriorVersion $pinManifestPathForCheck
+        if (-not [string]::IsNullOrWhiteSpace($pinPriorVersion) -and $pinPriorVersion -ne $script:CanonicalVersion) {
+          Log "pin refresh on version change $pinPriorVersion -> $($script:CanonicalVersion)"
+        } else {
+          foreach ($pinF in $AgentFiles) {
+            $pinRc = Test-Pin "$($script:RemoteAgentsPath)/$pinF" (Join-Path $script:TmpDir $pinF)
+            if ($pinRc -eq 1) { throw "pin verification failed" }
+          }
+          if (-not $SkipAgentsMd) {
+            $pinPolicyTmp = Join-Path $script:TmpDir "AGENTS.md"
+            if ($PolicyMode -eq "file") { $pinPolicyTmp = Join-Path $script:TmpDir "CLAUDE.md" }
+            $pinRc = Test-Pin $script:RemotePolicyPath $pinPolicyTmp
+            if ($pinRc -eq 1) { throw "pin verification failed" }
+          }
         }
         if (-not $SkipAgentsMd) {
           Backup-Md $DestPolicyMd
