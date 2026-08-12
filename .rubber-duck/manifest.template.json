@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "mode": "web",
+    "sourceRef": "main",
+    "rawBase": "https://raw.githubusercontent.com/sprngr/rubber-duck/main",
+    "lastAppliedVersion": "v0.0.0"
+  },
+  "targets": {
+    "opencode": {
+      "enabled": true,
+      "scope": "project",
+      "installAgentsMd": true,
+      "installSkills": true,
+      "extras": false
+    }
+  }
+}

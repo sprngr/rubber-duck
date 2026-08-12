@@ -10,6 +10,10 @@
 .claude
 node_modules
 skills-lock.json
-AGENTS.md.bak.*
+*.bak.*
 *-skill-check-report.html
 *-eval-report.html
+
+# Rubber Duck local runtime state
+.rubber-duck/manifest.json
+!.rubber-duck/manifest.template.json

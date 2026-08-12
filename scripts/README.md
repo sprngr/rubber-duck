@@ -16,6 +16,9 @@ make check
 
 # Install agents (example: project OpenCode target)
 ./scripts/rubber-duck.sh install --opencode --project
+
+# Install using harness selector (single target)
+./scripts/rubber-duck.sh install --harness "opencode" --project
 ```
 
 ## Build Targets (Make)

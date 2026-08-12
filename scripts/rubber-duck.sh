@@ -4,6 +4,9 @@ set -euo pipefail
 ACTION="install"
 TARGET=""
 SEEN_TARGET_COUNT=0
+HARNESS_CSV=""
+PRUNE=0
+TARGETS=()
 CLAUDE_MD=""
 PROJECT_SCOPE=1
 SEEN_PROJECT=0
@@ -81,12 +84,13 @@ EXTRAS_SKILLS=(
 usage() {
   cat <<'EOF'
 Usage:
-  scripts/rubber-duck.sh [install|uninstall|status|doctor] [options]
+  scripts/rubber-duck.sh [install|uninstall|status|doctor|sync] [options]
 
 Options:
   --opencode                        Use opencode paths (required: pick exactly one target)
   --copilot                         Use Copilot paths (required: pick exactly one target)
   --claude                          Use Claude paths (required: pick exactly one target)
+  --harness <list>                  Comma-separated harness list (opencode,copilot,claude)
   --global                          Apply global scope to selected target (and skills, unless --skip-skills)
   --project                         Apply project scope to selected target (and skills, unless --skip-skills)
   --claude-md <path>                Claude target memory file path override
@@ -95,16 +99,21 @@ Options:
   --skip-agents-md                  Skip AGENTS.md policy block install/remove
   --source <auto|local|web>         Artifact + skills source (default: auto)
   --raw-base <url>                  Raw GitHub base for web source
+  --prune                           With sync: remove managed targets not in manifest
   --dry-run                         Print planned actions only
   --extras                          Also install extras skills (duck-adapt, duck-grill, duck-tape)
   -h, --help                        Show help
 
 Examples:
   scripts/rubber-duck.sh install --opencode
+  scripts/rubber-duck.sh install --harness "opencode"
+  scripts/rubber-duck.sh install --harness "opencode,copilot"
   scripts/rubber-duck.sh install --opencode --extras
   scripts/rubber-duck.sh install --opencode --project
   scripts/rubber-duck.sh install --copilot --global
   scripts/rubber-duck.sh install --claude --skip-skills
+  scripts/rubber-duck.sh sync --project
+  scripts/rubber-duck.sh sync --project --prune --skip-skills --skip-agents-md
   scripts/rubber-duck.sh install --opencode --source local
   curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh | bash -s -- install --opencode
   curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/v2-quackening/scripts/rubber-duck.sh | bash -s -- install --opencode --branch v2-quackening
@@ -119,12 +128,15 @@ timestamp() { date +%Y%m%d-%H%M%S; }
 extract_version_from_file() {
   local source_file="$1"
   [[ -f "${source_file}" ]] || return 1
-  awk 'match($0, /RUBBER_DUCK_VERSION:[[:space:]]*(v[0-9]+\.[0-9]+\.[0-9]+)/, m) { print m[1]; exit 0 }' "${source_file}"
+  awk '
+    match($0, /RUBBER_DUCK_VERSION:[[:space:]]*(v[0-9]+\.[0-9]+\.[0-9]+)/, m) { print m[1]; found=1; exit 0 }
+    END { if (!found) exit 1 }
+  ' "${source_file}"
 }
 
 if [[ $# -gt 0 ]]; then
   case "$1" in
-    install|uninstall|status|doctor)
+    install|uninstall|status|doctor|sync)
       ACTION="$1"
       shift
       ;;
@@ -147,6 +159,10 @@ while [[ $# -gt 0 ]]; do
       TARGET="claude"
       SEEN_TARGET_COUNT=$((SEEN_TARGET_COUNT + 1))
       shift
+      ;;
+    --harness)
+      HARNESS_CSV="${2:-}"
+      shift 2
       ;;
     --project)
       PROJECT_SCOPE=1
@@ -182,6 +198,10 @@ while [[ $# -gt 0 ]]; do
       RAW_BASE="${2:-}"
       shift 2
       ;;
+    --prune)
+      PRUNE=1
+      shift
+      ;;
     --dry-run)
       DRY_RUN=1
       shift
@@ -202,20 +222,116 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if (( SEEN_TARGET_COUNT == 0 )); then
-  err "must specify exactly one target: --opencode, --copilot, or --claude"
-  usage
-  exit 1
-fi
-
-if (( SEEN_TARGET_COUNT > 1 )); then
-  err "cannot combine multiple targets; choose exactly one: --opencode, --copilot, or --claude"
-  exit 1
-fi
-
 if (( SEEN_PROJECT == 1 && SEEN_GLOBAL == 1 )); then
   err "cannot combine --project and --global"
   exit 1
+fi
+
+if [[ -n "${HARNESS_CSV}" && ${SEEN_TARGET_COUNT} -gt 0 ]]; then
+  err "cannot combine --harness with --opencode/--copilot/--claude"
+  exit 1
+fi
+
+if [[ -n "${HARNESS_CSV}" ]]; then
+  IFS=',' read -r -a HARNESS_ITEMS <<< "${HARNESS_CSV}"
+  for RAW in "${HARNESS_ITEMS[@]}"; do
+    T="${RAW//[[:space:]]/}"
+    case "${T}" in
+      opencode|copilot|claude) TARGETS+=("${T}") ;;
+      "") ;;
+      *) err "invalid harness in --harness: ${T}"; exit 1 ;;
+    esac
+  done
+else
+  if [[ "${ACTION}" == "sync" ]]; then
+    TARGETS=()
+  else
+    if (( SEEN_TARGET_COUNT == 0 )); then
+      err "must specify target via --harness or one legacy target flag"
+      usage
+      exit 1
+    fi
+    if (( SEEN_TARGET_COUNT > 1 )); then
+      err "cannot combine multiple legacy targets; use --harness for multi-target"
+      exit 1
+    fi
+    TARGETS+=("${TARGET}")
+  fi
+fi
+
+if (( PRUNE == 1 )) && [[ "${ACTION}" != "sync" ]]; then
+  err "--prune is only valid with sync"
+  exit 1
+fi
+
+HAS_CLAUDE=0
+for T in "${TARGETS[@]}"; do
+  [[ "${T}" == "claude" ]] && HAS_CLAUDE=1
+done
+if [[ -n "${CLAUDE_MD}" && ${HAS_CLAUDE} -eq 0 ]]; then
+  err "--claude-md applies only when claude target is selected"
+  exit 1
+fi
+
+if (( PROJECT_SCOPE == 1 )); then
+  MANIFEST_PATH=".rubber-duck/manifest.json"
+else
+  MANIFEST_PATH="${HOME}/.config/rubber-duck/manifest.json"
+fi
+
+if [[ "${ACTION}" == "sync" ]]; then
+  if [[ ! -f "${MANIFEST_PATH}" ]]; then
+    err "manifest missing: ${MANIFEST_PATH}. Run install first."
+    exit 1
+  fi
+  if [[ "${0:-}" == "bash" || "${0:-}" == "sh" || "${0:-}" == "-" ]]; then
+    err "sync requires file-backed execution (not piped)"
+    exit 1
+  fi
+  command -v python3 >/dev/null 2>&1 || { err "required command missing: python3"; exit 1; }
+  mapfile -t SYNC_TARGETS < <(
+    python3 - "${MANIFEST_PATH}" <<'PY'
+import json, sys
+data = json.load(open(sys.argv[1], encoding="utf-8"))
+targets = data.get("targets", {})
+for name, cfg in targets.items():
+    if cfg.get("enabled", True):
+        print(name)
+PY
+  )
+  declare -A SYNC_TARGET_SET=()
+  for T in "${SYNC_TARGETS[@]}"; do
+    SYNC_TARGET_SET["${T}"]=1
+  done
+  if (( ${#SYNC_TARGETS[@]} == 0 )); then
+    log "sync: no enabled targets in manifest"
+    if (( PRUNE == 0 )); then
+      exit 0
+    fi
+  fi
+  for T in "${SYNC_TARGETS[@]}"; do
+    CMD=(bash "${SCRIPT_PATH}" install --harness "${T}" --source "${SOURCE_MODE}" --branch "${BRANCH}" --raw-base "${RAW_BASE}")
+    if (( PROJECT_SCOPE == 1 )); then CMD+=(--project); else CMD+=(--global); fi
+    (( SKIP_SKILLS == 1 )) && CMD+=(--skip-skills)
+    (( SKIP_AGENTS_MD == 1 )) && CMD+=(--skip-agents-md)
+    (( EXTRAS == 1 )) && CMD+=(--extras)
+    (( DRY_RUN == 1 )) && CMD+=(--dry-run)
+    "${CMD[@]}"
+  done
+  if (( PRUNE == 1 )); then
+    for T in opencode copilot claude; do
+      if [[ -z "${SYNC_TARGET_SET[${T}]+x}" ]]; then
+        CMD=(bash "${SCRIPT_PATH}" uninstall --harness "${T}" --source "${SOURCE_MODE}" --branch "${BRANCH}" --raw-base "${RAW_BASE}")
+        if (( PROJECT_SCOPE == 1 )); then CMD+=(--project); else CMD+=(--global); fi
+        CMD+=(--skip-skills)
+        (( SKIP_AGENTS_MD == 1 )) && CMD+=(--skip-agents-md)
+        (( DRY_RUN == 1 )) && CMD+=(--dry-run)
+        "${CMD[@]}"
+      fi
+    done
+  fi
+  log "sync: complete"
+  exit 0
 fi
 
 # Auto-detect branch from piped URL if not explicitly set
@@ -234,11 +350,6 @@ fi
 RAW_BASE="https://raw.githubusercontent.com/sprngr/rubber-duck/${BRANCH}"
 if [[ "${BRANCH}" != "main" ]]; then
   log "Using branch: ${BRANCH}"
-fi
-
-if [[ -n "${CLAUDE_MD}" && "${TARGET}" != "claude" ]]; then
-  err "--claude-md requires --claude"
-  exit 1
 fi
 
 resolve_target() {
@@ -435,6 +546,16 @@ backup_md() {
   else
     : > "${backup}"
   fi
+  local backups=()
+  local keep_index=0
+  backups=( "${target}".bak.* )
+  if [[ -e "${backups[0]:-}" ]]; then
+    keep_index=$((${#backups[@]} - 1))
+    for i in "${!backups[@]}"; do
+      (( i == keep_index )) && continue
+      rm -f "${backups[$i]}"
+    done
+  fi
   log "Backup created: ${backup}"
 }
 
@@ -455,6 +576,7 @@ upsert_managed_block() {
   {
     if [[ -s "${target}" ]]; then
       cat "${target}"
+      printf '\n'
     fi
     printf '%s\n' "${MANAGED_START}"
     cat "${content_file}"
@@ -651,65 +773,98 @@ doctor() {
   log "doctor: ok"
 }
 
-resolve_target
-choose_source
+manifest_update_target() {
+  local op="$1" target_name="$2"
+  (( DRY_RUN == 1 )) && { log "[dry-run] manifest ${op} ${target_name} -> ${MANIFEST_PATH}"; return 0; }
+  require_cmd python3
+  mkdir -p "$(dirname -- "${MANIFEST_PATH}")"
+  python3 - "${MANIFEST_PATH}" "${op}" "${target_name}" "${PROJECT_SCOPE}" "${SKIP_AGENTS_MD}" "${SKIP_SKILLS}" "${EXTRAS}" "${EFFECTIVE_SOURCE}" "${BRANCH}" "${RAW_BASE}" "${CANONICAL_VERSION}" <<'PY'
+import json, sys, pathlib
+path, op, target = sys.argv[1], sys.argv[2], sys.argv[3]
+project_scope = sys.argv[4] == "1"
+skip_agents_md = sys.argv[5] == "1"
+skip_skills = sys.argv[6] == "1"
+extras = sys.argv[7] == "1"
+effective_source, branch, raw_base, version = sys.argv[8], sys.argv[9], sys.argv[10], sys.argv[11]
+p = pathlib.Path(path)
+data = {}
+if p.exists():
+    try: data = json.loads(p.read_text(encoding="utf-8") or "{}")
+    except Exception: data = {}
+data.setdefault("schemaVersion", 1)
+data["source"] = {"mode": effective_source, "sourceRef": branch, "rawBase": raw_base, "lastAppliedVersion": version}
+targets = data.setdefault("targets", {})
+if op == "install":
+    targets[target] = {"enabled": True, "scope": "project" if project_scope else "global", "installAgentsMd": not skip_agents_md, "installSkills": not skip_skills, "extras": extras}
+elif op == "uninstall":
+    targets.pop(target, None)
+p.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+PY
+}
 
-case "${EFFECTIVE_SOURCE}" in
-  local)
-    SKILLS_SOURCE="${REPO_ROOT}"
-    ;;
-  web|*)
-    if [[ "${BRANCH}" == "main" ]]; then
-      SKILLS_SOURCE="https://github.com/sprngr/rubber-duck"
-    else
-      SKILLS_SOURCE="https://github.com/sprngr/rubber-duck#${BRANCH}"
-    fi
-    ;;
-esac
-log "Skills source: ${SKILLS_SOURCE}"
+for TARGET in "${TARGETS[@]}"; do
+  resolve_target
+  choose_source
 
-case "${ACTION}" in
-  install)
-    doctor
-    prepare_sources
-    install_agents
-    if (( SKIP_AGENTS_MD == 0 )); then
-      backup_md "${DEST_POLICY_MD}"
-      if [[ "${POLICY_MODE}" == "managed_block" ]]; then
-        upsert_managed_block
+  case "${EFFECTIVE_SOURCE}" in
+    local)
+      SKILLS_SOURCE="${REPO_ROOT}"
+      ;;
+    web|*)
+      if [[ "${BRANCH}" == "main" ]]; then
+        SKILLS_SOURCE="https://github.com/sprngr/rubber-duck"
       else
-        backup_md "${DEST_CLAUDE_AGENTS_MD}"
-        install_policy_file
+        SKILLS_SOURCE="https://github.com/sprngr/rubber-duck#${BRANCH}"
       fi
-    fi
-    skills_install
-    status
-    ;;
-  uninstall)
-    doctor
-    prepare_sources
-    uninstall_agents
-    if (( SKIP_AGENTS_MD == 0 )); then
-      backup_md "${DEST_POLICY_MD}"
-      if [[ "${POLICY_MODE}" == "managed_block" ]]; then
-        remove_managed_block
-      else
-        backup_md "${DEST_CLAUDE_AGENTS_MD}"
-        remove_policy_file
+      ;;
+  esac
+  log "Skills source: ${SKILLS_SOURCE}"
+
+  case "${ACTION}" in
+    install)
+      doctor
+      prepare_sources
+      install_agents
+      if (( SKIP_AGENTS_MD == 0 )); then
+        backup_md "${DEST_POLICY_MD}"
+        if [[ "${POLICY_MODE}" == "managed_block" ]]; then
+          upsert_managed_block
+        else
+          backup_md "${DEST_CLAUDE_AGENTS_MD}"
+          install_policy_file
+        fi
       fi
-    fi
-    skills_uninstall
-    status
-    ;;
-  status)
-    status
-    ;;
-  doctor)
-    doctor
-    ;;
-  *)
-    err "unknown action: ${ACTION}"
-    usage
-    exit 1
-    ;;
-esac
+      skills_install
+      status
+      manifest_update_target "install" "${TARGET}"
+      ;;
+    uninstall)
+      doctor
+      prepare_sources
+      uninstall_agents
+      if (( SKIP_AGENTS_MD == 0 )); then
+        backup_md "${DEST_POLICY_MD}"
+        if [[ "${POLICY_MODE}" == "managed_block" ]]; then
+          remove_managed_block
+        else
+          backup_md "${DEST_CLAUDE_AGENTS_MD}"
+          remove_policy_file
+        fi
+      fi
+      skills_uninstall
+      status
+      manifest_update_target "uninstall" "${TARGET}"
+      ;;
+    status)
+      status
+      ;;
+    doctor)
+      doctor
+      ;;
+    *)
+      err "unknown action: ${ACTION}"
+      usage
+      exit 1
+      ;;
+  esac
+done
