@@ -12,6 +12,7 @@ param(
   [switch]$SkipSkills,
   [switch]$SkipAgentsMd,
   [switch]$Extras,
+  [switch]$DryRun,
   [switch]$Prune,
   [ValidateSet("auto","local","web")]
   [string]$Source = "auto",
@@ -97,6 +98,7 @@ function rubber-duck {
       if ($SkipSkills) { $args += "-SkipSkills" }
       if ($SkipAgentsMd) { $args += "-SkipAgentsMd" }
       if ($Extras) { $args += "-Extras" }
+      if ($DryRun) { $args += "-DryRun" }
       & pwsh @args
       if ($LASTEXITCODE -ne 0) { throw "sync install failed for target: $t" }
     }
@@ -106,6 +108,7 @@ function rubber-duck {
           $args = @("-File", $SyncScriptPath, "-Action", "uninstall", "-Harness", $t, "-Source", $Source, "-Branch", $Branch, "-RawBase", $RawBase, "-SkipSkills")
           if ($Project) { $args += "-Project" } else { $args += "-Global" }
           if ($SkipAgentsMd) { $args += "-SkipAgentsMd" }
+          if ($DryRun) { $args += "-DryRun" }
           & pwsh @args
           if ($LASTEXITCODE -ne 0) { throw "sync prune uninstall failed for target: $t" }
         }
@@ -135,6 +138,16 @@ $SkillsCli = "skills@^1.5.21"
 $SkillsSource = ""
 
 # Update RawBase based on branch
+if ($Branch -eq "main" -and -not [string]::IsNullOrWhiteSpace($env:BASH_SOURCE_URL)) {
+  $m = [regex]::Match($env:BASH_SOURCE_URL, 'githubusercontent\.com/[^/]+/[^/]+/([^/]+)/')
+  if ($m.Success) {
+    $detected = $m.Groups[1].Value
+    if (-not [string]::IsNullOrWhiteSpace($detected) -and $detected -ne "main") {
+      $Branch = $detected
+      Write-Host "Auto-detected branch: $Branch"
+    }
+  }
+}
 if ([string]::IsNullOrWhiteSpace($RawBase)) {
   $RawBase = "https://raw.githubusercontent.com/sprngr/rubber-duck/$Branch"
 }
@@ -357,6 +370,11 @@ function Strip-ManagedBlockText([string]$text) {
 }
 
 function Backup-Md([string]$Target) {
+  if ($DryRun) {
+    $stamp = Get-Date -Format "yyyyMMdd-HHmmss"
+    Log "[dry-run] backup $Target -> $Target.bak.$stamp"
+    return
+  }
   $parent = Split-Path -Parent $Target
   if (-not [string]::IsNullOrWhiteSpace($parent)) {
     New-Item -ItemType Directory -Force -Path $parent | Out-Null
@@ -380,6 +398,7 @@ function Backup-Md([string]$Target) {
 
 function Upsert-ManagedBlock([string]$Target, [string]$ContentFile) {
   if ($SkipAgentsMd) { return }
+  if ($DryRun) { Log "[dry-run] upsert managed block in $Target"; return }
   $parent = Split-Path -Parent $Target
   if (-not [string]::IsNullOrWhiteSpace($parent)) {
     New-Item -ItemType Directory -Force -Path $parent | Out-Null
@@ -404,6 +423,7 @@ function Upsert-ManagedBlock([string]$Target, [string]$ContentFile) {
 
 function Remove-ManagedBlock([string]$Target) {
   if ($SkipAgentsMd) { return }
+  if ($DryRun) { Log "[dry-run] remove managed block from $Target"; return }
   if (-not (Test-Path $Target)) { return }
   $current = Get-Content -Raw $Target
   $stripped = Strip-ManagedBlockText $current
@@ -431,6 +451,13 @@ function Remove-PolicyFile {
 }
 
 function Install-Agents {
+  if ($DryRun) {
+    Log "[dry-run] ensure dir $DestAgentsDir"
+    foreach ($f in $AgentFiles) {
+      Log "[dry-run] cp $(Join-Path $script:TmpDir $f) -> $(Join-Path $DestAgentsDir $f)"
+    }
+    return
+  }
   New-Item -ItemType Directory -Force -Path $DestAgentsDir | Out-Null
   foreach ($f in $AgentFiles) {
     Copy-Item -Force (Join-Path $script:TmpDir $f) (Join-Path $DestAgentsDir $f)
@@ -439,6 +466,12 @@ function Install-Agents {
 }
 
 function Uninstall-Agents {
+  if ($DryRun) {
+    foreach ($f in $AgentFiles) {
+      Log "[dry-run] rm $(Join-Path $DestAgentsDir $f)"
+    }
+    return
+  }
   $removed = 0
   foreach ($f in $AgentFiles) {
     $dest = Join-Path $DestAgentsDir $f
@@ -452,6 +485,13 @@ function Uninstall-Agents {
 
 function Skills-Install {
   if ($SkipSkills) { return }
+  if ($DryRun) {
+    $installList = @() + $DefaultSkills
+    if ($Extras) { $installList += $ExtrasSkills }
+    $scope = if ($Project) { @() } else { @("-g") }
+    Log "[dry-run] npx $SkillsCli add $SkillsSource --skill $($installList -join ' ') $($scope -join ' ') -y"
+    return
+  }
   if (-not (Get-Command npx -ErrorAction SilentlyContinue)) {
     Warn "npx not found; skipping skills install"
     return
@@ -465,6 +505,12 @@ function Skills-Install {
 
 function Skills-Uninstall {
   if ($SkipSkills) { return }
+  if ($DryRun) {
+    $allSkills = @() + $DefaultSkills + $ExtrasSkills
+    $scope = if ($Project) { @() } else { @("-g") }
+    Log "[dry-run] npx $SkillsCli remove $SkillsSource --skill $($allSkills -join ' ') $($scope -join ' ') -y"
+    return
+  }
   if (-not (Get-Command npx -ErrorAction SilentlyContinue)) {
     Warn "npx not found; skipping skills uninstall"
     return
@@ -554,15 +600,27 @@ function Status {
 function Doctor {
   Resolve-Target
   Resolve-Source
-  New-Item -ItemType Directory -Force -Path $DestAgentsDir | Out-Null
+  if ($DryRun) {
+    if (-not (Test-Path $DestAgentsDir)) { Warn "doctor: agents dir missing, would create: $DestAgentsDir" }
+  } else {
+    New-Item -ItemType Directory -Force -Path $DestAgentsDir | Out-Null
+  }
   $policyParent = Split-Path -Parent $DestPolicyMd
   if (-not [string]::IsNullOrWhiteSpace($policyParent)) {
-    New-Item -ItemType Directory -Force -Path $policyParent | Out-Null
+    if ($DryRun) {
+      if (-not (Test-Path $policyParent)) { Warn "doctor: policy parent missing, would create: $policyParent" }
+    } else {
+      New-Item -ItemType Directory -Force -Path $policyParent | Out-Null
+    }
   }
   if ($PolicyMode -eq "file") {
     $agentsParent = Split-Path -Parent $DestClaudeAgentsMd
     if (-not [string]::IsNullOrWhiteSpace($agentsParent)) {
-      New-Item -ItemType Directory -Force -Path $agentsParent | Out-Null
+      if ($DryRun) {
+        if (-not (Test-Path $agentsParent)) { Warn "doctor: policy parent missing, would create: $agentsParent" }
+      } else {
+        New-Item -ItemType Directory -Force -Path $agentsParent | Out-Null
+      }
     }
   }
   Log "doctor: ok"
@@ -570,6 +628,11 @@ function Doctor {
 
 function Update-ManifestTarget([string]$Operation, [string]$TargetName) {
   if ($Action -eq "sync") { return }
+  if ($DryRun) {
+    $dryManifestPath = if ($Project) { ".rubber-duck/manifest.json" } else { (Join-Path $HOME ".config/rubber-duck/manifest.json") }
+    Log "[dry-run] manifest $Operation $TargetName -> $dryManifestPath"
+    return
+  }
   $ManifestPath = if ($Project) { ".rubber-duck/manifest.json" } else { (Join-Path $HOME ".config/rubber-duck/manifest.json") }
   $ManifestParent = Split-Path -Parent $ManifestPath
   if (-not [string]::IsNullOrWhiteSpace($ManifestParent)) {
