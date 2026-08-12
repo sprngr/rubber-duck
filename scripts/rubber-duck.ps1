@@ -248,13 +248,13 @@ if ($script:RunningPiped) {
   $ScriptDir = Split-Path -Parent $ScriptPath
   $RepoRoot = Split-Path -Parent $ScriptDir
 }
-$LocalAgentsDir = $null
-$LocalPolicyFile = $null
-$LocalAgentsPolicyFile = $null
-$RemoteAgentsPath = $null
-$RemotePolicyPath = $null
-$RemoteAgentsPolicyPath = $null
-$PolicyMode = "managed_block"  # managed_block|file
+$script:LocalAgentsDir = $null
+$script:LocalPolicyFile = $null
+$script:LocalAgentsPolicyFile = $null
+$script:RemoteAgentsPath = $null
+$script:RemotePolicyPath = $null
+$script:RemoteAgentsPolicyPath = $null
+$script:PolicyMode = "managed_block"  # managed_block|file
 $script:CanonicalVersion = "unknown"
 
 $ManagedStart = "<!-- RUBBER_DUCK_MANAGED_BLOCK START -->"

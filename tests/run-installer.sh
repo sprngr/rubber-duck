@@ -104,12 +104,28 @@ test_rawbase_allowlist() {
   echo "$out" | grep -q "allowlist bypassed" || return 1
 }
 
+# Claude install: two-file layout (CLAUDE.md + sibling AGENTS.md) with pins.
+test_claude_install_two_file_layout() {
+  bash "$sh_installer" install --claude --source local --skip-skills --project || return 1
+  [[ -f CLAUDE.md ]] || return 1
+  [[ -f AGENTS.md ]] || return 1
+  [[ -f .claude/agents/rubber-duck.md ]] || return 1
+  python3 -c '
+import json
+d = json.load(open(".rubber-duck/manifest.json"))
+pins = d.get("pins", {})
+assert "dist/claude/CLAUDE.md" in pins, "claude policy pin missing"
+assert "dist/claude/agents/rubber-duck.md" in pins, "claude agent pin missing"
+'
+}
+
 # --- Test runner ---
 run_test "fresh install writes pins"        test_fresh_install_writes_pins
 run_test "reinstall verifies pins silently" test_reinstall_pins_verify
 run_test "tampered artifact mismatch"       test_tampered_artifact_mismatch
 run_test "sync round-trip"                  test_sync_round_trip
 run_test "rawBase allowlist"                test_rawbase_allowlist
+run_test "claude two-file layout"           test_claude_install_two_file_layout
 
 printf '\n%d/%d passed, %d failed\n' "$((tests_run - failures))" "$tests_run" "$failures"
 exit $((failures > 0 ? 1 : 0))
