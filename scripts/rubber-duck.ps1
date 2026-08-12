@@ -23,6 +23,76 @@ param(
 $ProjectSpecified = $MyInvocation.BoundParameters.ContainsKey("Project")
 $GlobalSpecified = $MyInvocation.BoundParameters.ContainsKey("Global")
 
+function Log($msg) { Write-Host $msg }
+function Warn($msg) { Write-Warning $msg }
+
+# Exact rawBase prefix required unless -AllowUntrustedSource is set.
+$AllowedRawBasePrefix = "https://raw.githubusercontent.com/sprngr/rubber-duck"
+
+# Compute SHA-256 of a file, return "sha256:<hex>". Returns $null on error.
+function Get-Sha256([string]$Path) {
+  if (-not (Test-Path $Path)) { return $null }
+  $h = (Get-FileHash -Algorithm SHA256 -Path $Path).Hash.ToLowerInvariant()
+  return "sha256:$h"
+}
+
+# Validate rawBase against $AllowedRawBasePrefix. Skip check for local mode.
+# Honor -AllowUntrustedSource override. Returns $true if allowed, $false otherwise.
+function Test-RawBaseAllowed([string]$RawBaseUrl, [string]$Mode) {
+  if ($Mode -eq "local") { return $true }
+  if ($AllowUntrustedSource) {
+    Warn "rawBase allowlist bypassed: $RawBaseUrl"
+    return $true
+  }
+  return $RawBaseUrl.StartsWith($AllowedRawBasePrefix)
+}
+
+# Verify artifact file matches manifest pin.
+# Returns 0 on match, 1 on mismatch, 2 if pin missing.
+function Test-Pin([string]$ArtifactPath, [string]$LocalFile) {
+  if ([string]::IsNullOrWhiteSpace($ArtifactPath) -or [string]::IsNullOrWhiteSpace($LocalFile)) { return 2 }
+  $mp = if ($Project) { ".rubber-duck/manifest.json" } else { (Join-Path $HOME ".config/rubber-duck/manifest.json") }
+  if (-not (Test-Path $mp)) { return 2 }
+  $expected = ""
+  try {
+    $data = Get-Content -Raw $mp | ConvertFrom-Json -AsHashtable
+    if ($data -and $data.ContainsKey("pins") -and $data["pins"].ContainsKey($ArtifactPath)) {
+      $expected = [string]$data["pins"][$ArtifactPath]
+    }
+  } catch { }
+  if ([string]::IsNullOrWhiteSpace($expected)) { return 2 }
+  if (-not (Test-Path $LocalFile)) { return 1 }
+  $actual = Get-Sha256 $LocalFile
+  if ($actual -ne $expected) {
+    Write-Host "ERROR: pin mismatch for ${ArtifactPath}: expected $expected, got $actual"
+    return 1
+  }
+  return 0
+}
+
+# Write pins block into manifest. $Pairs is hashtable of artifactPath -> sha256:<hex>.
+function Write-Pins([string]$ManifestPath, [hashtable]$Pairs) {
+  if ($null -eq $Pairs -or $Pairs.Count -eq 0) { return }
+  $data = @{}
+  if (Test-Path $ManifestPath) {
+    try { $data = Get-Content -Raw $ManifestPath | ConvertFrom-Json -AsHashtable } catch { $data = @{} }
+  }
+  if ($null -eq $data) { $data = @{} }
+  if (-not $data.ContainsKey("pins") -or $null -eq $data["pins"]) { $data["pins"] = @{} }
+  foreach ($k in $Pairs.Keys) { $data["pins"][$k] = $Pairs[$k] }
+  $data | ConvertTo-Json -Depth 10 | Set-Content -Path $ManifestPath
+}
+
+# Warn when lastAppliedVersion is newer than sourceRef being installed.
+function Warn-OnDowngrade([string]$LastApplied, [string]$Incoming) {
+  if ([string]::IsNullOrWhiteSpace($LastApplied) -or $LastApplied -eq "v0.0.0" -or $LastApplied -eq $Incoming) { return }
+  try {
+    $la = [version]($LastApplied.TrimStart('v'))
+    $inc = [version]($Incoming.TrimStart('v'))
+    if ($la -gt $inc) { Warn "downgrade: manifest lastAppliedVersion $LastApplied > incoming $Incoming" }
+  } catch { }
+}
+
 function rubber-duck {
   $LegacyTargets = @()
   if ($OpenCode) { $LegacyTargets += "opencode" }
@@ -80,7 +150,9 @@ function rubber-duck {
     if (-not (Test-RawBaseAllowed $RawBase $Source)) {
       throw "rawBase not in allowlist: $RawBase. Use -AllowUntrustedSource to override."
     }
-    $manifest = Get-Content -Raw $ManifestPath | ConvertFrom-Json -AsHashtable
+    $manifest = @{}
+    try { $manifest = Get-Content -Raw $ManifestPath | ConvertFrom-Json -AsHashtable } catch { $manifest = @{} }
+    if ($null -eq $manifest) { $manifest = @{} }
     $syncTargets = @()
     $syncTargetSet = @{}
     if ($manifest.ContainsKey("targets") -and $null -ne $manifest["targets"]) {
@@ -214,76 +286,6 @@ $ExtrasSkills = @(
   "duck-grill",
   "duck-tape"
 )
-
-function Log($msg) { Write-Host $msg }
-function Warn($msg) { Write-Warning $msg }
-
-# Exact rawBase prefix required unless -AllowUntrustedSource is set.
-$AllowedRawBasePrefix = "https://raw.githubusercontent.com/sprngr/rubber-duck"
-
-# Compute SHA-256 of a file, return "sha256:<hex>". Returns $null on error.
-function Get-Sha256([string]$Path) {
-  if (-not (Test-Path $Path)) { return $null }
-  $h = (Get-FileHash -Algorithm SHA256 -Path $Path).Hash.ToLowerInvariant()
-  return "sha256:$h"
-}
-
-# Validate rawBase against $AllowedRawBasePrefix. Skip check for local mode.
-# Honor -AllowUntrustedSource override. Returns $true if allowed, $false otherwise.
-function Test-RawBaseAllowed([string]$RawBaseUrl, [string]$Mode) {
-  if ($Mode -eq "local") { return $true }
-  if ($AllowUntrustedSource) {
-    Warn "rawBase allowlist bypassed: $RawBaseUrl"
-    return $true
-  }
-  return $RawBaseUrl.StartsWith($AllowedRawBasePrefix)
-}
-
-# Verify artifact file matches manifest pin.
-# Returns 0 on match, 1 on mismatch, 2 if pin missing.
-function Test-Pin([string]$ArtifactPath, [string]$LocalFile) {
-  if ([string]::IsNullOrWhiteSpace($ArtifactPath) -or [string]::IsNullOrWhiteSpace($LocalFile)) { return 2 }
-  $mp = if ($Project) { ".rubber-duck/manifest.json" } else { (Join-Path $HOME ".config/rubber-duck/manifest.json") }
-  if (-not (Test-Path $mp)) { return 2 }
-  $expected = ""
-  try {
-    $data = Get-Content -Raw $mp | ConvertFrom-Json -AsHashtable
-    if ($data -and $data.ContainsKey("pins") -and $data["pins"].ContainsKey($ArtifactPath)) {
-      $expected = [string]$data["pins"][$ArtifactPath]
-    }
-  } catch { }
-  if ([string]::IsNullOrWhiteSpace($expected)) { return 2 }
-  if (-not (Test-Path $LocalFile)) { return 1 }
-  $actual = Get-Sha256 $LocalFile
-  if ($actual -ne $expected) {
-    Write-Host "ERROR: pin mismatch for ${ArtifactPath}: expected $expected, got $actual"
-    return 1
-  }
-  return 0
-}
-
-# Write pins block into manifest. $Pairs is hashtable of artifactPath -> sha256:<hex>.
-function Write-Pins([string]$ManifestPath, [hashtable]$Pairs) {
-  if ($null -eq $Pairs -or $Pairs.Count -eq 0) { return }
-  $data = @{}
-  if (Test-Path $ManifestPath) {
-    try { $data = Get-Content -Raw $ManifestPath | ConvertFrom-Json -AsHashtable } catch { $data = @{} }
-  }
-  if ($null -eq $data) { $data = @{} }
-  if (-not $data.ContainsKey("pins") -or $null -eq $data["pins"]) { $data["pins"] = @{} }
-  foreach ($k in $Pairs.Keys) { $data["pins"][$k] = $Pairs[$k] }
-  $data | ConvertTo-Json -Depth 10 | Set-Content -Path $ManifestPath
-}
-
-# Warn when lastAppliedVersion is newer than sourceRef being installed.
-function Warn-OnDowngrade([string]$LastApplied, [string]$Incoming) {
-  if ([string]::IsNullOrWhiteSpace($LastApplied) -or $LastApplied -eq "v0.0.0" -or $LastApplied -eq $Incoming) { return }
-  try {
-    $la = [version]($LastApplied.TrimStart('v'))
-    $inc = [version]($Incoming.TrimStart('v'))
-    if ($la -gt $inc) { Warn "downgrade: manifest lastAppliedVersion $LastApplied > incoming $Incoming" }
-  } catch { }
-}
 
 function Get-VersionFromFile([string]$Path) {
   if (-not (Test-Path $Path)) { return $null }

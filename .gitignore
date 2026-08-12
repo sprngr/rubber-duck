@@ -10,7 +10,8 @@
 .claude
 node_modules
 skills-lock.json
-*.bak.*
+*AGENTS.md.bak.*
+*CLAUDE.md.bak.*
 *-skill-check-report.html
 *-eval-report.html
 
