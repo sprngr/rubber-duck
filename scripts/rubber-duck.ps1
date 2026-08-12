@@ -216,8 +216,8 @@ $SkillsCli = "skills@^1.5.21"
 $SkillsSource = ""
 
 # Update RawBase based on branch
-if ($Branch -eq "main" -and -not [string]::IsNullOrWhiteSpace($env:BASH_SOURCE_URL)) {
-  $m = [regex]::Match($env:BASH_SOURCE_URL, 'githubusercontent\.com/[^/]+/[^/]+/([^/]+)/')
+if ($Branch -eq "main" -and -not [string]::IsNullOrWhiteSpace($env:RUBBER_DUCK_SOURCE_URL)) {
+  $m = [regex]::Match($env:RUBBER_DUCK_SOURCE_URL, 'githubusercontent\.com/[^/]+/[^/]+/([^/]+)/')
   if ($m.Success) {
     $detected = $m.Groups[1].Value
     if (-not [string]::IsNullOrWhiteSpace($detected) -and $detected -ne "main") {

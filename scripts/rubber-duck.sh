@@ -427,7 +427,7 @@ fi
 # Auto-detect branch from piped URL if not explicitly set
 if [[ "${BRANCH}" == "main" ]]; then
   # Try to detect from common environment variables or process cmdline
-  if [[ -n "${BASH_SOURCE_URL:-}" ]] && [[ "${BASH_SOURCE_URL}" =~ githubusercontent\.com/[^/]+/[^/]+/([^/]+)/ ]]; then
+  if [[ -n "${RUBBER_DUCK_SOURCE_URL:-}" ]] && [[ "${RUBBER_DUCK_SOURCE_URL}" =~ githubusercontent\.com/[^/]+/[^/]+/([^/]+)/ ]]; then
     DETECTED_BRANCH="${BASH_REMATCH[1]}"
     if [[ "${DETECTED_BRANCH}" != "main" ]]; then
       BRANCH="${DETECTED_BRANCH}"
