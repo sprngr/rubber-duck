@@ -154,25 +154,6 @@ check_rawbase_allowed() {
   return 1
 }
 
-# Verify artifact file matches manifest pin.
-# Returns 0 on match, 1 on mismatch (with err message), 2 if pin missing.
-verify_pin() {
-  local artifact_path="$1" local_file="$2"
-  [[ -z "${artifact_path}" || -z "${local_file}" ]] && return 2
-  [[ -f "${MANIFEST_PATH:-}" ]] || return 2
-  local expected
-  expected=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d.get('pins',{}).get(sys.argv[2],''))" "${MANIFEST_PATH}" "${artifact_path}" 2>/dev/null || printf '')
-  [[ -z "${expected}" ]] && return 2
-  [[ -f "${local_file}" ]] || return 1
-  local actual
-  actual=$(compute_sha256 "${local_file}") || return 1
-  if [[ "${actual}" != "${expected}" ]]; then
-    err "pin mismatch for ${artifact_path}: expected ${expected}, got ${actual}"
-    return 1
-  fi
-  return 0
-}
-
 # Write pins block into manifest. Remaining args: artifact_path=sha256_hash pairs.
 write_pins() {
   local manifest_path="$1"
@@ -729,10 +710,21 @@ install_agents() {
     return
   fi
   mkdir -p "${DEST_AGENTS_DIR}"
+  local installed=0 skipped=0
   for f in "${AGENT_FILES[@]}"; do
+    if [[ -f "${DEST_AGENTS_DIR}/${f}" ]]; then
+      local tmp_h dest_h
+      tmp_h=$(compute_sha256 "${TMP_DIR}/${f}")
+      dest_h=$(compute_sha256 "${DEST_AGENTS_DIR}/${f}")
+      if [[ -n "${tmp_h}" && "${tmp_h}" == "${dest_h}" ]]; then
+        skipped=$((skipped + 1))
+        continue
+      fi
+    fi
     cp -f "${TMP_DIR}/${f}" "${DEST_AGENTS_DIR}/${f}"
+    installed=$((installed + 1))
   done
-  log "Installed ${#AGENT_FILES[@]} agents -> ${DEST_AGENTS_DIR}"
+  log "Installed ${installed} agents (${skipped} unchanged) -> ${DEST_AGENTS_DIR}"
 }
 
 uninstall_agents() {
@@ -967,21 +959,6 @@ for TARGET in "${TARGETS[@]}"; do
     install)
       doctor
       prepare_sources
-      pin_prior_version=$(read_prior_version "${MANIFEST_PATH}")
-      if [[ -n "${pin_prior_version}" && "${pin_prior_version}" != "${CANONICAL_VERSION}" ]]; then
-        log "pin refresh on version change ${pin_prior_version} -> ${CANONICAL_VERSION}"
-      else
-        for pin_f in "${AGENT_FILES[@]}"; do
-          pin_rc=0; verify_pin "${REMOTE_AGENTS_PATH}/${pin_f}" "${TMP_DIR}/${pin_f}" || pin_rc=$?
-          (( pin_rc == 1 )) && exit 1
-        done
-        if (( SKIP_AGENTS_MD == 0 )); then
-          pin_policy="${TMP_DIR}/AGENTS.md"
-          [[ "${POLICY_MODE}" == "file" ]] && pin_policy="${TMP_DIR}/CLAUDE.md"
-          pin_rc=0; verify_pin "${REMOTE_POLICY_PATH}" "${pin_policy}" || pin_rc=$?
-          (( pin_rc == 1 )) && exit 1
-        fi
-      fi
       install_agents
       if (( SKIP_AGENTS_MD == 0 )); then
         backup_md "${DEST_POLICY_MD}"

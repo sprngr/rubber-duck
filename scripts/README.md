@@ -211,12 +211,11 @@ Hook runs:
 - `rawBase` guardrail:
   - defaults to the canonical prefix `https://raw.githubusercontent.com/sprngr/rubber-duck`; helps avoid accidentally pointing at a fork or mistyped URL
   - override with `--allow-untrusted-source` / `-AllowUntrustedSource` (emits warning) when installing from a fork or mirror
-- Artifact pinning (SHA-256), scoped to development workflow safety:
+- Artifact pinning (SHA-256), used as a change log and skip-unchanged optimization:
   - `install` writes a `pins` block with hashes of installed agent files and policy artifact
-  - subsequent same-version `install` verifies fetched artifacts against the pin; mismatch aborts with `pin mismatch for <path>`
-  - a version bump (`lastAppliedVersion` != incoming) refreshes pins without verification, logged as `pin refresh on version change X -> Y`
-  - practical value: catches accidental local edits to `dist/` during development, unintended drift between installs, and same-version replay during CI. Not a substitute for source trust or TLS.
-  - fresh install with no prior pins passes silently
+  - on subsequent `install`, agent files with matching destination hash are skipped (no rewrite, mtime preserved)
+  - the `pins` block is refreshed after each install so it always reflects what is on disk
+  - inspect `.rubber-duck/manifest.json` to see what content is currently installed
 - Version downgrade:
   - warns when the manifest's `lastAppliedVersion` is newer than the incoming release
   - warning only; does not block the install

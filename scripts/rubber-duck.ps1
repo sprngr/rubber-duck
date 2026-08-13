@@ -47,29 +47,6 @@ function Test-RawBaseAllowed([string]$RawBaseUrl, [string]$Mode) {
   return $RawBaseUrl.StartsWith($AllowedRawBasePrefix)
 }
 
-# Verify artifact file matches manifest pin.
-# Returns 0 on match, 1 on mismatch, 2 if pin missing.
-function Test-Pin([string]$ArtifactPath, [string]$LocalFile) {
-  if ([string]::IsNullOrWhiteSpace($ArtifactPath) -or [string]::IsNullOrWhiteSpace($LocalFile)) { return 2 }
-  $mp = if ($Project) { ".rubber-duck/manifest.json" } else { (Join-Path $HOME ".config/rubber-duck/manifest.json") }
-  if (-not (Test-Path $mp)) { return 2 }
-  $expected = ""
-  try {
-    $data = Get-Content -Raw $mp | ConvertFrom-Json -AsHashtable
-    if ($data -and $data.ContainsKey("pins") -and $data["pins"].ContainsKey($ArtifactPath)) {
-      $expected = [string]$data["pins"][$ArtifactPath]
-    }
-  } catch { }
-  if ([string]::IsNullOrWhiteSpace($expected)) { return 2 }
-  if (-not (Test-Path $LocalFile)) { return 1 }
-  $actual = Get-Sha256 $LocalFile
-  if ($actual -ne $expected) {
-    Write-Host "ERROR: pin mismatch for ${ArtifactPath}: expected $expected, got $actual"
-    return 1
-  }
-  return 0
-}
-
 # Write pins block into manifest. $Pairs is hashtable of artifactPath -> sha256:<hex>.
 function Write-Pins([string]$ManifestPath, [hashtable]$Pairs) {
   if ($null -eq $Pairs -or $Pairs.Count -eq 0) { return }
@@ -550,10 +527,19 @@ function Install-Agents {
     return
   }
   New-Item -ItemType Directory -Force -Path $DestAgentsDir | Out-Null
+  $installed = 0
+  $skipped = 0
   foreach ($f in $AgentFiles) {
-    Copy-Item -Force (Join-Path $script:TmpDir $f) (Join-Path $DestAgentsDir $f)
+    $dest = Join-Path $DestAgentsDir $f
+    $tmp = Join-Path $script:TmpDir $f
+    if ((Test-Path $dest) -and ((Get-Sha256 $tmp) -eq (Get-Sha256 $dest))) {
+      $skipped++
+      continue
+    }
+    Copy-Item -Force $tmp $dest
+    $installed++
   }
-  Log "Installed $($AgentFiles.Count) agents -> $DestAgentsDir"
+  Log "Installed $installed agents ($skipped unchanged) -> $DestAgentsDir"
 }
 
 function Uninstall-Agents {
@@ -805,22 +791,6 @@ try {
       "install" {
         Doctor
         Download-Sources
-        $pinManifestPathForCheck = if ($Project) { ".rubber-duck/manifest.json" } else { (Join-Path $HOME ".config/rubber-duck/manifest.json") }
-        $pinPriorVersion = Read-PriorVersion $pinManifestPathForCheck
-        if (-not [string]::IsNullOrWhiteSpace($pinPriorVersion) -and $pinPriorVersion -ne $script:CanonicalVersion) {
-          Log "pin refresh on version change $pinPriorVersion -> $($script:CanonicalVersion)"
-        } else {
-          foreach ($pinF in $AgentFiles) {
-            $pinRc = Test-Pin "$($script:RemoteAgentsPath)/$pinF" (Join-Path $script:TmpDir $pinF)
-            if ($pinRc -eq 1) { throw "pin verification failed" }
-          }
-          if (-not $SkipAgentsMd) {
-            $pinPolicyTmp = Join-Path $script:TmpDir "AGENTS.md"
-            if ($PolicyMode -eq "file") { $pinPolicyTmp = Join-Path $script:TmpDir "CLAUDE.md" }
-            $pinRc = Test-Pin $script:RemotePolicyPath $pinPolicyTmp
-            if ($pinRc -eq 1) { throw "pin verification failed" }
-          }
-        }
         Install-Agents
         if (-not $SkipAgentsMd) {
           Backup-Md $DestPolicyMd

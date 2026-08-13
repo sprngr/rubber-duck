@@ -50,39 +50,19 @@ if not all(v.startswith("sha256:") for v in pins.values()): sys.exit(1)
 '
 }
 
-# Reinstall against same source: pins verify silently and are unchanged.
+# Reinstall against same source: pins stable and dest files not touched
+# (skip-unchanged optimization keeps mtime constant).
 test_reinstall_pins_verify() {
   bash "$sh_installer" install --opencode --source local --skip-skills --project || return 1
-  local before after
-  before=$(python3 -c 'import json; d=json.load(open(".rubber-duck/manifest.json")); print(sorted(d.get("pins",{}).items()))')
-  bash "$sh_installer" install --opencode --source local --skip-skills --project || return 1
-  after=$(python3 -c 'import json; d=json.load(open(".rubber-duck/manifest.json")); print(sorted(d.get("pins",{}).items()))')
-  [[ "$before" == "$after" ]] || return 1
-}
-
-# Tampered pin in manifest triggers mismatch abort on reinstall.
-# Agent files must not be re-written during the aborted install (mtime unchanged).
-test_tampered_artifact_mismatch() {
-  bash "$sh_installer" install --opencode --source local --skip-skills --project || return 1
-  local before_mtime
+  local before_pins before_mtime
+  before_pins=$(python3 -c 'import json; d=json.load(open(".rubber-duck/manifest.json")); print(sorted(d.get("pins",{}).items()))')
   before_mtime=$(stat -c '%Y' .opencode/agents/rubber-duck.md 2>/dev/null || stat -f '%m' .opencode/agents/rubber-duck.md)
-  # Wait to ensure any rewrite would tick mtime forward
   sleep 1
-  python3 -c '
-import json
-p = ".rubber-duck/manifest.json"
-d = json.load(open(p))
-key = next(iter(d["pins"]))
-d["pins"][key] = "sha256:deadbeef"
-open(p, "w").write(json.dumps(d, indent=2, sort_keys=True) + "\n")
-'
-  # Reinstall must abort with mismatch (exit non-zero)
-  if bash "$sh_installer" install --opencode --source local --skip-skills --project 2>/dev/null; then
-    return 1
-  fi
-  # Verify agent files were NOT touched during the aborted install
-  local after_mtime
+  bash "$sh_installer" install --opencode --source local --skip-skills --project || return 1
+  local after_pins after_mtime
+  after_pins=$(python3 -c 'import json; d=json.load(open(".rubber-duck/manifest.json")); print(sorted(d.get("pins",{}).items()))')
   after_mtime=$(stat -c '%Y' .opencode/agents/rubber-duck.md 2>/dev/null || stat -f '%m' .opencode/agents/rubber-duck.md)
+  [[ "$before_pins" == "$after_pins" ]] || return 1
   [[ "$before_mtime" == "$after_mtime" ]] || return 1
 }
 
@@ -128,38 +108,12 @@ assert "dist/claude/agents/rubber-duck.md" in pins, "claude agent pin missing"
 '
 }
 
-# Version-gated pin refresh: version change bypasses pin check and refreshes pins.
-test_upgrade_refreshes_pins() {
-  bash "$sh_installer" install --opencode --source local --skip-skills --project || return 1
-  # Simulate we were previously on an older version by lowering lastAppliedVersion
-  # AND corrupt a pin. On upgrade, the version mismatch should skip verification
-  # and refresh pins with real hashes.
-  python3 -c '
-import json
-p = ".rubber-duck/manifest.json"
-d = json.load(open(p))
-d["source"]["lastAppliedVersion"] = "v0.0.1"
-key = next(iter(d["pins"]))
-d["pins"][key] = "sha256:deadbeef"
-open(p, "w").write(json.dumps(d, indent=2, sort_keys=True) + "\n")
-'
-  bash "$sh_installer" install --opencode --source local --skip-skills --project || return 1
-  python3 -c '
-import json
-d = json.load(open(".rubber-duck/manifest.json"))
-for v in d.get("pins", {}).values():
-    assert v != "sha256:deadbeef", "pin was not refreshed on upgrade"
-'
-}
-
 # --- Test runner ---
 run_test "fresh install writes pins"        test_fresh_install_writes_pins
 run_test "reinstall verifies pins silently" test_reinstall_pins_verify
-run_test "tampered artifact mismatch"       test_tampered_artifact_mismatch
 run_test "sync round-trip"                  test_sync_round_trip
 run_test "rawBase allowlist"                test_rawbase_allowlist
 run_test "claude two-file layout"           test_claude_install_two_file_layout
-run_test "upgrade refreshes pins"           test_upgrade_refreshes_pins
 
 printf '\n%d/%d passed, %d failed\n' "$((tests_run - failures))" "$tests_run" "$failures"
 exit $((failures > 0 ? 1 : 0))
