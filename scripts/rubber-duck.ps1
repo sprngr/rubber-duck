@@ -26,6 +26,36 @@ $GlobalSpecified = $MyInvocation.BoundParameters.ContainsKey("Global")
 function Log($msg) { Write-Host $msg }
 function Warn($msg) { Write-Warning $msg }
 
+function Print-Banner {
+  @'
+           _    _                    _         _
+ _ _ _  _| |__| |__  ___ _ _ ___ __| |_  _ __| |__
+| '_| || | '_ \ '_ \/ -_) '_|___/ _` | || / _| / /
+|_|  \_,_|_.__/_.__/\___|_|     \__,_|\_,_\__|_\_\
+
+'@ | Write-Host
+}
+
+function Resolve-CanonicalVersion {
+  $src = $null
+  if ($script:EffectiveSource -eq "local") {
+    $candidate = Join-Path $RepoRoot "dist/AGENTS.md"
+    if (Test-Path $candidate) { $src = $candidate }
+  } else {
+    try {
+      $tmp = [System.IO.Path]::GetTempFileName()
+      $remote = if ($script:RemotePolicyPath) { $script:RemotePolicyPath } else { "dist/AGENTS.md" }
+      Invoke-WebRequest -UseBasicParsing -Uri "$RawBase/$remote" -OutFile $tmp -ErrorAction Stop | Out-Null
+      $src = $tmp
+    } catch { $src = $null }
+  }
+  if ($src) {
+    $v = Get-VersionFromFile $src
+    if (-not [string]::IsNullOrWhiteSpace($v)) { $script:CanonicalVersion = $v }
+    if ($script:EffectiveSource -ne "local" -and (Test-Path $src)) { Remove-Item -Force $src }
+  }
+}
+
 # Exact rawBase prefix required unless -AllowUntrustedSource is set.
 $AllowedRawBasePrefix = "https://raw.githubusercontent.com/sprngr/rubber-duck"
 
@@ -401,7 +431,6 @@ function Download-Sources {
     }
     $v = Get-VersionFromFile (Join-Path $script:TmpDir "AGENTS.md")
     if (-not [string]::IsNullOrWhiteSpace($v)) { $script:CanonicalVersion = $v }
-    Log "source: local ($RepoRoot)"
     return
   }
 
@@ -416,7 +445,6 @@ function Download-Sources {
   }
   $v = Get-VersionFromFile (Join-Path $script:TmpDir "AGENTS.md")
   if (-not [string]::IsNullOrWhiteSpace($v)) { $script:CanonicalVersion = $v }
-  Log "source: web ($RawBase)"
 }
 
 function Cleanup-Sources {
@@ -674,10 +702,8 @@ function Report-PolicyBlock([string]$Target) {
 function Status {
   $v = Get-VersionFromFile $DestPolicyMd
   if (-not [string]::IsNullOrWhiteSpace($v)) { $script:CanonicalVersion = $v }
-  Log "target: $Target"
   Log "agents_dir: $DestAgentsDir"
   Log "policy_md: $DestPolicyMd"
-  Log "version: $script:CanonicalVersion"
   $installed = 0
   foreach ($f in $AgentFiles) {
     if (Test-Path (Join-Path $DestAgentsDir $f)) { $installed++ }
@@ -685,7 +711,6 @@ function Status {
   Log "agents: $installed/$($AgentFiles.Count) present"
   Report-PolicyBlock $DestPolicyMd
   if ($PolicyMode -eq "file") { Report-PolicyBlock $DestClaudeAgentsMd }
-  Skills-Status
 }
 
 function Doctor {
@@ -696,7 +721,6 @@ function Doctor {
   if ($PolicyMode -eq "file") {
     Ensure-Dir (Split-Path -Parent $DestClaudeAgentsMd) "policy parent"
   }
-  Log "doctor: ok"
 }
 
 function Update-ManifestTarget([string]$Operation, [string]$TargetName) {
@@ -763,9 +787,21 @@ try {
       }
     }
   }
-  Write-Host "Skills source: $SkillsSource"
   if (-not (Test-RawBaseAllowed $RawBase $script:EffectiveSource)) {
     throw "rawBase not in allowlist: $RawBase. Use -AllowUntrustedSource to override."
+  }
+
+  # Pre-loop header (install/uninstall only)
+  if ($Action -eq "install" -or $Action -eq "uninstall") {
+    if ($Action -eq "install") { Print-Banner }
+    Resolve-CanonicalVersion
+    Log "version: $script:CanonicalVersion"
+    if ($script:EffectiveSource -eq "local") {
+      Log "source: local ($RepoRoot)"
+    } else {
+      Log "source: web ($RawBase)"
+    }
+    Log "doctor: ok"
   }
 
   # Consolidated skills call: one npx invocation with -a for each selected target.
@@ -778,6 +814,7 @@ try {
     if ($skillsAgents.Count -gt 0) {
       if ($Action -eq "install") { Skills-Install $skillsAgents }
       else { Skills-Uninstall $skillsAgents }
+      Skills-Status
     }
   }
 
@@ -787,6 +824,10 @@ try {
     $Claude = $SelectedTarget -eq "claude"
 
     Resolve-Target
+    if ($Action -eq "install" -or $Action -eq "uninstall") {
+      Log ""
+      Log "[$SelectedTarget]"
+    }
     switch ($Action) {
       "install" {
         Doctor
@@ -836,6 +877,10 @@ try {
       "status" { Status }
       "doctor" { Doctor }
     }
+  }
+  if ($Action -eq "install" -or $Action -eq "uninstall") {
+    Log ""
+    Log "🦆 quack"
   }
 }
 finally {
