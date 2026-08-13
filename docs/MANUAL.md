@@ -80,6 +80,16 @@ Use `quack <intent>` for explicit routing with keyword-based precedence (risk/co
 
 See also: [best practices](./best-practices.md) for routing, scope, and approval guidance.
 
+### Installer quick invoke (Bash)
+
+Use safe web flow (download, syntax check, execute):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh -o /tmp/rubber-duck.sh && bash -n /tmp/rubber-duck.sh && bash /tmp/rubber-duck.sh install --<target>
+```
+
+Replace `<target>` with `opencode`, `copilot`, or `claude`. Full flags and platform variants: [scripts/README.md](../scripts/README.md).
+
 ### Single-skill playbooks
 
 #### Review
