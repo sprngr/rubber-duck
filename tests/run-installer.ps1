@@ -72,16 +72,56 @@ function Test-ReinstallVerifiesPins {
   $afterMtime = (Get-Item ".opencode/agents/rubber-duck.md").LastWriteTimeUtc
   if ($beforeMtime -ne $afterMtime) { throw "mtime changed: $beforeMtime -> $afterMtime" }
 }
-function Test-SyncRoundTrip          { throw "not implemented" }
+function Test-SyncRoundTrip {
+  & pwsh -NoProfile -File $script:PsInstaller -Action install -Harness opencode -Source local -SkipSkills -Project | Out-Null
+  if ($LASTEXITCODE -ne 0) { throw "install failed" }
+  if (-not (Test-Path ".opencode/agents/rubber-duck.md")) { throw "opencode agent missing" }
+  $manifestPath = ".rubber-duck/manifest.json"
+  $d = Get-Content -Raw $manifestPath | ConvertFrom-Json -AsHashtable
+  $d["targets"]["opencode"]["enabled"] = $false
+  $d["targets"]["claude"] = @{ enabled = $true; scope = "project"; installAgentsMd = $true; installSkills = $false; extras = $false }
+  $d | ConvertTo-Json -Depth 10 | Set-Content -Path $manifestPath
+  & pwsh -NoProfile -File $script:PsInstaller -Action sync -Project -Prune -Source local -SkipSkills | Out-Null
+  if ($LASTEXITCODE -ne 0) { throw "sync failed" }
+  if (-not (Test-Path ".claude/agents/rubber-duck.md")) { throw "claude agent missing after sync" }
+  if (Test-Path ".opencode/agents/rubber-duck.md") { throw "opencode agent not pruned" }
+}
 function Test-RawBaseAllowlist {
   & pwsh -NoProfile -File $script:PsInstaller -Action install -Harness opencode -Source web -RawBase "https://evil.example/foo" -SkipSkills -Project 2>&1 | Out-Null
   if ($LASTEXITCODE -eq 0) { throw "expected non-allowlisted rawBase to fail" }
   $out = & pwsh -NoProfile -File $script:PsInstaller -Action install -Harness opencode -Source web -RawBase "https://evil.example/foo" -SkipSkills -Project -AllowUntrustedSource 2>&1
   if (-not ($out -match "allowlist bypassed")) { throw "expected allowlist bypassed warning" }
 }
-function Test-ClaudeTwoFileLayout    { throw "not implemented" }
-function Test-DryRunNoWrites         { throw "not implemented" }
-function Test-DryRunMultiTargetLayout{ throw "not implemented" }
+function Test-ClaudeTwoFileLayout {
+  & pwsh -NoProfile -File $script:PsInstaller -Action install -Harness claude -Source local -SkipSkills -Project | Out-Null
+  if ($LASTEXITCODE -ne 0) { throw "install failed" }
+  if (-not (Test-Path "CLAUDE.md")) { throw "CLAUDE.md missing" }
+  if (-not (Test-Path "AGENTS.md")) { throw "AGENTS.md missing" }
+  if (-not (Test-Path ".claude/agents/rubber-duck.md")) { throw "claude agent missing" }
+  $d = Get-Content -Raw ".rubber-duck/manifest.json" | ConvertFrom-Json
+  $pins = $d.pins
+  if (-not $pins."dist/claude/CLAUDE.md") { throw "claude policy pin missing" }
+  if (-not $pins."dist/claude/agents/rubber-duck.md") { throw "claude agent pin missing" }
+}
+function Test-DryRunNoWrites {
+  & pwsh -NoProfile -File $script:PsInstaller -Action install -Harness opencode -Source local -SkipSkills -Project -DryRun | Out-Null
+  if ($LASTEXITCODE -ne 0) { throw "dry-run install failed" }
+  if (Test-Path ".rubber-duck/manifest.json") { throw "manifest.json created in dry-run" }
+  if (Test-Path ".opencode") { throw ".opencode created in dry-run" }
+  if (Test-Path "AGENTS.md") { throw "AGENTS.md created in dry-run" }
+  if (Get-ChildItem -Filter "AGENTS.md.bak.*" -ErrorAction SilentlyContinue) { throw "backup created in dry-run" }
+}
+function Test-DryRunMultiTargetLayout {
+  $out = & pwsh -NoProfile -File $script:PsInstaller -Action install -Harness opencode,claude,copilot -Source local -SkipSkills -Project -DryRun 2>&1 | Out-String
+  if ($LASTEXITCODE -ne 0) { throw "dry-run failed" }
+  foreach ($needle in @("version: ", "[opencode]", "[claude]", "[copilot]", "[dry-run] pins update", "🦆 quack")) {
+    if (-not $out.Contains($needle)) { throw "missing marker: $needle" }
+  }
+  if (Test-Path ".rubber-duck/manifest.json") { throw "manifest.json created" }
+  if (Test-Path ".opencode") { throw ".opencode created" }
+  if (Test-Path ".claude") { throw ".claude created" }
+  if (Test-Path ".github/agents") { throw ".github/agents created" }
+}
 
 # --- Test runner ---
 Run-Test "fresh install writes pins"        { Test-FreshInstallWritesPins }
