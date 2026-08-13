@@ -53,8 +53,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Installer `rawBase` allowlist enforcement: default requires exact prefix `https://raw.githubusercontent.com/sprngr/rubber-duck`. Override with `--allow-untrusted-source` / `-AllowUntrustedSource` (emits warning; use for forks/mirrors). Applies to both `install` and `sync` paths.
-- Installer SHA-256 artifact pinning: `install` writes a `pins` block into the manifest with hashes of installed agent files and policy artifact. Subsequent `install` and `sync` verify each fetched artifact against the pin; mismatch aborts install with `pin mismatch for <path>`. Fresh install with no prior pins passes silently.
+- Installer canonical-source guardrail: `rawBase` defaults to the canonical prefix `https://raw.githubusercontent.com/sprngr/rubber-duck` to avoid accidentally installing from a fork or mistyped URL. Override with `--allow-untrusted-source` / `-AllowUntrustedSource` (emits warning) when installing from a fork or mirror. Applies to both `install` and `sync` paths.
+- Installer SHA-256 artifact pinning for development workflow safety: `install` writes a `pins` block with hashes of installed agent files and policy artifact. Subsequent same-version `install` verifies fetched artifacts against the pin; mismatch aborts install with `pin mismatch for <path>`. A version bump refreshes pins without verification (logged as `pin refresh on version change X -> Y`). Catches accidental local `dist/` edits during development and unintended drift between installs; not a substitute for source trust or TLS.
 - Installer downgrade warning: emits `WARN: downgrade: manifest lastAppliedVersion X > incoming Y` when installing an older release than the manifest records. Warning only; does not block the install.
 - Installer test suite (`tests/run-installer.sh`, `make check-installer`) covering fresh install, reinstall pin verify, pin tamper mismatch, sync install-then-prune round-trip, and rawBase allowlist scenarios in isolated tmp workspaces.
 

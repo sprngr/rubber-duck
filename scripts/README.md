@@ -202,19 +202,20 @@ Hook runs:
   - installs/updates enabled targets
   - with `--prune` / `-Prune`, uninstalls managed targets not enabled in manifest
 
-### Manifest & Security
+### Manifest & Local State
 
 - Manifest paths:
   - project: `.rubber-duck/manifest.json`
   - global: `~/.config/rubber-duck/manifest.json`
 - `sync` reads manifest from the scope you invoke it with. Run `sync --project` / `-Project` from the project root that owns the manifest.
-- `rawBase` allowlist:
-  - default requires exact prefix `https://raw.githubusercontent.com/sprngr/rubber-duck`
-  - override with `--allow-untrusted-source` / `-AllowUntrustedSource` (emits warning; use for forks/mirrors)
-  - `sync` re-checks the allowlist before running per-target installs
-- Artifact pinning (SHA-256):
-  - `install` writes `pins` block with hashes of installed agent files and policy artifact
-  - subsequent `install` and `sync` verify each fetched artifact against the pin; mismatch aborts with `pin mismatch for <path>`
+- `rawBase` guardrail:
+  - defaults to the canonical prefix `https://raw.githubusercontent.com/sprngr/rubber-duck`; helps avoid accidentally pointing at a fork or mistyped URL
+  - override with `--allow-untrusted-source` / `-AllowUntrustedSource` (emits warning) when installing from a fork or mirror
+- Artifact pinning (SHA-256), scoped to development workflow safety:
+  - `install` writes a `pins` block with hashes of installed agent files and policy artifact
+  - subsequent same-version `install` verifies fetched artifacts against the pin; mismatch aborts with `pin mismatch for <path>`
+  - a version bump (`lastAppliedVersion` != incoming) refreshes pins without verification, logged as `pin refresh on version change X -> Y`
+  - practical value: catches accidental local edits to `dist/` during development, unintended drift between installs, and same-version replay during CI. Not a substitute for source trust or TLS.
   - fresh install with no prior pins passes silently
 - Version downgrade:
   - warns when the manifest's `lastAppliedVersion` is newer than the incoming release
