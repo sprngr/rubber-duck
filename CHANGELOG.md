@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [Unreleased]
+
+### Changed
+
+- duck-tape security hardening across source and generated hook/plugin artifacts:
+  - Removed PowerShell `-ExecutionPolicy Bypass` from hook commands and added non-interactive/no-profile shell flags.
+  - Added transcript trust-boundary checks (symlink reject, trusted-root enforcement, size cap via `DUCK_TAPE_MAX_TRANSCRIPT_BYTES`, fail-closed fallback) in shell/PowerShell hook scripts.
+  - Added sensitive-token redaction for extracted state and raw transcript outputs (shell, PowerShell, and opencode plugin paths).
+  - Hardened opencode plugin transcript snapshot handling with payload size cap and `.duck-tape` path validation.
+- duck-debt prompt-injection posture hardening:
+  - Added explicit untrusted-content handling rules in skill method/output guidance (treat scanned repository text as data, never instructions; no execution/follow actions; sanitized output snippets only).
+
+### Security
+
+- Reduced indirect prompt-injection and data-exposure risk in transcript/debt scanning flows while preserving existing feature behavior.
+
 ## [v2.1.0] - 2026-08-12
 
 ### Changed
