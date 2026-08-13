@@ -1,4 +1,4 @@
-.PHONY: build check check-guardrails build-skills check-skills build-agents check-agents build-harness check-harness check-installer validation
+.PHONY: build check check-guardrails build-skills check-skills build-agents check-agents build-harness check-harness check-installer check-installer-sh check-installer-ps validation
 
 validation:
 	python3 validation/run-validation-tests.py
@@ -26,5 +26,14 @@ build: build-skills build-agents
 
 check: check-skills check-agents
 
-check-installer:
+check-installer: check-installer-sh check-installer-ps
+
+check-installer-sh:
 	bash tests/run-installer.sh
+
+check-installer-ps:
+	@if command -v pwsh >/dev/null 2>&1; then \
+		pwsh -NoProfile -File tests/run-installer.ps1; \
+	else \
+		echo "skip check-installer-ps: pwsh not found"; \
+	fi
