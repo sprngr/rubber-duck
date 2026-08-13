@@ -147,12 +147,13 @@ This repository contains source prompts, assembled skills, generated harness art
   - `make build` then `make check`.
 - Installer source mismatch:
   - Verify `dist/AGENTS.md` exists and is current.
+
 <!-- RUBBER_DUCK_MANAGED_BLOCK START -->
 <!-- RUBBER_DUCK_VERSION: v2.1.0 -->
 
 ## Load Project Context
 
-On session start, load `CONTEXT.md`:
+On session start, load `CONTEXT.md` if not already loaded:
 
 - Primary: `CONTEXT.md` at workspace root.
 - Localized: any `CONTEXT.md` on the path from workspace root to current working directory. Localized fills gaps root does not cover. Root wins on conflict.

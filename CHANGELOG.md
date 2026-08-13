@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [v2.1.0] - 2026-08-06
+## [v2.1.0] - 2026-08-12
 
 ### Changed
 
@@ -36,14 +36,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Installer CLIs now reject conflicting scope flags (`--project` + `--global`, `-Project` + `-Global`) for consistent cross-shell behavior.
 - Installer docs updated to reflect explicit target requirement and target/scope constraints in `scripts/README.md`.
 - Add versioning flag to embed into skills and AGENTS policy, keeping it in sync back to the release.
+- Installer parity pass expanded PowerShell behavior to match Bash for dry-run workflows:
+  - Added `-DryRun` support across mutating installer paths (backup, managed-block upsert/remove, agent install/uninstall, skills install/uninstall, doctor directory creation, manifest updates).
+  - Sync recursion now propagates dry-run and relevant installer flags to nested install/uninstall calls.
+- Branch-selection parity improved across shells:
+  - PowerShell now auto-detects non-`main` branch from raw GitHub URL context (`BASH_SOURCE_URL`) when `-Branch` remains default `main`, mirroring Bash branch-detection intent.
+- Installer CLI reference docs (`scripts/README.md`) were aligned with current behavior:
+  - Added/updated `sync`, harness selector (`--harness` / `-Harness`), prune (`--prune` / `-Prune`), and dry-run (`--dry-run` / `-DryRun`) coverage.
+  - Updated target-selection constraints to reflect harness-list mode, legacy single-target mode, and no-mixing rules.
+  - Documented manifest-driven sync behavior and manifest paths for project/global scope.
+- Installer multi-target install now supports a single `--harness`/`-Harness` comma-separated list. Consolidated output: one banner + version + source + doctor + skills header, per-target `[name]` section, single `🦆 quack` footer.
+- Bash installer no longer requires `python3`. Manifest parsing/emission is pure bash via a small library (`manifest_load`/`manifest_save` populating `MF_*` globals). PowerShell installer already used native JSON.
+- Skills install consolidated: a single `npx` call receives one `-a <agent>` flag per selected target, replacing per-target `npx` invocations.
+- Pinning reframed as a dev-workflow change log with skip-unchanged optimization (not a security boundary). Fresh install writes `pins`; re-install compares fetched artifact sha256 to on-disk and skips rewriting unchanged files (preserves mtime).
+- Environment variable renamed `BASH_SOURCE_URL` -> `RUBBER_DUCK_SOURCE_URL` for shell-agnostic naming; both installers respect it for auto branch detection from piped install URLs.
+- Installer backup retention: only the most recent `<file>.bak.*` is kept per policy file. Prior backups are pruned on install/uninstall. Applies to both bash and PowerShell installers.
 
 #### Skills
 
 - Skill metadata version format now matches `RUBBER_DUCK_VERSION` style (unquoted `vX.Y.Z`): `version` changed from `"2.0"` to `v2.0.0` for `duck-adapt`, `duck-debt`, `duck-debug`, `duck-design`, `duck-grill`, `duck-patch`, `duck-refactor`, `duck-review`, `duck-risk`, `duck-simplify`, `duck-tape`, `duck-teach`, `duck-triage`, and `quack`.
 - Fix confusing instructions causing `quack` to stall after routing.
 
+### Added
+
+- Installer canonical-source guardrail: `rawBase` defaults to the canonical prefix `https://raw.githubusercontent.com/sprngr/rubber-duck` to avoid accidentally installing from a fork or mistyped URL. Override with `--allow-untrusted-source` / `-AllowUntrustedSource` (emits warning) when installing from a fork or mirror. Applies to both `install` and `sync` paths.
+- Installer SHA-256 artifact record + skip-unchanged install: `install` writes a `pins` block into the manifest recording the hash of each installed agent file. Subsequent installs compare fetched artifacts against the destination and skip rewriting files that already match (preserving mtime and speeding up reinstalls). Pins are refreshed after each install to reflect current disk state.
+- Installer downgrade warning: emits `WARN: downgrade: manifest lastAppliedVersion X > incoming Y` when installing an older release than the manifest records. Warning only; does not block the install.
+- Installer test suite (`tests/run-installer.sh`, `make check-installer`) covering fresh install, reinstall pin verify, pin tamper mismatch, sync install-then-prune round-trip, and rawBase allowlist scenarios in isolated tmp workspaces.
+- PowerShell installer test suite (`tests/run-installer.ps1`, `make check-installer-ps`) mirrors the bash suite: fresh install, reinstall pin verify, sync round-trip, rawBase allowlist, claude two-file layout, and dry-run scenarios.
+- Bash dry-run test cases (`dry-run no writes`, `dry-run multi-target layout`) added to `tests/run-installer.sh`.
+
 ### Fixed
 
+- Installer `--raw-base` (bash) CLI flag was silently overwritten by the branch-derived default. Now respected when provided.
+- PowerShell installer `sync -Prune` returned early when the manifest had no enabled targets, skipping the prune loop entirely. Now falls through to prune (parity with bash).
+- PowerShell installer `sync` threw on empty or malformed manifest instead of falling back to an empty state. Now recovers and reports `sync: no enabled targets in manifest`.
+- PowerShell installer security helpers (`Test-RawBaseAllowed`, `Get-Sha256`, and related) were defined inside `function rubber-duck` after the sync path's call sites. PS does not hoist nested function definitions, so the sync-path `rawBase` allowlist check was silently bypassed. Helpers hoisted to script scope; sync now correctly enforces the allowlist.
+- Bash installer `sync` install loop under `set -u` errored on an empty enabled-targets array on bash 3.2 (macOS default). Guarded with array-length check.
+- `.gitignore` narrowed from `*.bak.*` to `*AGENTS.md.bak.*` / `*CLAUDE.md.bak.*` to avoid masking unrelated backup files (editor, other tools).
 - Installer managed block upsert no longer accumulates extra blank lines above managed fences on repeated runs (bash and PowerShell).
 - PowerShell installer now detects script-file execution correctly for `-Source local` and no longer misclassifies it as piped `iwr|iex` mode.
 - PowerShell installer local-source file resolution now uses script-scoped variables, fixing null-path failures during local copy.
@@ -52,6 +82,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rendered rubber-duck agent artifacts (`dist/*/agents/rubber-duck.md`) no longer duplicate the approval-workflow, scope-rules, and change-type sections. `src/agents/rubber-duck/body.md` no longer re-includes policy snippets that are already pulled in via the Safety Gates section.
 - AGENTS.md Layout section now correctly distinguishes `.github/` (tracked CI/workflow config) from `.agents/`, `.claude/`, `.opencode/` (untracked local harness install targets, populated by installers).
 - PowerShell installer target-resolution fallback no longer defaults implicitly to global opencode paths.
+- Installer `write_pins` (bash) and `Write-Pins` (PowerShell) did not honor dry-run. Bash silently wrote `.rubber-duck/manifest.json`; PowerShell errored on missing parent directory. Both now emit a `[dry-run] pins update -> <path>` marker and skip the write.
 
 ## [v2.0.1] - 2026-08-03
 

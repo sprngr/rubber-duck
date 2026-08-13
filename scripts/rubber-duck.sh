@@ -4,6 +4,9 @@ set -euo pipefail
 ACTION="install"
 TARGET=""
 SEEN_TARGET_COUNT=0
+HARNESS_CSV=""
+PRUNE=0
+TARGETS=()
 CLAUDE_MD=""
 PROJECT_SCOPE=1
 SEEN_PROJECT=0
@@ -13,7 +16,7 @@ SKIP_AGENTS_MD=0
 SKILLS_CLI="skills@^1.5.21"  # pinned npx CLI package spec
 SOURCE_MODE="auto"  # auto|local|web
 BRANCH="main"  # default branch
-RAW_BASE="https://raw.githubusercontent.com/sprngr/rubber-duck/main"
+RAW_BASE=""  # default computed after branch resolution unless set via --raw-base
 SKILLS_SOURCE=""  # derived from --source after choose_source
 DRY_RUN=0
 EXTRAS=0
@@ -81,12 +84,13 @@ EXTRAS_SKILLS=(
 usage() {
   cat <<'EOF'
 Usage:
-  scripts/rubber-duck.sh [install|uninstall|status|doctor] [options]
+  scripts/rubber-duck.sh [install|uninstall|status|doctor|sync] [options]
 
 Options:
   --opencode                        Use opencode paths (required: pick exactly one target)
   --copilot                         Use Copilot paths (required: pick exactly one target)
   --claude                          Use Claude paths (required: pick exactly one target)
+  --harness <list>                  Comma-separated harness list (opencode,copilot,claude)
   --global                          Apply global scope to selected target (and skills, unless --skip-skills)
   --project                         Apply project scope to selected target (and skills, unless --skip-skills)
   --claude-md <path>                Claude target memory file path override
@@ -95,16 +99,22 @@ Options:
   --skip-agents-md                  Skip AGENTS.md policy block install/remove
   --source <auto|local|web>         Artifact + skills source (default: auto)
   --raw-base <url>                  Raw GitHub base for web source
+  --prune                           With sync: remove managed targets not in manifest
   --dry-run                         Print planned actions only
   --extras                          Also install extras skills (duck-adapt, duck-grill, duck-tape)
+  --allow-untrusted-source          Skip rawBase allowlist check (dangerous; forks/custom mirrors)
   -h, --help                        Show help
 
 Examples:
   scripts/rubber-duck.sh install --opencode
+  scripts/rubber-duck.sh install --harness "opencode"
+  scripts/rubber-duck.sh install --harness "opencode,copilot"
   scripts/rubber-duck.sh install --opencode --extras
   scripts/rubber-duck.sh install --opencode --project
   scripts/rubber-duck.sh install --copilot --global
   scripts/rubber-duck.sh install --claude --skip-skills
+  scripts/rubber-duck.sh sync --project
+  scripts/rubber-duck.sh sync --project --prune --skip-skills --skip-agents-md
   scripts/rubber-duck.sh install --opencode --source local
   curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh | bash -s -- install --opencode
   curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/v2-quackening/scripts/rubber-duck.sh | bash -s -- install --opencode --branch v2-quackening
@@ -116,15 +126,229 @@ warn() { printf 'WARN: %s\n' "$*"; }
 err() { printf 'ERROR: %s\n' "$*" >&2; }
 timestamp() { date +%Y%m%d-%H%M%S; }
 
+print_banner() {
+  cat <<'BANNER'
+          _    _                    _         _
+ _ _ _  _| |__| |__  ___ _ _ ___ __| |_  _ __| |__
+| '_| || | '_ \ '_ \/ -_) '_|___/ _` | || / _| / /
+|_|  \_,_|_.__/_.__/\___|_|     \__,_|\_,_\__|_\_\
+
+BANNER
+}
+
+resolve_canonical_version() {
+  local src="" v=""
+  if [[ "${EFFECTIVE_SOURCE}" == "local" ]]; then
+    src="${REPO_ROOT}/dist/AGENTS.md"
+    [[ -f "${src}" ]] || return 0
+  else
+    command -v curl >/dev/null 2>&1 || return 0
+    src="$(mktemp)"
+    if ! curl -fsSL "${RAW_BASE}/${REMOTE_POLICY_PATH:-dist/AGENTS.md}" -o "${src}" 2>/dev/null; then
+      rm -f "${src}"
+      return 0
+    fi
+  fi
+  v="$(extract_version_from_file "${src}" 2>/dev/null)" && [[ -n "${v}" ]] && CANONICAL_VERSION="${v}"
+  [[ "${EFFECTIVE_SOURCE}" != "local" ]] && rm -f "${src}"
+  return 0
+}
+
+# Exact rawBase prefix required unless --allow-untrusted-source is set.
+ALLOWED_RAW_BASE_PREFIX="https://raw.githubusercontent.com/sprngr/rubber-duck"
+ALLOW_UNTRUSTED_SOURCE=0
+
+# Compute SHA-256 of a file, print "sha256:<hex>". Returns 1 on error.
+compute_sha256() {
+  local file="$1" hash=""
+  [[ -f "${file}" ]] || return 1
+  if command -v sha256sum >/dev/null 2>&1; then
+    hash=$(sha256sum "${file}" | awk '{print $1}')
+  elif command -v shasum >/dev/null 2>&1; then
+    hash=$(shasum -a 256 "${file}" | awk '{print $1}')
+  else
+    return 1
+  fi
+  [[ -n "${hash}" ]] && printf 'sha256:%s\n' "${hash}"
+}
+
+# Validate rawBase against ALLOWED_RAW_BASE_PREFIX. Skip check for local mode.
+# Honor ALLOW_UNTRUSTED_SOURCE override. Returns 0 if allowed, 1 otherwise.
+check_rawbase_allowed() {
+  local raw_base="$1" mode="$2"
+  [[ "${mode}" == "local" ]] && return 0
+  (( ALLOW_UNTRUSTED_SOURCE == 1 )) && { warn "rawBase allowlist bypassed: ${raw_base}"; return 0; }
+  [[ "${raw_base}" == "${ALLOWED_RAW_BASE_PREFIX}"* ]] && return 0
+  return 1
+}
+
+# --- Manifest handling (pure bash, no python3) ---
+# Global state populated by manifest_load, consumed by manifest_save.
+declare -A MF_TARGET_ENABLED=() MF_TARGET_SCOPE=() MF_TARGET_INSTALL_AGENTS_MD=() MF_TARGET_INSTALL_SKILLS=() MF_TARGET_EXTRAS=()
+declare -a MF_TARGET_NAMES=()
+declare -A MF_PINS=()
+MF_SCHEMA_VERSION=1
+MF_SOURCE_MODE=""
+MF_SOURCE_REF=""
+MF_SOURCE_RAW_BASE=""
+MF_SOURCE_LAST_APPLIED_VERSION=""
+
+manifest_reset() {
+  MF_TARGET_ENABLED=(); MF_TARGET_SCOPE=(); MF_TARGET_INSTALL_AGENTS_MD=()
+  MF_TARGET_INSTALL_SKILLS=(); MF_TARGET_EXTRAS=(); MF_TARGET_NAMES=(); MF_PINS=()
+  MF_SCHEMA_VERSION=1
+  MF_SOURCE_MODE=""; MF_SOURCE_REF=""; MF_SOURCE_RAW_BASE=""; MF_SOURCE_LAST_APPLIED_VERSION=""
+}
+
+# Load manifest into MF_* globals. Falls back to template if primary missing.
+# Args: manifest_path [template_path]
+manifest_load() {
+  local mp="$1" tpl="${2:-}"
+  manifest_reset
+  local src=""
+  [[ -f "${mp}" ]] && src="${mp}"
+  [[ -z "${src}" && -n "${tpl}" && -f "${tpl}" ]] && src="${tpl}"
+  [[ -z "${src}" ]] && return 0
+  local block="" current="" line
+  while IFS= read -r line || [[ -n "${line}" ]]; do
+    if [[ "${line}" =~ ^\ \ \"source\":[[:space:]]*\{ ]]; then block="source"; continue; fi
+    if [[ "${line}" =~ ^\ \ \"pins\":[[:space:]]*\{ ]]; then block="pins"; continue; fi
+    if [[ "${line}" =~ ^\ \ \"targets\":[[:space:]]*\{ ]]; then block="targets"; continue; fi
+    if [[ "${line}" =~ ^\ \ \} ]]; then block=""; current=""; continue; fi
+    if [[ -z "${block}" && "${line}" =~ \"schemaVersion\":[[:space:]]*([0-9]+) ]]; then
+      MF_SCHEMA_VERSION="${BASH_REMATCH[1]}"; continue
+    fi
+    if [[ "${block}" == "source" && "${line}" =~ \"([^\"]+)\":[[:space:]]*\"([^\"]*)\" ]]; then
+      case "${BASH_REMATCH[1]}" in
+        mode) MF_SOURCE_MODE="${BASH_REMATCH[2]}" ;;
+        sourceRef) MF_SOURCE_REF="${BASH_REMATCH[2]}" ;;
+        rawBase) MF_SOURCE_RAW_BASE="${BASH_REMATCH[2]}" ;;
+        lastAppliedVersion) MF_SOURCE_LAST_APPLIED_VERSION="${BASH_REMATCH[2]}" ;;
+      esac
+      continue
+    fi
+    if [[ "${block}" == "pins" && "${line}" =~ \"([^\"]+)\":[[:space:]]*\"([^\"]*)\" ]]; then
+      MF_PINS["${BASH_REMATCH[1]}"]="${BASH_REMATCH[2]}"; continue
+    fi
+    if [[ "${block}" == "targets" && "${line}" =~ ^\ \ \ \ \"([^\"]+)\":[[:space:]]*\{ ]]; then
+      current="${BASH_REMATCH[1]}"; MF_TARGET_NAMES+=("${current}"); continue
+    fi
+    if [[ "${block}" == "targets" && -n "${current}" && "${line}" =~ \"([^\"]+)\":[[:space:]]*(true|false) ]]; then
+      case "${BASH_REMATCH[1]}" in
+        enabled) MF_TARGET_ENABLED["${current}"]="${BASH_REMATCH[2]}" ;;
+        extras) MF_TARGET_EXTRAS["${current}"]="${BASH_REMATCH[2]}" ;;
+        installAgentsMd) MF_TARGET_INSTALL_AGENTS_MD["${current}"]="${BASH_REMATCH[2]}" ;;
+        installSkills) MF_TARGET_INSTALL_SKILLS["${current}"]="${BASH_REMATCH[2]}" ;;
+      esac
+      continue
+    fi
+    if [[ "${block}" == "targets" && -n "${current}" && "${line}" =~ \"scope\":[[:space:]]*\"([^\"]*)\" ]]; then
+      MF_TARGET_SCOPE["${current}"]="${BASH_REMATCH[1]}"; continue
+    fi
+    if [[ "${block}" == "targets" && -n "${current}" && "${line}" =~ ^\ \ \ \ \} ]]; then
+      current=""; continue
+    fi
+  done < "${src}"
+}
+
+# Save MF_* globals as sorted JSON. Matches python json.dumps(indent=2, sort_keys=True).
+manifest_save() {
+  local mp="$1"
+  mkdir -p "$(dirname -- "${mp}")"
+  local tmp="${mp}.tmp.$$"
+  local -a sorted_pins=() sorted_targets=()
+  (( ${#MF_PINS[@]} > 0 )) && mapfile -t sorted_pins < <(printf '%s\n' "${!MF_PINS[@]}" | sort)
+  (( ${#MF_TARGET_NAMES[@]} > 0 )) && mapfile -t sorted_targets < <(printf '%s\n' "${MF_TARGET_NAMES[@]}" | sort -u)
+  {
+    printf '{\n'
+    if (( ${#sorted_pins[@]} == 0 )); then
+      printf '  "pins": {},\n'
+    else
+      printf '  "pins": {\n'
+      local i=0 last=$((${#sorted_pins[@]} - 1)) k
+      for k in "${sorted_pins[@]}"; do
+        printf '    "%s": "%s"' "${k}" "${MF_PINS[$k]}"
+        (( i < last )) && printf ','
+        printf '\n'; i=$((i + 1))
+      done
+      printf '  },\n'
+    fi
+    printf '  "schemaVersion": %s,\n' "${MF_SCHEMA_VERSION}"
+    printf '  "source": {\n'
+    printf '    "lastAppliedVersion": "%s",\n' "${MF_SOURCE_LAST_APPLIED_VERSION}"
+    printf '    "mode": "%s",\n' "${MF_SOURCE_MODE}"
+    printf '    "rawBase": "%s",\n' "${MF_SOURCE_RAW_BASE}"
+    printf '    "sourceRef": "%s"\n' "${MF_SOURCE_REF}"
+    printf '  },\n'
+    if (( ${#sorted_targets[@]} == 0 )); then
+      printf '  "targets": {}\n'
+    else
+      printf '  "targets": {\n'
+      local i=0 last=$((${#sorted_targets[@]} - 1)) t
+      for t in "${sorted_targets[@]}"; do
+        printf '    "%s": {\n' "${t}"
+        printf '      "enabled": %s,\n' "${MF_TARGET_ENABLED[$t]:-true}"
+        printf '      "extras": %s,\n' "${MF_TARGET_EXTRAS[$t]:-false}"
+        printf '      "installAgentsMd": %s,\n' "${MF_TARGET_INSTALL_AGENTS_MD[$t]:-true}"
+        printf '      "installSkills": %s,\n' "${MF_TARGET_INSTALL_SKILLS[$t]:-true}"
+        printf '      "scope": "%s"\n' "${MF_TARGET_SCOPE[$t]:-project}"
+        printf '    }'
+        (( i < last )) && printf ','
+        printf '\n'; i=$((i + 1))
+      done
+      printf '  }\n'
+    fi
+    printf '}\n'
+  } > "${tmp}"
+  mv "${tmp}" "${mp}"
+}
+
+# Write pins block into manifest. Remaining args: artifact_path=sha256_hash pairs.
+write_pins() {
+  local manifest_path="$1"
+  shift
+  (( $# == 0 )) && return 0
+  (( DRY_RUN == 1 )) && { log "[dry-run] pins update -> ${manifest_path}"; return 0; }
+  local template_path="${REPO_ROOT}/.rubber-duck/manifest.template.json"
+  manifest_load "${manifest_path}" "${template_path}"
+  local pair k v
+  for pair in "$@"; do
+    IFS='=' read -r k v <<<"${pair}"
+    MF_PINS["${k}"]="${v}"
+  done
+  manifest_save "${manifest_path}"
+}
+
+# Warn when lastAppliedVersion is newer than sourceRef being installed.
+warn_on_downgrade() {
+  local last_applied="$1" incoming="$2"
+  [[ -z "${last_applied}" || "${last_applied}" == "v0.0.0" || "${last_applied}" == "${incoming}" ]] && return 0
+  local newer
+  newer=$(printf '%s\n%s\n' "${last_applied}" "${incoming}" | sort -V | tail -1)
+  [[ "${newer}" == "${last_applied}" ]] && warn "downgrade: manifest lastAppliedVersion ${last_applied} > incoming ${incoming}"
+  return 0
+}
+
+# Read prior lastAppliedVersion from manifest. Prints empty string when missing.
+read_prior_version() {
+  local mp="$1"
+  [[ -f "${mp}" ]] || { printf ''; return; }
+  manifest_load "${mp}"
+  printf '%s' "${MF_SOURCE_LAST_APPLIED_VERSION}"
+}
+
 extract_version_from_file() {
   local source_file="$1"
   [[ -f "${source_file}" ]] || return 1
-  awk 'match($0, /RUBBER_DUCK_VERSION:[[:space:]]*(v[0-9]+\.[0-9]+\.[0-9]+)/, m) { print m[1]; exit 0 }' "${source_file}"
+  awk '
+    match($0, /RUBBER_DUCK_VERSION:[[:space:]]*(v[0-9]+\.[0-9]+\.[0-9]+)/, m) { print m[1]; found=1; exit 0 }
+    END { if (!found) exit 1 }
+  ' "${source_file}"
 }
 
 if [[ $# -gt 0 ]]; then
   case "$1" in
-    install|uninstall|status|doctor)
+    install|uninstall|status|doctor|sync)
       ACTION="$1"
       shift
       ;;
@@ -147,6 +371,10 @@ while [[ $# -gt 0 ]]; do
       TARGET="claude"
       SEEN_TARGET_COUNT=$((SEEN_TARGET_COUNT + 1))
       shift
+      ;;
+    --harness)
+      HARNESS_CSV="${2:-}"
+      shift 2
       ;;
     --project)
       PROJECT_SCOPE=1
@@ -182,6 +410,14 @@ while [[ $# -gt 0 ]]; do
       RAW_BASE="${2:-}"
       shift 2
       ;;
+    --prune)
+      PRUNE=1
+      shift
+      ;;
+    --allow-untrusted-source)
+      ALLOW_UNTRUSTED_SOURCE=1
+      shift
+      ;;
     --dry-run)
       DRY_RUN=1
       shift
@@ -202,26 +438,30 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if (( SEEN_TARGET_COUNT == 0 )); then
-  err "must specify exactly one target: --opencode, --copilot, or --claude"
-  usage
-  exit 1
-fi
-
-if (( SEEN_TARGET_COUNT > 1 )); then
-  err "cannot combine multiple targets; choose exactly one: --opencode, --copilot, or --claude"
-  exit 1
-fi
-
 if (( SEEN_PROJECT == 1 && SEEN_GLOBAL == 1 )); then
   err "cannot combine --project and --global"
   exit 1
 fi
 
+if [[ -n "${HARNESS_CSV}" && ${SEEN_TARGET_COUNT} -gt 0 ]]; then
+  err "cannot combine --harness with --opencode/--copilot/--claude"
+  exit 1
+fi
+
+if [[ -n "${HARNESS_CSV}" ]]; then
+  IFS=',' read -r -a HARNESS_ITEMS <<< "${HARNESS_CSV}"
+  for RAW in "${HARNESS_ITEMS[@]}"; do
+    T="${RAW//[[:space:]]/}"
+    case "${T}" in
+      opencode|copilot|claude) TARGETS+=("${T}") ;;
+      "") ;;
+      *) err "invalid harness in --harness: ${T}"; exit 1 ;;
+    esac
+  done
+else
 # Auto-detect branch from piped URL if not explicitly set
 if [[ "${BRANCH}" == "main" ]]; then
-  # Try to detect from common environment variables or process cmdline
-  if [[ -n "${BASH_SOURCE_URL:-}" ]] && [[ "${BASH_SOURCE_URL}" =~ githubusercontent\.com/[^/]+/[^/]+/([^/]+)/ ]]; then
+  if [[ -n "${RUBBER_DUCK_SOURCE_URL:-}" ]] && [[ "${RUBBER_DUCK_SOURCE_URL}" =~ githubusercontent\.com/[^/]+/[^/]+/([^/]+)/ ]]; then
     DETECTED_BRANCH="${BASH_REMATCH[1]}"
     if [[ "${DETECTED_BRANCH}" != "main" ]]; then
       BRANCH="${DETECTED_BRANCH}"
@@ -230,15 +470,103 @@ if [[ "${BRANCH}" == "main" ]]; then
   fi
 fi
 
-# Update RAW_BASE based on branch
-RAW_BASE="https://raw.githubusercontent.com/sprngr/rubber-duck/${BRANCH}"
+# Default RAW_BASE from branch if not explicitly set via --raw-base
+if [[ -z "${RAW_BASE}" ]]; then
+  RAW_BASE="https://raw.githubusercontent.com/sprngr/rubber-duck/${BRANCH}"
+fi
 if [[ "${BRANCH}" != "main" ]]; then
   log "Using branch: ${BRANCH}"
 fi
 
-if [[ -n "${CLAUDE_MD}" && "${TARGET}" != "claude" ]]; then
-  err "--claude-md requires --claude"
+if [[ "${ACTION}" == "sync" ]]; then
+    TARGETS=()
+  else
+    if (( SEEN_TARGET_COUNT == 0 )); then
+      err "must specify target via --harness or one legacy target flag"
+      usage
+      exit 1
+    fi
+    if (( SEEN_TARGET_COUNT > 1 )); then
+      err "cannot combine multiple legacy targets; use --harness for multi-target"
+      exit 1
+    fi
+    TARGETS+=("${TARGET}")
+  fi
+fi
+
+if (( PRUNE == 1 )) && [[ "${ACTION}" != "sync" ]]; then
+  err "--prune is only valid with sync"
   exit 1
+fi
+
+HAS_CLAUDE=0
+for T in "${TARGETS[@]}"; do
+  [[ "${T}" == "claude" ]] && HAS_CLAUDE=1
+done
+if [[ -n "${CLAUDE_MD}" && ${HAS_CLAUDE} -eq 0 ]]; then
+  err "--claude-md applies only when claude target is selected"
+  exit 1
+fi
+
+if (( PROJECT_SCOPE == 1 )); then
+  MANIFEST_PATH=".rubber-duck/manifest.json"
+else
+  MANIFEST_PATH="${HOME}/.config/rubber-duck/manifest.json"
+fi
+
+if [[ "${ACTION}" == "sync" ]]; then
+  if [[ ! -f "${MANIFEST_PATH}" ]]; then
+    err "manifest missing: ${MANIFEST_PATH}. Run install first."
+    exit 1
+  fi
+  if [[ "${0:-}" == "bash" || "${0:-}" == "sh" || "${0:-}" == "-" ]]; then
+    err "sync requires file-backed execution (not piped)"
+    exit 1
+  fi
+  check_rawbase_allowed "${RAW_BASE}" "${SOURCE_MODE}" || { err "rawBase not in allowlist: ${RAW_BASE}. Use --allow-untrusted-source to override."; exit 1; }
+  manifest_load "${MANIFEST_PATH}"
+  SYNC_TARGETS=()
+  for T in "${MF_TARGET_NAMES[@]}"; do
+    sync_enabled="${MF_TARGET_ENABLED[$T]:-true}"
+    [[ "${sync_enabled}" == "true" ]] && SYNC_TARGETS+=("${T}")
+  done
+  declare -A SYNC_TARGET_SET=()
+  for T in "${SYNC_TARGETS[@]}"; do
+    SYNC_TARGET_SET["${T}"]=1
+  done
+  if (( ${#SYNC_TARGETS[@]} == 0 )); then
+    log "sync: no enabled targets in manifest"
+    if (( PRUNE == 0 )); then
+      exit 0
+    fi
+  fi
+  if (( ${#SYNC_TARGETS[@]} > 0 )); then
+    for T in "${SYNC_TARGETS[@]}"; do
+      CMD=(bash "${SCRIPT_PATH}" install --harness "${T}" --source "${SOURCE_MODE}" --branch "${BRANCH}" --raw-base "${RAW_BASE}")
+      if (( PROJECT_SCOPE == 1 )); then CMD+=(--project); else CMD+=(--global); fi
+      (( SKIP_SKILLS == 1 )) && CMD+=(--skip-skills)
+      (( SKIP_AGENTS_MD == 1 )) && CMD+=(--skip-agents-md)
+      (( EXTRAS == 1 )) && CMD+=(--extras)
+      (( DRY_RUN == 1 )) && CMD+=(--dry-run)
+      (( ALLOW_UNTRUSTED_SOURCE == 1 )) && CMD+=(--allow-untrusted-source)
+      "${CMD[@]}"
+    done
+  fi
+  if (( PRUNE == 1 )); then
+    for T in opencode copilot claude; do
+      if [[ -z "${SYNC_TARGET_SET[${T}]+x}" ]]; then
+        CMD=(bash "${SCRIPT_PATH}" uninstall --harness "${T}" --source "${SOURCE_MODE}" --branch "${BRANCH}" --raw-base "${RAW_BASE}")
+        if (( PROJECT_SCOPE == 1 )); then CMD+=(--project); else CMD+=(--global); fi
+        CMD+=(--skip-skills)
+        (( SKIP_AGENTS_MD == 1 )) && CMD+=(--skip-agents-md)
+        (( DRY_RUN == 1 )) && CMD+=(--dry-run)
+        (( ALLOW_UNTRUSTED_SOURCE == 1 )) && CMD+=(--allow-untrusted-source)
+        "${CMD[@]}"
+      fi
+    done
+  fi
+  log "sync: complete"
+  exit 0
 fi
 
 resolve_target() {
@@ -365,7 +693,6 @@ prepare_sources() {
     if v="$(extract_version_from_file "${TMP_DIR}/AGENTS.md" 2>/dev/null)"; then
       CANONICAL_VERSION="${v}"
     fi
-    log "source: local (${REPO_ROOT})"
     return
   fi
 
@@ -382,7 +709,6 @@ prepare_sources() {
   if v="$(extract_version_from_file "${TMP_DIR}/AGENTS.md" 2>/dev/null)"; then
     CANONICAL_VERSION="${v}"
   fi
-  log "source: web (${RAW_BASE})"
 }
 
 strip_managed_block_to_file() {
@@ -435,6 +761,16 @@ backup_md() {
   else
     : > "${backup}"
   fi
+  local backups=()
+  local keep_index=0
+  backups=( "${target}".bak.* )
+  if [[ -e "${backups[0]:-}" ]]; then
+    keep_index=$((${#backups[@]} - 1))
+    for i in "${!backups[@]}"; do
+      (( i == keep_index )) && continue
+      rm -f "${backups[$i]}"
+    done
+  fi
   log "Backup created: ${backup}"
 }
 
@@ -455,6 +791,7 @@ upsert_managed_block() {
   {
     if [[ -s "${target}" ]]; then
       cat "${target}"
+      printf '\n'
     fi
     printf '%s\n' "${MANAGED_START}"
     cat "${content_file}"
@@ -507,10 +844,21 @@ install_agents() {
     return
   fi
   mkdir -p "${DEST_AGENTS_DIR}"
+  local installed=0 skipped=0
   for f in "${AGENT_FILES[@]}"; do
+    if [[ -f "${DEST_AGENTS_DIR}/${f}" ]]; then
+      local tmp_h dest_h
+      tmp_h=$(compute_sha256 "${TMP_DIR}/${f}")
+      dest_h=$(compute_sha256 "${DEST_AGENTS_DIR}/${f}")
+      if [[ -n "${tmp_h}" && "${tmp_h}" == "${dest_h}" ]]; then
+        skipped=$((skipped + 1))
+        continue
+      fi
+    fi
     cp -f "${TMP_DIR}/${f}" "${DEST_AGENTS_DIR}/${f}"
+    installed=$((installed + 1))
   done
-  log "Installed ${#AGENT_FILES[@]} agents -> ${DEST_AGENTS_DIR}"
+  log "Installed ${installed} agents (${skipped} unchanged) -> ${DEST_AGENTS_DIR}"
 }
 
 uninstall_agents() {
@@ -536,15 +884,17 @@ skills_install() {
   local -a install_list=("${DEFAULT_SKILLS[@]}")
   (( PROJECT_SCOPE == 0 )) && scope="-g"
   (( EXTRAS == 1 )) && install_list+=("${EXTRAS_SKILLS[@]}")
+  local -a agent_args=()
+  for a in "$@"; do agent_args+=(-a "${a}"); done
   if (( DRY_RUN == 1 )); then
-    log "[dry-run] npx ${SKILLS_CLI} add ${SKILLS_SOURCE} --skill ${install_list[*]} ${scope} -y"
+    log "[dry-run] npx ${SKILLS_CLI} add ${SKILLS_SOURCE} --skill ${install_list[*]} ${agent_args[*]} ${scope} -y"
     return
   fi
   if ! command -v npx >/dev/null 2>&1; then
     warn "npx not found; skipping skills install"
     return
   fi
-  npx "${SKILLS_CLI}" add "${SKILLS_SOURCE}" --skill ${install_list[*]} ${scope} -y
+  npx "${SKILLS_CLI}" add "${SKILLS_SOURCE}" --skill ${install_list[*]} ${agent_args[*]} ${scope} -y
 }
 
 skills_uninstall() {
@@ -552,17 +902,29 @@ skills_uninstall() {
   local scope=""
   local -a all_skills=("${DEFAULT_SKILLS[@]}" "${EXTRAS_SKILLS[@]}")
   (( PROJECT_SCOPE == 0 )) && scope="-g"
+  local -a agent_args=()
+  for a in "$@"; do agent_args+=(-a "${a}"); done
   if (( DRY_RUN == 1 )); then
-    log "[dry-run] npx ${SKILLS_CLI} remove ${SKILLS_SOURCE} --skill ${all_skills[*]} ${scope} -y"
+    log "[dry-run] npx ${SKILLS_CLI} remove ${SKILLS_SOURCE} --skill ${all_skills[*]} ${agent_args[*]} ${scope} -y"
     return
   fi
   if ! command -v npx >/dev/null 2>&1; then
     warn "npx not found; skipping skills uninstall"
     return
   fi
-  if ! npx "${SKILLS_CLI}" remove "${SKILLS_SOURCE}" --skill ${all_skills[*]} ${scope} -y; then
+  if ! npx "${SKILLS_CLI}" remove "${SKILLS_SOURCE}" --skill ${all_skills[*]} ${agent_args[*]} ${scope} -y; then
     warn "skills remove failed; remove package manually if needed"
   fi
+}
+
+# Map our target names to skills CLI agent identifiers.
+target_to_skills_agent() {
+  case "$1" in
+    opencode) printf 'opencode' ;;
+    copilot)  printf 'github-copilot' ;;
+    claude)   printf 'claude-code' ;;
+    *)        printf '' ;;
+  esac
 }
 
 skills_status() {
@@ -617,10 +979,8 @@ status() {
   if v="$(extract_version_from_file "${DEST_POLICY_MD}" 2>/dev/null)"; then
     CANONICAL_VERSION="${v}"
   fi
-  log "target: ${TARGET}"
   log "agents_dir: ${DEST_AGENTS_DIR}"
   log "policy_md: ${DEST_POLICY_MD}"
-  log "version: ${CANONICAL_VERSION}"
   local installed=0
   for f in "${AGENT_FILES[@]}"; do
     [[ -f "${DEST_AGENTS_DIR}/${f}" ]] && installed=$((installed + 1))
@@ -628,7 +988,7 @@ status() {
   log "agents: ${installed}/${#AGENT_FILES[@]} present"
   report_policy_block "${DEST_POLICY_MD}"
   [[ "${POLICY_MODE}" == "file" ]] && report_policy_block "${DEST_CLAUDE_AGENTS_MD}"
-  skills_status
+  return 0
 }
 
 doctor() {
@@ -648,10 +1008,50 @@ doctor() {
       mkdir -p "$(dirname -- "${DEST_CLAUDE_AGENTS_MD}")"
     fi
   fi
-  log "doctor: ok"
 }
 
-resolve_target
+manifest_update_target() {
+  local op="$1" target_name="$2"
+  (( DRY_RUN == 1 )) && { log "[dry-run] manifest ${op} ${target_name} -> ${MANIFEST_PATH}"; return 0; }
+  local prior_version=""
+  prior_version=$(read_prior_version "${MANIFEST_PATH}")
+  warn_on_downgrade "${prior_version}" "${CANONICAL_VERSION}"
+  local template_path="${REPO_ROOT}/.rubber-duck/manifest.template.json"
+  manifest_load "${MANIFEST_PATH}" "${template_path}"
+  MF_SOURCE_MODE="${EFFECTIVE_SOURCE}"
+  MF_SOURCE_REF="${BRANCH}"
+  MF_SOURCE_RAW_BASE="${RAW_BASE}"
+  MF_SOURCE_LAST_APPLIED_VERSION="${CANONICAL_VERSION}"
+  if [[ "${op}" == "install" ]]; then
+    local found=0 t
+    for t in "${MF_TARGET_NAMES[@]}"; do
+      [[ "${t}" == "${target_name}" ]] && { found=1; break; }
+    done
+    (( found == 0 )) && MF_TARGET_NAMES+=("${target_name}")
+    MF_TARGET_ENABLED["${target_name}"]="true"
+    if (( PROJECT_SCOPE == 1 )); then MF_TARGET_SCOPE["${target_name}"]="project"
+    else MF_TARGET_SCOPE["${target_name}"]="global"; fi
+    if (( SKIP_AGENTS_MD == 1 )); then MF_TARGET_INSTALL_AGENTS_MD["${target_name}"]="false"
+    else MF_TARGET_INSTALL_AGENTS_MD["${target_name}"]="true"; fi
+    if (( SKIP_SKILLS == 1 )); then MF_TARGET_INSTALL_SKILLS["${target_name}"]="false"
+    else MF_TARGET_INSTALL_SKILLS["${target_name}"]="true"; fi
+    if (( EXTRAS == 1 )); then MF_TARGET_EXTRAS["${target_name}"]="true"
+    else MF_TARGET_EXTRAS["${target_name}"]="false"; fi
+  elif [[ "${op}" == "uninstall" ]]; then
+    unset "MF_TARGET_ENABLED[${target_name}]"
+    unset "MF_TARGET_SCOPE[${target_name}]"
+    unset "MF_TARGET_INSTALL_AGENTS_MD[${target_name}]"
+    unset "MF_TARGET_INSTALL_SKILLS[${target_name}]"
+    unset "MF_TARGET_EXTRAS[${target_name}]"
+    local -a new_names=() t
+    for t in "${MF_TARGET_NAMES[@]}"; do
+      [[ "${t}" != "${target_name}" ]] && new_names+=("${t}")
+    done
+    MF_TARGET_NAMES=("${new_names[@]}")
+  fi
+  manifest_save "${MANIFEST_PATH}"
+}
+
 choose_source
 
 case "${EFFECTIVE_SOURCE}" in
@@ -666,50 +1066,104 @@ case "${EFFECTIVE_SOURCE}" in
     fi
     ;;
 esac
-log "Skills source: ${SKILLS_SOURCE}"
 
-case "${ACTION}" in
-  install)
-    doctor
-    prepare_sources
-    install_agents
-    if (( SKIP_AGENTS_MD == 0 )); then
-      backup_md "${DEST_POLICY_MD}"
-      if [[ "${POLICY_MODE}" == "managed_block" ]]; then
-        upsert_managed_block
-      else
-        backup_md "${DEST_CLAUDE_AGENTS_MD}"
-        install_policy_file
-      fi
+check_rawbase_allowed "${RAW_BASE}" "${EFFECTIVE_SOURCE}" || { err "rawBase not in allowlist: ${RAW_BASE}. Use --allow-untrusted-source to override."; exit 1; }
+
+# Pre-loop header (install/uninstall only)
+if [[ "${ACTION}" == "install" || "${ACTION}" == "uninstall" ]]; then
+  [[ "${ACTION}" == "install" ]] && print_banner
+  resolve_canonical_version
+  log "version: ${CANONICAL_VERSION}"
+  if [[ "${EFFECTIVE_SOURCE}" == "local" ]]; then
+    log "source: local (${REPO_ROOT})"
+  else
+    log "source: web (${RAW_BASE})"
+  fi
+  log "doctor: ok"
+fi
+
+# Consolidated skills call: one npx invocation with -a for each selected target.
+if [[ "${ACTION}" == "install" || "${ACTION}" == "uninstall" ]] && (( ${#TARGETS[@]} > 0 )); then
+  SKILLS_AGENTS=()
+  for T in "${TARGETS[@]}"; do
+    a=$(target_to_skills_agent "${T}")
+    [[ -n "${a}" ]] && SKILLS_AGENTS+=("${a}")
+  done
+  if (( ${#SKILLS_AGENTS[@]} > 0 )); then
+    if [[ "${ACTION}" == "install" ]]; then
+      skills_install "${SKILLS_AGENTS[@]}"
+    else
+      skills_uninstall "${SKILLS_AGENTS[@]}"
     fi
-    skills_install
-    status
-    ;;
-  uninstall)
-    doctor
-    prepare_sources
-    uninstall_agents
-    if (( SKIP_AGENTS_MD == 0 )); then
-      backup_md "${DEST_POLICY_MD}"
-      if [[ "${POLICY_MODE}" == "managed_block" ]]; then
-        remove_managed_block
-      else
-        backup_md "${DEST_CLAUDE_AGENTS_MD}"
-        remove_policy_file
+    skills_status
+  fi
+fi
+
+for TARGET in "${TARGETS[@]}"; do
+  resolve_target
+
+  case "${ACTION}" in
+    install|uninstall) log ""; log "[${TARGET}]" ;;
+  esac
+
+  case "${ACTION}" in
+    install)
+      doctor
+      prepare_sources
+      install_agents
+      if (( SKIP_AGENTS_MD == 0 )); then
+        backup_md "${DEST_POLICY_MD}"
+        if [[ "${POLICY_MODE}" == "managed_block" ]]; then
+          upsert_managed_block
+        else
+          backup_md "${DEST_CLAUDE_AGENTS_MD}"
+          install_policy_file
+        fi
       fi
-    fi
-    skills_uninstall
-    status
-    ;;
-  status)
-    status
-    ;;
-  doctor)
-    doctor
-    ;;
-  *)
-    err "unknown action: ${ACTION}"
-    usage
-    exit 1
-    ;;
-esac
+      status
+      manifest_update_target "install" "${TARGET}"
+      PIN_PAIRS=()
+      for pin_f in "${AGENT_FILES[@]}"; do
+        pin_h=$(compute_sha256 "${TMP_DIR}/${pin_f}") && PIN_PAIRS+=("${REMOTE_AGENTS_PATH}/${pin_f}=${pin_h}")
+      done
+      if (( SKIP_AGENTS_MD == 0 )); then
+        pin_policy="${TMP_DIR}/AGENTS.md"
+        [[ "${POLICY_MODE}" == "file" ]] && pin_policy="${TMP_DIR}/CLAUDE.md"
+        pin_h=$(compute_sha256 "${pin_policy}") && PIN_PAIRS+=("${REMOTE_POLICY_PATH}=${pin_h}")
+      fi
+      write_pins "${MANIFEST_PATH}" "${PIN_PAIRS[@]}"
+      ;;
+    uninstall)
+      doctor
+      prepare_sources
+      uninstall_agents
+      if (( SKIP_AGENTS_MD == 0 )); then
+        backup_md "${DEST_POLICY_MD}"
+        if [[ "${POLICY_MODE}" == "managed_block" ]]; then
+          remove_managed_block
+        else
+          backup_md "${DEST_CLAUDE_AGENTS_MD}"
+          remove_policy_file
+        fi
+      fi
+      status
+      manifest_update_target "uninstall" "${TARGET}"
+      ;;
+    status)
+      status
+      ;;
+    doctor)
+      doctor
+      ;;
+    *)
+      err "unknown action: ${ACTION}"
+      usage
+      exit 1
+      ;;
+  esac
+done
+
+if [[ "${ACTION}" == "install" || "${ACTION}" == "uninstall" ]]; then
+  log ""
+  log "🦆 quack"
+fi

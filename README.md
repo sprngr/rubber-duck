@@ -1,3 +1,7 @@
+<p align="center">
+    <img src="docs/assets/rubber_duck.svg" style="margin: 0 auto; width: 25%;"/>
+</p>
+
 # Rubber Duck 🦆
 
  Socratic assistant operating system for developers who want better-quality decisions, not blind automation.
@@ -283,6 +287,8 @@ Rubber Duck adopted terse language and a review structure inspired by [Caveman](
 Part of Rubber Duck's operating model adapts ideas from [Ponytail](https://github.com/DietrichGebert/ponytail) by Dietrich Gebert.
 
 `duck-grill` is an adaptation of the `grill` skills from [skills](https://github.com/mattpocock/skills) by Matt Pocock.
+
+Rubber-Duck logo based on duck emoji from [Noto Emoji](https://github.com/googlefonts/noto-emoji).
 
 ## License
 

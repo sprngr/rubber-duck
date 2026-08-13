@@ -1,9 +1,10 @@
 param(
-  [ValidateSet("install","uninstall","status","doctor")]
+  [ValidateSet("install","uninstall","status","doctor","sync")]
   [string]$Action = "install",
   [switch]$OpenCode,
   [switch]$Copilot,
   [switch]$Claude,
+  [string]$Harness,
   [switch]$Global,
   [switch]$Project = $true,
   [string]$ClaudeMd,
@@ -11,6 +12,9 @@ param(
   [switch]$SkipSkills,
   [switch]$SkipAgentsMd,
   [switch]$Extras,
+  [switch]$DryRun,
+  [switch]$Prune,
+  [switch]$AllowUntrustedSource,
   [ValidateSet("auto","local","web")]
   [string]$Source = "auto",
   [string]$RawBase = ""
@@ -18,17 +22,215 @@ param(
 
 $ProjectSpecified = $MyInvocation.BoundParameters.ContainsKey("Project")
 $GlobalSpecified = $MyInvocation.BoundParameters.ContainsKey("Global")
-$TargetFlags = @($OpenCode, $Copilot, $Claude) | Where-Object { $_ }
-$TargetCount = $TargetFlags.Count
+
+function Log($msg) { Write-Host $msg }
+function Warn($msg) { Write-Warning $msg }
+
+function Print-Banner {
+  @'
+          _    _                    _         _
+ _ _ _  _| |__| |__  ___ _ _ ___ __| |_  _ __| |__
+| '_| || | '_ \ '_ \/ -_) '_|___/ _` | || / _| / /
+|_|  \_,_|_.__/_.__/\___|_|     \__,_|\_,_\__|_\_\
+
+'@ | Write-Host
+}
+
+function Resolve-CanonicalVersion {
+  $src = $null
+  if ($script:EffectiveSource -eq "local") {
+    $candidate = Join-Path $RepoRoot "dist/AGENTS.md"
+    if (Test-Path $candidate) { $src = $candidate }
+  } else {
+    try {
+      $tmp = [System.IO.Path]::GetTempFileName()
+      $remote = if ($script:RemotePolicyPath) { $script:RemotePolicyPath } else { "dist/AGENTS.md" }
+      Invoke-WebRequest -UseBasicParsing -Uri "$RawBase/$remote" -OutFile $tmp -ErrorAction Stop | Out-Null
+      $src = $tmp
+    } catch { $src = $null }
+  }
+  if ($src) {
+    $v = Get-VersionFromFile $src
+    if (-not [string]::IsNullOrWhiteSpace($v)) { $script:CanonicalVersion = $v }
+    if ($script:EffectiveSource -ne "local" -and (Test-Path $src)) { Remove-Item -Force $src }
+  }
+}
+
+# Exact rawBase prefix required unless -AllowUntrustedSource is set.
+$AllowedRawBasePrefix = "https://raw.githubusercontent.com/sprngr/rubber-duck"
+
+# Compute SHA-256 of a file, return "sha256:<hex>". Returns $null on error.
+function Get-Sha256([string]$Path) {
+  if (-not (Test-Path $Path)) { return $null }
+  $h = (Get-FileHash -Algorithm SHA256 -Path $Path).Hash.ToLowerInvariant()
+  return "sha256:$h"
+}
+
+# Validate rawBase against $AllowedRawBasePrefix. Skip check for local mode.
+# Honor -AllowUntrustedSource override. Returns $true if allowed, $false otherwise.
+function Test-RawBaseAllowed([string]$RawBaseUrl, [string]$Mode) {
+  if ($Mode -eq "local") { return $true }
+  if ($AllowUntrustedSource) {
+    Warn "rawBase allowlist bypassed: $RawBaseUrl"
+    return $true
+  }
+  return $RawBaseUrl.StartsWith($AllowedRawBasePrefix)
+}
+
+# Write pins block into manifest. $Pairs is hashtable of artifactPath -> sha256:<hex>.
+function Write-Pins([string]$ManifestPath, [hashtable]$Pairs) {
+  if ($null -eq $Pairs -or $Pairs.Count -eq 0) { return }
+  if ($DryRun) {
+    Log "[dry-run] pins update -> $ManifestPath"
+    return
+  }
+  $data = @{}
+  if (Test-Path $ManifestPath) {
+    try { $data = Get-Content -Raw $ManifestPath | ConvertFrom-Json -AsHashtable } catch { $data = @{} }
+  }
+  if ($null -eq $data) { $data = @{} }
+  if (-not $data.ContainsKey("pins") -or $null -eq $data["pins"]) { $data["pins"] = @{} }
+  foreach ($k in $Pairs.Keys) { $data["pins"][$k] = $Pairs[$k] }
+  $data | ConvertTo-Json -Depth 10 | Set-Content -Path $ManifestPath
+}
+
+# Warn when lastAppliedVersion is newer than sourceRef being installed.
+function Warn-OnDowngrade([string]$LastApplied, [string]$Incoming) {
+  if ([string]::IsNullOrWhiteSpace($LastApplied) -or $LastApplied -eq "v0.0.0" -or $LastApplied -eq $Incoming) { return }
+  try {
+    $la = [version]($LastApplied.TrimStart('v'))
+    $inc = [version]($Incoming.TrimStart('v'))
+    if ($la -gt $inc) { Warn "downgrade: manifest lastAppliedVersion $LastApplied > incoming $Incoming" }
+  } catch { }
+}
+
+# Read prior lastAppliedVersion from manifest. Returns "" when missing/unreadable.
+function Read-PriorVersion([string]$ManifestPath) {
+  if (-not (Test-Path $ManifestPath)) { return "" }
+  try { return [string](Get-Content -Raw $ManifestPath | ConvertFrom-Json -AsHashtable)["source"]["lastAppliedVersion"] } catch { return "" }
+}
 
 function rubber-duck {
-# Exactly one target is required.
-if ($TargetCount -eq 0) {
-  throw "Must specify exactly one target: -OpenCode, -Copilot, or -Claude."
-}
-if ($TargetCount -gt 1) {
-  throw "Cannot combine multiple targets. Choose exactly one: -OpenCode, -Copilot, or -Claude."
-}
+  $LegacyTargets = @()
+  if ($OpenCode) { $LegacyTargets += "opencode" }
+  if ($Copilot) { $LegacyTargets += "copilot" }
+  if ($Claude) { $LegacyTargets += "claude" }
+  $LegacyTargetCount = $LegacyTargets.Count
+  $SelectedTargets = @()
+
+  if (-not [string]::IsNullOrWhiteSpace($Harness)) {
+    if ($LegacyTargetCount -gt 0) {
+      throw "Cannot combine -Harness with -OpenCode/-Copilot/-Claude."
+    }
+    foreach ($raw in ($Harness -split ",")) {
+      $name = $raw.Trim().ToLowerInvariant()
+      if ([string]::IsNullOrWhiteSpace($name)) { continue }
+      if ($name -in @("opencode","copilot","claude")) {
+        $SelectedTargets += $name
+      } else {
+        throw "Invalid harness in -Harness: $name"
+      }
+    }
+    if ($SelectedTargets.Count -eq 0) {
+      throw "Harness list is empty. Use opencode,copilot,claude."
+    }
+  } else {
+    if ($Action -ne "sync") {
+      if ($LegacyTargetCount -eq 0) {
+        throw "Must specify target via -Harness or one legacy target flag."
+      }
+      if ($LegacyTargetCount -gt 1) {
+        throw "Cannot combine multiple legacy targets. Use -Harness for multi-target."
+      }
+      $SelectedTargets += $LegacyTargets[0]
+    }
+  }
+
+  if ($Prune -and $Action -ne "sync") {
+    throw "-Prune is only valid with sync."
+  }
+  if (-not [string]::IsNullOrWhiteSpace($ClaudeMd) -and -not ($SelectedTargets -contains "claude")) {
+    throw "-ClaudeMd applies only when claude target is selected."
+  }
+  # Auto-detect branch from RUBBER_DUCK_SOURCE_URL if not explicitly set
+  if ($Branch -eq "main" -and -not [string]::IsNullOrWhiteSpace($env:RUBBER_DUCK_SOURCE_URL)) {
+    $m = [regex]::Match($env:RUBBER_DUCK_SOURCE_URL, 'githubusercontent\.com/[^/]+/[^/]+/([^/]+)/')
+    if ($m.Success) {
+      $detected = $m.Groups[1].Value
+      if (-not [string]::IsNullOrWhiteSpace($detected) -and $detected -ne "main") {
+        $Branch = $detected
+        Write-Host "Auto-detected branch: $Branch"
+      }
+    }
+  }
+  # Default RawBase from branch if not explicitly set
+  if ([string]::IsNullOrWhiteSpace($RawBase)) {
+    $RawBase = "https://raw.githubusercontent.com/sprngr/rubber-duck/$Branch"
+  }
+  if ($Branch -ne "main") {
+    Write-Host "Using branch: $Branch"
+  }
+  if ($Action -eq "sync") {
+    $SyncScriptPath = $PSCommandPath
+    if ([string]::IsNullOrWhiteSpace($SyncScriptPath)) {
+      $SyncScriptPath = $MyInvocation.PSCommandPath
+    }
+    $ManifestPath = if ($Project) { ".rubber-duck/manifest.json" } else { (Join-Path $HOME ".config/rubber-duck/manifest.json") }
+    if (-not (Test-Path $ManifestPath)) {
+      throw "Manifest missing: $ManifestPath. Run install first."
+    }
+    if ([string]::IsNullOrWhiteSpace($SyncScriptPath)) {
+      throw "sync requires file-backed execution (not piped)."
+    }
+    if (-not (Test-RawBaseAllowed $RawBase $Source)) {
+      throw "rawBase not in allowlist: $RawBase. Use -AllowUntrustedSource to override."
+    }
+    $manifest = @{}
+    try { $manifest = Get-Content -Raw $ManifestPath | ConvertFrom-Json -AsHashtable } catch { $manifest = @{} }
+    if ($null -eq $manifest) { $manifest = @{} }
+    $syncTargets = @()
+    $syncTargetSet = @{}
+    if ($manifest.ContainsKey("targets") -and $null -ne $manifest["targets"]) {
+      foreach ($kv in $manifest["targets"].GetEnumerator()) {
+        $cfg = $kv.Value
+        if ($null -eq $cfg -or -not $cfg.ContainsKey("enabled") -or [bool]$cfg["enabled"]) {
+          $syncTargets += $kv.Key
+          $syncTargetSet[$kv.Key] = $true
+        }
+      }
+    }
+    if ($syncTargets.Count -eq 0) {
+      Write-Host "sync: no enabled targets in manifest"
+      if (-not $Prune) { return }
+    }
+    foreach ($t in $syncTargets) {
+      $syncArgs = @("-File", $SyncScriptPath, "-Action", "install", "-Harness", $t, "-Source", $Source, "-Branch", $Branch, "-RawBase", $RawBase)
+      if ($Project) { $syncArgs += "-Project" } else { $syncArgs += "-Global" }
+      if ($SkipSkills) { $syncArgs += "-SkipSkills" }
+      if ($SkipAgentsMd) { $syncArgs += "-SkipAgentsMd" }
+      if ($Extras) { $syncArgs += "-Extras" }
+      if ($DryRun) { $syncArgs += "-DryRun" }
+      if ($AllowUntrustedSource) { $syncArgs += "-AllowUntrustedSource" }
+      & pwsh @syncArgs
+      if ($LASTEXITCODE -ne 0) { throw "sync install failed for target: $t" }
+    }
+    if ($Prune) {
+      foreach ($t in @("opencode","copilot","claude")) {
+        if (-not $syncTargetSet.ContainsKey($t)) {
+          $syncArgs = @("-File", $SyncScriptPath, "-Action", "uninstall", "-Harness", $t, "-Source", $Source, "-Branch", $Branch, "-RawBase", $RawBase, "-SkipSkills")
+          if ($Project) { $syncArgs += "-Project" } else { $syncArgs += "-Global" }
+          if ($SkipAgentsMd) { $syncArgs += "-SkipAgentsMd" }
+          if ($DryRun) { $syncArgs += "-DryRun" }
+          if ($AllowUntrustedSource) { $syncArgs += "-AllowUntrustedSource" }
+          & pwsh @syncArgs
+          if ($LASTEXITCODE -ne 0) { throw "sync prune uninstall failed for target: $t" }
+        }
+      }
+    }
+    Write-Host "sync: complete"
+    return
+  }
+  $script:SelectedTargets = $SelectedTargets
 
 # Scope flags are mutually exclusive.
 if ($ProjectSpecified -and $GlobalSpecified) {
@@ -48,18 +250,6 @@ $SkillsCli = "skills@^1.5.21"
 # SkillsSource derived from -Source after Resolve-Source
 $SkillsSource = ""
 
-if (-not $Claude -and -not [string]::IsNullOrWhiteSpace($ClaudeMd)) {
-  throw "-ClaudeMd requires -Claude."
-}
-
-# Update RawBase based on branch
-if ([string]::IsNullOrWhiteSpace($RawBase)) {
-  $RawBase = "https://raw.githubusercontent.com/sprngr/rubber-duck/$Branch"
-}
-if ($Branch -ne "main") {
-  Write-Host "Using branch: $Branch"
-}
-
 # When run via `iwr | iex` there is no backing script file path.
 # In function scope, $MyInvocation.MyCommand.Path can also be empty even for file execution.
 # Use script path variables first, then classify piped mode only if still empty.
@@ -75,13 +265,13 @@ if ($script:RunningPiped) {
   $ScriptDir = Split-Path -Parent $ScriptPath
   $RepoRoot = Split-Path -Parent $ScriptDir
 }
-$LocalAgentsDir = $null
-$LocalPolicyFile = $null
-$LocalAgentsPolicyFile = $null
-$RemoteAgentsPath = $null
-$RemotePolicyPath = $null
-$RemoteAgentsPolicyPath = $null
-$PolicyMode = "managed_block"  # managed_block|file
+$script:LocalAgentsDir = $null
+$script:LocalPolicyFile = $null
+$script:LocalAgentsPolicyFile = $null
+$script:RemoteAgentsPath = $null
+$script:RemotePolicyPath = $null
+$script:RemoteAgentsPolicyPath = $null
+$script:PolicyMode = "managed_block"  # managed_block|file
 $script:CanonicalVersion = "unknown"
 
 $ManagedStart = "<!-- RUBBER_DUCK_MANAGED_BLOCK START -->"
@@ -114,8 +304,15 @@ $ExtrasSkills = @(
   "duck-tape"
 )
 
-function Log($msg) { Write-Host $msg }
-function Warn($msg) { Write-Warning $msg }
+# Ensure directory exists; in dry-run mode warn without creating.
+function Ensure-Dir([string]$Path, [string]$Label) {
+  if ([string]::IsNullOrWhiteSpace($Path)) { return }
+  if ($DryRun) {
+    if (-not (Test-Path $Path)) { Warn "doctor: $Label missing, would create: $Path" }
+  } else {
+    New-Item -ItemType Directory -Force -Path $Path | Out-Null
+  }
+}
 
 function Get-VersionFromFile([string]$Path) {
   if (-not (Test-Path $Path)) { return $null }
@@ -155,7 +352,9 @@ function Resolve-Target {
       $script:DestAgentsDir = Join-Path $HOME ".claude/agents"
       $script:DestPolicyMd = if ([string]::IsNullOrWhiteSpace($ClaudeMd)) { (Join-Path $HOME ".claude/CLAUDE.md") } else { $ClaudeMd }
     }
-    $script:DestClaudeAgentsMd = Join-Path (Split-Path -Parent $script:DestPolicyMd) "AGENTS.md"
+    $policyParent = Split-Path -Parent $script:DestPolicyMd
+    if ([string]::IsNullOrWhiteSpace($policyParent)) { $policyParent = "." }
+    $script:DestClaudeAgentsMd = Join-Path $policyParent "AGENTS.md"
     $script:PolicyMode = "file"
     $script:LocalPolicyFile = Join-Path $RepoRoot "dist/claude/CLAUDE.md"
     $script:LocalAgentsPolicyFile = Join-Path $RepoRoot "dist/AGENTS.md"
@@ -236,7 +435,6 @@ function Download-Sources {
     }
     $v = Get-VersionFromFile (Join-Path $script:TmpDir "AGENTS.md")
     if (-not [string]::IsNullOrWhiteSpace($v)) { $script:CanonicalVersion = $v }
-    Log "source: local ($RepoRoot)"
     return
   }
 
@@ -251,7 +449,6 @@ function Download-Sources {
   }
   $v = Get-VersionFromFile (Join-Path $script:TmpDir "AGENTS.md")
   if (-not [string]::IsNullOrWhiteSpace($v)) { $script:CanonicalVersion = $v }
-  Log "source: web ($RawBase)"
 }
 
 function Cleanup-Sources {
@@ -273,6 +470,11 @@ function Strip-ManagedBlockText([string]$text) {
 }
 
 function Backup-Md([string]$Target) {
+  if ($DryRun) {
+    $stamp = Get-Date -Format "yyyyMMdd-HHmmss"
+    Log "[dry-run] backup $Target -> $Target.bak.$stamp"
+    return
+  }
   $parent = Split-Path -Parent $Target
   if (-not [string]::IsNullOrWhiteSpace($parent)) {
     New-Item -ItemType Directory -Force -Path $parent | Out-Null
@@ -284,11 +486,19 @@ function Backup-Md([string]$Target) {
   } else {
     New-Item -ItemType File -Force -Path $backup | Out-Null
   }
+  $allBackups = Get-ChildItem -Path "$Target.bak.*" -ErrorAction SilentlyContinue | Sort-Object Name
+  if ($allBackups.Count -gt 1) {
+    $toDelete = $allBackups | Select-Object -First ($allBackups.Count - 1)
+    foreach ($b in $toDelete) {
+      Remove-Item -Force $b.FullName
+    }
+  }
   Log "Backup created: $backup"
 }
 
 function Upsert-ManagedBlock([string]$Target, [string]$ContentFile) {
   if ($SkipAgentsMd) { return }
+  if ($DryRun) { Log "[dry-run] upsert managed block in $Target"; return }
   $parent = Split-Path -Parent $Target
   if (-not [string]::IsNullOrWhiteSpace($parent)) {
     New-Item -ItemType Directory -Force -Path $parent | Out-Null
@@ -300,7 +510,10 @@ function Upsert-ManagedBlock([string]$Target, [string]$ContentFile) {
   $policy = Get-Content -Raw $ContentFile
   $policy = $policy -replace "(\r?\n)+$",""
   $parts = New-Object System.Collections.Generic.List[string]
-  if (-not [string]::IsNullOrWhiteSpace($stripped)) { $parts.Add($stripped) }
+  if (-not [string]::IsNullOrWhiteSpace($stripped)) {
+    $parts.Add($stripped)
+    $parts.Add("")
+  }
   $parts.Add($ManagedStart)
   if (-not [string]::IsNullOrEmpty($policy)) { $parts.Add($policy) }
   $parts.Add($ManagedEnd)
@@ -310,6 +523,7 @@ function Upsert-ManagedBlock([string]$Target, [string]$ContentFile) {
 
 function Remove-ManagedBlock([string]$Target) {
   if ($SkipAgentsMd) { return }
+  if ($DryRun) { Log "[dry-run] remove managed block from $Target"; return }
   if (-not (Test-Path $Target)) { return }
   $current = Get-Content -Raw $Target
   $stripped = Strip-ManagedBlockText $current
@@ -337,14 +551,36 @@ function Remove-PolicyFile {
 }
 
 function Install-Agents {
-  New-Item -ItemType Directory -Force -Path $DestAgentsDir | Out-Null
-  foreach ($f in $AgentFiles) {
-    Copy-Item -Force (Join-Path $script:TmpDir $f) (Join-Path $DestAgentsDir $f)
+  if ($DryRun) {
+    Log "[dry-run] ensure dir $DestAgentsDir"
+    foreach ($f in $AgentFiles) {
+      Log "[dry-run] cp $(Join-Path $script:TmpDir $f) -> $(Join-Path $DestAgentsDir $f)"
+    }
+    return
   }
-  Log "Installed $($AgentFiles.Count) agents -> $DestAgentsDir"
+  New-Item -ItemType Directory -Force -Path $DestAgentsDir | Out-Null
+  $installed = 0
+  $skipped = 0
+  foreach ($f in $AgentFiles) {
+    $dest = Join-Path $DestAgentsDir $f
+    $tmp = Join-Path $script:TmpDir $f
+    if ((Test-Path $dest) -and ((Get-Sha256 $tmp) -eq (Get-Sha256 $dest))) {
+      $skipped++
+      continue
+    }
+    Copy-Item -Force $tmp $dest
+    $installed++
+  }
+  Log "Installed $installed agents ($skipped unchanged) -> $DestAgentsDir"
 }
 
 function Uninstall-Agents {
+  if ($DryRun) {
+    foreach ($f in $AgentFiles) {
+      Log "[dry-run] rm $(Join-Path $DestAgentsDir $f)"
+    }
+    return
+  }
   $removed = 0
   foreach ($f in $AgentFiles) {
     $dest = Join-Path $DestAgentsDir $f
@@ -356,8 +592,17 @@ function Uninstall-Agents {
   Log "Removed $removed agents from $DestAgentsDir"
 }
 
-function Skills-Install {
+function Skills-Install([string[]]$Agents = @()) {
   if ($SkipSkills) { return }
+  $agentArgs = @()
+  foreach ($a in $Agents) { $agentArgs += @("-a", $a) }
+  if ($DryRun) {
+    $installList = @() + $DefaultSkills
+    if ($Extras) { $installList += $ExtrasSkills }
+    $scope = if ($Project) { @() } else { @("-g") }
+    Log "[dry-run] npx $SkillsCli add $SkillsSource --skill $($installList -join ' ') $($agentArgs -join ' ') $($scope -join ' ') -y"
+    return
+  }
   if (-not (Get-Command npx -ErrorAction SilentlyContinue)) {
     Warn "npx not found; skipping skills install"
     return
@@ -365,12 +610,20 @@ function Skills-Install {
   $installList = @() + $DefaultSkills
   if ($Extras) { $installList += $ExtrasSkills }
   $scope = if ($Project) { @() } else { @("-g") }
-  $args = @("--yes", $SkillsCli, "add", $SkillsSource, "--skill") + $installList + $scope
-  & npx @args
+  $cliArgs = @("--yes", $SkillsCli, "add", $SkillsSource, "--skill") + $installList + $agentArgs + $scope
+  & npx @cliArgs
 }
 
-function Skills-Uninstall {
+function Skills-Uninstall([string[]]$Agents = @()) {
   if ($SkipSkills) { return }
+  $agentArgs = @()
+  foreach ($a in $Agents) { $agentArgs += @("-a", $a) }
+  if ($DryRun) {
+    $allSkills = @() + $DefaultSkills + $ExtrasSkills
+    $scope = if ($Project) { @() } else { @("-g") }
+    Log "[dry-run] npx $SkillsCli remove $SkillsSource --skill $($allSkills -join ' ') $($agentArgs -join ' ') $($scope -join ' ') -y"
+    return
+  }
   if (-not (Get-Command npx -ErrorAction SilentlyContinue)) {
     Warn "npx not found; skipping skills uninstall"
     return
@@ -378,10 +631,20 @@ function Skills-Uninstall {
   $allSkills = @() + $DefaultSkills + $ExtrasSkills
   $scope = if ($Project) { @() } else { @("-g") }
   try {
-    $args = @("--yes", $SkillsCli, "remove", $SkillsSource, "--skill") + $allSkills + $scope
-    & npx @args
+    $cliArgs = @("--yes", $SkillsCli, "remove", $SkillsSource, "--skill") + $allSkills + $agentArgs + $scope
+    & npx @cliArgs
   } catch {
     Warn "skills remove failed; remove package manually if needed"
+  }
+}
+
+# Map our target names to skills CLI agent identifiers.
+function Get-SkillsAgent([string]$Target) {
+  switch ($Target) {
+    "opencode" { return "opencode" }
+    "copilot"  { return "github-copilot" }
+    "claude"   { return "claude-code" }
+    default    { return "" }
   }
 }
 
@@ -395,8 +658,8 @@ function Skills-Status {
   $previousNoColor = $env:NO_COLOR
   try {
     $env:NO_COLOR = "1"
-    $args = @("--yes", $SkillsCli, "list") + $scope
-    $list = & npx @args | Out-String
+    $cliArgs = @("--yes", $SkillsCli, "list") + $scope
+    $list = & npx @cliArgs | Out-String
     $allPresent = $true
     foreach ($skill in $DefaultSkills) {
       if ($list.IndexOf($skill, [System.StringComparison]::Ordinal) -lt 0) {
@@ -443,10 +706,8 @@ function Report-PolicyBlock([string]$Target) {
 function Status {
   $v = Get-VersionFromFile $DestPolicyMd
   if (-not [string]::IsNullOrWhiteSpace($v)) { $script:CanonicalVersion = $v }
-  Log "target: $Target"
   Log "agents_dir: $DestAgentsDir"
   Log "policy_md: $DestPolicyMd"
-  Log "version: $script:CanonicalVersion"
   $installed = 0
   foreach ($f in $AgentFiles) {
     if (Test-Path (Join-Path $DestAgentsDir $f)) { $installed++ }
@@ -454,27 +715,70 @@ function Status {
   Log "agents: $installed/$($AgentFiles.Count) present"
   Report-PolicyBlock $DestPolicyMd
   if ($PolicyMode -eq "file") { Report-PolicyBlock $DestClaudeAgentsMd }
-  Skills-Status
 }
 
 function Doctor {
   Resolve-Target
   Resolve-Source
-  New-Item -ItemType Directory -Force -Path $DestAgentsDir | Out-Null
-  $policyParent = Split-Path -Parent $DestPolicyMd
-  if (-not [string]::IsNullOrWhiteSpace($policyParent)) {
-    New-Item -ItemType Directory -Force -Path $policyParent | Out-Null
-  }
+  Ensure-Dir $DestAgentsDir "agents dir"
+  Ensure-Dir (Split-Path -Parent $DestPolicyMd) "policy parent"
   if ($PolicyMode -eq "file") {
-    $agentsParent = Split-Path -Parent $DestClaudeAgentsMd
-    if (-not [string]::IsNullOrWhiteSpace($agentsParent)) {
-      New-Item -ItemType Directory -Force -Path $agentsParent | Out-Null
+    Ensure-Dir (Split-Path -Parent $DestClaudeAgentsMd) "policy parent"
+  }
+}
+
+function Update-ManifestTarget([string]$Operation, [string]$TargetName) {
+  if ($Action -eq "sync") { return }
+  if ($DryRun) {
+    $dryManifestPath = if ($Project) { ".rubber-duck/manifest.json" } else { (Join-Path $HOME ".config/rubber-duck/manifest.json") }
+    Log "[dry-run] manifest $Operation $TargetName -> $dryManifestPath"
+    return
+  }
+  $ManifestPath = if ($Project) { ".rubber-duck/manifest.json" } else { (Join-Path $HOME ".config/rubber-duck/manifest.json") }
+  $priorVersion = Read-PriorVersion $ManifestPath
+  Warn-OnDowngrade $priorVersion $script:CanonicalVersion
+  $ManifestParent = Split-Path -Parent $ManifestPath
+  if (-not [string]::IsNullOrWhiteSpace($ManifestParent)) {
+    New-Item -ItemType Directory -Force -Path $ManifestParent | Out-Null
+  }
+  $manifest = @{}
+  if (Test-Path $ManifestPath) {
+    try { $manifest = Get-Content -Raw $ManifestPath | ConvertFrom-Json -AsHashtable } catch { $manifest = @{} }
+  } else {
+    $templatePath = Join-Path $RepoRoot ".rubber-duck/manifest.template.json"
+    if (Test-Path $templatePath) {
+      try { $manifest = Get-Content -Raw $templatePath | ConvertFrom-Json -AsHashtable } catch { $manifest = @{} }
     }
   }
-  Log "doctor: ok"
+  if ($null -eq $manifest) { $manifest = @{} }
+  if (-not $manifest.ContainsKey("schemaVersion")) { $manifest["schemaVersion"] = 1 }
+  $manifest["source"] = @{
+    mode = $script:EffectiveSource
+    sourceRef = $Branch
+    rawBase = $RawBase
+    lastAppliedVersion = $script:CanonicalVersion
+  }
+  if (-not $manifest.ContainsKey("targets") -or $null -eq $manifest["targets"]) { $manifest["targets"] = @{} }
+  if ($Operation -eq "install") {
+    $manifest["targets"][$TargetName] = @{
+      enabled = $true
+      scope = $(if ($Project) { "project" } else { "global" })
+      installAgentsMd = (-not $SkipAgentsMd)
+      installSkills = (-not $SkipSkills)
+      extras = [bool]$Extras
+    }
+  } elseif ($Operation -eq "uninstall") {
+    [void]$manifest["targets"].Remove($TargetName)
+  }
+  $manifest | ConvertTo-Json -Depth 10 | Set-Content -Path $ManifestPath
 }
 
 try {
+  # Resolve source once (target-independent). Use first target for has-local detection.
+  $firstTarget = $script:SelectedTargets[0]
+  $OpenCode = $firstTarget -eq "opencode"
+  $Copilot = $firstTarget -eq "copilot"
+  $Claude = $firstTarget -eq "claude"
   Resolve-Target
   Resolve-Source
   switch ($script:EffectiveSource) {
@@ -487,42 +791,100 @@ try {
       }
     }
   }
-  Write-Host "Skills source: $SkillsSource"
-  switch ($Action) {
-    "install" {
-      Doctor
-      Download-Sources
-      Install-Agents
-      if (-not $SkipAgentsMd) {
-        Backup-Md $DestPolicyMd
-        if ($PolicyMode -eq "managed_block") {
-          Upsert-ManagedBlock $DestPolicyMd (Join-Path $script:TmpDir "AGENTS.md")
-        } else {
-          Backup-Md $DestClaudeAgentsMd
-          Install-PolicyFile
-        }
-      }
-      Skills-Install
-      Status
+  if (-not (Test-RawBaseAllowed $RawBase $script:EffectiveSource)) {
+    throw "rawBase not in allowlist: $RawBase. Use -AllowUntrustedSource to override."
+  }
+
+  # Pre-loop header (install/uninstall only)
+  if ($Action -eq "install" -or $Action -eq "uninstall") {
+    if ($Action -eq "install") { Print-Banner }
+    Resolve-CanonicalVersion
+    Log "version: $script:CanonicalVersion"
+    if ($script:EffectiveSource -eq "local") {
+      Log "source: local ($RepoRoot)"
+    } else {
+      Log "source: web ($RawBase)"
     }
-    "uninstall" {
-      Doctor
-      Download-Sources
-      Uninstall-Agents
-      if (-not $SkipAgentsMd) {
-        Backup-Md $DestPolicyMd
-        if ($PolicyMode -eq "managed_block") {
-          Remove-ManagedBlock $DestPolicyMd
-        } else {
-          Backup-Md $DestClaudeAgentsMd
-          Remove-PolicyFile
-        }
-      }
-      Skills-Uninstall
-      Status
+    Log "doctor: ok"
+  }
+
+  # Consolidated skills call: one npx invocation with -a for each selected target.
+  if ($Action -eq "install" -or $Action -eq "uninstall") {
+    $skillsAgents = @()
+    foreach ($t in $script:SelectedTargets) {
+      $a = Get-SkillsAgent $t
+      if (-not [string]::IsNullOrWhiteSpace($a)) { $skillsAgents += $a }
     }
-    "status" { Status }
-    "doctor" { Doctor }
+    if ($skillsAgents.Count -gt 0) {
+      if ($Action -eq "install") { Skills-Install $skillsAgents }
+      else { Skills-Uninstall $skillsAgents }
+      Skills-Status
+    }
+  }
+
+  foreach ($SelectedTarget in $script:SelectedTargets) {
+    $OpenCode = $SelectedTarget -eq "opencode"
+    $Copilot = $SelectedTarget -eq "copilot"
+    $Claude = $SelectedTarget -eq "claude"
+
+    Resolve-Target
+    if ($Action -eq "install" -or $Action -eq "uninstall") {
+      Log ""
+      Log "[$SelectedTarget]"
+    }
+    switch ($Action) {
+      "install" {
+        Doctor
+        Download-Sources
+        Install-Agents
+        if (-not $SkipAgentsMd) {
+          Backup-Md $DestPolicyMd
+          if ($PolicyMode -eq "managed_block") {
+            Upsert-ManagedBlock $DestPolicyMd (Join-Path $script:TmpDir "AGENTS.md")
+          } else {
+            Backup-Md $DestClaudeAgentsMd
+            Install-PolicyFile
+          }
+        }
+        Status
+        Update-ManifestTarget "install" $script:Target
+        $pinManifestPath = if ($Project) { ".rubber-duck/manifest.json" } else { (Join-Path $HOME ".config/rubber-duck/manifest.json") }
+        $pinPairs = @{}
+        foreach ($pinF in $AgentFiles) {
+          $h = Get-Sha256 (Join-Path $script:TmpDir $pinF)
+          if ($h) { $pinPairs["$($script:RemoteAgentsPath)/$pinF"] = $h }
+        }
+        if (-not $SkipAgentsMd) {
+          $pinPolicyTmp = Join-Path $script:TmpDir "AGENTS.md"
+          if ($PolicyMode -eq "file") { $pinPolicyTmp = Join-Path $script:TmpDir "CLAUDE.md" }
+          $h = Get-Sha256 $pinPolicyTmp
+          if ($h) { $pinPairs[$script:RemotePolicyPath] = $h }
+        }
+        Write-Pins $pinManifestPath $pinPairs
+      }
+      "uninstall" {
+        Doctor
+        Download-Sources
+        Uninstall-Agents
+        if (-not $SkipAgentsMd) {
+          Backup-Md $DestPolicyMd
+          if ($PolicyMode -eq "managed_block") {
+            Remove-ManagedBlock $DestPolicyMd
+          } else {
+            Backup-Md $DestClaudeAgentsMd
+            Remove-PolicyFile
+          }
+        }
+        Status
+        Update-ManifestTarget "uninstall" $script:Target
+      }
+      "status" { Status }
+      "doctor" { Doctor }
+    }
+  }
+  if ($Action -eq "install" -or $Action -eq "uninstall") {
+    Log ""
+    Log "🦆 quack"
   }
 }
 finally {

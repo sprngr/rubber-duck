@@ -24,6 +24,7 @@ SRC_AGENTS_POLICY_MD="${SRC_AGENTS_DIR}/AGENTS.md"
 DIST_AGENTS_POLICY_MD="${REPO_ROOT}/dist/AGENTS.md"
 VERSION_FILE="${REPO_ROOT}/VERSION"
 VERSION_TOKEN="__RUBBER_DUCK_VERSION__"
+VERSION_FENCE="<!-- RUBBER_DUCK_VERSION: ${VERSION_TOKEN} -->"
 VERSION_VALUE=""
 
 CLAUDE_DIST_DIR="${REPO_ROOT}/dist/claude"
@@ -274,11 +275,13 @@ for name in "${CONFIG_AGENTS[@]}"; do
 
   claude_tmp="${TMP_DIR}/claude-${name}.md"
   render_claude_fm "${meta}" "${claude_tmp}"
+  printf '%s\n\n' "${VERSION_FENCE}" >> "${claude_tmp}"
   cat "${rendered_body}" >> "${claude_tmp}"
   render_or_check_file "${claude_tmp}" "${CLAUDE_AGENT_DIR}/${name}.md"
 
   opencode_tmp="${TMP_DIR}/opencode-${name}.md"
   render_opencode_fm "${meta}" "${opencode_tmp}"
+  printf '%s\n\n' "${VERSION_FENCE}" >> "${opencode_tmp}"
   cat "${rendered_body}" >> "${opencode_tmp}"
   render_or_check_file "${opencode_tmp}" "${OPENCODE_AGENT_DIR}/${name}.md"
 
@@ -287,6 +290,7 @@ for name in "${CONFIG_AGENTS[@]}"; do
   if jq -e '.harnesses.copilot? != null' "${meta}" >/dev/null; then
     copilot_tmp="${TMP_DIR}/copilot-${name}.md"
     render_copilot_fm "${meta}" "${copilot_tmp}"
+    printf '%s\n\n' "${VERSION_FENCE}" >> "${copilot_tmp}"
     cat "${rendered_body}" >> "${copilot_tmp}"
     render_or_check_file "${copilot_tmp}" "${COPILOT_AGENT_DIR}/${name}.md"
   fi
