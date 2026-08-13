@@ -126,6 +126,16 @@ warn() { printf 'WARN: %s\n' "$*"; }
 err() { printf 'ERROR: %s\n' "$*" >&2; }
 timestamp() { date +%Y%m%d-%H%M%S; }
 
+print_banner() {
+  cat <<'BANNER'
+           _    _                    _         _
+ _ _ _  _| |__| |__  ___ _ _ ___ __| |_  _ __| |__
+| '_| || | '_ \ '_ \/ -_) '_|___/ _` | || / _| / /
+|_|  \_,_|_.__/_.__/\___|_|     \__,_|\_,_\__|_\_\
+
+BANNER
+}
+
 # Exact rawBase prefix required unless --allow-untrusted-source is set.
 ALLOWED_RAW_BASE_PREFIX="https://raw.githubusercontent.com/sprngr/rubber-duck"
 ALLOW_UNTRUSTED_SOURCE=0
@@ -665,7 +675,6 @@ prepare_sources() {
     if v="$(extract_version_from_file "${TMP_DIR}/AGENTS.md" 2>/dev/null)"; then
       CANONICAL_VERSION="${v}"
     fi
-    log "source: local (${REPO_ROOT})"
     return
   fi
 
@@ -682,7 +691,6 @@ prepare_sources() {
   if v="$(extract_version_from_file "${TMP_DIR}/AGENTS.md" 2>/dev/null)"; then
     CANONICAL_VERSION="${v}"
   fi
-  log "source: web (${RAW_BASE})"
 }
 
 strip_managed_block_to_file() {
@@ -953,10 +961,8 @@ status() {
   if v="$(extract_version_from_file "${DEST_POLICY_MD}" 2>/dev/null)"; then
     CANONICAL_VERSION="${v}"
   fi
-  log "target: ${TARGET}"
   log "agents_dir: ${DEST_AGENTS_DIR}"
   log "policy_md: ${DEST_POLICY_MD}"
-  log "version: ${CANONICAL_VERSION}"
   local installed=0
   for f in "${AGENT_FILES[@]}"; do
     [[ -f "${DEST_AGENTS_DIR}/${f}" ]] && installed=$((installed + 1))
@@ -964,7 +970,7 @@ status() {
   log "agents: ${installed}/${#AGENT_FILES[@]} present"
   report_policy_block "${DEST_POLICY_MD}"
   [[ "${POLICY_MODE}" == "file" ]] && report_policy_block "${DEST_CLAUDE_AGENTS_MD}"
-  skills_status
+  return 0
 }
 
 doctor() {
@@ -984,7 +990,6 @@ doctor() {
       mkdir -p "$(dirname -- "${DEST_CLAUDE_AGENTS_MD}")"
     fi
   fi
-  log "doctor: ok"
 }
 
 manifest_update_target() {
@@ -1043,9 +1048,19 @@ case "${EFFECTIVE_SOURCE}" in
     fi
     ;;
 esac
-log "Skills source: ${SKILLS_SOURCE}"
 
 check_rawbase_allowed "${RAW_BASE}" "${EFFECTIVE_SOURCE}" || { err "rawBase not in allowlist: ${RAW_BASE}. Use --allow-untrusted-source to override."; exit 1; }
+
+# Pre-loop header (install/uninstall only)
+if [[ "${ACTION}" == "install" || "${ACTION}" == "uninstall" ]]; then
+  [[ "${ACTION}" == "install" ]] && print_banner
+  if [[ "${EFFECTIVE_SOURCE}" == "local" ]]; then
+    log "source: local (${REPO_ROOT})"
+  else
+    log "source: web (${RAW_BASE})"
+  fi
+  log "doctor: ok"
+fi
 
 # Consolidated skills call: one npx invocation with -a for each selected target.
 if [[ "${ACTION}" == "install" || "${ACTION}" == "uninstall" ]] && (( ${#TARGETS[@]} > 0 )); then
@@ -1060,11 +1075,16 @@ if [[ "${ACTION}" == "install" || "${ACTION}" == "uninstall" ]] && (( ${#TARGETS
     else
       skills_uninstall "${SKILLS_AGENTS[@]}"
     fi
+    skills_status
   fi
 fi
 
 for TARGET in "${TARGETS[@]}"; do
   resolve_target
+
+  case "${ACTION}" in
+    install|uninstall) log ""; log "[${TARGET}]" ;;
+  esac
 
   case "${ACTION}" in
     install)
@@ -1122,3 +1142,8 @@ for TARGET in "${TARGETS[@]}"; do
       ;;
   esac
 done
+
+if [[ "${ACTION}" == "install" || "${ACTION}" == "uninstall" ]]; then
+  log ""
+  log "version: ${CANONICAL_VERSION}"
+fi
