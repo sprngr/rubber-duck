@@ -50,6 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Skills install consolidated: a single `npx` call receives one `-a <agent>` flag per selected target, replacing per-target `npx` invocations.
 - Pinning reframed as a dev-workflow change log with skip-unchanged optimization (not a security boundary). Fresh install writes `pins`; re-install compares fetched artifact sha256 to on-disk and skips rewriting unchanged files (preserves mtime).
 - Environment variable renamed `BASH_SOURCE_URL` -> `RUBBER_DUCK_SOURCE_URL` for shell-agnostic naming; both installers respect it for auto branch detection from piped install URLs.
+- Installer backup retention: only the most recent `<file>.bak.*` is kept per policy file. Prior backups are pruned on install/uninstall. Applies to both bash and PowerShell installers.
 
 #### Skills
 
