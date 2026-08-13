@@ -771,7 +771,6 @@ try {
       "install" {
         Doctor
         Download-Sources
-        Install-Agents
         $pinManifestPathForCheck = if ($Project) { ".rubber-duck/manifest.json" } else { (Join-Path $HOME ".config/rubber-duck/manifest.json") }
         $pinPriorVersion = Read-PriorVersion $pinManifestPathForCheck
         if (-not [string]::IsNullOrWhiteSpace($pinPriorVersion) -and $pinPriorVersion -ne $script:CanonicalVersion) {
@@ -788,6 +787,7 @@ try {
             if ($pinRc -eq 1) { throw "pin verification failed" }
           }
         }
+        Install-Agents
         if (-not $SkipAgentsMd) {
           Backup-Md $DestPolicyMd
           if ($PolicyMode -eq "managed_block") {

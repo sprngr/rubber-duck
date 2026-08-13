@@ -936,7 +936,6 @@ for TARGET in "${TARGETS[@]}"; do
     install)
       doctor
       prepare_sources
-      install_agents
       pin_prior_version=$(read_prior_version "${MANIFEST_PATH}")
       if [[ -n "${pin_prior_version}" && "${pin_prior_version}" != "${CANONICAL_VERSION}" ]]; then
         log "pin refresh on version change ${pin_prior_version} -> ${CANONICAL_VERSION}"
@@ -952,6 +951,7 @@ for TARGET in "${TARGETS[@]}"; do
           (( pin_rc == 1 )) && exit 1
         fi
       fi
+      install_agents
       if (( SKIP_AGENTS_MD == 0 )); then
         backup_md "${DEST_POLICY_MD}"
         if [[ "${POLICY_MODE}" == "managed_block" ]]; then

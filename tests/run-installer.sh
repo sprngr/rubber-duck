@@ -61,8 +61,13 @@ test_reinstall_pins_verify() {
 }
 
 # Tampered pin in manifest triggers mismatch abort on reinstall.
+# Agent files must not be re-written during the aborted install (mtime unchanged).
 test_tampered_artifact_mismatch() {
   bash "$sh_installer" install --opencode --source local --skip-skills --project || return 1
+  local before_mtime
+  before_mtime=$(stat -c '%Y' .opencode/agents/rubber-duck.md 2>/dev/null || stat -f '%m' .opencode/agents/rubber-duck.md)
+  # Wait to ensure any rewrite would tick mtime forward
+  sleep 1
   python3 -c '
 import json
 p = ".rubber-duck/manifest.json"
@@ -75,6 +80,10 @@ open(p, "w").write(json.dumps(d, indent=2, sort_keys=True) + "\n")
   if bash "$sh_installer" install --opencode --source local --skip-skills --project 2>/dev/null; then
     return 1
   fi
+  # Verify agent files were NOT touched during the aborted install
+  local after_mtime
+  after_mtime=$(stat -c '%Y' .opencode/agents/rubber-duck.md 2>/dev/null || stat -f '%m' .opencode/agents/rubber-duck.md)
+  [[ "$before_mtime" == "$after_mtime" ]] || return 1
 }
 
 # Install opencode, edit manifest to disable opencode + enable claude, sync prune.
