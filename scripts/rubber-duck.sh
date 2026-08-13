@@ -758,15 +758,17 @@ skills_install() {
   local -a install_list=("${DEFAULT_SKILLS[@]}")
   (( PROJECT_SCOPE == 0 )) && scope="-g"
   (( EXTRAS == 1 )) && install_list+=("${EXTRAS_SKILLS[@]}")
+  local -a agent_args=()
+  for a in "$@"; do agent_args+=(-a "${a}"); done
   if (( DRY_RUN == 1 )); then
-    log "[dry-run] npx ${SKILLS_CLI} add ${SKILLS_SOURCE} --skill ${install_list[*]} ${scope} -y"
+    log "[dry-run] npx ${SKILLS_CLI} add ${SKILLS_SOURCE} --skill ${install_list[*]} ${agent_args[*]} ${scope} -y"
     return
   fi
   if ! command -v npx >/dev/null 2>&1; then
     warn "npx not found; skipping skills install"
     return
   fi
-  npx "${SKILLS_CLI}" add "${SKILLS_SOURCE}" --skill ${install_list[*]} ${scope} -y
+  npx "${SKILLS_CLI}" add "${SKILLS_SOURCE}" --skill ${install_list[*]} ${agent_args[*]} ${scope} -y
 }
 
 skills_uninstall() {
@@ -774,17 +776,29 @@ skills_uninstall() {
   local scope=""
   local -a all_skills=("${DEFAULT_SKILLS[@]}" "${EXTRAS_SKILLS[@]}")
   (( PROJECT_SCOPE == 0 )) && scope="-g"
+  local -a agent_args=()
+  for a in "$@"; do agent_args+=(-a "${a}"); done
   if (( DRY_RUN == 1 )); then
-    log "[dry-run] npx ${SKILLS_CLI} remove ${SKILLS_SOURCE} --skill ${all_skills[*]} ${scope} -y"
+    log "[dry-run] npx ${SKILLS_CLI} remove ${SKILLS_SOURCE} --skill ${all_skills[*]} ${agent_args[*]} ${scope} -y"
     return
   fi
   if ! command -v npx >/dev/null 2>&1; then
     warn "npx not found; skipping skills uninstall"
     return
   fi
-  if ! npx "${SKILLS_CLI}" remove "${SKILLS_SOURCE}" --skill ${all_skills[*]} ${scope} -y; then
+  if ! npx "${SKILLS_CLI}" remove "${SKILLS_SOURCE}" --skill ${all_skills[*]} ${agent_args[*]} ${scope} -y; then
     warn "skills remove failed; remove package manually if needed"
   fi
+}
+
+# Map our target names to skills CLI agent identifiers.
+target_to_skills_agent() {
+  case "$1" in
+    opencode) printf 'opencode' ;;
+    copilot)  printf 'github-copilot' ;;
+    claude)   printf 'claude-code' ;;
+    *)        printf '' ;;
+  esac
 }
 
 skills_status() {
@@ -912,25 +926,42 @@ p.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8"
 PY
 }
 
+choose_source
+
+case "${EFFECTIVE_SOURCE}" in
+  local)
+    SKILLS_SOURCE="${REPO_ROOT}"
+    ;;
+  web|*)
+    if [[ "${BRANCH}" == "main" ]]; then
+      SKILLS_SOURCE="https://github.com/sprngr/rubber-duck"
+    else
+      SKILLS_SOURCE="https://github.com/sprngr/rubber-duck#${BRANCH}"
+    fi
+    ;;
+esac
+log "Skills source: ${SKILLS_SOURCE}"
+
+check_rawbase_allowed "${RAW_BASE}" "${EFFECTIVE_SOURCE}" || { err "rawBase not in allowlist: ${RAW_BASE}. Use --allow-untrusted-source to override."; exit 1; }
+
+# Consolidated skills call: one npx invocation with -a for each selected target.
+if [[ "${ACTION}" == "install" || "${ACTION}" == "uninstall" ]] && (( ${#TARGETS[@]} > 0 )); then
+  SKILLS_AGENTS=()
+  for T in "${TARGETS[@]}"; do
+    a=$(target_to_skills_agent "${T}")
+    [[ -n "${a}" ]] && SKILLS_AGENTS+=("${a}")
+  done
+  if (( ${#SKILLS_AGENTS[@]} > 0 )); then
+    if [[ "${ACTION}" == "install" ]]; then
+      skills_install "${SKILLS_AGENTS[@]}"
+    else
+      skills_uninstall "${SKILLS_AGENTS[@]}"
+    fi
+  fi
+fi
+
 for TARGET in "${TARGETS[@]}"; do
   resolve_target
-  choose_source
-
-  case "${EFFECTIVE_SOURCE}" in
-    local)
-      SKILLS_SOURCE="${REPO_ROOT}"
-      ;;
-    web|*)
-      if [[ "${BRANCH}" == "main" ]]; then
-        SKILLS_SOURCE="https://github.com/sprngr/rubber-duck"
-      else
-        SKILLS_SOURCE="https://github.com/sprngr/rubber-duck#${BRANCH}"
-      fi
-      ;;
-  esac
-  log "Skills source: ${SKILLS_SOURCE}"
-
-  check_rawbase_allowed "${RAW_BASE}" "${EFFECTIVE_SOURCE}" || { err "rawBase not in allowlist: ${RAW_BASE}. Use --allow-untrusted-source to override."; exit 1; }
 
   case "${ACTION}" in
     install)
@@ -961,7 +992,6 @@ for TARGET in "${TARGETS[@]}"; do
           install_policy_file
         fi
       fi
-      skills_install
       status
       manifest_update_target "install" "${TARGET}"
       PIN_PAIRS=()
@@ -988,7 +1018,6 @@ for TARGET in "${TARGETS[@]}"; do
           remove_policy_file
         fi
       fi
-      skills_uninstall
       status
       manifest_update_target "uninstall" "${TARGET}"
       ;;

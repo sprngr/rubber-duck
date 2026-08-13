@@ -229,3 +229,5 @@ Default skills (11) match `.claude-plugin/plugin.json`: quack, duck-debt, duck-d
 Extras skills (3): duck-adapt, duck-grill, duck-tape. Installed only with `--extras` (bash) / `-Extras` (PowerShell). Optional by default.
 
 `uninstall` removes all 14 skills (default + extras) regardless of flag so no orphan skills remain. `status` reports extras separately as optional (present/missing count).
+
+Skills install scope: each install/uninstall run passes `-a <agent>` for every selected harness (`opencode`, `github-copilot`, `claude-code`), so skills only land in the harnesses you asked for. Multi-target invocations collapse to a single `npx skills` call.

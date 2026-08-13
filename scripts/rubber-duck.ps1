@@ -574,13 +574,15 @@ function Uninstall-Agents {
   Log "Removed $removed agents from $DestAgentsDir"
 }
 
-function Skills-Install {
+function Skills-Install([string[]]$Agents = @()) {
   if ($SkipSkills) { return }
+  $agentArgs = @()
+  foreach ($a in $Agents) { $agentArgs += @("-a", $a) }
   if ($DryRun) {
     $installList = @() + $DefaultSkills
     if ($Extras) { $installList += $ExtrasSkills }
     $scope = if ($Project) { @() } else { @("-g") }
-    Log "[dry-run] npx $SkillsCli add $SkillsSource --skill $($installList -join ' ') $($scope -join ' ') -y"
+    Log "[dry-run] npx $SkillsCli add $SkillsSource --skill $($installList -join ' ') $($agentArgs -join ' ') $($scope -join ' ') -y"
     return
   }
   if (-not (Get-Command npx -ErrorAction SilentlyContinue)) {
@@ -590,16 +592,18 @@ function Skills-Install {
   $installList = @() + $DefaultSkills
   if ($Extras) { $installList += $ExtrasSkills }
   $scope = if ($Project) { @() } else { @("-g") }
-  $cliArgs = @("--yes", $SkillsCli, "add", $SkillsSource, "--skill") + $installList + $scope
+  $cliArgs = @("--yes", $SkillsCli, "add", $SkillsSource, "--skill") + $installList + $agentArgs + $scope
   & npx @cliArgs
 }
 
-function Skills-Uninstall {
+function Skills-Uninstall([string[]]$Agents = @()) {
   if ($SkipSkills) { return }
+  $agentArgs = @()
+  foreach ($a in $Agents) { $agentArgs += @("-a", $a) }
   if ($DryRun) {
     $allSkills = @() + $DefaultSkills + $ExtrasSkills
     $scope = if ($Project) { @() } else { @("-g") }
-    Log "[dry-run] npx $SkillsCli remove $SkillsSource --skill $($allSkills -join ' ') $($scope -join ' ') -y"
+    Log "[dry-run] npx $SkillsCli remove $SkillsSource --skill $($allSkills -join ' ') $($agentArgs -join ' ') $($scope -join ' ') -y"
     return
   }
   if (-not (Get-Command npx -ErrorAction SilentlyContinue)) {
@@ -609,10 +613,20 @@ function Skills-Uninstall {
   $allSkills = @() + $DefaultSkills + $ExtrasSkills
   $scope = if ($Project) { @() } else { @("-g") }
   try {
-    $cliArgs = @("--yes", $SkillsCli, "remove", $SkillsSource, "--skill") + $allSkills + $scope
+    $cliArgs = @("--yes", $SkillsCli, "remove", $SkillsSource, "--skill") + $allSkills + $agentArgs + $scope
     & npx @cliArgs
   } catch {
     Warn "skills remove failed; remove package manually if needed"
+  }
+}
+
+# Map our target names to skills CLI agent identifiers.
+function Get-SkillsAgent([string]$Target) {
+  switch ($Target) {
+    "opencode" { return "opencode" }
+    "copilot"  { return "github-copilot" }
+    "claude"   { return "claude-code" }
+    default    { return "" }
   }
 }
 
@@ -746,27 +760,47 @@ function Update-ManifestTarget([string]$Operation, [string]$TargetName) {
 }
 
 try {
+  # Resolve source once (target-independent). Use first target for has-local detection.
+  $firstTarget = $script:SelectedTargets[0]
+  $OpenCode = $firstTarget -eq "opencode"
+  $Copilot = $firstTarget -eq "copilot"
+  $Claude = $firstTarget -eq "claude"
+  Resolve-Target
+  Resolve-Source
+  switch ($script:EffectiveSource) {
+    "local" { $SkillsSource = $RepoRoot }
+    default {
+      if ($Branch -eq "main") {
+        $SkillsSource = "https://github.com/sprngr/rubber-duck"
+      } else {
+        $SkillsSource = "https://github.com/sprngr/rubber-duck#$Branch"
+      }
+    }
+  }
+  Write-Host "Skills source: $SkillsSource"
+  if (-not (Test-RawBaseAllowed $RawBase $script:EffectiveSource)) {
+    throw "rawBase not in allowlist: $RawBase. Use -AllowUntrustedSource to override."
+  }
+
+  # Consolidated skills call: one npx invocation with -a for each selected target.
+  if ($Action -eq "install" -or $Action -eq "uninstall") {
+    $skillsAgents = @()
+    foreach ($t in $script:SelectedTargets) {
+      $a = Get-SkillsAgent $t
+      if (-not [string]::IsNullOrWhiteSpace($a)) { $skillsAgents += $a }
+    }
+    if ($skillsAgents.Count -gt 0) {
+      if ($Action -eq "install") { Skills-Install $skillsAgents }
+      else { Skills-Uninstall $skillsAgents }
+    }
+  }
+
   foreach ($SelectedTarget in $script:SelectedTargets) {
     $OpenCode = $SelectedTarget -eq "opencode"
     $Copilot = $SelectedTarget -eq "copilot"
     $Claude = $SelectedTarget -eq "claude"
 
     Resolve-Target
-    Resolve-Source
-    switch ($script:EffectiveSource) {
-      "local" { $SkillsSource = $RepoRoot }
-      default {
-        if ($Branch -eq "main") {
-          $SkillsSource = "https://github.com/sprngr/rubber-duck"
-        } else {
-          $SkillsSource = "https://github.com/sprngr/rubber-duck#$Branch"
-        }
-      }
-    }
-    Write-Host "Skills source: $SkillsSource"
-    if (-not (Test-RawBaseAllowed $RawBase $script:EffectiveSource)) {
-      throw "rawBase not in allowlist: $RawBase. Use -AllowUntrustedSource to override."
-    }
     switch ($Action) {
       "install" {
         Doctor
@@ -797,7 +831,6 @@ try {
             Install-PolicyFile
           }
         }
-        Skills-Install
         Status
         Update-ManifestTarget "install" $script:Target
         $pinManifestPath = if ($Project) { ".rubber-duck/manifest.json" } else { (Join-Path $HOME ".config/rubber-duck/manifest.json") }
@@ -827,7 +860,6 @@ try {
             Remove-PolicyFile
           }
         }
-        Skills-Uninstall
         Status
         Update-ManifestTarget "uninstall" $script:Target
       }
