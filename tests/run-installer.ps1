@@ -6,7 +6,7 @@ $ErrorActionPreference = "Stop"
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $repoRoot  = Resolve-Path (Join-Path $scriptDir "..")
-$psInstaller = Join-Path $repoRoot "scripts/rubber-duck.ps1"
+$script:PsInstaller = Join-Path $repoRoot "scripts/rubber-duck.ps1"
 
 $script:Failures = 0
 $script:TestsRun = 0
@@ -48,10 +48,37 @@ function Run-Test([string]$Name, [scriptblock]$Fn) {
 
 # --- Test stubs (bodies land in follow-up batches) ---
 
-function Test-FreshInstallWritesPins { throw "not implemented" }
-function Test-ReinstallVerifiesPins  { throw "not implemented" }
+function Test-FreshInstallWritesPins {
+  & pwsh -NoProfile -File $script:PsInstaller -Action install -Harness opencode -Source local -SkipSkills -Project | Out-Null
+  if ($LASTEXITCODE -ne 0) { throw "installer failed" }
+  if (-not (Test-Path ".rubber-duck/manifest.json")) { throw "manifest.json missing" }
+  $d = Get-Content -Raw ".rubber-duck/manifest.json" | ConvertFrom-Json
+  $pins = $d.pins
+  if (-not $pins) { throw "no pins" }
+  $keys = @($pins.PSObject.Properties.Name)
+  if ($keys.Count -lt 3) { throw "pin count $($keys.Count) < 3" }
+  foreach ($k in $keys) {
+    if (-not $pins.$k.StartsWith("sha256:")) { throw "pin $k missing sha256 prefix" }
+  }
+}
+
+function Test-ReinstallVerifiesPins {
+  & pwsh -NoProfile -File $script:PsInstaller -Action install -Harness opencode -Source local -SkipSkills -Project | Out-Null
+  if ($LASTEXITCODE -ne 0) { throw "first install failed" }
+  $beforeMtime = (Get-Item ".opencode/agents/rubber-duck.md").LastWriteTimeUtc
+  Start-Sleep -Seconds 1
+  & pwsh -NoProfile -File $script:PsInstaller -Action install -Harness opencode -Source local -SkipSkills -Project | Out-Null
+  if ($LASTEXITCODE -ne 0) { throw "reinstall failed" }
+  $afterMtime = (Get-Item ".opencode/agents/rubber-duck.md").LastWriteTimeUtc
+  if ($beforeMtime -ne $afterMtime) { throw "mtime changed: $beforeMtime -> $afterMtime" }
+}
 function Test-SyncRoundTrip          { throw "not implemented" }
-function Test-RawBaseAllowlist       { throw "not implemented" }
+function Test-RawBaseAllowlist {
+  & pwsh -NoProfile -File $script:PsInstaller -Action install -Harness opencode -Source web -RawBase "https://evil.example/foo" -SkipSkills -Project 2>&1 | Out-Null
+  if ($LASTEXITCODE -eq 0) { throw "expected non-allowlisted rawBase to fail" }
+  $out = & pwsh -NoProfile -File $script:PsInstaller -Action install -Harness opencode -Source web -RawBase "https://evil.example/foo" -SkipSkills -Project -AllowUntrustedSource 2>&1
+  if (-not ($out -match "allowlist bypassed")) { throw "expected allowlist bypassed warning" }
+}
 function Test-ClaudeTwoFileLayout    { throw "not implemented" }
 function Test-DryRunNoWrites         { throw "not implemented" }
 function Test-DryRunMultiTargetLayout{ throw "not implemented" }
