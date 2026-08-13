@@ -77,6 +77,37 @@ function Test-RawBaseAllowed([string]$RawBaseUrl, [string]$Mode) {
   return $RawBaseUrl.StartsWith($AllowedRawBasePrefix)
 }
 
+# Convert JSON object graph into hashtable/array graph (PS 5.1 + 7+ compatible).
+function Convert-ToHashtableCompat($InputObject) {
+  if ($null -eq $InputObject) { return $null }
+  if ($InputObject -is [hashtable]) {
+    $h = @{}
+    foreach ($k in $InputObject.Keys) { $h[$k] = Convert-ToHashtableCompat $InputObject[$k] }
+    return $h
+  }
+  if ($InputObject -is [pscustomobject]) {
+    $h = @{}
+    foreach ($p in $InputObject.PSObject.Properties) { $h[$p.Name] = Convert-ToHashtableCompat $p.Value }
+    return $h
+  }
+  if ($InputObject -is [System.Collections.IList]) {
+    $arr = @()
+    foreach ($i in $InputObject) { $arr += ,(Convert-ToHashtableCompat $i) }
+    return $arr
+  }
+  return $InputObject
+}
+
+function Read-JsonAsHashtable([string]$Path) {
+  if (-not (Test-Path $Path)) { return @{} }
+  try {
+    $obj = Get-Content -Raw $Path | ConvertFrom-Json
+    $data = Convert-ToHashtableCompat $obj
+    if ($null -eq $data) { return @{} }
+    return $data
+  } catch { return @{} }
+}
+
 # Write pins block into manifest. $Pairs is hashtable of artifactPath -> sha256:<hex>.
 function Write-Pins([string]$ManifestPath, [hashtable]$Pairs) {
   if ($null -eq $Pairs -or $Pairs.Count -eq 0) { return }
@@ -86,7 +117,7 @@ function Write-Pins([string]$ManifestPath, [hashtable]$Pairs) {
   }
   $data = @{}
   if (Test-Path $ManifestPath) {
-    try { $data = Get-Content -Raw $ManifestPath | ConvertFrom-Json -AsHashtable } catch { $data = @{} }
+    $data = Read-JsonAsHashtable $ManifestPath
   }
   if ($null -eq $data) { $data = @{} }
   if (-not $data.ContainsKey("pins") -or $null -eq $data["pins"]) { $data["pins"] = @{} }
@@ -107,7 +138,10 @@ function Warn-OnDowngrade([string]$LastApplied, [string]$Incoming) {
 # Read prior lastAppliedVersion from manifest. Returns "" when missing/unreadable.
 function Read-PriorVersion([string]$ManifestPath) {
   if (-not (Test-Path $ManifestPath)) { return "" }
-  try { return [string](Get-Content -Raw $ManifestPath | ConvertFrom-Json -AsHashtable)["source"]["lastAppliedVersion"] } catch { return "" }
+  $data = Read-JsonAsHashtable $ManifestPath
+  if (-not $data.ContainsKey("source") -or $null -eq $data["source"]) { return "" }
+  if (-not $data["source"].ContainsKey("lastAppliedVersion")) { return "" }
+  return [string]$data["source"]["lastAppliedVersion"]
 }
 
 function rubber-duck {
@@ -185,8 +219,7 @@ function rubber-duck {
     if (-not (Test-RawBaseAllowed $RawBase $Source)) {
       throw "rawBase not in allowlist: $RawBase. Use -AllowUntrustedSource to override."
     }
-    $manifest = @{}
-    try { $manifest = Get-Content -Raw $ManifestPath | ConvertFrom-Json -AsHashtable } catch { $manifest = @{} }
+    $manifest = Read-JsonAsHashtable $ManifestPath
     if ($null -eq $manifest) { $manifest = @{} }
     $syncTargets = @()
     $syncTargetSet = @{}
@@ -743,11 +776,11 @@ function Update-ManifestTarget([string]$Operation, [string]$TargetName) {
   }
   $manifest = @{}
   if (Test-Path $ManifestPath) {
-    try { $manifest = Get-Content -Raw $ManifestPath | ConvertFrom-Json -AsHashtable } catch { $manifest = @{} }
+    $manifest = Read-JsonAsHashtable $ManifestPath
   } else {
     $templatePath = Join-Path $RepoRoot ".rubber-duck/manifest.template.json"
     if (Test-Path $templatePath) {
-      try { $manifest = Get-Content -Raw $templatePath | ConvertFrom-Json -AsHashtable } catch { $manifest = @{} }
+      $manifest = Read-JsonAsHashtable $templatePath
     }
   }
   if ($null -eq $manifest) { $manifest = @{} }

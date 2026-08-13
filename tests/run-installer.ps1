@@ -132,6 +132,30 @@ function Test-SyncDefaultSource {
   if ($LASTEXITCODE -ne 0) { throw "sync with default source failed" }
 }
 
+# Optional Windows PowerShell compatibility hook.
+# Runs only when powershell.exe exists.
+function Test-WinPsManifestStructure {
+  if (-not $IsWindows) { return }
+  $winPs = Get-Command "powershell.exe" -ErrorAction SilentlyContinue
+  if (-not $winPs) { return }
+
+  $cmd = "& '$($script:PsInstaller)' -Action install -Harness 'opencode,copilot,claude' -Extras -Source local -SkipSkills -Project"
+  & $winPs.Source -NoProfile -ExecutionPolicy Bypass -Command $cmd | Out-Null
+  if ($LASTEXITCODE -ne 0) { throw "Windows PowerShell install failed" }
+
+  if (-not (Test-Path ".rubber-duck/manifest.json")) { throw "manifest.json missing" }
+  $m = Get-Content -Raw ".rubber-duck/manifest.json" | ConvertFrom-Json
+  $manifestKeys = @($m.PSObject.Properties.Name)
+  foreach ($k in @("schemaVersion","source","targets","pins")) {
+    if (-not ($manifestKeys -contains $k)) { throw "manifest missing key: $k" }
+  }
+  $targetKeys = @($m.targets.PSObject.Properties.Name)
+  foreach ($t in @("opencode","copilot","claude")) {
+    if (-not ($targetKeys -contains $t)) { throw "manifest missing target: $t" }
+  }
+  if (@($m.pins.PSObject.Properties.Name).Count -eq 0) { throw "pins empty" }
+}
+
 # --- Test runner ---
 Run-Test "fresh install writes pins"        { Test-FreshInstallWritesPins }
 Run-Test "reinstall verifies pins silently" { Test-ReinstallVerifiesPins  }
@@ -141,6 +165,7 @@ Run-Test "claude two-file layout"           { Test-ClaudeTwoFileLayout    }
 Run-Test "dry-run no writes"                { Test-DryRunNoWrites         }
 Run-Test "dry-run multi-target layout"      { Test-DryRunMultiTargetLayout}
 Run-Test "sync default source"              { Test-SyncDefaultSource      }
+Run-Test "winps manifest structure"         { Test-WinPsManifestStructure }
 
 "`n$($script:TestsRun - $script:Failures)/$($script:TestsRun) passed, $($script:Failures) failed"
 if ($script:Failures -gt 0) { exit 1 } else { exit 0 }
