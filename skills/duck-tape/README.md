@@ -241,6 +241,29 @@ Redaction runs before every write. Secrets, API keys, tokens, passwords, and PII
 
 Redaction applies to both tiers (CONTEXT.md and state files).
 
+### Hook environment variables
+
+Hook scripts support these controls:
+
+- `DUCK_TAPE_MAX_TRANSCRIPT_BYTES`
+  - Maximum transcript/snapshot size in bytes.
+  - Default: `5242880` (5 MB).
+- `DUCK_TAPE_TRUSTED_ROOT`
+  - Optional root boundary for transcript path checks.
+  - Default: unset (no root-boundary enforcement).
+  - When set, transcript paths must resolve inside this root (or equal it), or hooks fall back safely.
+
+Symlink rejection and size-cap checks remain active regardless of `DUCK_TAPE_TRUSTED_ROOT`.
+
+Examples:
+
+- Bash:
+  - `export DUCK_TAPE_TRUSTED_ROOT="$PWD"`
+  - `export DUCK_TAPE_MAX_TRANSCRIPT_BYTES=5242880`
+- PowerShell:
+  - `$env:DUCK_TAPE_TRUSTED_ROOT = (Get-Location).Path`
+  - `$env:DUCK_TAPE_MAX_TRANSCRIPT_BYTES = "5242880"`
+
 ## Troubleshooting
 
 **CONTEXT.md lacks schema sections.** Run `/duck-tape migrate` to classify existing content and append missing headers.

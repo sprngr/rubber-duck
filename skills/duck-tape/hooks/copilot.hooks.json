@@ -5,7 +5,7 @@
       {
         "type": "command",
         "bash": "bash ./src/skills/duck-tape/hooks/extract-state.sh",
-        "powershell": "powershell -ExecutionPolicy Bypass -File ./src/skills/duck-tape/hooks/extract-state.ps1",
+        "powershell": "powershell -NoProfile -NonInteractive -File ./src/skills/duck-tape/hooks/extract-state.ps1",
         "timeoutSec": 10
       }
     ]

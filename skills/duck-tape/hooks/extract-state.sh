@@ -7,6 +7,9 @@
 # or parse error. Marker format matches pre-compact.sh.
 set -euo pipefail
 
+MAX_BYTES="${DUCK_TAPE_MAX_TRANSCRIPT_BYTES:-5242880}" # 5MB default
+TRUSTED_ROOT="${DUCK_TAPE_TRUSTED_ROOT:-}"
+
 # Resolve transcript path: $1 first, else stdin JSON transcript_path/transcriptPath.
 transcript="${1:-}"
 if [[ -z "$transcript" && ! -t 0 ]]; then
@@ -28,6 +31,15 @@ stamp="$(date -u +%Y-%m-%d-%H%M)"
 cwd="$(pwd)"
 state_file="$duck_tape_dir/${stamp}-auto.state.md"
 marker="$duck_tape_dir/.last-compact"
+
+canon_path() {
+  local p="$1"
+  if command -v realpath >/dev/null 2>&1; then
+    realpath "$p" 2>/dev/null || return 1
+  else
+    python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$p" 2>/dev/null || return 1
+  fi
+}
 
 write_marker_only() {
   local latest_state=""
@@ -58,6 +70,36 @@ fi
 
 # Require a readable transcript.
 if [[ -z "$transcript" || ! -f "$transcript" ]]; then
+  write_marker_only
+  exit 0
+fi
+
+# Trust-boundary checks: canonical path under trusted root, no symlink, size cap.
+if [[ -L "$transcript" ]]; then
+  write_marker_only
+  exit 0
+fi
+transcript_real="$(canon_path "$transcript" || true)"
+if [[ -z "${transcript_real:-}" ]]; then
+  write_marker_only
+  exit 0
+fi
+if [[ -n "$TRUSTED_ROOT" ]]; then
+  trusted_real="$(canon_path "$TRUSTED_ROOT" || true)"
+  if [[ -z "${trusted_real:-}" ]]; then
+    write_marker_only
+    exit 0
+  fi
+  case "$transcript_real" in
+    "$trusted_real"|"${trusted_real}/"*) ;;
+    *)
+      write_marker_only
+      exit 0
+      ;;
+  esac
+fi
+size_bytes="$(wc -c < "$transcript" 2>/dev/null || echo 0)"
+if ! [[ "$size_bytes" =~ ^[0-9]+$ ]] || (( size_bytes > MAX_BYTES )); then
   write_marker_only
   exit 0
 fi
@@ -98,6 +140,16 @@ truncate200() {
   s="${s//$'\r'/ }"
   s="${s//|/\\|}"
   printf '%s' "$s"
+}
+
+redact_sensitive() {
+  printf '%s' "$1" \
+    | sed -E \
+      -e 's/(ghp_[A-Za-z0-9_]{20,})/[REDACTED]/g' \
+      -e 's/(github_pat_[A-Za-z0-9_]{20,})/[REDACTED]/g' \
+      -e 's/([Aa]uthorization:[[:space:]]*[Bb]earer[[:space:]]+)[^[:space:]]+/\1[REDACTED]/g' \
+      -e 's/([Aa][Pp][Ii][_ -]?[Kk]ey[[:space:]]*[:=][[:space:]]*)[^[:space:]]+/\1[REDACTED]/g' \
+      -e 's/(AKIA[0-9A-Z]{16})/[REDACTED]/g'
 }
 
 # Extract via jq with fallback. On any jq error, drop to marker-only.
@@ -167,6 +219,11 @@ extract_copilot() {
 render_state() {
   local first_prompt="$1" tool_calls="$2" last_text="$3" decisions="$4"
   local first_prompt_t last_text_t
+
+  first_prompt="$(redact_sensitive "$first_prompt")"
+  tool_calls="$(redact_sensitive "$tool_calls")"
+  last_text="$(redact_sensitive "$last_text")"
+  decisions="$(redact_sensitive "$decisions")"
 
   if [[ -z "$first_prompt" && -z "$tool_calls" && -z "$last_text" ]]; then
     # Nothing extracted; marker-only.

@@ -62,7 +62,7 @@ v2 uses managed-block fencing. The installer adds fences when writing AGENTS.md 
 Fresh install recommended:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh | bash -s -- install --<target>
+curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh -o /tmp/rubber-duck.sh && bash -n /tmp/rubber-duck.sh && bash /tmp/rubber-duck.sh install --<target>
 ```
 
 Use `--skip-agents-md` to preserve existing AGENTS.md customizations outside the managed block.

@@ -103,7 +103,7 @@ Use Bash CLI for Linux/macOS and shell-based CI.
 | `--global`  | switch | Apply global scope to selected target (and skills, unless `--skip-skills`) |
 | `--project` | switch | Apply project scope to selected target (and skills, unless `--skip-skills`) |
 | `--claude-md <path>` | value | Claude target `CLAUDE.md` path override (default for `--claude`; project default when `--project` also set) |
-| `--branch <name>` | value | Branch to install from (default: `main`, auto-detects from URL when piped) |
+| `--branch <name>` | value | Branch to install from (default: `main`; pass explicitly for non-main installs) |
 | `--skip-skills` | switch | Skip `npx skills add/remove/list` |
 | `--skip-agents-md` | switch | Skip AGENTS.md policy block install/remove |
 | `--source <auto\|local\|web>` | value | Artifact + skills source selection (`auto` default; `local` derives repo path, `web` derives GitHub URL) |
@@ -189,9 +189,9 @@ Hook runs:
 ### Installation Behavior
 
 - Installer supports web invocation:
-  - Bash: `curl .../scripts/rubber-duck.sh | bash -s -- <command>`
+  - Bash: `curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh -o /tmp/rubber-duck.sh && bash -n /tmp/rubber-duck.sh && bash /tmp/rubber-duck.sh <command>`
   - PowerShell: download script then execute.
-- Piped web installs may set the `RUBBER_DUCK_SOURCE_URL` env var to the raw script URL. Both installers auto-detect the branch from that URL when `--branch` / `-Branch` is not explicitly set, so fork/branch installs via `curl | bash` pick up the correct branch automatically.
+- For non-`main` sources, pass `--branch <name>` / `-Branch <name>` explicitly.
 - Fresh install seeds the manifest from `.rubber-duck/manifest.template.json` when running against a local checkout; web installs use built-in defaults.
 - Backup retention: before mutating a managed policy file (`AGENTS.md`, `CLAUDE.md`), the installer writes a `<file>.bak.<YYYYmmdd-HHMMSS>` copy alongside it. Only the most recent `<file>.bak.*` is kept per policy file; prior backups are pruned on install/uninstall to avoid accumulation. Applies to both bash and PowerShell installers.
 - Skills install default: project (`npx skills add <source> -y`).

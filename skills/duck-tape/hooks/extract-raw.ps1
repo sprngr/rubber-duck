@@ -19,9 +19,70 @@ param(
 $ErrorActionPreference = "Stop"
 $OutputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$MaxBytes = if ($env:DUCK_TAPE_MAX_TRANSCRIPT_BYTES) { [long]$env:DUCK_TAPE_MAX_TRANSCRIPT_BYTES } else { 5242880L } # 5MB
+$TrustedRoot = if ($env:DUCK_TAPE_TRUSTED_ROOT) { $env:DUCK_TAPE_TRUSTED_ROOT } else { "" }
+
+function Redact-Sensitive {
+  param([string]$s)
+  if ([string]::IsNullOrEmpty($s)) { return $s }
+  $s = [regex]::Replace($s, 'ghp_[A-Za-z0-9_]{20,}', '[REDACTED]')
+  $s = [regex]::Replace($s, 'github_pat_[A-Za-z0-9_]{20,}', '[REDACTED]')
+  $s = [regex]::Replace($s, '([Aa]uthorization:\s*[Bb]earer\s+)[^\s]+', '$1[REDACTED]')
+  $s = [regex]::Replace($s, '([Aa][Pp][Ii][_ -]?[Kk]ey\s*[:=]\s*)[^\s]+', '$1[REDACTED]')
+  $s = [regex]::Replace($s, 'AKIA[0-9A-Z]{16}', '[REDACTED]')
+  return $s
+}
+
+function Write-Output {
+  [CmdletBinding()]
+  param(
+    [Parameter(ValueFromRemainingArguments = $true)]
+    [object[]]$InputObject
+  )
+  if (-not $InputObject) {
+    Microsoft.PowerShell.Utility\Write-Output
+    return
+  }
+  foreach ($obj in $InputObject) {
+    if ($null -eq $obj) {
+      Microsoft.PowerShell.Utility\Write-Output $obj
+      continue
+    }
+    $text = if ($obj -is [string]) { $obj } else { [string]$obj }
+    Microsoft.PowerShell.Utility\Write-Output (Redact-Sensitive $text)
+  }
+}
 
 if ([string]::IsNullOrEmpty($Transcript) -or -not (Test-Path $Transcript -PathType Leaf)) {
   [Console]::Error.WriteLine("Transcript not found: $(if ($Transcript) { $Transcript } else { '<none>' })")
+  Write-Output "# Transcript Raw Material`n`nTranscript not available. Read session manually."
+  exit 0
+}
+
+# Trust-boundary checks: canonical path under trusted root, no symlink, size cap.
+try {
+  $transcriptItem = Get-Item -LiteralPath $Transcript -Force
+  if ($transcriptItem.Attributes -band [IO.FileAttributes]::ReparsePoint) {
+    Write-Output "# Transcript Raw Material`n`nTranscript not available. Read session manually."
+    exit 0
+  }
+  $transcriptReal = [System.IO.Path]::GetFullPath($transcriptItem.FullName)
+  if (-not [string]::IsNullOrEmpty($TrustedRoot)) {
+    $trustedReal = [System.IO.Path]::GetFullPath($TrustedRoot)
+    $sep = [System.IO.Path]::DirectorySeparatorChar
+    $trustedPrefix = if ($trustedReal.EndsWith($sep)) { $trustedReal } else { "$trustedReal$sep" }
+    if (-not ($transcriptReal.Equals($trustedReal, [System.StringComparison]::OrdinalIgnoreCase) -or
+              $transcriptReal.StartsWith($trustedPrefix, [System.StringComparison]::OrdinalIgnoreCase))) {
+      Write-Output "# Transcript Raw Material`n`nTranscript not available. Read session manually."
+      exit 0
+    }
+  }
+  if ($transcriptItem.Length -gt $MaxBytes) {
+    Write-Output "# Transcript Raw Material`n`nTranscript not available. Read session manually."
+    exit 0
+  }
+}
+catch {
   Write-Output "# Transcript Raw Material`n`nTranscript not available. Read session manually."
   exit 0
 }
