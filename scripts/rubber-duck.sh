@@ -136,6 +136,24 @@ print_banner() {
 BANNER
 }
 
+resolve_canonical_version() {
+  local src="" v=""
+  if [[ "${EFFECTIVE_SOURCE}" == "local" ]]; then
+    src="${REPO_ROOT}/dist/AGENTS.md"
+    [[ -f "${src}" ]] || return 0
+  else
+    command -v curl >/dev/null 2>&1 || return 0
+    src="$(mktemp)"
+    if ! curl -fsSL "${RAW_BASE}/${REMOTE_POLICY_PATH:-dist/AGENTS.md}" -o "${src}" 2>/dev/null; then
+      rm -f "${src}"
+      return 0
+    fi
+  fi
+  v="$(extract_version_from_file "${src}" 2>/dev/null)" && [[ -n "${v}" ]] && CANONICAL_VERSION="${v}"
+  [[ "${EFFECTIVE_SOURCE}" != "local" ]] && rm -f "${src}"
+  return 0
+}
+
 # Exact rawBase prefix required unless --allow-untrusted-source is set.
 ALLOWED_RAW_BASE_PREFIX="https://raw.githubusercontent.com/sprngr/rubber-duck"
 ALLOW_UNTRUSTED_SOURCE=0
@@ -1054,6 +1072,8 @@ check_rawbase_allowed "${RAW_BASE}" "${EFFECTIVE_SOURCE}" || { err "rawBase not 
 # Pre-loop header (install/uninstall only)
 if [[ "${ACTION}" == "install" || "${ACTION}" == "uninstall" ]]; then
   [[ "${ACTION}" == "install" ]] && print_banner
+  resolve_canonical_version
+  log "version: ${CANONICAL_VERSION}"
   if [[ "${EFFECTIVE_SOURCE}" == "local" ]]; then
     log "source: local (${REPO_ROOT})"
   else
@@ -1145,5 +1165,5 @@ done
 
 if [[ "${ACTION}" == "install" || "${ACTION}" == "uninstall" ]]; then
   log ""
-  log "version: ${CANONICAL_VERSION}"
+  log "🦆 quack"
 fi
