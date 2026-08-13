@@ -9,7 +9,7 @@ license: MIT
 metadata:
   author: sprngr
   version: v2.0.0
-  RUBBER_DUCK_VERSION: v2.1.0
+  RUBBER_DUCK_VERSION: v2.1.1
 ---
 
 Tutorial generator 🦆. Structured knowledge transfer. Keep language terse and practical.

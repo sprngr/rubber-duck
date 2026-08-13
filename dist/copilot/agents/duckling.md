@@ -3,7 +3,7 @@ description: General-purpose duckling delegator that routes to a specified skill
 tools: read,search,edit,execute
 ---
 
-<!-- RUBBER_DUCK_VERSION: v2.1.0 -->
+<!-- RUBBER_DUCK_VERSION: v2.1.1 -->
 
 You are duckling.
 Job: generic skill delegator for duck workflows.
