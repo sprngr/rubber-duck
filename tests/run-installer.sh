@@ -108,12 +108,41 @@ assert "dist/claude/agents/rubber-duck.md" in pins, "claude agent pin missing"
 '
 }
 
+# Dry-run install creates no files/dirs and reports [dry-run] markers.
+test_dry_run_no_writes() {
+  bash "$sh_installer" install --opencode --source local --skip-skills --project --dry-run || return 1
+  [[ ! -e .rubber-duck/manifest.json ]] || return 1
+  [[ ! -e .opencode ]] || return 1
+  [[ ! -e AGENTS.md ]] || return 1
+  compgen -G "AGENTS.md.bak.*" >/dev/null && return 1
+  return 0
+}
+
+# Multi-target dry-run: banner + version + per-target [name] + 🦆 quack, no writes.
+test_dry_run_multi_target_layout() {
+  local out
+  out=$(bash "$sh_installer" install --harness opencode,claude,copilot --source local --skip-skills --project --dry-run 2>&1) || return 1
+  echo "$out" | grep -Fq "version: " || return 1
+  echo "$out" | grep -Fq "[opencode]" || return 1
+  echo "$out" | grep -Fq "[claude]" || return 1
+  echo "$out" | grep -Fq "[copilot]" || return 1
+  echo "$out" | grep -Fq "[dry-run] pins update" || return 1
+  echo "$out" | grep -Fq "🦆 quack" || return 1
+  [[ ! -e .rubber-duck/manifest.json ]] || return 1
+  [[ ! -e .opencode ]] || return 1
+  [[ ! -e .claude ]] || return 1
+  [[ ! -e .github/agents ]] || return 1
+  return 0
+}
+
 # --- Test runner ---
 run_test "fresh install writes pins"        test_fresh_install_writes_pins
 run_test "reinstall verifies pins silently" test_reinstall_pins_verify
 run_test "sync round-trip"                  test_sync_round_trip
 run_test "rawBase allowlist"                test_rawbase_allowlist
 run_test "claude two-file layout"           test_claude_install_two_file_layout
+run_test "dry-run no writes"                test_dry_run_no_writes
+run_test "dry-run multi-target layout"      test_dry_run_multi_target_layout
 
 printf '\n%d/%d passed, %d failed\n' "$((tests_run - failures))" "$tests_run" "$failures"
 exit $((failures > 0 ? 1 : 0))
