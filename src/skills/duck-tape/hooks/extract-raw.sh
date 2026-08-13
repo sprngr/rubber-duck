@@ -14,7 +14,7 @@
 set -euo pipefail
 
 MAX_BYTES="${DUCK_TAPE_MAX_TRANSCRIPT_BYTES:-5242880}" # 5MB default
-TRUSTED_ROOT="${DUCK_TAPE_TRUSTED_ROOT:-$(pwd)}"
+TRUSTED_ROOT="${DUCK_TAPE_TRUSTED_ROOT:-}"
 
 canon_path() {
   local p="$1"
@@ -51,15 +51,21 @@ if [[ -L "$transcript" ]]; then
   exit 0
 fi
 transcript_real="$(canon_path "$transcript" || true)"
-trusted_real="$(canon_path "$TRUSTED_ROOT" || true)"
-if [[ -z "${transcript_real:-}" || -z "${trusted_real:-}" ]]; then
+if [[ -z "${transcript_real:-}" ]]; then
   printf '# Transcript Raw Material\n\nTranscript not available. Read session manually.\n'
   exit 0
 fi
-case "$transcript_real" in
-  "$trusted_real"|"${trusted_real}/"*) ;;
-  *) printf '# Transcript Raw Material\n\nTranscript not available. Read session manually.\n'; exit 0 ;;
-esac
+if [[ -n "$TRUSTED_ROOT" ]]; then
+  trusted_real="$(canon_path "$TRUSTED_ROOT" || true)"
+  if [[ -z "${trusted_real:-}" ]]; then
+    printf '# Transcript Raw Material\n\nTranscript not available. Read session manually.\n'
+    exit 0
+  fi
+  case "$transcript_real" in
+    "$trusted_real"|"${trusted_real}/"*) ;;
+    *) printf '# Transcript Raw Material\n\nTranscript not available. Read session manually.\n'; exit 0 ;;
+  esac
+fi
 size_bytes="$(wc -c < "$transcript" 2>/dev/null || echo 0)"
 if ! [[ "$size_bytes" =~ ^[0-9]+$ ]] || (( size_bytes > MAX_BYTES )); then
   printf '# Transcript Raw Material\n\nTranscript not available. Read session manually.\n'; exit 0

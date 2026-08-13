@@ -11,7 +11,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $MaxBytes = if ($env:DUCK_TAPE_MAX_TRANSCRIPT_BYTES) { [long]$env:DUCK_TAPE_MAX_TRANSCRIPT_BYTES } else { 5242880L } # 5MB
-$TrustedRoot = if ($env:DUCK_TAPE_TRUSTED_ROOT) { $env:DUCK_TAPE_TRUSTED_ROOT } else { (Get-Location).Path }
+$TrustedRoot = if ($env:DUCK_TAPE_TRUSTED_ROOT) { $env:DUCK_TAPE_TRUSTED_ROOT } else { "" }
 
 # Resolve transcript from stdin JSON if $Transcript empty and stdin piped.
 if ([string]::IsNullOrEmpty($Transcript) -and -not [Console]::IsInputRedirected) {
@@ -71,13 +71,15 @@ try {
     exit 0
   }
   $transcriptReal = [System.IO.Path]::GetFullPath($transcriptItem.FullName)
-  $trustedReal = [System.IO.Path]::GetFullPath($TrustedRoot)
-  $sep = [System.IO.Path]::DirectorySeparatorChar
-  $trustedPrefix = if ($trustedReal.EndsWith($sep)) { $trustedReal } else { "$trustedReal$sep" }
-  if (-not ($transcriptReal.Equals($trustedReal, [System.StringComparison]::OrdinalIgnoreCase) -or
-            $transcriptReal.StartsWith($trustedPrefix, [System.StringComparison]::OrdinalIgnoreCase))) {
-    Write-MarkerOnly
-    exit 0
+  if (-not [string]::IsNullOrEmpty($TrustedRoot)) {
+    $trustedReal = [System.IO.Path]::GetFullPath($TrustedRoot)
+    $sep = [System.IO.Path]::DirectorySeparatorChar
+    $trustedPrefix = if ($trustedReal.EndsWith($sep)) { $trustedReal } else { "$trustedReal$sep" }
+    if (-not ($transcriptReal.Equals($trustedReal, [System.StringComparison]::OrdinalIgnoreCase) -or
+              $transcriptReal.StartsWith($trustedPrefix, [System.StringComparison]::OrdinalIgnoreCase))) {
+      Write-MarkerOnly
+      exit 0
+    }
   }
   if ($transcriptItem.Length -gt $MaxBytes) {
     Write-MarkerOnly
