@@ -135,6 +135,13 @@ test_dry_run_multi_target_layout() {
   return 0
 }
 
+# Sync with default source (auto). Regression guard for RAW_BASE ordering bug:
+# sync path used to call rawBase allowlist before RAW_BASE default was applied.
+test_sync_default_source() {
+  bash "$sh_installer" install --opencode --source local --skip-skills --skip-agents-md --project || return 1
+  bash "$sh_installer" sync --project --skip-skills --skip-agents-md || return 1
+}
+
 # --- Test runner ---
 run_test "fresh install writes pins"        test_fresh_install_writes_pins
 run_test "reinstall verifies pins silently" test_reinstall_pins_verify
@@ -143,6 +150,7 @@ run_test "rawBase allowlist"                test_rawbase_allowlist
 run_test "claude two-file layout"           test_claude_install_two_file_layout
 run_test "dry-run no writes"                test_dry_run_no_writes
 run_test "dry-run multi-target layout"      test_dry_run_multi_target_layout
+run_test "sync default source"              test_sync_default_source
 
 printf '\n%d/%d passed, %d failed\n' "$((tests_run - failures))" "$tests_run" "$failures"
 exit $((failures > 0 ? 1 : 0))

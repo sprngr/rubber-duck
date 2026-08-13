@@ -123,6 +123,15 @@ function Test-DryRunMultiTargetLayout {
   if (Test-Path ".github/agents") { throw ".github/agents created" }
 }
 
+# Sync with default source (auto). Regression guard for RawBase ordering bug:
+# sync path used to call Test-RawBaseAllowed before RawBase default was applied.
+function Test-SyncDefaultSource {
+  & pwsh -NoProfile -File $script:PsInstaller -Action install -Harness opencode -Source local -SkipSkills -SkipAgentsMd -Project | Out-Null
+  if ($LASTEXITCODE -ne 0) { throw "install failed" }
+  & pwsh -NoProfile -File $script:PsInstaller -Action sync -Project -SkipSkills -SkipAgentsMd | Out-Null
+  if ($LASTEXITCODE -ne 0) { throw "sync with default source failed" }
+}
+
 # --- Test runner ---
 Run-Test "fresh install writes pins"        { Test-FreshInstallWritesPins }
 Run-Test "reinstall verifies pins silently" { Test-ReinstallVerifiesPins  }
@@ -131,6 +140,7 @@ Run-Test "rawBase allowlist"                { Test-RawBaseAllowlist       }
 Run-Test "claude two-file layout"           { Test-ClaudeTwoFileLayout    }
 Run-Test "dry-run no writes"                { Test-DryRunNoWrites         }
 Run-Test "dry-run multi-target layout"      { Test-DryRunMultiTargetLayout}
+Run-Test "sync default source"              { Test-SyncDefaultSource      }
 
 "`n$($script:TestsRun - $script:Failures)/$($script:TestsRun) passed, $($script:Failures) failed"
 if ($script:Failures -gt 0) { exit 1 } else { exit 0 }
