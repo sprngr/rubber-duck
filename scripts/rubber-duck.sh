@@ -154,27 +154,140 @@ check_rawbase_allowed() {
   return 1
 }
 
+# --- Manifest handling (pure bash, no python3) ---
+# Global state populated by manifest_load, consumed by manifest_save.
+declare -A MF_TARGET_ENABLED=() MF_TARGET_SCOPE=() MF_TARGET_INSTALL_AGENTS_MD=() MF_TARGET_INSTALL_SKILLS=() MF_TARGET_EXTRAS=()
+declare -a MF_TARGET_NAMES=()
+declare -A MF_PINS=()
+MF_SCHEMA_VERSION=1
+MF_SOURCE_MODE=""
+MF_SOURCE_REF=""
+MF_SOURCE_RAW_BASE=""
+MF_SOURCE_LAST_APPLIED_VERSION=""
+
+manifest_reset() {
+  MF_TARGET_ENABLED=(); MF_TARGET_SCOPE=(); MF_TARGET_INSTALL_AGENTS_MD=()
+  MF_TARGET_INSTALL_SKILLS=(); MF_TARGET_EXTRAS=(); MF_TARGET_NAMES=(); MF_PINS=()
+  MF_SCHEMA_VERSION=1
+  MF_SOURCE_MODE=""; MF_SOURCE_REF=""; MF_SOURCE_RAW_BASE=""; MF_SOURCE_LAST_APPLIED_VERSION=""
+}
+
+# Load manifest into MF_* globals. Falls back to template if primary missing.
+# Args: manifest_path [template_path]
+manifest_load() {
+  local mp="$1" tpl="${2:-}"
+  manifest_reset
+  local src=""
+  [[ -f "${mp}" ]] && src="${mp}"
+  [[ -z "${src}" && -n "${tpl}" && -f "${tpl}" ]] && src="${tpl}"
+  [[ -z "${src}" ]] && return 0
+  local block="" current="" line
+  while IFS= read -r line || [[ -n "${line}" ]]; do
+    if [[ "${line}" =~ ^\ \ \"source\":[[:space:]]*\{ ]]; then block="source"; continue; fi
+    if [[ "${line}" =~ ^\ \ \"pins\":[[:space:]]*\{ ]]; then block="pins"; continue; fi
+    if [[ "${line}" =~ ^\ \ \"targets\":[[:space:]]*\{ ]]; then block="targets"; continue; fi
+    if [[ "${line}" =~ ^\ \ \} ]]; then block=""; current=""; continue; fi
+    if [[ -z "${block}" && "${line}" =~ \"schemaVersion\":[[:space:]]*([0-9]+) ]]; then
+      MF_SCHEMA_VERSION="${BASH_REMATCH[1]}"; continue
+    fi
+    if [[ "${block}" == "source" && "${line}" =~ \"([^\"]+)\":[[:space:]]*\"([^\"]*)\" ]]; then
+      case "${BASH_REMATCH[1]}" in
+        mode) MF_SOURCE_MODE="${BASH_REMATCH[2]}" ;;
+        sourceRef) MF_SOURCE_REF="${BASH_REMATCH[2]}" ;;
+        rawBase) MF_SOURCE_RAW_BASE="${BASH_REMATCH[2]}" ;;
+        lastAppliedVersion) MF_SOURCE_LAST_APPLIED_VERSION="${BASH_REMATCH[2]}" ;;
+      esac
+      continue
+    fi
+    if [[ "${block}" == "pins" && "${line}" =~ \"([^\"]+)\":[[:space:]]*\"([^\"]*)\" ]]; then
+      MF_PINS["${BASH_REMATCH[1]}"]="${BASH_REMATCH[2]}"; continue
+    fi
+    if [[ "${block}" == "targets" && "${line}" =~ ^\ \ \ \ \"([^\"]+)\":[[:space:]]*\{ ]]; then
+      current="${BASH_REMATCH[1]}"; MF_TARGET_NAMES+=("${current}"); continue
+    fi
+    if [[ "${block}" == "targets" && -n "${current}" && "${line}" =~ \"([^\"]+)\":[[:space:]]*(true|false) ]]; then
+      case "${BASH_REMATCH[1]}" in
+        enabled) MF_TARGET_ENABLED["${current}"]="${BASH_REMATCH[2]}" ;;
+        extras) MF_TARGET_EXTRAS["${current}"]="${BASH_REMATCH[2]}" ;;
+        installAgentsMd) MF_TARGET_INSTALL_AGENTS_MD["${current}"]="${BASH_REMATCH[2]}" ;;
+        installSkills) MF_TARGET_INSTALL_SKILLS["${current}"]="${BASH_REMATCH[2]}" ;;
+      esac
+      continue
+    fi
+    if [[ "${block}" == "targets" && -n "${current}" && "${line}" =~ \"scope\":[[:space:]]*\"([^\"]*)\" ]]; then
+      MF_TARGET_SCOPE["${current}"]="${BASH_REMATCH[1]}"; continue
+    fi
+    if [[ "${block}" == "targets" && -n "${current}" && "${line}" =~ ^\ \ \ \ \} ]]; then
+      current=""; continue
+    fi
+  done < "${src}"
+}
+
+# Save MF_* globals as sorted JSON. Matches python json.dumps(indent=2, sort_keys=True).
+manifest_save() {
+  local mp="$1"
+  mkdir -p "$(dirname -- "${mp}")"
+  local tmp="${mp}.tmp.$$"
+  local -a sorted_pins=() sorted_targets=()
+  (( ${#MF_PINS[@]} > 0 )) && mapfile -t sorted_pins < <(printf '%s\n' "${!MF_PINS[@]}" | sort)
+  (( ${#MF_TARGET_NAMES[@]} > 0 )) && mapfile -t sorted_targets < <(printf '%s\n' "${MF_TARGET_NAMES[@]}" | sort -u)
+  {
+    printf '{\n'
+    if (( ${#sorted_pins[@]} == 0 )); then
+      printf '  "pins": {},\n'
+    else
+      printf '  "pins": {\n'
+      local i=0 last=$((${#sorted_pins[@]} - 1)) k
+      for k in "${sorted_pins[@]}"; do
+        printf '    "%s": "%s"' "${k}" "${MF_PINS[$k]}"
+        (( i < last )) && printf ','
+        printf '\n'; i=$((i + 1))
+      done
+      printf '  },\n'
+    fi
+    printf '  "schemaVersion": %s,\n' "${MF_SCHEMA_VERSION}"
+    printf '  "source": {\n'
+    printf '    "lastAppliedVersion": "%s",\n' "${MF_SOURCE_LAST_APPLIED_VERSION}"
+    printf '    "mode": "%s",\n' "${MF_SOURCE_MODE}"
+    printf '    "rawBase": "%s",\n' "${MF_SOURCE_RAW_BASE}"
+    printf '    "sourceRef": "%s"\n' "${MF_SOURCE_REF}"
+    printf '  },\n'
+    if (( ${#sorted_targets[@]} == 0 )); then
+      printf '  "targets": {}\n'
+    else
+      printf '  "targets": {\n'
+      local i=0 last=$((${#sorted_targets[@]} - 1)) t
+      for t in "${sorted_targets[@]}"; do
+        printf '    "%s": {\n' "${t}"
+        printf '      "enabled": %s,\n' "${MF_TARGET_ENABLED[$t]:-true}"
+        printf '      "extras": %s,\n' "${MF_TARGET_EXTRAS[$t]:-false}"
+        printf '      "installAgentsMd": %s,\n' "${MF_TARGET_INSTALL_AGENTS_MD[$t]:-true}"
+        printf '      "installSkills": %s,\n' "${MF_TARGET_INSTALL_SKILLS[$t]:-true}"
+        printf '      "scope": "%s"\n' "${MF_TARGET_SCOPE[$t]:-project}"
+        printf '    }'
+        (( i < last )) && printf ','
+        printf '\n'; i=$((i + 1))
+      done
+      printf '  }\n'
+    fi
+    printf '}\n'
+  } > "${tmp}"
+  mv "${tmp}" "${mp}"
+}
+
 # Write pins block into manifest. Remaining args: artifact_path=sha256_hash pairs.
 write_pins() {
   local manifest_path="$1"
   shift
   (( $# == 0 )) && return 0
-  require_cmd python3
-  python3 - "${manifest_path}" "$@" <<'PY'
-import json, sys, pathlib
-path = sys.argv[1]
-p = pathlib.Path(path)
-data = {}
-if p.exists():
-    try: data = json.loads(p.read_text(encoding="utf-8") or "{}")
-    except Exception: data = {}
-pins = data.setdefault("pins", {})
-for pair in sys.argv[2:]:
-    if "=" in pair:
-        k, v = pair.split("=", 1)
-        pins[k] = v
-p.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-PY
+  local template_path="${REPO_ROOT}/.rubber-duck/manifest.template.json"
+  manifest_load "${manifest_path}" "${template_path}"
+  local pair k v
+  for pair in "$@"; do
+    IFS='=' read -r k v <<<"${pair}"
+    MF_PINS["${k}"]="${v}"
+  done
+  manifest_save "${manifest_path}"
 }
 
 # Warn when lastAppliedVersion is newer than sourceRef being installed.
@@ -191,8 +304,8 @@ warn_on_downgrade() {
 read_prior_version() {
   local mp="$1"
   [[ -f "${mp}" ]] || { printf ''; return; }
-  command -v python3 >/dev/null 2>&1 || { printf ''; return; }
-  python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d.get('source',{}).get('lastAppliedVersion',''))" "${mp}" 2>/dev/null || printf ''
+  manifest_load "${mp}"
+  printf '%s' "${MF_SOURCE_LAST_APPLIED_VERSION}"
 }
 
 extract_version_from_file() {
@@ -363,17 +476,12 @@ if [[ "${ACTION}" == "sync" ]]; then
     exit 1
   fi
   check_rawbase_allowed "${RAW_BASE}" "${SOURCE_MODE}" || { err "rawBase not in allowlist: ${RAW_BASE}. Use --allow-untrusted-source to override."; exit 1; }
-  command -v python3 >/dev/null 2>&1 || { err "required command missing: python3"; exit 1; }
-  mapfile -t SYNC_TARGETS < <(
-    python3 - "${MANIFEST_PATH}" <<'PY'
-import json, sys
-data = json.load(open(sys.argv[1], encoding="utf-8"))
-targets = data.get("targets", {})
-for name, cfg in targets.items():
-    if cfg.get("enabled", True):
-        print(name)
-PY
-  )
+  manifest_load "${MANIFEST_PATH}"
+  SYNC_TARGETS=()
+  for T in "${MF_TARGET_NAMES[@]}"; do
+    sync_enabled="${MF_TARGET_ENABLED[$T]:-true}"
+    [[ "${sync_enabled}" == "true" ]] && SYNC_TARGETS+=("${T}")
+  done
   declare -A SYNC_TARGET_SET=()
   for T in "${SYNC_TARGETS[@]}"; do
     SYNC_TARGET_SET["${T}"]=1
@@ -885,37 +993,40 @@ manifest_update_target() {
   local prior_version=""
   prior_version=$(read_prior_version "${MANIFEST_PATH}")
   warn_on_downgrade "${prior_version}" "${CANONICAL_VERSION}"
-  require_cmd python3
-  mkdir -p "$(dirname -- "${MANIFEST_PATH}")"
   local template_path="${REPO_ROOT}/.rubber-duck/manifest.template.json"
-  python3 - "${MANIFEST_PATH}" "${op}" "${target_name}" "${PROJECT_SCOPE}" "${SKIP_AGENTS_MD}" "${SKIP_SKILLS}" "${EXTRAS}" "${EFFECTIVE_SOURCE}" "${BRANCH}" "${RAW_BASE}" "${CANONICAL_VERSION}" "${template_path}" <<'PY'
-import json, sys, pathlib
-path, op, target = sys.argv[1], sys.argv[2], sys.argv[3]
-project_scope = sys.argv[4] == "1"
-skip_agents_md = sys.argv[5] == "1"
-skip_skills = sys.argv[6] == "1"
-extras = sys.argv[7] == "1"
-effective_source, branch, raw_base, version = sys.argv[8], sys.argv[9], sys.argv[10], sys.argv[11]
-template_path = sys.argv[12] if len(sys.argv) > 12 else ""
-p = pathlib.Path(path)
-data = {}
-if p.exists():
-    try: data = json.loads(p.read_text(encoding="utf-8") or "{}")
-    except Exception: data = {}
-elif template_path:
-    tp = pathlib.Path(template_path)
-    if tp.exists():
-        try: data = json.loads(tp.read_text(encoding="utf-8"))
-        except Exception: data = {}
-data.setdefault("schemaVersion", 1)
-data["source"] = {"mode": effective_source, "sourceRef": branch, "rawBase": raw_base, "lastAppliedVersion": version}
-targets = data.setdefault("targets", {})
-if op == "install":
-    targets[target] = {"enabled": True, "scope": "project" if project_scope else "global", "installAgentsMd": not skip_agents_md, "installSkills": not skip_skills, "extras": extras}
-elif op == "uninstall":
-    targets.pop(target, None)
-p.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-PY
+  manifest_load "${MANIFEST_PATH}" "${template_path}"
+  MF_SOURCE_MODE="${EFFECTIVE_SOURCE}"
+  MF_SOURCE_REF="${BRANCH}"
+  MF_SOURCE_RAW_BASE="${RAW_BASE}"
+  MF_SOURCE_LAST_APPLIED_VERSION="${CANONICAL_VERSION}"
+  if [[ "${op}" == "install" ]]; then
+    local found=0 t
+    for t in "${MF_TARGET_NAMES[@]}"; do
+      [[ "${t}" == "${target_name}" ]] && { found=1; break; }
+    done
+    (( found == 0 )) && MF_TARGET_NAMES+=("${target_name}")
+    MF_TARGET_ENABLED["${target_name}"]="true"
+    if (( PROJECT_SCOPE == 1 )); then MF_TARGET_SCOPE["${target_name}"]="project"
+    else MF_TARGET_SCOPE["${target_name}"]="global"; fi
+    if (( SKIP_AGENTS_MD == 1 )); then MF_TARGET_INSTALL_AGENTS_MD["${target_name}"]="false"
+    else MF_TARGET_INSTALL_AGENTS_MD["${target_name}"]="true"; fi
+    if (( SKIP_SKILLS == 1 )); then MF_TARGET_INSTALL_SKILLS["${target_name}"]="false"
+    else MF_TARGET_INSTALL_SKILLS["${target_name}"]="true"; fi
+    if (( EXTRAS == 1 )); then MF_TARGET_EXTRAS["${target_name}"]="true"
+    else MF_TARGET_EXTRAS["${target_name}"]="false"; fi
+  elif [[ "${op}" == "uninstall" ]]; then
+    unset "MF_TARGET_ENABLED[${target_name}]"
+    unset "MF_TARGET_SCOPE[${target_name}]"
+    unset "MF_TARGET_INSTALL_AGENTS_MD[${target_name}]"
+    unset "MF_TARGET_INSTALL_SKILLS[${target_name}]"
+    unset "MF_TARGET_EXTRAS[${target_name}]"
+    local -a new_names=() t
+    for t in "${MF_TARGET_NAMES[@]}"; do
+      [[ "${t}" != "${target_name}" ]] && new_names+=("${t}")
+    done
+    MF_TARGET_NAMES=("${new_names[@]}")
+  fi
+  manifest_save "${MANIFEST_PATH}"
 }
 
 choose_source
