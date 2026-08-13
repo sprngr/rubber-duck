@@ -126,5 +126,5 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Run hook tests (bash + JS)
-        run: bash tests/run.sh && node tests/run.js
+      - name: Run duck-tape hook tests (bash + JS)
+        run: bash tests/run-duck-tape.sh && node tests/run-duck-tape.js
