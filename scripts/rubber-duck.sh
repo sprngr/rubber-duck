@@ -459,7 +459,26 @@ if [[ -n "${HARNESS_CSV}" ]]; then
     esac
   done
 else
-  if [[ "${ACTION}" == "sync" ]]; then
+# Auto-detect branch from piped URL if not explicitly set
+if [[ "${BRANCH}" == "main" ]]; then
+  if [[ -n "${RUBBER_DUCK_SOURCE_URL:-}" ]] && [[ "${RUBBER_DUCK_SOURCE_URL}" =~ githubusercontent\.com/[^/]+/[^/]+/([^/]+)/ ]]; then
+    DETECTED_BRANCH="${BASH_REMATCH[1]}"
+    if [[ "${DETECTED_BRANCH}" != "main" ]]; then
+      BRANCH="${DETECTED_BRANCH}"
+      log "Auto-detected branch: ${BRANCH}"
+    fi
+  fi
+fi
+
+# Default RAW_BASE from branch if not explicitly set via --raw-base
+if [[ -z "${RAW_BASE}" ]]; then
+  RAW_BASE="https://raw.githubusercontent.com/sprngr/rubber-duck/${BRANCH}"
+fi
+if [[ "${BRANCH}" != "main" ]]; then
+  log "Using branch: ${BRANCH}"
+fi
+
+if [[ "${ACTION}" == "sync" ]]; then
     TARGETS=()
   else
     if (( SEEN_TARGET_COUNT == 0 )); then
@@ -548,26 +567,6 @@ if [[ "${ACTION}" == "sync" ]]; then
   fi
   log "sync: complete"
   exit 0
-fi
-
-# Auto-detect branch from piped URL if not explicitly set
-if [[ "${BRANCH}" == "main" ]]; then
-  # Try to detect from common environment variables or process cmdline
-  if [[ -n "${RUBBER_DUCK_SOURCE_URL:-}" ]] && [[ "${RUBBER_DUCK_SOURCE_URL}" =~ githubusercontent\.com/[^/]+/[^/]+/([^/]+)/ ]]; then
-    DETECTED_BRANCH="${BASH_REMATCH[1]}"
-    if [[ "${DETECTED_BRANCH}" != "main" ]]; then
-      BRANCH="${DETECTED_BRANCH}"
-      log "Auto-detected branch: ${BRANCH}"
-    fi
-  fi
-fi
-
-# Default RAW_BASE from branch if not explicitly set via --raw-base
-if [[ -z "${RAW_BASE}" ]]; then
-  RAW_BASE="https://raw.githubusercontent.com/sprngr/rubber-duck/${BRANCH}"
-fi
-if [[ "${BRANCH}" != "main" ]]; then
-  log "Using branch: ${BRANCH}"
 fi
 
 resolve_target() {

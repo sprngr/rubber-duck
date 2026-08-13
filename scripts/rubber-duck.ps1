@@ -152,6 +152,24 @@ function rubber-duck {
   if (-not [string]::IsNullOrWhiteSpace($ClaudeMd) -and -not ($SelectedTargets -contains "claude")) {
     throw "-ClaudeMd applies only when claude target is selected."
   }
+  # Auto-detect branch from RUBBER_DUCK_SOURCE_URL if not explicitly set
+  if ($Branch -eq "main" -and -not [string]::IsNullOrWhiteSpace($env:RUBBER_DUCK_SOURCE_URL)) {
+    $m = [regex]::Match($env:RUBBER_DUCK_SOURCE_URL, 'githubusercontent\.com/[^/]+/[^/]+/([^/]+)/')
+    if ($m.Success) {
+      $detected = $m.Groups[1].Value
+      if (-not [string]::IsNullOrWhiteSpace($detected) -and $detected -ne "main") {
+        $Branch = $detected
+        Write-Host "Auto-detected branch: $Branch"
+      }
+    }
+  }
+  # Default RawBase from branch if not explicitly set
+  if ([string]::IsNullOrWhiteSpace($RawBase)) {
+    $RawBase = "https://raw.githubusercontent.com/sprngr/rubber-duck/$Branch"
+  }
+  if ($Branch -ne "main") {
+    Write-Host "Using branch: $Branch"
+  }
   if ($Action -eq "sync") {
     $SyncScriptPath = $PSCommandPath
     if ([string]::IsNullOrWhiteSpace($SyncScriptPath)) {
@@ -231,24 +249,6 @@ $SkillsCli = "skills@^1.5.21"
 
 # SkillsSource derived from -Source after Resolve-Source
 $SkillsSource = ""
-
-# Update RawBase based on branch
-if ($Branch -eq "main" -and -not [string]::IsNullOrWhiteSpace($env:RUBBER_DUCK_SOURCE_URL)) {
-  $m = [regex]::Match($env:RUBBER_DUCK_SOURCE_URL, 'githubusercontent\.com/[^/]+/[^/]+/([^/]+)/')
-  if ($m.Success) {
-    $detected = $m.Groups[1].Value
-    if (-not [string]::IsNullOrWhiteSpace($detected) -and $detected -ne "main") {
-      $Branch = $detected
-      Write-Host "Auto-detected branch: $Branch"
-    }
-  }
-}
-if ([string]::IsNullOrWhiteSpace($RawBase)) {
-  $RawBase = "https://raw.githubusercontent.com/sprngr/rubber-duck/$Branch"
-}
-if ($Branch -ne "main") {
-  Write-Host "Using branch: $Branch"
-}
 
 # When run via `iwr | iex` there is no backing script file path.
 # In function scope, $MyInvocation.MyCommand.Path can also be empty even for file execution.
