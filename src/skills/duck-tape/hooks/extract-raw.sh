@@ -13,6 +13,26 @@
 # or transcript unreadable.
 set -euo pipefail
 
+MAX_BYTES="${DUCK_TAPE_MAX_TRANSCRIPT_BYTES:-5242880}" # 5MB default
+TRUSTED_ROOT="${DUCK_TAPE_TRUSTED_ROOT:-$(pwd)}"
+
+canon_path() {
+  local p="$1"
+  if command -v realpath >/dev/null 2>&1; then
+    realpath "$p" 2>/dev/null || return 1
+  else
+    python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$p" 2>/dev/null || return 1
+  fi
+}
+
+# Redact common secret patterns from all stdout lines.
+exec > >(sed -E \
+  -e 's/(ghp_[A-Za-z0-9_]{20,})/[REDACTED]/g' \
+  -e 's/(github_pat_[A-Za-z0-9_]{20,})/[REDACTED]/g' \
+  -e 's/([Aa]uthorization:[[:space:]]*[Bb]earer[[:space:]]+)[^[:space:]]+/\1[REDACTED]/g' \
+  -e 's/([Aa][Pp][Ii][_ -]?[Kk]ey[[:space:]]*[:=][[:space:]]*)[^[:space:]]+/\1[REDACTED]/g' \
+  -e 's/(AKIA[0-9A-Z]{16})/[REDACTED]/g')
+
 transcript="${1:-}"
 if [[ -z "$transcript" || ! -f "$transcript" ]]; then
   printf 'Transcript not found: %s\n' "${transcript:-<none>}" >&2
@@ -23,6 +43,26 @@ fi
 if ! command -v jq >/dev/null 2>&1; then
   printf '# Transcript Raw Material\n\njq missing. Read transcript manually: %s\n' "$transcript"
   exit 0
+fi
+
+# Trust-boundary checks: canonical path under trusted root, no symlink, size cap.
+if [[ -L "$transcript" ]]; then
+  printf '# Transcript Raw Material\n\nTranscript not available. Read session manually.\n'
+  exit 0
+fi
+transcript_real="$(canon_path "$transcript" || true)"
+trusted_real="$(canon_path "$TRUSTED_ROOT" || true)"
+if [[ -z "${transcript_real:-}" || -z "${trusted_real:-}" ]]; then
+  printf '# Transcript Raw Material\n\nTranscript not available. Read session manually.\n'
+  exit 0
+fi
+case "$transcript_real" in
+  "$trusted_real"|"${trusted_real}/"*) ;;
+  *) printf '# Transcript Raw Material\n\nTranscript not available. Read session manually.\n'; exit 0 ;;
+esac
+size_bytes="$(wc -c < "$transcript" 2>/dev/null || echo 0)"
+if ! [[ "$size_bytes" =~ ^[0-9]+$ ]] || (( size_bytes > MAX_BYTES )); then
+  printf '# Transcript Raw Material\n\nTranscript not available. Read session manually.\n'; exit 0
 fi
 
 # Detect format.

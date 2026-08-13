@@ -10,6 +10,8 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+$MaxBytes = if ($env:DUCK_TAPE_MAX_TRANSCRIPT_BYTES) { [long]$env:DUCK_TAPE_MAX_TRANSCRIPT_BYTES } else { 5242880L } # 5MB
+$TrustedRoot = if ($env:DUCK_TAPE_TRUSTED_ROOT) { $env:DUCK_TAPE_TRUSTED_ROOT } else { (Get-Location).Path }
 
 # Resolve transcript from stdin JSON if $Transcript empty and stdin piped.
 if ([string]::IsNullOrEmpty($Transcript) -and -not [Console]::IsInputRedirected) {
@@ -61,6 +63,32 @@ if ([string]::IsNullOrEmpty($Transcript) -or -not (Test-Path $Transcript -PathTy
   exit 0
 }
 
+# Trust-boundary checks: canonical path under trusted root, no symlink, size cap.
+try {
+  $transcriptItem = Get-Item -LiteralPath $Transcript -Force
+  if ($transcriptItem.Attributes -band [IO.FileAttributes]::ReparsePoint) {
+    Write-MarkerOnly
+    exit 0
+  }
+  $transcriptReal = [System.IO.Path]::GetFullPath($transcriptItem.FullName)
+  $trustedReal = [System.IO.Path]::GetFullPath($TrustedRoot)
+  $sep = [System.IO.Path]::DirectorySeparatorChar
+  $trustedPrefix = if ($trustedReal.EndsWith($sep)) { $trustedReal } else { "$trustedReal$sep" }
+  if (-not ($transcriptReal.Equals($trustedReal, [System.StringComparison]::OrdinalIgnoreCase) -or
+            $transcriptReal.StartsWith($trustedPrefix, [System.StringComparison]::OrdinalIgnoreCase))) {
+    Write-MarkerOnly
+    exit 0
+  }
+  if ($transcriptItem.Length -gt $MaxBytes) {
+    Write-MarkerOnly
+    exit 0
+  }
+}
+catch {
+  Write-MarkerOnly
+  exit 0
+}
+
 # Detect format by scanning first 50 lines for a discriminator.
 # CC transcripts often start with metadata (ai-title, mode, file-history-snapshot)
 # before the first message, so the first line alone is unreliable.
@@ -91,6 +119,17 @@ function Truncate200 {
   $s = $s -replace "`n", " "
   $s = $s -replace "`r", " "
   $s = $s -replace "\|", "\|"
+  return $s
+}
+
+function Redact-Sensitive {
+  param([string]$s)
+  if ([string]::IsNullOrEmpty($s)) { return $s }
+  $s = [regex]::Replace($s, 'ghp_[A-Za-z0-9_]{20,}', '[REDACTED]')
+  $s = [regex]::Replace($s, 'github_pat_[A-Za-z0-9_]{20,}', '[REDACTED]')
+  $s = [regex]::Replace($s, '([Aa]uthorization:\s*[Bb]earer\s+)[^\s]+', '$1[REDACTED]')
+  $s = [regex]::Replace($s, '([Aa][Pp][Ii][_ -]?[Kk]ey\s*[:=]\s*)[^\s]+', '$1[REDACTED]')
+  $s = [regex]::Replace($s, 'AKIA[0-9A-Z]{16}', '[REDACTED]')
   return $s
 }
 
@@ -225,6 +264,11 @@ function Render-State {
     # Nothing extracted; marker-only.
     return $false
   }
+
+  $firstPrompt = Redact-Sensitive $firstPrompt
+  $lastText = Redact-Sensitive $lastText
+  for ($i = 0; $i -lt $toolCalls.Count; $i++) { $toolCalls[$i] = Redact-Sensitive $toolCalls[$i] }
+  for ($i = 0; $i -lt $decisions.Count; $i++) { $decisions[$i] = Redact-Sensitive $decisions[$i] }
 
   $firstPromptT = Truncate200 $firstPrompt
   $lastTextT = Truncate200 $lastText
