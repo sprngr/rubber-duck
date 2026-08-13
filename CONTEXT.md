@@ -33,6 +33,10 @@
 - **Approval wording compacted with non-exhaustive intent note**: execution approval ask uses concise scope prompt with examples while policy clarifies examples are non-exhaustive and clear approval intent is accepted. (date: 2026-08-06)
 - **Phase 1 hard constraints adopted**: phase label is stubs/skeleton/interfaces and new-file bootstrap requires stub-first approvals before later implementation phases. (date: 2026-08-06)
 - **Validation gate semantics realigned**: V14 now enforces phase-cap boundary, V30 treats clear approval intent as valid, and V32/V33 cover missing phase preflight and phase re-approval. (date: 2026-08-06)
+- **Multi-harness install model**: installer accepts a single `--harness`/`-Harness` comma-separated list for multi-target install; legacy single-target flags remain but cannot be combined. Sync spawns child installer processes per enabled target. (date: 2026-08-12)
+- **Manifest schema v1 with pins**: `.rubber-duck/manifest.json` tracks `source`, `targets`, and `pins` (sha256 of installed artifacts). Pins are a dev-workflow change log enabling skip-unchanged reinstalls, not a security boundary. (date: 2026-08-12)
+- **rawBase allowlist**: installer only accepts sources under `https://raw.githubusercontent.com/sprngr/rubber-duck` unless `--allow-untrusted-source`/`-AllowUntrustedSource` is passed (emits warning). Prevents accidental fork installs. (date: 2026-08-12)
+- **Installer runtime dependency floor**: bash installer requires only bash 4+, awk, curl, coreutils. `python3` removed from installer path. (date: 2026-08-12)
 
 ## Conventions
 
@@ -55,7 +59,6 @@
 - **Extras skills set**: `duck-adapt`, `duck-grill`, `duck-tape`, installed only with extras flags.
 - **Validation fixtures**: scenario clusters live under `validation/fixtures/` for prompt-eval coverage.
 - **Guardrails drift check**: `scripts/check-guardrails-drift.sh` verifies vendored guardrails alignment.
-- **Bash-only dry-run**: `scripts/rubber-duck.sh` supports `--dry-run`; `scripts/rubber-duck.ps1` has no `-DryRun`.
 
 ## Deferred-Debt
 
@@ -99,3 +102,15 @@ Policy and validation alignment session completed in bounded approvals.
 - Source snippets now enforce phase-fit statement and hard phase-content constraints (stub/skeleton-first for new files).
 - Generated skills/dist rebuilt and synced; guardrails drift check passed after AGENTS managed-block sync.
 - Validation fixtures/docs updated to V01-V33 with focused calibration of V14/V30/V32/V33; runlog entry added.
+
+### 2026-08-12 22:00
+
+Multi-harness installer branch (`2.1.0-multi-harness-install`) landed:
+
+- Multi-target install via `--harness`/`-Harness` with consolidated output (banner + per-target `[name]` sections + `🦆 quack` footer).
+- Manifest schema v1 with `pins` change log (sha256 skip-unchanged optimization).
+- rawBase allowlist with `--allow-untrusted-source`/`-AllowUntrustedSource` override.
+- Skills install consolidated to a single `npx` call with `-a` per target.
+- Bash installer python3 dependency removed (pure-bash manifest library).
+- `BASH_SOURCE_URL` renamed to `RUBBER_DUCK_SOURCE_URL`.
+- Test coverage parity: bash + PowerShell installer test suites both at 7/7 covering fresh install, reinstall, sync round-trip, allowlist, claude two-file, and dry-run scenarios.

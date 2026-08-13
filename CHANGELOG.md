@@ -45,6 +45,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added/updated `sync`, harness selector (`--harness` / `-Harness`), prune (`--prune` / `-Prune`), and dry-run (`--dry-run` / `-DryRun`) coverage.
   - Updated target-selection constraints to reflect harness-list mode, legacy single-target mode, and no-mixing rules.
   - Documented manifest-driven sync behavior and manifest paths for project/global scope.
+- Installer multi-target install now supports a single `--harness`/`-Harness` comma-separated list. Consolidated output: one banner + version + source + doctor + skills header, per-target `[name]` section, single `🦆 quack` footer.
+- Bash installer no longer requires `python3`. Manifest parsing/emission is pure bash via a small library (`manifest_load`/`manifest_save` populating `MF_*` globals). PowerShell installer already used native JSON.
+- Skills install consolidated: a single `npx` call receives one `-a <agent>` flag per selected target, replacing per-target `npx` invocations.
+- Pinning reframed as a dev-workflow change log with skip-unchanged optimization (not a security boundary). Fresh install writes `pins`; re-install compares fetched artifact sha256 to on-disk and skips rewriting unchanged files (preserves mtime).
+- Environment variable renamed `BASH_SOURCE_URL` -> `RUBBER_DUCK_SOURCE_URL` for shell-agnostic naming; both installers respect it for auto branch detection from piped install URLs.
 
 #### Skills
 
@@ -57,6 +62,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Installer SHA-256 artifact record + skip-unchanged install: `install` writes a `pins` block into the manifest recording the hash of each installed agent file. Subsequent installs compare fetched artifacts against the destination and skip rewriting files that already match (preserving mtime and speeding up reinstalls). Pins are refreshed after each install to reflect current disk state.
 - Installer downgrade warning: emits `WARN: downgrade: manifest lastAppliedVersion X > incoming Y` when installing an older release than the manifest records. Warning only; does not block the install.
 - Installer test suite (`tests/run-installer.sh`, `make check-installer`) covering fresh install, reinstall pin verify, pin tamper mismatch, sync install-then-prune round-trip, and rawBase allowlist scenarios in isolated tmp workspaces.
+- PowerShell installer test suite (`tests/run-installer.ps1`, `make check-installer-ps`) mirrors the bash suite: fresh install, reinstall pin verify, sync round-trip, rawBase allowlist, claude two-file layout, and dry-run scenarios.
+- Bash dry-run test cases (`dry-run no writes`, `dry-run multi-target layout`) added to `tests/run-installer.sh`.
 
 ### Fixed
 
@@ -74,6 +81,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rendered rubber-duck agent artifacts (`dist/*/agents/rubber-duck.md`) no longer duplicate the approval-workflow, scope-rules, and change-type sections. `src/agents/rubber-duck/body.md` no longer re-includes policy snippets that are already pulled in via the Safety Gates section.
 - AGENTS.md Layout section now correctly distinguishes `.github/` (tracked CI/workflow config) from `.agents/`, `.claude/`, `.opencode/` (untracked local harness install targets, populated by installers).
 - PowerShell installer target-resolution fallback no longer defaults implicitly to global opencode paths.
+- Installer `write_pins` (bash) and `Write-Pins` (PowerShell) did not honor dry-run. Bash silently wrote `.rubber-duck/manifest.json`; PowerShell errored on missing parent directory. Both now emit a `[dry-run] pins update -> <path>` marker and skip the write.
 
 ## [v2.0.1] - 2026-08-03
 
