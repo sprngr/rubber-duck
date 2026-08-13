@@ -80,6 +80,10 @@ function Test-RawBaseAllowed([string]$RawBaseUrl, [string]$Mode) {
 # Write pins block into manifest. $Pairs is hashtable of artifactPath -> sha256:<hex>.
 function Write-Pins([string]$ManifestPath, [hashtable]$Pairs) {
   if ($null -eq $Pairs -or $Pairs.Count -eq 0) { return }
+  if ($DryRun) {
+    Log "[dry-run] pins update -> $ManifestPath"
+    return
+  }
   $data = @{}
   if (Test-Path $ManifestPath) {
     try { $data = Get-Content -Raw $ManifestPath | ConvertFrom-Json -AsHashtable } catch { $data = @{} }

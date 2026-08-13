@@ -308,6 +308,7 @@ write_pins() {
   local manifest_path="$1"
   shift
   (( $# == 0 )) && return 0
+  (( DRY_RUN == 1 )) && { log "[dry-run] pins update -> ${manifest_path}"; return 0; }
   local template_path="${REPO_ROOT}/.rubber-duck/manifest.template.json"
   manifest_load "${manifest_path}" "${template_path}"
   local pair k v
