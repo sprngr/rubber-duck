@@ -540,18 +540,40 @@ if [[ "${ACTION}" == "sync" ]]; then
       exit 0
     fi
   fi
+
   if (( ${#SYNC_TARGETS[@]} > 0 )); then
+    declare -a SYNC_GROUP_KEYS=()
+    declare -A SYNC_GROUP_TARGETS=()
+
     for T in "${SYNC_TARGETS[@]}"; do
-      CMD=(bash "${SCRIPT_PATH}" install --harness "${T}" --source "${SOURCE_MODE}" --branch "${BRANCH}" --raw-base "${RAW_BASE}")
+      t_install_skills="${MF_TARGET_INSTALL_SKILLS[$T]:-true}"
+      t_install_agents_md="${MF_TARGET_INSTALL_AGENTS_MD[$T]:-true}"
+      t_extras="${MF_TARGET_EXTRAS[$T]:-false}"
+      group_key="${t_install_skills}|${t_install_agents_md}|${t_extras}"
+
+      if [[ -z "${SYNC_GROUP_TARGETS[$group_key]+x}" ]]; then
+        SYNC_GROUP_KEYS+=("${group_key}")
+        SYNC_GROUP_TARGETS["${group_key}"]="${T}"
+      else
+        SYNC_GROUP_TARGETS["${group_key}"]+=",${T}"
+      fi
+    done
+
+    for group_key in "${SYNC_GROUP_KEYS[@]}"; do
+      IFS='|' read -r g_install_skills g_install_agents_md g_extras <<< "${group_key}"
+      group_harness_csv="${SYNC_GROUP_TARGETS[$group_key]}"
+
+      CMD=(bash "${SCRIPT_PATH}" install --harness "${group_harness_csv}" --source "${SOURCE_MODE}" --branch "${BRANCH}" --raw-base "${RAW_BASE}")
       if (( PROJECT_SCOPE == 1 )); then CMD+=(--project); else CMD+=(--global); fi
-      (( SKIP_SKILLS == 1 )) && CMD+=(--skip-skills)
-      (( SKIP_AGENTS_MD == 1 )) && CMD+=(--skip-agents-md)
-      (( EXTRAS == 1 )) && CMD+=(--extras)
+      [[ "${g_install_skills}" == "false" ]] && CMD+=(--skip-skills)
+      [[ "${g_install_agents_md}" == "false" ]] && CMD+=(--skip-agents-md)
+      [[ "${g_extras}" == "true" ]] && CMD+=(--extras)
       (( DRY_RUN == 1 )) && CMD+=(--dry-run)
       (( ALLOW_UNTRUSTED_SOURCE == 1 )) && CMD+=(--allow-untrusted-source)
       "${CMD[@]}"
     done
   fi
+
   if (( PRUNE == 1 )); then
     for T in opencode copilot claude; do
       if [[ -z "${SYNC_TARGET_SET[${T}]+x}" ]]; then
