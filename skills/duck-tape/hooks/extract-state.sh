@@ -149,7 +149,19 @@ redact_sensitive() {
       -e 's/(github_pat_[A-Za-z0-9_]{20,})/[REDACTED]/g' \
       -e 's/([Aa]uthorization:[[:space:]]*[Bb]earer[[:space:]]+)[^[:space:]]+/\1[REDACTED]/g' \
       -e 's/([Aa][Pp][Ii][_ -]?[Kk]ey[[:space:]]*[:=][[:space:]]*)[^[:space:]]+/\1[REDACTED]/g' \
-      -e 's/(AKIA[0-9A-Z]{16})/[REDACTED]/g'
+      -e 's/(AKIA[0-9A-Z]{16})/[REDACTED]/g' \
+      -e 's/([Pp]assword[[:space:]]*[:=][[:space:]]*)[^[:space:]"'"'"'`,;]+/\1[REDACTED]/g' \
+      -e 's/([Pp]ass(wd)?[[:space:]]*[:=][[:space:]]*)[^[:space:]"'"'"'`,;]+/\1[REDACTED]/g' \
+      -e 's/([Pp]wd[[:space:]]*[:=][[:space:]]*)[^[:space:]"'"'"'`,;]+/\1[REDACTED]/g' \
+      -e 's/([Ss]ecret[[:space:]]*[:=][[:space:]]*)[^[:space:]"'"'"'`,;]+/\1[REDACTED]/g' \
+      -e 's/([Tt]oken[[:space:]]*[:=][[:space:]]*)[^[:space:]"'"'"'`,;]+/\1[REDACTED]/g' \
+      -e 's/([Cc]lient[_ -]?[Ss]ecret[[:space:]]*[:=][[:space:]]*)[^[:space:]"'"'"'`,;]+/\1[REDACTED]/g' \
+      -e 's/([Pp]rivate[_ -]?[Kk]ey[[:space:]]*[:=][[:space:]]*)[^[:space:]"'"'"'`,;]+/\1[REDACTED]/g' \
+      -e 's#([a-z][a-z0-9+.-]*://[^:/[:space:]]+:)[^@/[:space:]]+@#\1[REDACTED]@#gI' \
+      -e 's/\b((export[[:space:]]+)?[A-Z][A-Z0-9_]*(PASSWORD|PASSWD|PWD|SECRET|TOKEN|API_KEY|ACCESS_KEY|PRIVATE_KEY)[A-Z0-9_]*[[:space:]]*=[[:space:]]*)[^[:space:]"'"'"'`]+/\1[REDACTED]/g' \
+      -e 's/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/[REDACTED]/g' \
+      -e 's/\b(\+?[0-9]{1,3}[-.[:space:]]?)?(\(?[0-9]{3}\)?[-.[:space:]]?)?[0-9]{3}[-.[:space:]]?[0-9]{4}\b/[REDACTED]/g' \
+      -e 's/\b[0-9]{3}-[0-9]{2}-[0-9]{4}\b/[REDACTED]/g'
 }
 
 # Extract via jq with fallback. On any jq error, drop to marker-only.

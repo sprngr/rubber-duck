@@ -132,6 +132,18 @@ function Redact-Sensitive {
   $s = [regex]::Replace($s, '([Aa]uthorization:\s*[Bb]earer\s+)[^\s]+', '$1[REDACTED]')
   $s = [regex]::Replace($s, '([Aa][Pp][Ii][_ -]?[Kk]ey\s*[:=]\s*)[^\s]+', '$1[REDACTED]')
   $s = [regex]::Replace($s, 'AKIA[0-9A-Z]{16}', '[REDACTED]')
+  $s = [regex]::Replace($s, '([Pp]assword\s*[:=]\s*)[^\s"''`,;]+', '$1[REDACTED]')
+  $s = [regex]::Replace($s, '([Pp]ass(?:wd)?\s*[:=]\s*)[^\s"''`,;]+', '$1[REDACTED]')
+  $s = [regex]::Replace($s, '([Pp]wd\s*[:=]\s*)[^\s"''`,;]+', '$1[REDACTED]')
+  $s = [regex]::Replace($s, '([Ss]ecret\s*[:=]\s*)[^\s"''`,;]+', '$1[REDACTED]')
+  $s = [regex]::Replace($s, '([Tt]oken\s*[:=]\s*)[^\s"''`,;]+', '$1[REDACTED]')
+  $s = [regex]::Replace($s, '([Cc]lient[_ -]?[Ss]ecret\s*[:=]\s*)[^\s"''`,;]+', '$1[REDACTED]')
+  $s = [regex]::Replace($s, '([Pp]rivate[_ -]?[Kk]ey\s*[:=]\s*)[^\s"''`,;]+', '$1[REDACTED]')
+  $s = [regex]::Replace($s, '\b([a-z][a-z0-9+.-]*://[^:\s/]+:)[^@\s/]+@', '$1[REDACTED]@', [System.Text.RegularExpressions.RegexOptions]::IgnoreCase)
+  $s = [regex]::Replace($s, '\b((?:export\s+)?[A-Z][A-Z0-9_]*(?:PASSWORD|PASSWD|PWD|SECRET|TOKEN|API_KEY|ACCESS_KEY|PRIVATE_KEY)[A-Z0-9_]*\s*=\s*)[^\s"''`]+', '$1[REDACTED]')
+  $s = [regex]::Replace($s, '\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b', '[REDACTED]', [System.Text.RegularExpressions.RegexOptions]::IgnoreCase)
+  $s = [regex]::Replace($s, '\b(?:\+?\d{1,3}[-.\s]?)?(?:\(?\d{3}\)?[-.\s]?)\d{3}[-.\s]?\d{4}\b', '[REDACTED]')
+  $s = [regex]::Replace($s, '\b\d{3}-\d{2}-\d{4}\b', '[REDACTED]')
   return $s
 }
 

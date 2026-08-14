@@ -61,6 +61,18 @@ const REDACTION_RULES = [
   [/([Aa]uthorization:\s*[Bb]earer\s+)[^\s]+/g, "$1[REDACTED]"],
   [/([Aa][Pp][Ii][_ -]?[Kk]ey\s*[:=]\s*)[^\s]+/g, "$1[REDACTED]"],
   [/AKIA[0-9A-Z]{16}/g, "[REDACTED]"],
+  [/([Pp]assword\s*[:=]\s*)[^\s"'`,;]+/g, "$1[REDACTED]"],
+  [/([Pp]ass(?:wd)?\s*[:=]\s*)[^\s"'`,;]+/g, "$1[REDACTED]"],
+  [/([Pp]wd\s*[:=]\s*)[^\s"'`,;]+/g, "$1[REDACTED]"],
+  [/([Ss]ecret\s*[:=]\s*)[^\s"'`,;]+/g, "$1[REDACTED]"],
+  [/([Tt]oken\s*[:=]\s*)[^\s"'`,;]+/g, "$1[REDACTED]"],
+  [/([Cc]lient[_ -]?[Ss]ecret\s*[:=]\s*)[^\s"'`,;]+/g, "$1[REDACTED]"],
+  [/([Pp]rivate[_ -]?[Kk]ey\s*[:=]\s*)[^\s"'`,;]+/g, "$1[REDACTED]"],
+  [/\b([a-z][a-z0-9+.-]*:\/\/[^:\s\/]+:)[^@\s\/]+@/gi, "$1[REDACTED]@"],
+  [/\b((?:export\s+)?[A-Z][A-Z0-9_]*(?:PASSWORD|PASSWD|PWD|SECRET|TOKEN|API_KEY|ACCESS_KEY|PRIVATE_KEY)[A-Z0-9_]*\s*=\s*)[^\s"'`]+/g, "$1[REDACTED]"],
+  [/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, "[REDACTED]"],
+  [/\b(?:\+?\d{1,3}[-.\s]?)?(?:\(?\d{3}\)?[-.\s]?)\d{3}[-.\s]?\d{4}\b/g, "[REDACTED]"],
+  [/\b\d{3}-\d{2}-\d{4}\b/g, "[REDACTED]"],
 ]
 
 function redactSensitive(s) {
