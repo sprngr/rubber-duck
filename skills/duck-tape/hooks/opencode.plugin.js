@@ -72,6 +72,21 @@ function redactSensitive(s) {
   return out
 }
 
+function redactDeep(value) {
+  if (typeof value === "string") {
+    return redactSensitive(value)
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => redactDeep(item))
+  }
+  if (value && typeof value === "object") {
+    const out = {}
+    for (const [k, v] of Object.entries(value)) out[k] = redactDeep(v)
+    return out
+  }
+  return value
+}
+
 const DECISION_PATTERN = /APPROVED|DECIDED|CHOSE|DECISION|we will use|going with|let's go with/i
 
 function extractTarget(part) {
@@ -113,7 +128,8 @@ async function writeTranscriptSnapshot(duckTapeDir, sessionId, messageList) {
     const c = m?.info?.time?.created
     return typeof c === "number" && c > sinceMs
   })
-  const payload = JSON.stringify(filtered)
+  const redacted = filtered.map((m) => redactDeep(m))
+  const payload = JSON.stringify(redacted)
   if (Buffer.byteLength(payload, "utf8") > MAX_SNAPSHOT_BYTES) {
     return null
   }
