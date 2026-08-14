@@ -112,7 +112,7 @@
 
 Upgrading from v1.x? See [migration guide](./docs/migration-v2.md).
 
-Two install paths. Full install options (flags, targets, uninstall) in [docs/MANUAL.md](./docs/MANUAL.md) and [scripts/README.md](./scripts/README.md).
+Two install paths. Full install options (flags, targets, uninstall, sync) in [scripts/README.md](./scripts/README.md).
 
 ### Skills-only
 
@@ -125,16 +125,16 @@ npx skills add https://github.com/sprngr/rubber-duck
 **Bash (macOS/Linux):**
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh -o /tmp/rubber-duck.sh && bash -n /tmp/rubber-duck.sh && bash /tmp/rubber-duck.sh install --<target>
+curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh -o /tmp/rubber-duck.sh && bash -n /tmp/rubber-duck.sh && bash /tmp/rubber-duck.sh install --harness "opencode"
 ```
 
 **PowerShell (Windows):**
 
 ```powershell
-$p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.ps1 -OutFile $p; & $p -Action install -<Target>
+$p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.ps1 -OutFile $p; & $p -Action install -Harness "opencode"
 ```
 
-Replace `<target>` / `<Target>` with: `claude`, `copilot`, or `opencode`. Add `--project` / `-Project` for project scope. See [docs/MANUAL.md](./docs/MANUAL.md) for skip flags, extras, and all CLI options.
+Replace `"opencode"` with one or more of: `opencode`, `copilot`, `claude` (comma-separated). Project scope is the default; pass `--global` / `-Global` for user-wide install. See [scripts/README.md](./scripts/README.md) for skip flags, extras, sync, and all CLI options.
 
 ### Update using saved manifest (basic sync)
 
