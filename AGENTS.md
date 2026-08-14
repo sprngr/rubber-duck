@@ -149,7 +149,7 @@ This repository contains source prompts, assembled skills, generated harness art
   - Verify `dist/AGENTS.md` exists and is current.
 
 <!-- RUBBER_DUCK_MANAGED_BLOCK START -->
-<!-- RUBBER_DUCK_VERSION: v2.1.1 -->
+<!-- RUBBER_DUCK_VERSION: v2.1.2 -->
 
 ## Load Project Context
 

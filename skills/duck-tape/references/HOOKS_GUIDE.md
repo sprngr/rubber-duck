@@ -82,13 +82,13 @@ Recovery is reactive. Angle A (auto-checkpoint) is proactive. Both complement: A
 
 **Unix (macOS/Linux):**
 
-1. Merge `hooks/claude-code.hooks.json` content into `.claude/settings.json` under `hooks` key. If `hooks` exists, add `PreCompact` as sibling.
+1. Merge `hooks/claude-code.hooks.json` content into repo-local `.claude/settings.local.json` (recommended) or `.claude/settings.json` under `hooks` key. If `hooks` exists, add `PreCompact` as sibling.
 2. Confirm `src/skills/duck-tape/hooks/extract-state.sh` exists in project root.
 3. Run `/hooks` in Claude Code. Confirm `PreCompact` appears.
 
 **Windows:**
 
-1. Merge `hooks/claude-code.hooks.windows.json` content into `.claude/settings.json` under `hooks` key.
+1. Merge `hooks/claude-code.hooks.windows.json` content into repo-local `.claude/settings.local.json` (recommended) or `.claude/settings.json` under `hooks` key.
 2. Confirm `src/skills/duck-tape/hooks/extract-state.ps1` exists in project root.
 3. Run `/hooks` in Claude Code. Confirm `PreCompact` appears.
 
@@ -139,7 +139,7 @@ Run `/duck-tape init` for guided setup. Skill prompts for harness choice, writes
 
 - Run `/hooks`. Confirm `PreCompact` listed with count.
 - Confirm `$CLAUDE_PROJECT_DIR` resolves correctly.
-- Check `.claude/settings.json` is valid JSON.
+- Check `.claude/settings.local.json` (recommended) or `.claude/settings.json` is valid JSON.
 
 **Copilot hook not firing:**
 
@@ -187,7 +187,7 @@ Single `command` field, no platform branching. Two config files ship:
 - `claude-code.hooks.json` — unix, calls `extract-state.sh` via bash.
 - `claude-code.hooks.windows.json` — Windows, calls `extract-state.ps1` via powershell.
 
-Merge one into `.claude/settings.json` under `hooks` key. Pick the one matching your platform. Do not merge both.
+Merge one into repo-local `.claude/settings.local.json` (recommended) or `.claude/settings.json` under `hooks` key. Pick the one matching your platform. Do not merge both.
 
 ### Copilot CLI
 

@@ -136,6 +136,15 @@ $p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.co
 
 Replace `<target>` / `<Target>` with: `claude`, `copilot`, or `opencode`. Add `--project` / `-Project` for project scope. See [docs/MANUAL.md](./docs/MANUAL.md) for skip flags, extras, and all CLI options.
 
+### Update using saved manifest (basic sync)
+
+Use this after initial install when target and scope are already in manifest.
+
+Bash local example (Supported by Bash and Powershell via web & local)
+```bash
+./scripts/rubber-duck.sh sync
+```
+
 ## Verify after install
 
  <details>

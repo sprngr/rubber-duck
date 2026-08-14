@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [v2.1.2] - 2026-08-13
+
+### Changed
+
+- duck-tape skill metadata version bumped to `v2.1.2` in source-of-truth (`src/skills/duck-tape/SKILL.md`) and regenerated artifact.
+- duck-tape Claude hook install guidance now offers repo-local `.claude/settings.local.json` (recommended) or `.claude/settings.json` for hook merge placement.
+- duck-tape Claude troubleshooting guidance now validates either `.claude/settings.local.json` (recommended) or `.claude/settings.json`.
+
+### Fixed
+
+- Clarified Claude hook setup docs to match repo-local config workflow and reduce confusion between shared and local settings targets.
+
 ## [v2.1.1] - 2026-08-13
 
 ### Changed

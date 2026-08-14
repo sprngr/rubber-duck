@@ -10,8 +10,8 @@ description: >
 license: MIT
 metadata:
   author: sprngr
-  version: v2.1.1
-  RUBBER_DUCK_VERSION: v2.1.1
+  version: v2.1.2
+  RUBBER_DUCK_VERSION: v2.1.2
 ---
 
 Session memory management 🦆📼. Context hygiene, persistent memory, session state handoff.
@@ -257,7 +257,7 @@ If no state file exists and no transcript path in marker, report "compaction occ
    - Copilot: `hooks/copilot.hooks.json`
 3. Show user the target install path for their harness:
    - opencode: `.opencode/plugins/duck-tape.js`
-   - Claude Code: merge into `.claude/settings.json` under `hooks` key
+   - Claude Code: merge into repo-local `.claude/settings.local.json` (recommended) or `.claude/settings.json` under `hooks` key
    - Copilot: `.github/hooks/duck-tape.json`
 4. Ask user if they want the skill to write the file or show the snippet for manual placement.
 5. If write: confirm target path with user (approval required, file creation). Write file. Report success.
