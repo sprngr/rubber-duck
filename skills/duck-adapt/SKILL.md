@@ -83,7 +83,7 @@ Ask clarifying questions (up to 3) to establish:
 
 **For skill audit:**
 
-- Read skill source from `src/skills/<name>/SKILL.md`
+- Read skill source from `.agents/skills/<name>/SKILL.md`
 - Check against philosophy guardrails
 - Check against prompt order standard (04-prompt-order-standard.md)
 - Check for execution approval gates on mutating actions
@@ -91,7 +91,7 @@ Ask clarifying questions (up to 3) to establish:
 
 **For overlap detection:**
 
-- Load existing skill summaries from `src/skills/*/SKILL.md` frontmatter
+- Load existing skill summaries from `.agents/skills/*/SKILL.md` frontmatter
 - Compare intent, scope, workflow patterns
 - Identify semantic overlap vs complementary composition
 
@@ -203,7 +203,7 @@ Check against existing skills using loaded patterns:
 Emit full directory structure:
 
 ```
-src/skills/duck-<name>/
+.agents/skills/duck-<name>/
 ├── SKILL.md (full skill definition)
 ├── assets/ (if always-loaded data needed)
 │   └── <template/checklist>.md

@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash --noprofile --norc \"$CLAUDE_PROJECT_DIR/src/skills/duck-tape/hooks/extract-state.sh\""
+            "command": "bash --noprofile --norc \"$CLAUDE_PROJECT_DIR/.agents/skills/duck-tape/hooks/extract-state.sh\""
           }
         ]
       }

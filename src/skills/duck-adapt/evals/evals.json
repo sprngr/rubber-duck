@@ -60,7 +60,7 @@
       "scenario": "Audit existing skill compliance",
       "input": "Audit duck-review for philosophy compliance.",
       "expected_behavior": [
-        "Reads src/skills/duck-review/SKILL.md",
+        "Reads .agents/skills/duck-review/SKILL.md",
         "Checks philosophy guardrails presence",
         "Checks prompt order standard",
         "Checks execution approval gates (N/A for non-mutating)",

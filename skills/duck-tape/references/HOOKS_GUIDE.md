@@ -83,13 +83,13 @@ Recovery is reactive. Angle A (auto-checkpoint) is proactive. Both complement: A
 **Unix (macOS/Linux):**
 
 1. Merge `hooks/claude-code.hooks.json` content into repo-local `.claude/settings.local.json` (recommended) or `.claude/settings.json` under `hooks` key. If `hooks` exists, add `PreCompact` as sibling.
-2. Confirm `src/skills/duck-tape/hooks/extract-state.sh` exists in project root.
+2. Confirm `.agents/skills/duck-tape/hooks/extract-state.sh` exists in project root.
 3. Run `/hooks` in Claude Code. Confirm `PreCompact` appears.
 
 **Windows:**
 
 1. Merge `hooks/claude-code.hooks.windows.json` content into repo-local `.claude/settings.local.json` (recommended) or `.claude/settings.json` under `hooks` key.
-2. Confirm `src/skills/duck-tape/hooks/extract-state.ps1` exists in project root.
+2. Confirm `.agents/skills/duck-tape/hooks/extract-state.ps1` exists in project root.
 3. Run `/hooks` in Claude Code. Confirm `PreCompact` appears.
 
 Pick one variant. Do not merge both into the same settings file.
@@ -115,7 +115,7 @@ Run `/duck-tape init` for guided setup. Skill prompts for harness choice, writes
 **Marker not written after compaction:**
 
 - Confirm hook config file in correct location per harness.
-- Confirm `extract-state.sh` is executable: `chmod +x src/skills/duck-tape/hooks/extract-state.sh`.
+- Confirm `extract-state.sh` is executable: `chmod +x .agents/skills/duck-tape/hooks/extract-state.sh`.
 - Check harness hook logs for errors.
 
 **State file not written (marker only):**
