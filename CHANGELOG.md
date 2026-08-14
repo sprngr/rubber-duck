@@ -13,10 +13,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - duck-tape skill metadata version bumped to `v2.1.2` in source-of-truth (`src/skills/duck-tape/SKILL.md`) and regenerated artifact.
 - duck-tape Claude hook install guidance now offers repo-local `.claude/settings.local.json` (recommended) or `.claude/settings.json` for hook merge placement.
 - duck-tape Claude troubleshooting guidance now validates either `.claude/settings.local.json` (recommended) or `.claude/settings.json`.
+- README quick start now includes basic manifest update command: `./scripts/rubber-duck.sh sync --project`.
+- Edited skills aligned to current project version `v2.1.2` (`duck-tape`, `duck-adapt`, `quack`) in source and regenerated artifacts.
 
 ### Fixed
 
 - Clarified Claude hook setup docs to match repo-local config workflow and reduce confusion between shared and local settings targets.
+- Distributed skill references now use `.agents/skills/...` instead of source-tree `src/skills/...` in duck-tape hooks/docs and duck-adapt skill guidance.
+- Harness artifact renderer now resolves `{{include: skill-snippets/...}}` in agent bodies, eliminating raw include tokens in rendered duckling dist agents.
+- Quack skill boundaries now render safety carve-out snippet correctly (no leaked include token in built skill output).
+
+### Security
+
+- duck-tape opencode plugin transcript snapshot now redacts recursively before serialization to `.duck-tape/<id>-transcript.json` (prevents raw secret leakage in recovery snapshots).
+- Expanded duck-tape redaction coverage across shell, PowerShell, and opencode plugin extract paths:
+  - password/passwd/pwd/secret/token/client_secret/private_key key-value forms
+  - credentialed connection URIs (`scheme://user:pass@host`)
+  - secret-like environment assignments (`...PASSWORD=...`, `...TOKEN=...`, etc.)
+  - baseline PII shapes (email, phone, SSN)
 
 ## [v2.1.1] - 2026-08-13
 
