@@ -125,16 +125,16 @@ npx skills add https://github.com/sprngr/rubber-duck
 **Bash (macOS/Linux):**
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh -o /tmp/rubber-duck.sh && bash -n /tmp/rubber-duck.sh && bash /tmp/rubber-duck.sh install --harness "opencode"
+curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh -o /tmp/rubber-duck.sh && bash -n /tmp/rubber-duck.sh && bash /tmp/rubber-duck.sh install --harness "<target>"
 ```
 
 **PowerShell (Windows):**
 
 ```powershell
-$p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.ps1 -OutFile $p; & $p -Action install -Harness "opencode"
+$p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.ps1 -OutFile $p; & $p -Action install -Harness "<target>"
 ```
 
-Replace `"opencode"` with one or more of: `opencode`, `copilot`, `claude` (comma-separated). Project scope is the default; pass `--global` / `-Global` for user-wide install. See [scripts/README.md](./scripts/README.md) for skip flags, extras, sync, and all CLI options.
+Replace `"<target>"` with one or more of: `opencode`, `copilot`, `claude` (comma-separated in quotes). Project scope is the default; pass `--global` / `-Global` for user-wide install. See [scripts/README.md](./scripts/README.md) for skip flags, extras, sync, and all CLI options.
 
 ### Update using saved manifest (basic sync)
 
