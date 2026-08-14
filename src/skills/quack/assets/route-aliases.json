@@ -55,7 +55,7 @@
     "duck-risk": {
       "aliases": [
         "risk",
-        "adverserial review",
+        "adversarial review",
         "stress test",
         "what could break",
         "rollback risk"
