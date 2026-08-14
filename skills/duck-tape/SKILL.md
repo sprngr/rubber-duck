@@ -11,7 +11,7 @@ license: MIT
 metadata:
   author: sprngr
   version: v2.1.2
-  RUBBER_DUCK_VERSION: v2.1.4
+  RUBBER_DUCK_VERSION: v2.2.0
 ---
 
 Session memory management 🦆📼. Context hygiene, persistent memory, session state handoff.

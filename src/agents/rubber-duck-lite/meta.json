@@ -1,0 +1,30 @@
+{
+  "name": "rubber-duck-lite",
+  "description": "Rubber duck recommendation and rules governor. Enforces policy/safety gates with explicit routing via quack.",
+  "harnesses": {
+    "claude": {
+      "tools": "Read, Glob, Grep, Edit, Write, Bash, Agent, Skill, AskUserQuestion",
+      "initialPrompt": true,
+      "color": "yellow"
+    },
+    "copilot": {
+      "name": "🦆",
+      "argument-hint": "Quack.",
+      "tools": "read,search,edit,execute,agent"
+    },
+    "opencode": {
+      "name": "🦆",
+      "mode": "all",
+      "permission": {
+        "read": "allow",
+        "edit": "allow",
+        "task": "allow",
+        "skill": "allow",
+        "lsp": "allow",
+        "question": "allow",
+        "doom_loop": "allow"
+      },
+      "color": "#FFD801"
+    }
+  }
+}

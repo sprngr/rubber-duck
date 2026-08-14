@@ -37,6 +37,9 @@
 - **Manifest schema v1 with pins**: `.rubber-duck/manifest.json` tracks `source`, `targets`, and `pins` (sha256 of installed artifacts). Pins are a dev-workflow change log enabling skip-unchanged reinstalls, not a security boundary. (date: 2026-08-12)
 - **rawBase allowlist**: installer only accepts sources under `https://raw.githubusercontent.com/sprngr/rubber-duck` unless `--allow-untrusted-source`/`-AllowUntrustedSource` is passed (emits warning). Prevents accidental fork installs. (date: 2026-08-12)
 - **Installer runtime dependency floor**: bash installer requires only bash 4+, awk, curl, coreutils. `python3` removed from installer path. (date: 2026-08-12)
+- **Installer policy mode model**: installer now uses semantic policy mode selection (`--policy`/`-Policy` with `host|self`, `host` default). Legacy skip flag remains as alias for `self` with explicit host+skip conflict guard. (date: 2026-08-14)
+- **Deterministic duck variant install**: policy mode controls installer source artifact selection (`host` -> `rubber-duck-lite`, `self` -> full `rubber-duck`) while installed destination filename remains `rubber-duck.md`. (date: 2026-08-14)
+- **Lite duck workflow parity tightened**: lite prompt now includes explicit workflow-choice wait gate and parity-critical workflow controls without duplicating full AGENTS policy body. (date: 2026-08-14)
 
 ## Conventions
 
@@ -114,3 +117,15 @@ Multi-harness installer branch (`2.1.0-multi-harness-install`) landed:
 - Bash installer python3 dependency removed (pure-bash manifest library).
 - `BASH_SOURCE_URL` renamed to `RUBBER_DUCK_SOURCE_URL`.
 - Test coverage parity: bash + PowerShell installer test suites both at 7/7 covering fresh install, reinstall, sync round-trip, allowlist, claude two-file, and dry-run scenarios.
+
+### 2026-08-14
+
+Policy-mode and lite-variant refactor landed:
+
+- Added semantic installer policy mode flags: `--policy|-p host|self` and `-Policy/-p host|self` (`host` default).
+- Kept `--skip-agents-md` / `-SkipAgentsMd` as legacy alias for `self`.
+- Added deterministic artifact selection by mode:
+  - `host` installs AGENTS policy block and sources `rubber-duck-lite`
+  - `self` skips AGENTS policy block writes and sources full `rubber-duck`
+- Added Host vs Self tradeoff matrix to `scripts/README.md`; README quick start links to matrix.
+- Tightened `rubber-duck-lite` workflow behavior to wait for approach selection before continuing workflow path.

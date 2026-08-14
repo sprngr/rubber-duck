@@ -49,7 +49,8 @@ Existing `TODO(decision-debt):` markers still parse under `duck-debt` broad mode
 
 New flags:
 
-- `--skip-agents-md` / `-SkipAgentsMd` — install skills only, leave existing AGENTS.md untouched.
+- `--policy host|self` / `-Policy host|self` (`-p`) — policy mode selection (`host` default; `self` skips AGENTS policy block install and uses full self-contained duck agent policy).
+- `--skip-agents-md` / `-SkipAgentsMd` — legacy alias for `--policy self` / `-Policy self`.
 - `--branch` / `-Branch` — install from a non-main branch (testing).
 - `--extras` / `-Extras` — install optional skills (duck-adapt, duck-grill, duck-tape).
 
@@ -65,4 +66,4 @@ Fresh install recommended:
 curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh -o /tmp/rubber-duck.sh && bash -n /tmp/rubber-duck.sh && bash /tmp/rubber-duck.sh install --<target>
 ```
 
-Use `--skip-agents-md` to preserve existing AGENTS.md customizations outside the managed block.
+Use `--policy self` (or legacy `--skip-agents-md`) when you want to preserve existing AGENTS.md customizations outside the managed block.

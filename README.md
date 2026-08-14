@@ -122,6 +122,13 @@ npx skills add https://github.com/sprngr/rubber-duck
 
 ### Full assistant operating system (agents + skills)
 
+> [!IMPORTANT]
+> Full install uses deterministic agent variant selection:
+> - `--policy host` (default): installs AGENTS policy block + `rubber-duck-lite` source variant
+> - `--policy self` (or legacy `--skip-agents-md` / `-SkipAgentsMd`): skips AGENTS policy block + installs full self-contained `rubber-duck` source variant
+> - installed destination filename remains `rubber-duck.md` in both cases
+> - mode tradeoffs and use-case guidance: [Host vs Self policy mode matrix](./scripts/README.md#host-vs-self-policy-mode-matrix)
+
 **Bash (macOS/Linux):**
 
 ```bash
@@ -134,9 +141,15 @@ curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rub
 $p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.ps1 -OutFile $p; & $p -Action install -Harness "<target>"
 ```
 
-Replace `"<target>"` with one or more of: `opencode`, `copilot`, `claude` (comma-separated in quotes). Project scope is the default; pass `--global` / `-Global` for user-wide install. See [scripts/README.md](./scripts/README.md) for skip flags, extras, sync, and all CLI options.
+Replace `"<target>"` with one or more of: `opencode`, `copilot`, `claude` (comma-separated in quotes).
 
-### Update using saved manifest (basic sync)
+Project scope is the default; pass `--global` / `-Global` for user-wide install.
+
+Use `-p self` when you want full self-contained duck policy with no AGENTS policy injection.
+
+See [scripts/README.md](./scripts/README.md) for full behavior, aliases, extras, sync, and all CLI options.
+
+#### Update using saved manifest (basic sync)
 
 Use this after initial install when target and scope are already in manifest.
 

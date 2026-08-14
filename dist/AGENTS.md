@@ -1,4 +1,4 @@
-<!-- RUBBER_DUCK_VERSION: v2.1.4 -->
+<!-- RUBBER_DUCK_VERSION: v2.2.0 -->
 
 ## Load Project Context
 

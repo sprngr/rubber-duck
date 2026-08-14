@@ -14,6 +14,13 @@ CLI reference for install/update/uninstall tooling.
 
 `--project` scope is the default; pass `--global` for user-wide install.
 
+Agent variant selection is deterministic:
+- `--policy host` (default): install AGENTS policy block + `rubber-duck-lite` source variant
+- `--policy self` (legacy alias: `--skip-agents-md` / `-SkipAgentsMd`): skip AGENTS policy block + install full self-contained `rubber-duck` source variant
+- destination filename remains `rubber-duck.md` in both modes
+
+See [Host vs Self policy mode matrix](#host-vs-self-policy-mode-matrix) for tradeoffs and recommended use cases.
+
 Sync targets from a manifest:
 
 ```bash
@@ -41,7 +48,8 @@ Opt out of default install steps or adjust source to fit your workflow. All opti
 | Flag (Bash) | Flag (PowerShell) | Effect |
 | --- | --- | --- |
 | `--skip-skills` | `-SkipSkills` | Skip `npx skills add/remove/list` |
-| `--skip-agents-md` | `-SkipAgentsMd` | Skip AGENTS.md managed policy block install/remove |
+| `--policy <host\|self>` (`-p`) | `-Policy host\|self` (`-p`) | Policy mode selection (`host` default, `self` skips AGENTS policy install) |
+| `--skip-agents-md` | `-SkipAgentsMd` | Legacy alias for `--policy self` / `-Policy self` |
 | `--dry-run` | `-DryRun` | Print planned actions without writing |
 | `--prune` | `-Prune` | With `sync`: remove managed targets not enabled in manifest |
 | `--source <auto\|local\|web>` | `-Source auto\|local\|web` | Pick artifact + skills source (`auto` default) |
@@ -63,8 +71,9 @@ Use Bash CLI for Linux/macOS and shell-based CI.
 | `--project` | switch | Apply project scope to selected target (default; skills follow unless `--skip-skills`) |
 | `--claude-md <path>` | value | Claude target `CLAUDE.md` path override (default for `--claude`; project default when `--project` also set) |
 | `--branch <name>` | value | Branch to install from (default: `main`; pass explicitly for non-main installs) |
+| `--policy <host\|self>`, `-p <host\|self>` | value | Policy mode (`host` default; `self` skips AGENTS policy install) |
 | `--skip-skills` | switch | Skip `npx skills add/remove/list` |
-| `--skip-agents-md` | switch | Skip AGENTS.md policy block install/remove |
+| `--skip-agents-md` | switch | Legacy alias for `--policy self` |
 | `--source <auto\|local\|web>` | value | Artifact + skills source selection (`auto` default; `local` derives repo path, `web` derives GitHub URL) |
 | `--raw-base <url>` | value | Raw GitHub base URL for web source |
 | `--prune` | switch | With `sync`, uninstall managed targets not enabled in manifest |
@@ -88,8 +97,9 @@ Use PowerShell CLI for Windows-native environments.
 | `-Project` | switch | Apply project scope to selected target (default; skills follow unless `-SkipSkills`) |
 | `-ClaudeMd <path>` | value | Claude target `CLAUDE.md` path override (default for `-Claude`; project default when `-Project` also set) |
 | `-Branch <name>` | value | Branch to install from (default: `main`) |
+| `-Policy host\|self`, `-p host\|self` | value | Policy mode (`host` default; `self` skips AGENTS policy install) |
 | `-SkipSkills` | switch | Skip `npx skills add/remove/list` |
-| `-SkipAgentsMd` | switch | Skip AGENTS.md policy block install/remove |
+| `-SkipAgentsMd` | switch | Legacy alias for `-Policy self` |
 | `-Source auto\|local\|web` | value | Artifact + skills source selection (`auto` default; `local` derives repo path, `web` derives GitHub URL) |
 | `-RawBase <url>` | value | Raw GitHub base URL for web source |
 | `-Prune` | switch | With `sync`, uninstall managed targets not enabled in manifest |
@@ -98,6 +108,20 @@ Use PowerShell CLI for Windows-native environments.
 | `-AllowUntrustedSource` | switch | Skip `rawBase` allowlist check (dangerous; forks/custom mirrors) |
 
 ## Installation Behavior
+
+### Host vs Self policy mode matrix
+
+| Area | `--policy host` (default) | `--policy self` |
+| --- | --- | --- |
+| Policy location | Managed block in target `AGENTS.md` (Claude uses two-file layout) | Inside installed `rubber-duck.md` agent artifact |
+| Installed duck artifact source | `rubber-duck-lite` | full `rubber-duck` |
+| Installed filename | `rubber-duck.md` | `rubber-duck.md` |
+| Cross-agent policy coverage | Yes, policy can govern non-duck agents too | No centralized cross-agent policy injection |
+| Duck prompt size | Smaller | Larger |
+| Update model | Centralized AGENTS-managed policy + lite artifact updates | Full self-contained duck artifact updates |
+| Project AGENTS ownership | Installer writes managed block | AGENTS policy injection path stays untouched |
+| Mutating safety source | AGENTS policy canonical, lite fallback if AGENTS absent | Self-contained in duck artifact |
+| Best fit | Shared policy across workflows/agents | Keep project AGENTS focused on app/team policy |
 
 ### Mode and Flag Constraints & Target Path Behavior
 
@@ -129,6 +153,12 @@ Use PowerShell CLI for Windows-native environments.
   - backup before mutation: `AGENTS.md.bak.<YYYYmmdd-HHMMSS>`
 
 ### Installation Notes
+
+- Agent variant selection:
+  - `--policy host` (default) installs managed AGENTS policy + `rubber-duck-lite` source artifact
+  - `--policy self` installs full self-contained `rubber-duck` source artifact and skips AGENTS policy block install
+  - destination file written to target agents directory remains `rubber-duck.md`
+  - conflict rule: explicit host mode plus legacy skip flag in same command is invalid
 
 - Installer supports web invocation:
   - Bash: `curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh -o /tmp/rubber-duck.sh && bash -n /tmp/rubber-duck.sh && bash /tmp/rubber-duck.sh <command>`

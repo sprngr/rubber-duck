@@ -11,6 +11,9 @@ param(
   [string]$Branch = "main",
   [switch]$SkipSkills,
   [switch]$SkipAgentsMd,
+  [Alias("p")]
+  [ValidateSet("host","self")]
+  [string]$Policy = "host",
   [switch]$Extras,
   [switch]$DryRun,
   [switch]$Prune,
@@ -145,6 +148,15 @@ function Read-PriorVersion([string]$ManifestPath) {
 }
 
 function rubber-duck {
+  $skipAgentsMdSpecified = $MyInvocation.BoundParameters.ContainsKey("SkipAgentsMd")
+  $policySpecified = $MyInvocation.BoundParameters.ContainsKey("Policy")
+  if ($Policy -eq "self") {
+    $SkipAgentsMd = $true
+  }
+  if ($policySpecified -and $Policy -eq "host" -and $skipAgentsMdSpecified) {
+    throw "Conflicting flags: -Policy host cannot be combined with -SkipAgentsMd."
+  }
+
   $LegacyTargets = @()
   if ($OpenCode) { $LegacyTargets += "opencode" }
   if ($Copilot) { $LegacyTargets += "copilot" }
@@ -338,6 +350,18 @@ $AgentFiles = @(
   "duckling.md"
 )
 
+function Get-AgentSourceFile([string]$DestFile) {
+  if ($DestFile -eq "rubber-duck.md" -and -not $SkipAgentsMd) {
+    return "rubber-duck-lite.md"
+  }
+  return $DestFile
+}
+
+function Get-AgentRemotePinKey([string]$DestFile) {
+  $src = Get-AgentSourceFile $DestFile
+  return "$($script:RemoteAgentsPath)/$src"
+}
+
 $DefaultSkills = @(
   "duck-debt",
   "duck-debug",
@@ -448,7 +472,8 @@ function Has-LocalSources {
   if (-not (Test-Path $script:LocalPolicyFile)) { return $false }
   if ($script:PolicyMode -eq "file" -and -not (Test-Path $script:LocalAgentsPolicyFile)) { return $false }
   foreach ($f in $AgentFiles) {
-    if (-not (Test-Path (Join-Path $script:LocalAgentsDir $f))) { return $false }
+    $src = Get-AgentSourceFile $f
+    if (-not (Test-Path (Join-Path $script:LocalAgentsDir $src))) { return $false }
   }
   return $true
 }
@@ -486,7 +511,8 @@ function Download-Sources {
       Copy-Item -Force $script:LocalAgentsPolicyFile (Join-Path $script:TmpDir "AGENTS.md")
     }
     foreach ($f in $AgentFiles) {
-      Copy-Item -Force (Join-Path $script:LocalAgentsDir $f) (Join-Path $script:TmpDir $f)
+      $src = Get-AgentSourceFile $f
+      Copy-Item -Force (Join-Path $script:LocalAgentsDir $src) (Join-Path $script:TmpDir $f)
     }
     $v = Get-VersionFromFile (Join-Path $script:TmpDir "AGENTS.md")
     if (-not [string]::IsNullOrWhiteSpace($v)) { $script:CanonicalVersion = $v }
@@ -500,7 +526,8 @@ function Download-Sources {
     Invoke-WebRequest -UseBasicParsing -Uri "$RawBase/$($script:RemoteAgentsPolicyPath)" -OutFile (Join-Path $script:TmpDir "AGENTS.md")
   }
   foreach ($f in $AgentFiles) {
-    Invoke-WebRequest -UseBasicParsing -Uri "$RawBase/$($script:RemoteAgentsPath)/$f" -OutFile (Join-Path $script:TmpDir $f)
+    $src = Get-AgentSourceFile $f
+    Invoke-WebRequest -UseBasicParsing -Uri "$RawBase/$($script:RemoteAgentsPath)/$src" -OutFile (Join-Path $script:TmpDir $f)
   }
   $v = Get-VersionFromFile (Join-Path $script:TmpDir "AGENTS.md")
   if (-not [string]::IsNullOrWhiteSpace($v)) { $script:CanonicalVersion = $v }
@@ -907,7 +934,7 @@ try {
         $pinPairs = @{}
         foreach ($pinF in $AgentFiles) {
           $h = Get-Sha256 (Join-Path $script:TmpDir $pinF)
-          if ($h) { $pinPairs["$($script:RemoteAgentsPath)/$pinF"] = $h }
+          if ($h) { $pinPairs[(Get-AgentRemotePinKey $pinF)] = $h }
         }
         if (-not $SkipAgentsMd) {
           $pinPolicyTmp = Join-Path $script:TmpDir "AGENTS.md"

@@ -5,6 +5,35 @@ All notable changes to Rubber Duck will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2.2.0] - 2026-08-14
+
+### Changed
+
+- Installer policy mode is now semantic and explicit:
+  - Bash: `--policy <host|self>` with `-p` alias
+  - PowerShell: `-Policy host|self` with `-p` alias
+  - default mode is `host`
+  - `self` is equivalent to legacy `--skip-agents-md` / `-SkipAgentsMd`
+  - explicit conflict guard added for `host` + legacy skip flag in same invocation
+- Deterministic duck artifact selection by policy mode:
+  - `host`: installer sources `rubber-duck-lite` artifact
+  - `self`: installer sources full self-contained `rubber-duck` artifact
+  - installed destination filename remains `rubber-duck.md` in both modes
+- Installer docs now include canonical Host vs Self policy mode matrix in `scripts/README.md`, and README quick-start note links to this matrix.
+- Lite duck behavior parity tightened for workflow routing:
+  - explicit workflow-choice prompt template
+  - explicit wait-for-selection gate after approach choice
+  - clarified quack handoff/output constraints, clarify-first depth, and unsafe-simplification refusal line
+
+## [v2.1.4] - 2026-08-14
+
+### Changed
+
+- Policy/version sync stabilization:
+  - aligned repository managed policy block version markers with generated `dist/AGENTS.md`
+  - re-synced installer-managed AGENTS policy content to remove guardrails drift between root `AGENTS.md` managed block and built policy artifact
+  - preserved managed-block source contract (`src/agents/AGENTS.md` -> `dist/AGENTS.md` -> installer-managed target files)
+
 
 ## [v2.1.3] - 2026-08-14
 

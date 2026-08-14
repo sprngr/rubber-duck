@@ -13,6 +13,9 @@ SEEN_PROJECT=0
 SEEN_GLOBAL=0
 SKIP_SKILLS=0
 SKIP_AGENTS_MD=0
+SEEN_SKIP_AGENTS_MD=0
+POLICY_VARIANT="host"  # host|self
+SEEN_POLICY_VARIANT=0
 SKILLS_CLI="skills@^1.5.21"  # pinned npx CLI package spec
 SOURCE_MODE="auto"  # auto|local|web
 BRANCH="main"  # default branch
@@ -59,6 +62,22 @@ AGENT_FILES=(
   "duckling.md"
 )
 
+agent_source_file() {
+  local dest_file="$1"
+  if [[ "${dest_file}" == "rubber-duck.md" && ${SKIP_AGENTS_MD} -eq 0 ]]; then
+    printf 'rubber-duck-lite.md'
+    return
+  fi
+  printf '%s' "${dest_file}"
+}
+
+agent_remote_pin_key() {
+  local dest_file="$1"
+  local src_file
+  src_file="$(agent_source_file "${dest_file}")"
+  printf '%s/%s' "${REMOTE_AGENTS_PATH}" "${src_file}"
+}
+
 # Default skills: the set declared in .claude-plugin/plugin.json.
 DEFAULT_SKILLS=(
   "duck-debt"
@@ -95,8 +114,9 @@ Options:
   --project                         Apply project scope to selected target (and skills, unless --skip-skills)
   --claude-md <path>                Claude target memory file path override
   --branch <name>                   Branch to install from (default: main, auto-detects from URL)
+  --policy, -p <host|self>          Policy mode (default: host). self skips AGENTS policy install
   --skip-skills                     Skip npx skills add/remove/list
-  --skip-agents-md                  Skip AGENTS.md policy block install/remove
+  --skip-agents-md                  Legacy alias for --policy self (backward compatibility)
   --source <auto|local|web>         Artifact + skills source (default: auto)
   --raw-base <url>                  Raw GitHub base for web source
   --prune                           With sync: remove managed targets not in manifest
@@ -114,7 +134,8 @@ Examples:
   scripts/rubber-duck.sh install --copilot --global
   scripts/rubber-duck.sh install --claude --skip-skills
   scripts/rubber-duck.sh sync --project
-  scripts/rubber-duck.sh sync --project --prune --skip-skills --skip-agents-md
+  scripts/rubber-duck.sh sync --project --prune --skip-skills --policy self
+  scripts/rubber-duck.sh install --opencode --policy self
   scripts/rubber-duck.sh install --opencode --source local
   curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh -o /tmp/rubber-duck.sh && bash -n /tmp/rubber-duck.sh && bash /tmp/rubber-duck.sh install --opencode
   curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/v2-quackening/scripts/rubber-duck.sh -o /tmp/rubber-duck.sh && bash -n /tmp/rubber-duck.sh && bash /tmp/rubber-duck.sh install --opencode --branch v2-quackening
@@ -390,12 +411,18 @@ while [[ $# -gt 0 ]]; do
       CLAUDE_MD="${2:-}"
       shift 2
       ;;
+    --policy|-p)
+      POLICY_VARIANT="${2:-}"
+      SEEN_POLICY_VARIANT=1
+      shift 2
+      ;;
     --skip-skills)
       SKIP_SKILLS=1
       shift
       ;;
     --skip-agents-md)
       SKIP_AGENTS_MD=1
+      SEEN_SKIP_AGENTS_MD=1
       shift
       ;;
     --source)
@@ -437,6 +464,30 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+case "${POLICY_VARIANT}" in
+  host|self) ;;
+  *)
+    err "invalid --policy value: ${POLICY_VARIANT} (expected: host|self)"
+    exit 1
+    ;;
+esac
+
+# New semantic mode. self is equivalent to legacy skip flag.
+if [[ "${POLICY_VARIANT}" == "self" ]]; then
+  SKIP_AGENTS_MD=1
+fi
+
+# Conflict only when user explicitly asks for host and legacy skip in same invocation.
+if (( SEEN_POLICY_VARIANT == 1 )) && [[ "${POLICY_VARIANT}" == "host" ]] && (( SEEN_SKIP_AGENTS_MD == 1 )); then
+  err "conflicting flags: --policy host cannot be combined with --skip-agents-md"
+  exit 1
+fi
+
+# Legacy-only path sets equivalent policy marker.
+if (( SEEN_POLICY_VARIANT == 0 )) && (( SEEN_SKIP_AGENTS_MD == 1 )); then
+  POLICY_VARIANT="self"
+fi
 
 if (( SEEN_PROJECT == 1 && SEEN_GLOBAL == 1 )); then
   err "cannot combine --project and --global"
@@ -663,7 +714,9 @@ has_local_sources() {
     [[ -f "${LOCAL_POLICY_AGENTS_FILE}" ]] || return 1
   fi
   for f in "${AGENT_FILES[@]}"; do
-    [[ -f "${LOCAL_AGENTS_DIR}/${f}" ]] || return 1
+    local src_f
+    src_f="$(agent_source_file "${f}")"
+    [[ -f "${LOCAL_AGENTS_DIR}/${src_f}" ]] || return 1
   done
   return 0
 }
@@ -710,7 +763,9 @@ prepare_sources() {
       cp -f "${LOCAL_POLICY_AGENTS_FILE}" "${TMP_DIR}/AGENTS.md"
     fi
     for f in "${AGENT_FILES[@]}"; do
-      cp -f "${LOCAL_AGENTS_DIR}/${f}" "${TMP_DIR}/${f}"
+      local src_f
+      src_f="$(agent_source_file "${f}")"
+      cp -f "${LOCAL_AGENTS_DIR}/${src_f}" "${TMP_DIR}/${f}"
     done
     if v="$(extract_version_from_file "${TMP_DIR}/AGENTS.md" 2>/dev/null)"; then
       CANONICAL_VERSION="${v}"
@@ -726,7 +781,9 @@ prepare_sources() {
     curl -fsSL "${RAW_BASE}/${REMOTE_POLICY_AGENTS_PATH}" -o "${TMP_DIR}/AGENTS.md"
   fi
   for f in "${AGENT_FILES[@]}"; do
-    curl -fsSL "${RAW_BASE}/${REMOTE_AGENTS_PATH}/${f}" -o "${TMP_DIR}/${f}"
+    local src_f
+    src_f="$(agent_source_file "${f}")"
+    curl -fsSL "${RAW_BASE}/${REMOTE_AGENTS_PATH}/${src_f}" -o "${TMP_DIR}/${f}"
   done
   if v="$(extract_version_from_file "${TMP_DIR}/AGENTS.md" 2>/dev/null)"; then
     CANONICAL_VERSION="${v}"
@@ -1146,7 +1203,7 @@ for TARGET in "${TARGETS[@]}"; do
       manifest_update_target "install" "${TARGET}"
       PIN_PAIRS=()
       for pin_f in "${AGENT_FILES[@]}"; do
-        pin_h=$(compute_sha256 "${TMP_DIR}/${pin_f}") && PIN_PAIRS+=("${REMOTE_AGENTS_PATH}/${pin_f}=${pin_h}")
+        pin_h=$(compute_sha256 "${TMP_DIR}/${pin_f}") && PIN_PAIRS+=("$(agent_remote_pin_key "${pin_f}")=${pin_h}")
       done
       if (( SKIP_AGENTS_MD == 0 )); then
         pin_policy="${TMP_DIR}/AGENTS.md"
