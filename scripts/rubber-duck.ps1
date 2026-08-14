@@ -236,16 +236,38 @@ function rubber-duck {
       Write-Host "sync: no enabled targets in manifest"
       if (-not $Prune) { return }
     }
+
+    $syncGroups = @{}
+    $syncGroupOrder = @()
     foreach ($t in $syncTargets) {
-      $syncArgs = @("-File", $SyncScriptPath, "-Action", "install", "-Harness", $t, "-Source", $Source, "-Branch", $Branch, "-RawBase", $RawBase)
+      $cfg = if ($manifest.ContainsKey("targets") -and $manifest["targets"].ContainsKey($t)) { $manifest["targets"][$t] } else { @{} }
+      $tInstallSkills = if ($cfg.ContainsKey("installSkills")) { [bool]$cfg["installSkills"] } else { $true }
+      $tInstallAgentsMd = if ($cfg.ContainsKey("installAgentsMd")) { [bool]$cfg["installAgentsMd"] } else { $true }
+      $tExtras = if ($cfg.ContainsKey("extras")) { [bool]$cfg["extras"] } else { $false }
+      $groupKey = "$tInstallSkills|$tInstallAgentsMd|$tExtras"
+      if (-not $syncGroups.ContainsKey($groupKey)) {
+        $syncGroups[$groupKey] = [System.Collections.Generic.List[string]]::new()
+        $syncGroupOrder += $groupKey
+      }
+      $syncGroups[$groupKey].Add($t)
+    }
+
+    foreach ($groupKey in $syncGroupOrder) {
+      $parts = $groupKey -split '\|', 3
+      $gInstallSkills = [bool]::Parse($parts[0])
+      $gInstallAgentsMd = [bool]::Parse($parts[1])
+      $gExtras = [bool]::Parse($parts[2])
+      $groupHarness = ($syncGroups[$groupKey] -join ",")
+
+      $syncArgs = @("-File", $SyncScriptPath, "-Action", "install", "-Harness", $groupHarness, "-Source", $Source, "-Branch", $Branch, "-RawBase", $RawBase)
       if ($Project) { $syncArgs += "-Project" } else { $syncArgs += "-Global" }
-      if ($SkipSkills) { $syncArgs += "-SkipSkills" }
-      if ($SkipAgentsMd) { $syncArgs += "-SkipAgentsMd" }
-      if ($Extras) { $syncArgs += "-Extras" }
+      if (-not $gInstallSkills) { $syncArgs += "-SkipSkills" }
+      if (-not $gInstallAgentsMd) { $syncArgs += "-SkipAgentsMd" }
+      if ($gExtras) { $syncArgs += "-Extras" }
       if ($DryRun) { $syncArgs += "-DryRun" }
       if ($AllowUntrustedSource) { $syncArgs += "-AllowUntrustedSource" }
       & pwsh @syncArgs
-      if ($LASTEXITCODE -ne 0) { throw "sync install failed for target: $t" }
+      if ($LASTEXITCODE -ne 0) { throw "sync install failed for harness group: $groupHarness" }
     }
     if ($Prune) {
       foreach ($t in @("opencode","copilot","claude")) {
