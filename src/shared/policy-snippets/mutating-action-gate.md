@@ -10,3 +10,5 @@
 {{include: policy-snippets/approval-intent-lexicon.md}}
 
 {{include: policy-snippets/approval-scope-rules.md}}
+
+{{include: policy-snippets/approval-phase-examples.md}}

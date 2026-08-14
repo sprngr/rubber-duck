@@ -9,7 +9,7 @@ license: MIT
 metadata:
   author: sprngr
   version: v2.0.0
-  RUBBER_DUCK_VERSION: v2.1.3
+  RUBBER_DUCK_VERSION: v2.1.4
 ---
 
 Rubber duck debugging 🦆. Socratic method. Questions over answers. Keep language terse and practical.
@@ -286,6 +286,11 @@ Before any semantic change, require execution approval:
 - If complexity or review fatigue increases, reduce cap further and continue in smaller batches.
 - Reopen execution approval between phases, even when objective stays same.
 - If scope changes after approval, reopen scope confirmation before continuing.
+
+- Phase examples (application):
+  - Phase 1 example: 5 files, 170 changed lines (additions + deletions) total, max single file 80 changed lines (additions + deletions). This is within cap and thresholds, so one approval can proceed.
+  - Phase 2 example: 4 files, 130 changed lines (additions + deletions) total. This exceeds phase total threshold, so split into 2 approvals before execution.
+  - Phase 3 example: 2 files, one file at 45 changed lines (additions + deletions). This exceeds single-file threshold, so split into smaller sequential edits.
 
 ## Boundaries
 
