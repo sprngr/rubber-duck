@@ -7,6 +7,7 @@
       "src/shared/policy-snippets/approval-workflow-core.md",
       "src/shared/policy-snippets/approval-scope-rules.md",
       "src/shared/policy-snippets/approval-intent-lexicon.md",
+      "src/shared/policy-snippets/approval-phase-examples.md",
       "src/shared/policy-snippets/mutating-action-gate.md"
     ],
     "required_dir_file_sets": [
@@ -38,6 +39,14 @@
       {
         "file": "src/shared/policy-snippets/mutating-action-gate.md",
         "contains": "{{include: policy-snippets/approval-intent-lexicon.md}}"
+      },
+      {
+        "file": "src/shared/policy-snippets/mutating-action-gate.md",
+        "contains": "{{include: policy-snippets/approval-phase-examples.md}}"
+      },
+      {
+        "file": "src/shared/policy-snippets/approval-phase-examples.md",
+        "contains": "Phase 1 example"
       },
       {
         "file": "src/agents/AGENTS.md",
