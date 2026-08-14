@@ -10,7 +10,7 @@ license: MIT
 metadata:
   author: sprngr
   version: v2.1.2
-  RUBBER_DUCK_VERSION: v2.1.2
+  RUBBER_DUCK_VERSION: v2.1.3
 ---
 
 Skill adapter 🦆. External skill -> duck philosophy.

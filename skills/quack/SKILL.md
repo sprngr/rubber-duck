@@ -7,8 +7,8 @@ description: >
 license: MIT
 metadata:
   author: sprngr
-  version: v2.1.2
-  RUBBER_DUCK_VERSION: v2.1.2
+  version: v2.1.3
+  RUBBER_DUCK_VERSION: v2.1.3
 ---
 
 # Skill: quack
@@ -65,11 +65,11 @@ Use only when user explicitly invokes `quack`; do not auto-activate from inferre
        - execute skill inline first
        - if execution fails, ask one corrective question and stop
        - emit `Routing: <skill>.` only after inline execution step completes
-     - Otherwise (delegated-default OR user override):
-       - launch `task` with `subagent_type=<effective_subagent>` (determined in step 6, defaults to `duckling`) first
-       - pass `skill_name=<resolved_skill>` parameter
-       - if dispatch fails, ask one corrective question and stop
-       - emit `Routing: <skill> via <subagent>.` if user override supplied, else `Routing: <skill>.` only after dispatch succeeds
+      - Otherwise (delegated-default OR user override):
+        - delegate to subagent using harness-native dispatch tool with `subagent=<effective_subagent>` (determined in step 6, defaults to `duckling`) first
+        - pass `skill_name=<resolved_skill>` parameter
+        - if dispatch fails, ask one corrective question and stop
+        - emit `Routing: <skill> via <subagent>.` if user override supplied, else `Routing: <skill>.` only after dispatch succeeds
      - Do not stop at routing text alone when execution path is available.
 13. **Alias miss (disambiguation):**
     - Detect intent fragment and ask one targeted question:
@@ -84,4 +84,4 @@ Use only when user explicitly invokes `quack`; do not auto-activate from inferre
 
 - Preserve user decision ownership.
 - never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
-- No edits/mutating commands/task delegation that changes workspace state without explicit bounded approval.
+- No edits/mutating commands/subagent delegation that changes workspace state without explicit bounded approval.

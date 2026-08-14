@@ -8,7 +8,7 @@ license: MIT
 metadata:
   author: sprngr
   version: v2.1.1
-  RUBBER_DUCK_VERSION: v2.1.2
+  RUBBER_DUCK_VERSION: v2.1.3
 ---
 
 Duck debt ledger 🦆. Audit deferred work. Keep language terse and practical.
