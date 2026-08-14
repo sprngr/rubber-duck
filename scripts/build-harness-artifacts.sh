@@ -20,6 +20,7 @@ RULES_FILE="${REPO_ROOT}/build/agent-assembly.rules.json"
 
 SRC_AGENTS_DIR="${REPO_ROOT}/src/agents"
 POLICY_SNIPPETS_DIR="${REPO_ROOT}/src/shared/policy-snippets"
+SKILL_SNIPPETS_DIR="${REPO_ROOT}/src/shared/skill-snippets"
 SRC_AGENTS_POLICY_MD="${SRC_AGENTS_DIR}/AGENTS.md"
 DIST_AGENTS_POLICY_MD="${REPO_ROOT}/dist/AGENTS.md"
 VERSION_FILE="${REPO_ROOT}/VERSION"
@@ -131,6 +132,17 @@ resolve_policy_include_path_if_match() {
     local snippet_path="${POLICY_SNIPPETS_DIR}/${snippet_name}"
     if [[ ! -f "${snippet_path}" ]]; then
       printf 'ERROR: missing policy snippet: %s\n' "${snippet_path}" >&2
+      return 2
+    fi
+    printf '%s\n' "${snippet_path}"
+    return 0
+  fi
+
+  if [[ "${line}" =~ ^[[:space:]]*\{\{include:[[:space:]]*skill-snippets/([^[:space:]\}]+)[[:space:]]*\}\}[[:space:]]*$ ]]; then
+    local snippet_name="${BASH_REMATCH[1]}"
+    local snippet_path="${SKILL_SNIPPETS_DIR}/${snippet_name}"
+    if [[ ! -f "${snippet_path}" ]]; then
+      printf 'ERROR: missing skill snippet: %s\n' "${snippet_path}" >&2
       return 2
     fi
     printf '%s\n' "${snippet_path}"
