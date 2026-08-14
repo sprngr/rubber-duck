@@ -62,7 +62,7 @@
 
 ## Deferred-Debt
 
-- None recorded.
+- TODO(architecture,#22): 2026-08-13 Define localized CONTEXT.md merge model for duck-tape
 
 ## Open-Questions
 

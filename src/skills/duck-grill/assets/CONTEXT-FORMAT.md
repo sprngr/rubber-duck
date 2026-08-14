@@ -14,51 +14,68 @@ Use this template for project-level domain language glossary and system map.
 ```markdown
 # Project Context
 
-## Domain Language
+## Contents
 
-### Core Entities
+- [Goals](#goals)
+- [Decisions](#decisions)
+- [Conventions](#conventions)
+- [Glossary](#glossary)
+- [Deferred-Debt](#deferred-debt)
+- [Open-Questions](#open-questions)
+- [Notes](#notes)
+
+## Goals
+
+- **[Goal Name]**: [what this project optimizes for]
+
+## Decisions
+
+- **[Decision Name]**: [decision summary] (date: [YYYY-MM-DD])
+
+## Conventions
+
+- **[Convention Name]**: [project-local convention/pattern]
+- **System Map / [Component Name]**: [purpose, one sentence]
+  - Location: `[path or service name]`
+  - Depends on: [list]
+  - Owned by: [team/person]
+- **Boundary / Trust**: [where validation must occur]
+- **Boundary / Data**: [where data ownership changes]
+- **Boundary / Deployment**: [independently deployable units]
+
+## Glossary
 
 - **[Term]**: [One-sentence definition]
   - Code: `[canonical type/class name]`
   - Scope: [where this term applies]
   - Aliases: [other names used, if any]
+  - Avoid: [terms to not use for this concept, if any]
 
-### Glossary
+## Deferred-Debt
 
-| Term | Definition | Source of Truth |
-|------|------------|-----------------|
-| [term] | [one sentence] | [file/module] |
+- TODO([debt type]): [YYYY-MM-DD] [what deferred] [status: open|resolved]
+- TODO([debt type],#<issue>): [YYYY-MM-DD] [what deferred] [resolved: decision summary]
 
-## System Map
+## Open-Questions
 
-### Components
+- [question] (date: [YYYY-MM-DD])
 
-- **[Component Name]**: [purpose, one sentence]
-  - Location: `[path or service name]`
-  - Depends on: [list]
-  - Owned by: [team/person]
+## Notes
 
-### Boundaries
-
-- **Trust boundary**: [where validation must occur]
-- **Data boundary**: [where data ownership changes]
-- **Deployment boundary**: [independently deployable units]
-
-## Constraints
-
-- **Non-negotiable**: [list]
-- **Preferred**: [list]
-- **Open questions**: [list]
+### [YYYY-MM-DD HH:MM]
+[freeform context updates, constraints changes, session observations]
 ```
 
 ## Keep it current
 
 Update CONTEXT.md when:
 
-- Terminology changes during grilling/design sessions
-- New component boundaries emerge
-- Constraints shift (new regulation, platform choice, etc.)
+- A grilling/design session closes with a new or superseded decision
+- Glossary terms, aliases, or avoid-terms change
+- New deferred debt or open questions are identified
+- Conventions/system boundaries change and must persist across sessions
+- Before duck-tape merge, if schema sections are missing (run migrate first)
 
 ## Location
 
-Default: `CONTEXT.md` at project root, or `docs/CONTEXT.md` if root is cluttered.
+Canonical location: `CONTEXT.md` at project root.

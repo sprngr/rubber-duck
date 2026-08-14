@@ -7,7 +7,7 @@ description: >
 license: MIT
 metadata:
   author: sprngr
-  version: v2.0.0
+  version: v2.1.0
   RUBBER_DUCK_VERSION: __RUBBER_DUCK_VERSION__
 ---
 
@@ -159,11 +159,36 @@ End when all exit criteria met:
 Close-out format:
 
 - **Decision**: chosen option (1 sentence)
-- **Evidence used**: sources anchoring decision
-- **Assumptions ledger**: all assumptions surfaced during session, each marked validated / deferred / invalidated with evidence or validation plan
+- **Evidence used**: sources anchoring decision (code/docs/tests/ADR names)
+- **Assumptions ledger**: all assumptions surfaced during session, each marked `validated` / `deferred` / `invalidated` with evidence or validation plan
 - **Open risks**: unvalidated assumptions (see ledger), known gaps, unresolved evidence gaps
 - **Out of scope**: concerns surfaced but ruled beyond this decision (with rationale)
 - **Next approved step**: smallest safe action
+
+### 6.1 Duck-tape interoperability contract
+
+When closing a grilling session, emit the following fields in order to make duck-tape compaction deterministic:
+
+1. **Decision** (maps to CONTEXT.md -> Decisions)
+2. **Evidence used** (maps to Notes unless it contains explicit durable rationale for Decisions)
+3. **Assumptions ledger** with explicit status per line:
+   - `validated: <assumption> | evidence: <source>`
+   - `deferred: <assumption> | validation: <next check>`
+   - `invalidated: <assumption> | evidence: <source>`
+4. **Open risks** (maps to Open-Questions or Deferred-Debt based on actionability)
+5. **Deferred debt markers** for explicit deferred decisions:
+   - `TODO(<debt type>): <date> <what deferred>`
+   - `TODO(<debt type>,#<issue>): <date> <what deferred>`
+   - For complex unknowns, use spike form per global policy.
+6. **Position seed** for next-agent handoff:
+   - `Current: <active decision/work item>`
+   - `Done: <resolved items>`
+   - `Remaining: <next unresolved items>`
+7. **Compact-ready** flag:
+   - `compact-ready: yes` when decision closure criteria are met
+   - `compact-ready: no` when assumptions or risks still block durable compaction
+
+This contract is output-shape alignment only. It does not trigger file writes by itself.
 
 ### 7. Documentation updates (require approval)
 
@@ -175,6 +200,9 @@ If ADR or CONTEXT.md update is appropriate:
 - Max 2 files per approval cycle
 
 Do not edit docs by default during grilling session.
+
+If `compact-ready: yes`, suggest explicit follow-up:
+- "Run duck-tape merge now?" (user decides; no automatic handoff)
 
 ## Boundaries
 
