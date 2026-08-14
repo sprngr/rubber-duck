@@ -448,17 +448,6 @@ if [[ -n "${HARNESS_CSV}" && ${SEEN_TARGET_COUNT} -gt 0 ]]; then
   exit 1
 fi
 
-if [[ -n "${HARNESS_CSV}" ]]; then
-  IFS=',' read -r -a HARNESS_ITEMS <<< "${HARNESS_CSV}"
-  for RAW in "${HARNESS_ITEMS[@]}"; do
-    T="${RAW//[[:space:]]/}"
-    case "${T}" in
-      opencode|copilot|claude) TARGETS+=("${T}") ;;
-      "") ;;
-      *) err "invalid harness in --harness: ${T}"; exit 1 ;;
-    esac
-  done
-else
 # Auto-detect branch from piped URL if not explicitly set
 if [[ "${BRANCH}" == "main" ]]; then
   if [[ -n "${RUBBER_DUCK_SOURCE_URL:-}" ]] && [[ "${RUBBER_DUCK_SOURCE_URL}" =~ githubusercontent\.com/[^/]+/[^/]+/([^/]+)/ ]]; then
@@ -470,15 +459,18 @@ if [[ "${BRANCH}" == "main" ]]; then
   fi
 fi
 
-# Default RAW_BASE from branch if not explicitly set via --raw-base
-if [[ -z "${RAW_BASE}" ]]; then
-  RAW_BASE="https://raw.githubusercontent.com/sprngr/rubber-duck/${BRANCH}"
-fi
-if [[ "${BRANCH}" != "main" ]]; then
-  log "Using branch: ${BRANCH}"
-fi
-
-if [[ "${ACTION}" == "sync" ]]; then
+if [[ -n "${HARNESS_CSV}" ]]; then
+  IFS=',' read -r -a HARNESS_ITEMS <<< "${HARNESS_CSV}"
+  for RAW in "${HARNESS_ITEMS[@]}"; do
+    T="${RAW//[[:space:]]/}"
+    case "${T}" in
+      opencode|copilot|claude) TARGETS+=("${T}") ;;
+      "") ;;
+      *) err "invalid harness in --harness: ${T}"; exit 1 ;;
+    esac
+  done
+else
+  if [[ "${ACTION}" == "sync" ]]; then
     TARGETS=()
   else
     if (( SEEN_TARGET_COUNT == 0 )); then
@@ -492,6 +484,14 @@ if [[ "${ACTION}" == "sync" ]]; then
     fi
     TARGETS+=("${TARGET}")
   fi
+fi
+
+# Default RAW_BASE from branch if not explicitly set via --raw-base
+if [[ -z "${RAW_BASE}" ]]; then
+  RAW_BASE="https://raw.githubusercontent.com/sprngr/rubber-duck/${BRANCH}"
+fi
+if [[ "${BRANCH}" != "main" ]]; then
+  log "Using branch: ${BRANCH}"
 fi
 
 if (( PRUNE == 1 )) && [[ "${ACTION}" != "sync" ]]; then
