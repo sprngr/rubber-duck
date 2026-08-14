@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [v2.1.3] - 2026-08-14
+
+### Changed
+
+- quack routing language is now harness-agnostic for delegated execution:
+  - replaced OpenCode-specific `task` wording with generic subagent dispatch wording in source and generated skill artifacts
+  - preserves existing routing behavior while removing tool-name coupling from skill text
+- quack skill metadata version bumped to `v2.1.3` in source-of-truth and regenerated artifact.
+- duck-grill close-out contract now aligns with duck-tape compaction expectations:
+  - added deterministic interoperability fields (`Decision`, `Assumptions ledger` status lines, deferred debt markers, position seed, `compact-ready`)
+  - added explicit follow-up prompt when compaction is ready (`Run duck-tape merge now?`)
+- duck-grill CONTEXT template now uses duck-tape schema-aligned section shape:
+  - `Contents`, `Goals`, `Decisions`, `Conventions`, `Glossary`, `Deferred-Debt`, `Open-Questions`, `Notes`
+  - glossary entries retain richer domain metadata (`Code`, `Scope`, `Aliases`, `Avoid`)
+  - location guidance now sets canonical path to root `CONTEXT.md`
+- Project context debt tracking updated with linked spike marker:
+  - `TODO(architecture,#22): 2026-08-13 Define localized CONTEXT.md merge model for duck-tape`
+
 ## [v2.1.2] - 2026-08-13
 
 ### Changed
