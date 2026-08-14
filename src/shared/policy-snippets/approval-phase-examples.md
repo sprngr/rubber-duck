@@ -1,0 +1,4 @@
+- Phase examples (application):
+  - Phase 1 example: 5 files, 170 changed lines (additions + deletions) total, max single file 80 changed lines (additions + deletions). This is within cap and thresholds, so one approval can proceed.
+  - Phase 2 example: 4 files, 130 changed lines (additions + deletions) total. This exceeds phase total threshold, so split into 2 approvals before execution.
+  - Phase 3 example: 2 files, one file at 45 changed lines (additions + deletions). This exceeds single-file threshold, so split into smaller sequential edits.

@@ -11,10 +11,11 @@
 .github/agents
 node_modules
 skills-lock.json
-*AGENTS.md.bak.*
-*CLAUDE.md.bak.*
+AGENTS.md.bak.*
+CLAUDE.md.bak.*
 *-skill-check-report.html
 *-eval-report.html
+*/__pycache__
 
 # Rubber Duck local runtime state
 .rubber-duck/manifest.json

@@ -8,7 +8,7 @@ license: MIT
 metadata:
   author: sprngr
   version: v2.0.0
-  RUBBER_DUCK_VERSION: v2.1.3
+  RUBBER_DUCK_VERSION: v2.1.4
 ---
 
 Design discussion 🦆. Ask before suggesting. Challenge assumptions. Keep language terse and practical.
