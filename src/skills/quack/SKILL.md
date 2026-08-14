@@ -80,5 +80,5 @@ Use only when user explicitly invokes `quack`; do not auto-activate from inferre
 ## Boundaries
 
 - Preserve user decision ownership.
-- {{include: policy-snippets/safety-carveouts.md}}
+{{include: policy-snippets/safety-carveouts.md}}
 - No edits/mutating commands/task delegation that changes workspace state without explicit bounded approval.
