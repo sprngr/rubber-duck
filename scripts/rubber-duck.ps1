@@ -343,6 +343,8 @@ $script:CanonicalVersion = "unknown"
 
 $ManagedStart = "<!-- RUBBER_DUCK_MANAGED_BLOCK START -->"
 $ManagedEnd = "<!-- RUBBER_DUCK_MANAGED_BLOCK END -->"
+$SyncWrapperSourceUrl = "https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.ps1"
+$script:SyncWrapperWritten = $false
 
 # Built agent filenames are identical across harnesses (<name>.md)
 $AgentFiles = @(
@@ -632,6 +634,40 @@ function Remove-PolicyFile {
   Log "Removed policy block from $DestClaudeAgentsMd"
 }
 
+function Get-SyncWrapperPath {
+  if ($Project) { return ".rubber-duck/sync-latest.ps1" }
+  return (Join-Path $HOME ".config/rubber-duck/sync-latest.ps1")
+}
+
+function Install-SyncWrapper {
+  $target = Get-SyncWrapperPath
+  $scopeArg = if ($Project) { "-Project" } else { "-Global" }
+
+  if ($DryRun) {
+    Log "[dry-run] write sync helper -> $target"
+    return
+  }
+
+  $parent = Split-Path -Parent $target
+  if (-not [string]::IsNullOrWhiteSpace($parent)) {
+    New-Item -ItemType Directory -Force -Path $parent | Out-Null
+  }
+
+  $content = @"
+`$ErrorActionPreference = "Stop"
+`$tmp = Join-Path `$env:TEMP ("rubber-duck-sync-" + [Guid]::NewGuid().ToString() + ".ps1")
+try {
+  Invoke-WebRequest -UseBasicParsing -Uri "$SyncWrapperSourceUrl" -OutFile `$tmp
+  & pwsh -NoProfile -File `$tmp -Action sync $scopeArg @args
+  exit `$LASTEXITCODE
+} finally {
+  if (Test-Path `$tmp) { Remove-Item -Force `$tmp }
+}
+"@
+  Set-Content -Path $target -Value $content
+  Log "Installed sync helper -> $target"
+}
+
 function Install-Agents {
   if ($DryRun) {
     Log "[dry-run] ensure dir $DestAgentsDir"
@@ -919,6 +955,10 @@ try {
         Doctor
         Download-Sources
         Install-Agents
+        if (-not $script:SyncWrapperWritten) {
+          Install-SyncWrapper
+          $script:SyncWrapperWritten = $true
+        }
         if (-not $SkipAgentsMd) {
           Backup-Md $DestPolicyMd
           if ($PolicyMode -eq "managed_block") {

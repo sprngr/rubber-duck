@@ -158,6 +158,13 @@ Bash local example (Supported by Bash and Powershell via web & local)
 ./scripts/rubber-duck.sh sync
 ```
 
+After install, lightweight sync helpers are also generated:
+
+- project scope: `.rubber-duck/sync-latest.sh` and `.rubber-duck/sync-latest.ps1`
+- global scope: `~/.config/rubber-duck/sync-latest.sh` and `~/.config/rubber-duck/sync-latest.ps1`
+
+Helpers download the latest installer from GitHub, run `sync` with the correct scope, and remove the temp installer file on exit.
+
 ## Verify after install
 
  <details>

@@ -56,6 +56,8 @@ CLAUDE_AGENTS_DIR="${HOME}/.claude/agents"
 CLAUDE_POLICY_MD="${HOME}/.claude/CLAUDE.md"
 CLAUDE_PROJECT_AGENTS_DIR=".claude/agents"
 CLAUDE_PROJECT_POLICY_MD="CLAUDE.md"
+SYNC_WRAPPER_SOURCE_URL="https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh"
+SYNC_WRAPPER_WRITTEN=0
 
 AGENT_FILES=(
   "rubber-duck.md"
@@ -914,6 +916,41 @@ remove_policy_file() {
   fi
 }
 
+sync_wrapper_path() {
+  if (( PROJECT_SCOPE == 1 )); then
+    printf '.rubber-duck/sync-latest.sh'
+  else
+    printf '%s/.config/rubber-duck/sync-latest.sh' "${HOME}"
+  fi
+}
+
+install_sync_wrapper() {
+  local target scope_flag tmp
+  target="$(sync_wrapper_path)"
+  scope_flag="--project"
+  (( PROJECT_SCOPE == 0 )) && scope_flag="--global"
+
+  if (( DRY_RUN == 1 )); then
+    log "[dry-run] write sync helper -> ${target}"
+    return 0
+  fi
+
+  mkdir -p "$(dirname -- "${target}")"
+  tmp="$(mktemp)"
+  cat > "${tmp}" <<EOF
+#!/usr/bin/env bash
+set -euo pipefail
+tmp_installer="\$(mktemp)"
+cleanup() { rm -f "\${tmp_installer}"; }
+trap cleanup EXIT
+curl -fsSL "${SYNC_WRAPPER_SOURCE_URL}" -o "\${tmp_installer}"
+bash "\${tmp_installer}" sync ${scope_flag} "\$@"
+EOF
+  chmod +x "${tmp}"
+  mv "${tmp}" "${target}"
+  log "Installed sync helper -> ${target}"
+}
+
 install_agents() {
   if (( DRY_RUN == 1 )); then
     log "[dry-run] ensure dir ${DEST_AGENTS_DIR}"
@@ -1190,6 +1227,10 @@ for TARGET in "${TARGETS[@]}"; do
       doctor
       prepare_sources
       install_agents
+      if (( SYNC_WRAPPER_WRITTEN == 0 )); then
+        install_sync_wrapper
+        SYNC_WRAPPER_WRITTEN=1
+      fi
       if (( SKIP_AGENTS_MD == 0 )); then
         backup_md "${DEST_POLICY_MD}"
         if [[ "${POLICY_MODE}" == "managed_block" ]]; then

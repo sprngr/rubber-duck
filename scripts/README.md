@@ -31,6 +31,38 @@ Sync targets from a manifest:
 ./scripts/rubber-duck.sh sync --project --prune
 ```
 
+Generated sync helpers (created during `install`):
+
+- project scope:
+  - `.rubber-duck/sync-latest.sh`
+  - `.rubber-duck/sync-latest.ps1`
+- global scope:
+  - `~/.config/rubber-duck/sync-latest.sh`
+  - `~/.config/rubber-duck/sync-latest.ps1`
+
+Behavior:
+- download latest installer script from GitHub `main`
+- run `sync` with matching scope (`--project/--global` or `-Project/-Global`)
+- remove downloaded temp installer on exit
+
+Examples:
+
+```bash
+# project scope helper
+.rubber-duck/sync-latest.sh
+
+# project scope helper with prune
+.rubber-duck/sync-latest.sh --prune
+```
+
+```powershell
+# project scope helper
+pwsh -NoProfile -File .rubber-duck/sync-latest.ps1
+
+# project scope helper with prune
+pwsh -NoProfile -File .rubber-duck/sync-latest.ps1 -Prune
+```
+
 ## Commands
 
 | Command | Purpose |
@@ -154,6 +186,7 @@ Use PowerShell CLI for Windows-native environments.
 
 ### Installation Notes
 
+- Install writes lightweight sync helpers into `.rubber-duck/` (project) or `~/.config/rubber-duck/` (global). Helpers are convenience wrappers only; they do not create local repo checkouts.
 - Agent variant selection:
   - `--policy host` (default) installs managed AGENTS policy + `rubber-duck-lite` source artifact
   - `--policy self` installs full self-contained `rubber-duck` source artifact and skips AGENTS policy block install
