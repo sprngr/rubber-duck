@@ -80,6 +80,38 @@ function Test-RawBaseAllowed([string]$RawBaseUrl, [string]$Mode) {
   return $RawBaseUrl.StartsWith($AllowedRawBasePrefix)
 }
 
+# Phase 1 simplify stubs (wired in later phases).
+function Get-ManifestPath {
+  if ($Project) { return ".rubber-duck/manifest.json" }
+  return (Join-Path $HOME ".config/rubber-duck/manifest.json")
+}
+
+function Get-SyncReplayInstallArgs([string]$HarnessCsv) {
+  $args = @("-File", (Get-SyncScriptPath), "-Action", "install", "-Harness", $HarnessCsv, "-Source", $Source, "-Branch", $Branch, "-RawBase", $RawBase)
+  if ($Project) { $args += "-Project" } else { $args += "-Global" }
+  return $args
+}
+
+function Get-SyncReplayUninstallArgs([string]$HarnessCsv) {
+  $args = @("-File", (Get-SyncScriptPath), "-Action", "uninstall", "-Harness", $HarnessCsv, "-Source", $Source, "-Branch", $Branch, "-RawBase", $RawBase)
+  if ($Project) { $args += "-Project" } else { $args += "-Global" }
+  return $args
+}
+
+function Get-SyncScriptPath {
+  $p = $PSCommandPath
+  if ([string]::IsNullOrWhiteSpace($p)) { $p = $MyInvocation.PSCommandPath }
+  if ([string]::IsNullOrWhiteSpace($p)) { $p = $MyInvocation.MyCommand.Path }
+  return $p
+}
+
+function Get-RawBaseCheckMode {
+  if (-not [string]::IsNullOrWhiteSpace($script:EffectiveSource)) {
+    return $script:EffectiveSource
+  }
+  return $Source
+}
+
 # Convert JSON object graph into hashtable/array graph (PS 5.1 + 7+ compatible).
 function Convert-ToHashtableCompat($InputObject) {
   if ($null -eq $InputObject) { return $null }
@@ -217,18 +249,14 @@ function rubber-duck {
     Write-Host "Using branch: $Branch"
   }
   if ($Action -eq "sync") {
-    $SyncScriptPath = $PSCommandPath
-    if ([string]::IsNullOrWhiteSpace($SyncScriptPath)) {
-      $SyncScriptPath = $MyInvocation.PSCommandPath
-    }
-    $ManifestPath = if ($Project) { ".rubber-duck/manifest.json" } else { (Join-Path $HOME ".config/rubber-duck/manifest.json") }
+    $ManifestPath = Get-ManifestPath
     if (-not (Test-Path $ManifestPath)) {
       throw "Manifest missing: $ManifestPath. Run install first."
     }
-    if ([string]::IsNullOrWhiteSpace($SyncScriptPath)) {
+    if ([string]::IsNullOrWhiteSpace((Get-SyncScriptPath))) {
       throw "sync requires file-backed execution (not piped)."
     }
-    if (-not (Test-RawBaseAllowed $RawBase $Source)) {
+    if (-not (Test-RawBaseAllowed $RawBase (Get-RawBaseCheckMode))) {
       throw "rawBase not in allowlist: $RawBase. Use -AllowUntrustedSource to override."
     }
     $manifest = Read-JsonAsHashtable $ManifestPath
@@ -271,8 +299,7 @@ function rubber-duck {
       $gExtras = [bool]::Parse($parts[2])
       $groupHarness = ($syncGroups[$groupKey] -join ",")
 
-      $syncArgs = @("-File", $SyncScriptPath, "-Action", "install", "-Harness", $groupHarness, "-Source", $Source, "-Branch", $Branch, "-RawBase", $RawBase)
-      if ($Project) { $syncArgs += "-Project" } else { $syncArgs += "-Global" }
+      $syncArgs = Get-SyncReplayInstallArgs $groupHarness
       if (-not $gInstallSkills) { $syncArgs += "-SkipSkills" }
       if (-not $gInstallAgentsMd) { $syncArgs += "-SkipAgentsMd" }
       if ($gExtras) { $syncArgs += "-Extras" }
@@ -284,8 +311,8 @@ function rubber-duck {
     if ($Prune) {
       foreach ($t in @("opencode","copilot","claude")) {
         if (-not $syncTargetSet.ContainsKey($t)) {
-          $syncArgs = @("-File", $SyncScriptPath, "-Action", "uninstall", "-Harness", $t, "-Source", $Source, "-Branch", $Branch, "-RawBase", $RawBase, "-SkipSkills")
-          if ($Project) { $syncArgs += "-Project" } else { $syncArgs += "-Global" }
+          $syncArgs = Get-SyncReplayUninstallArgs $t
+          $syncArgs += "-SkipSkills"
           if ($SkipAgentsMd) { $syncArgs += "-SkipAgentsMd" }
           if ($DryRun) { $syncArgs += "-DryRun" }
           if ($AllowUntrustedSource) { $syncArgs += "-AllowUntrustedSource" }
@@ -348,7 +375,6 @@ $script:CanonicalVersion = "unknown"
 
 $ManagedStart = "<!-- RUBBER_DUCK_MANAGED_BLOCK START -->"
 $ManagedEnd = "<!-- RUBBER_DUCK_MANAGED_BLOCK END -->"
-$SyncWrapperSourceUrl = "https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.ps1"
 $script:SyncWrapperTemplateRemotePath = "dist/scripts/sync-latest.ps1"
 $script:SyncWrapperWritten = $false
 
@@ -888,11 +914,11 @@ function Doctor {
 function Update-ManifestTarget([string]$Operation, [string]$TargetName) {
   if ($Action -eq "sync") { return }
   if ($DryRun) {
-    $dryManifestPath = if ($Project) { ".rubber-duck/manifest.json" } else { (Join-Path $HOME ".config/rubber-duck/manifest.json") }
+    $dryManifestPath = Get-ManifestPath
     Log "[dry-run] manifest $Operation $TargetName -> $dryManifestPath"
     return
   }
-  $ManifestPath = if ($Project) { ".rubber-duck/manifest.json" } else { (Join-Path $HOME ".config/rubber-duck/manifest.json") }
+  $ManifestPath = Get-ManifestPath
   $priorVersion = Read-PriorVersion $ManifestPath
   Warn-OnDowngrade $priorVersion $script:CanonicalVersion
   $ManifestParent = Split-Path -Parent $ManifestPath
@@ -949,7 +975,7 @@ try {
       }
     }
   }
-  if (-not (Test-RawBaseAllowed $RawBase $script:EffectiveSource)) {
+  if (-not (Test-RawBaseAllowed $RawBase (Get-RawBaseCheckMode))) {
     throw "rawBase not in allowlist: $RawBase. Use -AllowUntrustedSource to override."
   }
 
@@ -1010,7 +1036,7 @@ try {
         }
         Status
         Update-ManifestTarget "install" $script:Target
-        $pinManifestPath = if ($Project) { ".rubber-duck/manifest.json" } else { (Join-Path $HOME ".config/rubber-duck/manifest.json") }
+        $pinManifestPath = Get-ManifestPath
         $pinPairs = @{}
         foreach ($pinF in $AgentFiles) {
           $h = Get-Sha256 (Join-Path $script:TmpDir $pinF)

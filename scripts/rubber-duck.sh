@@ -56,8 +56,6 @@ CLAUDE_AGENTS_DIR="${HOME}/.claude/agents"
 CLAUDE_POLICY_MD="${HOME}/.claude/CLAUDE.md"
 CLAUDE_PROJECT_AGENTS_DIR=".claude/agents"
 CLAUDE_PROJECT_POLICY_MD="CLAUDE.md"
-SYNC_WRAPPER_SOURCE_URL="https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh"
-SYNC_WRAPPER_TEMPLATE_LOCAL=""
 SYNC_WRAPPER_TEMPLATE_REMOTE="dist/scripts/sync-latest.sh"
 SYNC_WRAPPER_WRITTEN=0
 
@@ -205,6 +203,46 @@ check_rawbase_allowed() {
   (( ALLOW_UNTRUSTED_SOURCE == 1 )) && { warn "rawBase allowlist bypassed: ${raw_base}"; return 0; }
   [[ "${raw_base}" == "${ALLOWED_RAW_BASE_PREFIX}"* ]] && return 0
   return 1
+}
+
+# Phase 1 simplify stubs (wired in later phases).
+manifest_path() {
+  if (( PROJECT_SCOPE == 1 )); then
+    printf '.rubber-duck/manifest.json'
+  else
+    printf '%s/.config/rubber-duck/manifest.json' "${HOME}"
+  fi
+}
+
+sync_replay_install_cmd() {
+  local harness_csv="$1" install_skills="$2" install_agents_md="$3" extras="$4"
+  CMD=(bash "${SCRIPT_PATH}" install --harness "${harness_csv}" --source "${SOURCE_MODE}" --branch "${BRANCH}" --raw-base "${RAW_BASE}")
+  if (( PROJECT_SCOPE == 1 )); then CMD+=(--project); else CMD+=(--global); fi
+  [[ "${install_skills}" == "false" ]] && CMD+=(--skip-skills)
+  [[ "${install_agents_md}" == "false" ]] && CMD+=(--skip-agents-md)
+  [[ "${extras}" == "true" ]] && CMD+=(--extras)
+  (( DRY_RUN == 1 )) && CMD+=(--dry-run)
+  (( ALLOW_UNTRUSTED_SOURCE == 1 )) && CMD+=(--allow-untrusted-source)
+  return 0
+}
+
+sync_replay_uninstall_cmd() {
+  local target_name="$1"
+  CMD=(bash "${SCRIPT_PATH}" uninstall --harness "${target_name}" --source "${SOURCE_MODE}" --branch "${BRANCH}" --raw-base "${RAW_BASE}")
+  if (( PROJECT_SCOPE == 1 )); then CMD+=(--project); else CMD+=(--global); fi
+  CMD+=(--skip-skills)
+  (( SKIP_AGENTS_MD == 1 )) && CMD+=(--skip-agents-md)
+  (( DRY_RUN == 1 )) && CMD+=(--dry-run)
+  (( ALLOW_UNTRUSTED_SOURCE == 1 )) && CMD+=(--allow-untrusted-source)
+  return 0
+}
+
+rawbase_check_mode() {
+  if [[ -n "${EFFECTIVE_SOURCE:-}" ]]; then
+    printf '%s' "${EFFECTIVE_SOURCE}"
+  else
+    printf '%s' "${SOURCE_MODE}"
+  fi
 }
 
 # --- Manifest handling (pure bash, no python3) ---
@@ -563,11 +601,7 @@ if [[ -n "${CLAUDE_MD}" && ${HAS_CLAUDE} -eq 0 ]]; then
   exit 1
 fi
 
-if (( PROJECT_SCOPE == 1 )); then
-  MANIFEST_PATH=".rubber-duck/manifest.json"
-else
-  MANIFEST_PATH="${HOME}/.config/rubber-duck/manifest.json"
-fi
+MANIFEST_PATH="$(manifest_path)"
 
 if [[ "${ACTION}" == "sync" ]]; then
   if [[ ! -f "${MANIFEST_PATH}" ]]; then
@@ -578,7 +612,7 @@ if [[ "${ACTION}" == "sync" ]]; then
     err "sync requires file-backed execution (not piped)"
     exit 1
   fi
-  check_rawbase_allowed "${RAW_BASE}" "${SOURCE_MODE}" || { err "rawBase not in allowlist: ${RAW_BASE}. Use --allow-untrusted-source to override."; exit 1; }
+  check_rawbase_allowed "${RAW_BASE}" "$(rawbase_check_mode)" || { err "rawBase not in allowlist: ${RAW_BASE}. Use --allow-untrusted-source to override."; exit 1; }
   manifest_load "${MANIFEST_PATH}"
   SYNC_TARGETS=()
   for T in "${MF_TARGET_NAMES[@]}"; do
@@ -618,13 +652,7 @@ if [[ "${ACTION}" == "sync" ]]; then
       IFS='|' read -r g_install_skills g_install_agents_md g_extras <<< "${group_key}"
       group_harness_csv="${SYNC_GROUP_TARGETS[$group_key]}"
 
-      CMD=(bash "${SCRIPT_PATH}" install --harness "${group_harness_csv}" --source "${SOURCE_MODE}" --branch "${BRANCH}" --raw-base "${RAW_BASE}")
-      if (( PROJECT_SCOPE == 1 )); then CMD+=(--project); else CMD+=(--global); fi
-      [[ "${g_install_skills}" == "false" ]] && CMD+=(--skip-skills)
-      [[ "${g_install_agents_md}" == "false" ]] && CMD+=(--skip-agents-md)
-      [[ "${g_extras}" == "true" ]] && CMD+=(--extras)
-      (( DRY_RUN == 1 )) && CMD+=(--dry-run)
-      (( ALLOW_UNTRUSTED_SOURCE == 1 )) && CMD+=(--allow-untrusted-source)
+      sync_replay_install_cmd "${group_harness_csv}" "${g_install_skills}" "${g_install_agents_md}" "${g_extras}"
       "${CMD[@]}"
     done
   fi
@@ -632,12 +660,7 @@ if [[ "${ACTION}" == "sync" ]]; then
   if (( PRUNE == 1 )); then
     for T in opencode copilot claude; do
       if [[ -z "${SYNC_TARGET_SET[${T}]+x}" ]]; then
-        CMD=(bash "${SCRIPT_PATH}" uninstall --harness "${T}" --source "${SOURCE_MODE}" --branch "${BRANCH}" --raw-base "${RAW_BASE}")
-        if (( PROJECT_SCOPE == 1 )); then CMD+=(--project); else CMD+=(--global); fi
-        CMD+=(--skip-skills)
-        (( SKIP_AGENTS_MD == 1 )) && CMD+=(--skip-agents-md)
-        (( DRY_RUN == 1 )) && CMD+=(--dry-run)
-        (( ALLOW_UNTRUSTED_SOURCE == 1 )) && CMD+=(--allow-untrusted-source)
+        sync_replay_uninstall_cmd "${T}"
         "${CMD[@]}"
       fi
     done
@@ -1218,7 +1241,7 @@ case "${EFFECTIVE_SOURCE}" in
     ;;
 esac
 
-check_rawbase_allowed "${RAW_BASE}" "${EFFECTIVE_SOURCE}" || { err "rawBase not in allowlist: ${RAW_BASE}. Use --allow-untrusted-source to override."; exit 1; }
+check_rawbase_allowed "${RAW_BASE}" "$(rawbase_check_mode)" || { err "rawBase not in allowlist: ${RAW_BASE}. Use --allow-untrusted-source to override."; exit 1; }
 
 # Pre-loop header (install/uninstall only)
 if [[ "${ACTION}" == "install" || "${ACTION}" == "uninstall" ]]; then
