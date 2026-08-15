@@ -57,6 +57,8 @@ CLAUDE_POLICY_MD="${HOME}/.claude/CLAUDE.md"
 CLAUDE_PROJECT_AGENTS_DIR=".claude/agents"
 CLAUDE_PROJECT_POLICY_MD="CLAUDE.md"
 SYNC_WRAPPER_SOURCE_URL="https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh"
+SYNC_WRAPPER_TEMPLATE_LOCAL=""
+SYNC_WRAPPER_TEMPLATE_REMOTE="dist/scripts/sync-latest.sh"
 SYNC_WRAPPER_WRITTEN=0
 
 AGENT_FILES=(
@@ -925,7 +927,7 @@ sync_wrapper_path() {
 }
 
 install_sync_wrapper() {
-  local target scope_flag tmp
+  local target scope_flag tmp src_tpl line installer_url
   target="$(sync_wrapper_path)"
   scope_flag="--project"
   (( PROJECT_SCOPE == 0 )) && scope_flag="--global"
@@ -937,15 +939,48 @@ install_sync_wrapper() {
 
   mkdir -p "$(dirname -- "${target}")"
   tmp="$(mktemp)"
-  cat > "${tmp}" <<EOF
+  if [[ "${EFFECTIVE_SOURCE}" == "local" ]]; then
+    installer_url="${SCRIPT_PATH}"
+  else
+    installer_url="${RAW_BASE}/scripts/rubber-duck.sh"
+  fi
+  if [[ "${EFFECTIVE_SOURCE}" == "local" ]]; then
+    src_tpl="${REPO_ROOT}/dist/scripts/sync-latest.sh"
+    [[ -f "${src_tpl}" ]] || { err "missing sync wrapper template: ${src_tpl}. Run make build-harness."; rm -f "${tmp}"; exit 1; }
+    while IFS= read -r line || [[ -n "${line}" ]]; do
+      printf '%s\n' "${line}" >> "${tmp}"
+    done < "${src_tpl}"
+  else
+    if ! curl -fsSL "${RAW_BASE}/${SYNC_WRAPPER_TEMPLATE_REMOTE}" -o "${tmp}"; then
+      cat > "${tmp}" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
-tmp_installer="\$(mktemp)"
-cleanup() { rm -f "\${tmp_installer}"; }
+
+# Fallback sync helper template.
+SYNC_INSTALLER_URL="{{SYNC_INSTALLER_URL}}"
+SYNC_SCOPE_FLAG="{{SYNC_SCOPE_FLAG}}"
+
+tmp_installer="$(mktemp)"
+cleanup() { rm -f "${tmp_installer}"; }
 trap cleanup EXIT
-curl -fsSL "${SYNC_WRAPPER_SOURCE_URL}" -o "\${tmp_installer}"
-bash "\${tmp_installer}" sync ${scope_flag} "\$@"
+
+curl -fsSL "${SYNC_INSTALLER_URL}" -o "${tmp_installer}"
+bash "${tmp_installer}" sync "${SYNC_SCOPE_FLAG}" --source web "$@"
 EOF
+    fi
+  fi
+  python3 - "${tmp}" "${scope_flag}" "${installer_url}" <<'PY'
+import pathlib
+import sys
+
+p = pathlib.Path(sys.argv[1])
+scope = sys.argv[2]
+url = sys.argv[3]
+content = p.read_text()
+content = content.replace("{{SYNC_SCOPE_FLAG}}", scope)
+content = content.replace("{{SYNC_INSTALLER_URL}}", url)
+p.write_text(content)
+PY
   chmod +x "${tmp}"
   mv "${tmp}" "${target}"
   log "Installed sync helper -> ${target}"

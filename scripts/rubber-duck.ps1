@@ -324,13 +324,18 @@ $ScriptPath = $PSCommandPath
 if ([string]::IsNullOrWhiteSpace($ScriptPath)) {
   $ScriptPath = $MyInvocation.PSCommandPath
 }
+if ([string]::IsNullOrWhiteSpace($ScriptPath)) {
+  $ScriptPath = $MyInvocation.MyCommand.Path
+}
 $script:RunningPiped = [string]::IsNullOrWhiteSpace($ScriptPath)
 if ($script:RunningPiped) {
   $ScriptDir = [System.IO.Path]::GetTempPath()
   $RepoRoot = [System.IO.Path]::GetTempPath()
 } else {
   $ScriptDir = Split-Path -Parent $ScriptPath
+  if ([string]::IsNullOrWhiteSpace($ScriptDir)) { $ScriptDir = (Get-Location).Path }
   $RepoRoot = Split-Path -Parent $ScriptDir
+  if ([string]::IsNullOrWhiteSpace($RepoRoot)) { $RepoRoot = $ScriptDir }
 }
 $script:LocalAgentsDir = $null
 $script:LocalPolicyFile = $null
@@ -344,6 +349,7 @@ $script:CanonicalVersion = "unknown"
 $ManagedStart = "<!-- RUBBER_DUCK_MANAGED_BLOCK START -->"
 $ManagedEnd = "<!-- RUBBER_DUCK_MANAGED_BLOCK END -->"
 $SyncWrapperSourceUrl = "https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.ps1"
+$script:SyncWrapperTemplateRemotePath = "dist/scripts/sync-latest.ps1"
 $script:SyncWrapperWritten = $false
 
 # Built agent filenames are identical across harnesses (<name>.md)
@@ -642,6 +648,11 @@ function Get-SyncWrapperPath {
 function Install-SyncWrapper {
   $target = Get-SyncWrapperPath
   $scopeArg = if ($Project) { "-Project" } else { "-Global" }
+  if ($script:EffectiveSource -eq "local") {
+    $installerUrl = $ScriptPath
+  } else {
+    $installerUrl = "$RawBase/scripts/rubber-duck.ps1"
+  }
 
   if ($DryRun) {
     Log "[dry-run] write sync helper -> $target"
@@ -653,17 +664,46 @@ function Install-SyncWrapper {
     New-Item -ItemType Directory -Force -Path $parent | Out-Null
   }
 
-  $content = @"
-`$ErrorActionPreference = "Stop"
-`$tmp = Join-Path `$env:TEMP ("rubber-duck-sync-" + [Guid]::NewGuid().ToString() + ".ps1")
+  $content = ""
+  $fallbackTemplate = @'
+$ErrorActionPreference = "Stop"
+
+# Fallback sync helper template.
+$SyncInstallerUrl = "{{SYNC_INSTALLER_URL}}"
+$SyncScopeArg = "{{SYNC_SCOPE_ARG}}"
+
+$tmpRoot = if ([string]::IsNullOrWhiteSpace($env:TEMP)) { [System.IO.Path]::GetTempPath() } else { $env:TEMP }
+$tmp = Join-Path $tmpRoot ("rubber-duck-sync-" + [Guid]::NewGuid().ToString() + ".ps1")
+
 try {
-  Invoke-WebRequest -UseBasicParsing -Uri "$SyncWrapperSourceUrl" -OutFile `$tmp
-  & pwsh -NoProfile -File `$tmp -Action sync $scopeArg @args
-  exit `$LASTEXITCODE
+  Invoke-WebRequest -UseBasicParsing -Uri $SyncInstallerUrl -OutFile $tmp
+  & pwsh -NoProfile -File $tmp -Action sync $SyncScopeArg -Source web @args
+  exit $LASTEXITCODE
 } finally {
-  if (Test-Path `$tmp) { Remove-Item -Force `$tmp }
+  if (Test-Path $tmp) { Remove-Item -Force $tmp }
 }
-"@
+'@
+  if ($script:EffectiveSource -eq "local") {
+    $templatePath = Join-Path $RepoRoot "dist/scripts/sync-latest.ps1"
+    if (-not (Test-Path $templatePath)) {
+      throw "missing sync wrapper template: $templatePath. Run make build-harness."
+    }
+    $content = Get-Content -Raw $templatePath
+  } else {
+    $tmpTpl = Join-Path ([System.IO.Path]::GetTempPath()) ("rubber-duck-sync-template-" + [Guid]::NewGuid().ToString() + ".ps1")
+    try {
+      try {
+        Invoke-WebRequest -UseBasicParsing -Uri "$RawBase/$($script:SyncWrapperTemplateRemotePath)" -OutFile $tmpTpl
+        $content = Get-Content -Raw $tmpTpl
+      } catch {
+        $content = $fallbackTemplate
+      }
+    } finally {
+      if (Test-Path $tmpTpl) { Remove-Item -Force $tmpTpl }
+    }
+  }
+  $content = $content.Replace("{{SYNC_SCOPE_ARG}}", $scopeArg)
+  $content = $content.Replace("{{SYNC_INSTALLER_URL}}", $installerUrl)
   Set-Content -Path $target -Value $content
   Log "Installed sync helper -> $target"
 }

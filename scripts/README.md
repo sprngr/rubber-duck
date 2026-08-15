@@ -41,9 +41,11 @@ Generated sync helpers (created during `install`):
   - `~/.config/rubber-duck/sync-latest.ps1`
 
 Behavior:
-- download latest installer script from GitHub `main`
+- run matching installer source used during install:
+  - local install source -> local installer path from current checkout
+  - web install source -> downloaded installer from configured raw base
 - run `sync` with matching scope (`--project/--global` or `-Project/-Global`)
-- remove downloaded temp installer on exit
+- remove downloaded temp installer on exit (web mode)
 
 Examples:
 
