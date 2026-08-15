@@ -3,8 +3,6 @@ set -euo pipefail
 
 # Generated wrapper template source.
 # Installer will substitute scope token and source URL token.
-# TODO(phase2): wire build to emit dist/scripts/sync-latest.sh
-# TODO(phase3): installer copies/fetches generated wrapper and substitutes scope safely.
 
 SYNC_INSTALLER_URL="{{SYNC_INSTALLER_URL}}"
 SYNC_SCOPE_FLAG="{{SYNC_SCOPE_FLAG}}"
