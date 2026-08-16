@@ -85,6 +85,9 @@ function Get-ManifestPath {
   return (Join-Path $HOME ".config/rubber-duck/manifest.json")
 }
 
+# Build base args for sync replay. Unlike the bash sync_replay_cmd, this does
+# NOT append install-specific flags (SkipSkills, SkipAgentsMd, Extras) — the
+# caller is responsible for adding those based on context.
 function Get-SyncReplayArgs([string]$Action, [string]$HarnessCsv) {
   $args = @("-File", (Get-SyncScriptPath), "-Action", $Action, "-Harness", $HarnessCsv, "-Source", $Source, "-Branch", $Branch, "-RawBase", $RawBase)
   if ($Project) { $args += "-Project" } else { $args += "-Global" }

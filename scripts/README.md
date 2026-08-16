@@ -196,6 +196,7 @@ Use PowerShell CLI for Windows-native environments.
   - `--policy self` installs full self-contained `rubber-duck` source artifact and skips AGENTS policy block install
   - destination file written to target agents directory remains `rubber-duck.md`
   - conflict rule: explicit host mode plus legacy skip flag in same command is invalid
+  - **Deprecated:** `--skip-agents-md` / `-SkipAgentsMd` will be removed in a future release. Use `--policy self` / `-Policy self` instead.
 
 - Installer supports web invocation:
   - Bash: `curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh -o /tmp/rubber-duck.sh && bash -n /tmp/rubber-duck.sh && bash /tmp/rubber-duck.sh <command>`

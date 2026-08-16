@@ -7,6 +7,7 @@ set -euo pipefail
 
 SYNC_INSTALLER_URL="{{SYNC_INSTALLER_URL}}"
 SYNC_SCOPE_FLAG="{{SYNC_SCOPE_FLAG}}"
+INSTALLER_HASH="af27bca340a069493362b23eaeb83e7b53cf744e35981fc45ff8395f2c75aaf3"
 
 IS_REMOTE=0
 [[ "${SYNC_INSTALLER_URL}" == https://* || "${SYNC_INSTALLER_URL}" == http://* ]] && IS_REMOTE=1
@@ -19,37 +20,59 @@ else
   MANIFEST="${HOME}/.config/rubber-duck/manifest.json"
 fi
 if [[ -f "${MANIFEST}" ]]; then
-  CURRENT_VERSION=$(sed -n 's/.*"lastAppliedVersion":[[:space:]]*"\([^"]*\)".*/\1/p' "${MANIFEST}" 2>/dev/null || true)
+  CURRENT_VERSION=$(sed -n 's/.*"lastAppliedVersion":[[:space:]]*"\([^"]*\)".*/\1/p' "${MANIFEST}" 2>/dev/null | tr -d '[:space:]' || true)
 fi
 REMOTE_VERSION=""
 if (( IS_REMOTE )); then
-  REMOTE_VERSION=$(curl -fsSL "https://raw.githubusercontent.com/sprngr/rubber-duck/main/VERSION" 2>/dev/null | tr -d '\r\n' || true)
+  REMOTE_VERSION=$(curl -fsSL "https://raw.githubusercontent.com/sprngr/rubber-duck/main/VERSION" 2>/dev/null | tr -d '\r\n[:space:]' || true)
 else
   LOCAL_VERSION_FILE="$(cd -- "$(dirname -- "${SYNC_INSTALLER_URL}")/.." && pwd)/VERSION"
-  [[ -f "${LOCAL_VERSION_FILE}" ]] && REMOTE_VERSION=$(tr -d '\r\n' < "${LOCAL_VERSION_FILE}" 2>/dev/null || true)
+  [[ -f "${LOCAL_VERSION_FILE}" ]] && REMOTE_VERSION=$(tr -d '\r\n[:space:]' < "${LOCAL_VERSION_FILE}" 2>/dev/null || true)
 fi
+SKIP_SYNC=0
+version_gt() {
+  local IFS='.'
+  local a=(${1#v}) b=(${2#v})
+  for i in 0 1 2; do
+    local na=${a[$i]:-0} nb=${b[$i]:-0}
+    if (( na > nb )); then return 0; fi
+    if (( na < nb )); then return 1; fi
+  done
+  return 1
+}
 if [[ -n "${CURRENT_VERSION}" && -n "${REMOTE_VERSION}" ]]; then
   if [[ "${CURRENT_VERSION}" == "${REMOTE_VERSION}" ]]; then
     echo "Already up to date (${CURRENT_VERSION})."
-  elif printf '%s\n%s\n' "${CURRENT_VERSION}" "${REMOTE_VERSION}" | sort -V | tail -1 | grep -qxF "${REMOTE_VERSION}"; then
+  elif version_gt "${REMOTE_VERSION}" "${CURRENT_VERSION}"; then
     echo "New version available: ${CURRENT_VERSION} -> ${REMOTE_VERSION}"
     echo "Changelog: https://github.com/sprngr/rubber-duck/blob/main/CHANGELOG.md"
     printf "Update now? [y/N] "
     read -r REPLY
     if [[ "${REPLY}" != "y" && "${REPLY}" != "Y" ]]; then
       echo "Skipping update."
+      SKIP_SYNC=1
     fi
   else
     echo "WARNING: local version (${CURRENT_VERSION}) is newer than remote (${REMOTE_VERSION})."
   fi
 fi
 
-if (( IS_REMOTE )); then
-  tmp_installer="$(mktemp)"
-  cleanup() { rm -f "${tmp_installer}"; }
-  trap cleanup EXIT
-  curl -fsSL "${SYNC_INSTALLER_URL}" -o "${tmp_installer}"
-  bash "${tmp_installer}" sync "${SYNC_SCOPE_FLAG}" --source web "$@"
-else
-  bash "${SYNC_INSTALLER_URL}" sync "${SYNC_SCOPE_FLAG}" --source local "$@"
+if (( SKIP_SYNC == 0 )); then
+  if (( IS_REMOTE )); then
+    tmp_installer="$(mktemp)"
+    cleanup() { rm -f "${tmp_installer}"; }
+    trap cleanup EXIT
+    curl -fsSL "${SYNC_INSTALLER_URL}" -o "${tmp_installer}"
+    if [[ -n "${INSTALLER_HASH}" ]]; then
+      ACTUAL_HASH=$(sha256sum "${tmp_installer}" | awk '{print $1}')
+      if [[ "${ACTUAL_HASH}" != "${INSTALLER_HASH}" ]]; then
+        echo "ERROR: installer hash mismatch (expected ${INSTALLER_HASH}, got ${ACTUAL_HASH})." >&2
+        echo "The installer may have been tampered with. Aborting." >&2
+        exit 1
+      fi
+    fi
+    bash "${tmp_installer}" sync "${SYNC_SCOPE_FLAG}" --source web "$@"
+  else
+    bash "${SYNC_INSTALLER_URL}" sync "${SYNC_SCOPE_FLAG}" --source local "$@"
+  fi
 fi

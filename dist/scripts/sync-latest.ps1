@@ -6,6 +6,7 @@ $ErrorActionPreference = "Stop"
 
 $SyncInstallerUrl = "{{SYNC_INSTALLER_URL}}"
 $SyncScopeArg = "{{SYNC_SCOPE_ARG}}"
+$InstallerHash = "ad44094393a051ff1a52ada41c00ef92e71df4ece5b856107c3c2a21fd04361a"
 
 $isRemote = $SyncInstallerUrl -match '^https?://'
 
@@ -32,13 +33,21 @@ if ($isRemote) {
 if (-not [string]::IsNullOrWhiteSpace($currentVersion) -and -not [string]::IsNullOrWhiteSpace($remoteVersion)) {
   if ($currentVersion -eq $remoteVersion) {
     Write-Host "Already up to date ($currentVersion)."
-  } elseif ([version]($currentVersion.TrimStart('v')) -lt [version]($remoteVersion.TrimStart('v'))) {
-    Write-Host "New version available: $currentVersion -> $remoteVersion"
-    Write-Host "Changelog: https://github.com/sprngr/rubber-duck/blob/main/CHANGELOG.md"
-    $reply = Read-Host "Update now? [y/N]"
-    if ($reply -ne "y" -and $reply -ne "Y") { Write-Host "Skipping update."; exit 0 }
   } else {
-    Write-Host "WARNING: local version ($currentVersion) is newer than remote ($remoteVersion)."
+    $curVer = $null
+    $remVer = $null
+    try { $curVer = [version]($currentVersion.TrimStart('v')) } catch { }
+    try { $remVer = [version]($remoteVersion.TrimStart('v')) } catch { }
+    if ($null -ne $curVer -and $null -ne $remVer -and $curVer -lt $remVer) {
+      Write-Host "New version available: $currentVersion -> $remoteVersion"
+      Write-Host "Changelog: https://github.com/sprngr/rubber-duck/blob/main/CHANGELOG.md"
+      $reply = Read-Host "Update now? [y/N]"
+      if ($reply -ne "y" -and $reply -ne "Y") { Write-Host "Skipping update."; exit 0 }
+    } elseif ($null -ne $curVer -and $null -ne $remVer) {
+      Write-Host "WARNING: local version ($currentVersion) is newer than remote ($remoteVersion)."
+    } else {
+      Write-Host "Unable to compare versions: $currentVersion vs $remoteVersion. Syncing anyway."
+    }
   }
 }
 
@@ -47,6 +56,12 @@ if ($isRemote) {
   $tmp = Join-Path $tmpRoot ("rubber-duck-sync-" + [Guid]::NewGuid().ToString() + ".ps1")
   try {
     Invoke-WebRequest -UseBasicParsing -Uri $SyncInstallerUrl -OutFile $tmp
+    if (-not [string]::IsNullOrWhiteSpace($InstallerHash)) {
+      $actualHash = (Get-FileHash -Algorithm SHA256 -Path $tmp).Hash.ToLower()
+      if ($actualHash -ne $InstallerHash.ToLower()) {
+        throw "Installer hash mismatch (expected $InstallerHash, got $actualHash). The installer may have been tampered with."
+      }
+    }
     & pwsh -NoProfile -File $tmp -Action sync $SyncScopeArg -Source web @args
     exit $LASTEXITCODE
   } finally {

@@ -137,6 +137,7 @@ render_body_markdown() {
 render_sync_template() {
   local src="$1"
   local out="$2"
+  local installer_hash=""
 
   if [[ ! -f "${src}" ]]; then
     printf 'ERROR: missing sync wrapper template: %s\n' "${src}" >&2
@@ -144,6 +145,16 @@ render_sync_template() {
   fi
 
   cp -f "${src}" "${out}"
+
+  # Compute installer hash for tamper verification at sync time
+  if [[ "${src}" == *.sh.tmpl ]]; then
+    installer_hash=$(sha256sum "${REPO_ROOT}/scripts/rubber-duck.sh" | awk '{print $1}')
+  elif [[ "${src}" == *.ps1.tmpl ]]; then
+    installer_hash=$(sha256sum "${REPO_ROOT}/scripts/rubber-duck.ps1" | awk '{print $1}')
+  fi
+  if [[ -n "${installer_hash}" ]]; then
+    sed -i "s|{{INSTALLER_HASH}}|${installer_hash}|g" "${out}"
+  fi
 }
 
 resolve_policy_include_path_if_match() {

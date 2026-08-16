@@ -9,18 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Deterministic agent variant selection by policy mode: `--policy host` (default) installs `rubber-duck-lite` + AGENTS managed block; `--policy self` installs full self-contained `rubber-duck`. Destination filename remains `rubber-duck.md` in both modes.
 - Sync wrapper scripts now check for newer versions before syncing. Compares manifest `lastAppliedVersion` against the remote `VERSION` file (web installs) or local `VERSION` file (local installs). Prompts user with version change and CHANGELOG link when an update is available.
+- Sync wrapper scripts verify installer integrity via pinned SHA-256 hash before execution.
 - Installer displays sync update hint after successful install (e.g. `To update: bash .rubber-duck/sync-latest.sh`).
 - `RUBBER_DUCK_VERSION` comment embedded in generated sync wrapper scripts for diagnostics.
 
 ### Changed
 
-- Installer policy mode is now semantic and explicit:
-  - Bash: `--policy <host|self>` with `-p` alias
-  - PowerShell: `-Policy host|self` with `-p` alias
-  - default mode is `host`
-  - `self` is equivalent to legacy `--skip-agents-md` / `-SkipAgentsMd`
-  - explicit conflict guard added for `host` + legacy skip flag in same invocation
+- **Deprecation:** `--skip-agents-md` / `-SkipAgentsMd` is now a legacy alias for `--policy self` / `-Policy self`. It will be removed in a future release. Migrate to `--policy self`.
+- Installer policy mode is now semantic and explicit (`--policy host|self`, `host` default, conflict guard for host + legacy skip flag).
+- Sync wrapper version comparison uses POSIX-compatible bash function instead of GNU `sort -V`.
 - Deterministic duck artifact selection by policy mode:
   - `host`: installer sources `rubber-duck-lite` artifact
   - `self`: installer sources full self-contained `rubber-duck` artifact
