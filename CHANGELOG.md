@@ -5,6 +5,25 @@ All notable changes to Rubber Duck will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Sync wrapper scripts now check for newer versions before syncing. Compares manifest `lastAppliedVersion` against the remote `VERSION` file (web installs) or local `VERSION` file (local installs). Prompts user with version change and CHANGELOG link when an update is available.
+- Installer displays sync update hint after successful install (e.g. `To update: bash .rubber-duck/sync-latest.sh`).
+- `RUBBER_DUCK_VERSION` comment embedded in generated sync wrapper scripts for diagnostics.
+
+### Changed
+
+- Installer template sources moved from `src/shared/install-templates/` to `src/install/scripts/` (sync wrappers) and `src/install/templates/` (manifest template). Build outputs remain at `dist/scripts/` and `dist/templates/`.
+- Sync wrapper fallback templates removed from both installers. If the sync template cannot be fetched, the installer exits with a clear error instead of silently falling back to an embedded template.
+- Sync replay functions deduplicated: bash `sync_replay_install_cmd` + `sync_replay_uninstall_cmd` merged into `sync_replay_cmd`; PowerShell `Get-SyncReplayInstallArgs` + `Get-SyncReplayUninstallArgs` merged into `Get-SyncReplayArgs`.
+- Manifest template path extracted to `MANIFEST_TEMPLATE_PATH` constant (bash installer).
+
+### Fixed
+
+- Bash installer: `running_piped()` function definition moved before the sync block that calls it, fixing a function-not-found error when running sync actions.
+
 ## [v2.2.0] - 2026-08-14
 
 ### Changed

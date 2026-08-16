@@ -41,6 +41,8 @@ Generated sync helpers (created during `install`):
   - `~/.config/rubber-duck/sync-latest.ps1`
 
 Behavior:
+- check for newer version before syncing (compares manifest `lastAppliedVersion` against remote/local `VERSION`)
+- if newer version available, prompt with version change and CHANGELOG link
 - run matching installer source used during install:
   - local install source -> local installer path from current checkout
   - web install source -> downloaded installer from configured raw base

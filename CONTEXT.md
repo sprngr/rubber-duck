@@ -40,6 +40,8 @@
 - **Installer policy mode model**: installer now uses semantic policy mode selection (`--policy`/`-Policy` with `host|self`, `host` default). Legacy skip flag remains as alias for `self` with explicit host+skip conflict guard. (date: 2026-08-14)
 - **Deterministic duck variant install**: policy mode controls installer source artifact selection (`host` -> `rubber-duck-lite`, `self` -> full `rubber-duck`) while installed destination filename remains `rubber-duck.md`. (date: 2026-08-14)
 - **Lite duck workflow parity tightened**: lite prompt now includes explicit workflow-choice wait gate and parity-critical workflow controls without duplicating full AGENTS policy body. (date: 2026-08-14)
+- **Installer template sources reorganized**: sync wrapper templates moved to `src/install/scripts/`, manifest template moved to `src/install/templates/`. Shared snippets (`src/shared/`) reserved for prompt/policy snippets only. Build outputs at `dist/scripts/` and `dist/templates/`. (date: 2026-08-16)
+- **Sync wrapper version check**: sync-latest scripts compare manifest `lastAppliedVersion` against remote/local `VERSION` file before syncing. Prompts user with version change and CHANGELOG link when newer version exists. Fallback templates removed; missing sync template is a hard error. (date: 2026-08-16)
 
 ## Conventions
 

@@ -21,8 +21,12 @@ This repository contains source prompts, assembled skills, generated harness art
 ## Layout
 
 - `src/` - source-of-truth for agents, skills, and shared snippets
+  - `src/install/scripts/` - sync wrapper templates
+  - `src/install/templates/` - manifest template
 - `skills/` - built skill artifacts generated from `src/skills/*`
 - `dist/` - built harness artifacts generated from `src/agents/*` (including `dist/AGENTS.md`)
+  - `dist/scripts/` - generated sync wrapper scripts
+  - `dist/templates/` - generated manifest template
 - `scripts/` - build, check, and installer scripts (`rubber-duck.sh`, `rubber-duck.ps1`)
 - `docs/` - architecture and supporting documentation
 - `validation/` - prompt validation suite, fixtures, and runner

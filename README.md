@@ -149,21 +149,14 @@ Use `-p self` when you want full self-contained duck policy with no AGENTS polic
 
 See [scripts/README.md](./scripts/README.md) for full behavior, aliases, extras, sync, and all CLI options.
 
-#### Update using saved manifest (basic sync)
+#### Update using saved manifest (sync-latest script)
 
-Use this after initial install when target and scope are already in manifest.
-
-Bash local example (Supported by Bash and Powershell via web & local)
-```bash
-./scripts/rubber-duck.sh sync
-```
-
-After install, lightweight sync helpers are also generated:
+After install, lightweight sync helpers are generated based on the installer script used:
 
 - project scope: `.rubber-duck/sync-latest.sh` and `.rubber-duck/sync-latest.ps1`
 - global scope: `~/.config/rubber-duck/sync-latest.sh` and `~/.config/rubber-duck/sync-latest.ps1`
 
-Helpers download the latest installer from GitHub, run `sync` with the correct scope, and remove the temp installer file on exit.
+Helpers check for newer versions before syncing. If an update is available, they prompt with the version change (e.g. `v2.2.0 -> v2.3.0`) and a link to the [CHANGELOG](https://github.com/sprngr/rubber-duck/blob/main/CHANGELOG.md). The helper then downloads the latest installer from GitHub, runs `sync` with the correct scope, and removes the temp installer file on exit.
 
 ## Verify after install
 
