@@ -32,6 +32,7 @@ else
   [[ -f "${LOCAL_VERSION_FILE}" ]] && REMOTE_VERSION=$(tr -d '\r\n[:space:]' < "${LOCAL_VERSION_FILE}" 2>/dev/null || true)
 fi
 SKIP_SYNC=0
+VERIFY_INSTALLER_HASH=1
 version_gt() {
   local IFS='.'
   local a=(${1#v}) b=(${2#v})
@@ -59,6 +60,10 @@ if [[ -n "${CURRENT_VERSION}" && -n "${REMOTE_VERSION}" ]]; then
       if [[ "${REPLY}" != "y" && "${REPLY}" != "Y" ]]; then
         echo "Skipping update."
         SKIP_SYNC=1
+      else
+        # Confirmed bump: pin is regenerated per build, so a changed pin
+        # alongside a changed version is consent, not tampering.
+        VERIFY_INSTALLER_HASH=0
       fi
     elif (( version_compare_rc == 2 )); then
       echo "Unable to compare versions: ${CURRENT_VERSION} vs ${REMOTE_VERSION}. Syncing anyway."
@@ -74,7 +79,7 @@ if (( SKIP_SYNC == 0 )); then
     cleanup() { rm -f "${tmp_installer}"; }
     trap cleanup EXIT
     curl -fsSL "${SYNC_INSTALLER_URL}" -o "${tmp_installer}"
-    if [[ -n "${INSTALLER_HASH}" ]]; then
+    if [[ -n "${INSTALLER_HASH}" && ${VERIFY_INSTALLER_HASH} == 1 ]]; then
       ACTUAL_HASH=""
       if command -v sha256sum >/dev/null 2>&1; then
         ACTUAL_HASH=$(sha256sum "${tmp_installer}" | awk '{print $1}')

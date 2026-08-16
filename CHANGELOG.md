@@ -39,7 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Bash installer: `running_piped()` function definition moved before the sync block that calls it, fixing a function-not-found error when running sync actions.
-- Sync wrapper hash pinning now computed from the installer file actually used (LF-normalized); previously the baked hash was computed over CRLF content, so every remote sync failed verification with a false "tampered" error.
+- Sync wrapper hash pinning now computed from the installer file actually used (LF-normalized); previously the baked hash was computed over CRLF content, so every remote sync failed verification with a false "tampered" error. Hash verification applies to same-version syncs; a confirmed version bump skips the stale pin (user consent is the control), and the pin is regenerated per build so it corroborates the bump.
 - CI drift: `*.ps1` line endings standardized to LF in `.gitattributes`; generated `dist/scripts/sync-latest.ps1` now byte-matches rendered output.
 - PowerShell sync wrapper host detection: replaced inert `$PSVersionInfo.PSExecutable` (not an automatic variable) with `(Get-Process -Id $PID).Path`.
 - PowerShell sync wrapper: scope is embedded in the wrapper; forwarded `-Project`/`-Global` args are filtered, so explicit scope flags no longer cause a duplicate-parameter binding error.

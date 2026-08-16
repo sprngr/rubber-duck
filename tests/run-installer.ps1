@@ -240,7 +240,39 @@ function Test-SyncWrapperRemoteHashVerify {
 }
 
 Run-Test "sync wrapper psHost detection"          { Test-SyncWrapperPsHostDetection }
+# Upgrade path: confirmed version bump skips the stale pin; wrapper
+# self-heals to the new installer's hash after sync.
+function Test-SyncWrapperUpgradeSkipsHash {
+  $remote = "remote"
+  New-Item -ItemType Directory -Path $remote | Out-Null
+  Copy-Item -Recurse -Force (Join-Path $repoRoot "scripts") $remote
+  Copy-Item -Recurse -Force (Join-Path $repoRoot "dist") $remote
+  Copy-Item -Force (Join-Path $repoRoot "VERSION") $remote
+  $port = ([string](& python3 -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1",0)); print(s.getsockname()[1]); s.close()')).Trim()
+  $server = Start-Process python3 -ArgumentList @("-m","http.server",$port,"--bind","127.0.0.1","--directory",$remote) -PassThru
+  try {
+    for ($i = 0; $i -lt 20; $i++) {
+      try { Invoke-WebRequest -UseBasicParsing -Uri "http://127.0.0.1:$port/VERSION" -ErrorAction Stop | Out-Null; break }
+      catch { Start-Sleep -Milliseconds 200 }
+    }
+    & pwsh -NoProfile -File $script:PsInstaller -Action install -Harness opencode -Source web -RawBase "http://127.0.0.1:$port" -SkipSkills -AllowUntrustedSource -Project | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "web install failed" }
+    # Release v2.3.0: bump VERSION + change installer bytes.
+    Set-Content -Path (Join-Path $remote "VERSION") -Value "v2.3.0" -NoNewline
+    Add-Content -Path (Join-Path $remote "scripts/rubber-duck.ps1") -Value "# v2.3.0"
+    $newHash = (Get-FileHash -Algorithm SHA256 -Path (Join-Path $remote "scripts/rubber-duck.ps1")).Hash.ToLowerInvariant()
+    $out = 'y' | & pwsh -NoProfile -File ".rubber-duck/sync-latest.ps1" -AllowUntrustedSource 2>&1 | Out-String
+    if ($LASTEXITCODE -ne 0) { throw "upgrade sync failed" }
+    if (-not $out.Contains("New version available: v2.2.0 -> v2.3.0")) { throw "upgrade prompt missing" }
+    $content = Get-Content -Raw ".rubber-duck/sync-latest.ps1"
+    if ($content -notmatch ('(?m)^\$InstallerHash = "' + $newHash + '"')) { throw "wrapper not self-healed to new hash" }
+  } finally {
+    if ($server -and -not $server.HasExited) { Stop-Process -Id $server.Id -Force }
+  }
+}
+
 Run-Test "sync wrapper remote hash verify"        { Test-SyncWrapperRemoteHashVerify }
+Run-Test "sync wrapper upgrade skips hash"        { Test-SyncWrapperUpgradeSkipsHash }
 
 "`n$($script:TestsRun - $script:Failures)/$($script:TestsRun) passed, $($script:Failures) failed"
 if ($script:Failures -gt 0) { exit 1 } else { exit 0 }

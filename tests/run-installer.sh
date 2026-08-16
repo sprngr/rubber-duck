@@ -250,7 +250,41 @@ test_sync_wrapper_remote_hash_verify() {
 }
 
 run_test "sync wrapper hash placeholder replaced" test_sync_wrapper_hash_no_placeholder
+# Upgrade path: confirmed version bump skips the stale pin; wrapper
+# self-heals to the new installer's hash after sync.
+test_sync_wrapper_upgrade_skips_hash() {
+  local ws="$1" port server_pid out rc i new_hash
+  mkdir -p "$ws/remote"
+  cp -r "$repo_root/scripts" "$ws/remote/"
+  cp -r "$repo_root/dist" "$ws/remote/"
+  cp "$repo_root/VERSION" "$ws/remote/"
+  port=$(python3 -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1",0)); print(s.getsockname()[1]); s.close()')
+  python3 -m http.server "$port" --bind 127.0.0.1 --directory "$ws/remote" >/dev/null 2>&1 &
+  server_pid=$!
+  trap 'kill "${server_pid:-}" 2>/dev/null || true' EXIT
+  for i in $(seq 1 20); do
+    if curl -fsS "http://127.0.0.1:$port/VERSION" >/dev/null 2>&1; then break; fi
+    sleep 0.2
+  done
+
+  bash "$sh_installer" install --opencode --source web --raw-base "http://127.0.0.1:$port" --skip-skills --allow-untrusted-source --project || return 1
+  local wrapper=".rubber-duck/sync-latest.sh"
+  [[ -f "$wrapper" ]] || return 1
+
+  # Release v2.3.0: bump VERSION + change installer bytes.
+  echo "v2.3.0" > "$ws/remote/VERSION"
+  echo "# v2.3.0" >> "$ws/remote/scripts/rubber-duck.sh"
+  new_hash=$(sha256sum "$ws/remote/scripts/rubber-duck.sh" | awk '{print $1}')
+
+  out=$(printf 'y\n' | bash "$wrapper" --allow-untrusted-source 2>&1) && rc=0 || rc=$?
+  [[ $rc -eq 0 ]] || return 1
+  echo "$out" | grep -q "New version available: v2.2.0 -> v2.3.0" || return 1
+  grep -q "^INSTALLER_HASH=\"${new_hash}\"" "$wrapper" || return 1
+  return 0
+}
+
 run_test "sync wrapper remote hash verify" test_sync_wrapper_remote_hash_verify
+run_test "sync wrapper upgrade skips hash" test_sync_wrapper_upgrade_skips_hash
 
 printf '\n%d/%d passed, %d failed\n' "$((tests_run - failures))" "$tests_run" "$failures"
 exit $((failures > 0 ? 1 : 0))

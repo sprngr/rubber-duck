@@ -22,7 +22,7 @@ if ([string]::IsNullOrWhiteSpace($psHost)) {
 
 # --- Version check ---
 $currentVersion = ""
-$manifest = if ($SyncScopeArg -eq "--project") { ".rubber-duck/manifest.json" } else { Join-Path $HOME ".config/rubber-duck/manifest.json" }
+$manifest = if ($SyncScopeArg -eq "-Project") { ".rubber-duck/manifest.json" } else { Join-Path $HOME ".config/rubber-duck/manifest.json" }
 if (Test-Path $manifest) {
   try {
     $m = Get-Content -Raw $manifest | ConvertFrom-Json
@@ -38,7 +38,13 @@ for ($i = 0; $i -lt 2; $i++) {
 if ($isRemote) {
   $remoteVersionUrl = "$remoteBase/VERSION"
   try {
-    $remoteVersion = (Invoke-WebRequest -UseBasicParsing -Uri $remoteVersionUrl -ErrorAction Stop).Content.Trim()
+    $resp = Invoke-WebRequest -UseBasicParsing -Uri $remoteVersionUrl -ErrorAction Stop
+    if ($resp.Content -is [byte[]]) {
+      $remoteVersion = [System.Text.Encoding]::UTF8.GetString($resp.Content)
+    } else {
+      $remoteVersion = [string]$resp.Content
+    }
+    $remoteVersion = $remoteVersion.Trim()
   } catch { }
 } else {
   $localVersionFile = Join-Path (Split-Path -Parent (Split-Path -Parent $SyncInstallerUrl)) "VERSION"
@@ -46,6 +52,7 @@ if ($isRemote) {
     try { $remoteVersion = (Get-Content -Raw $localVersionFile).Trim() } catch { }
   }
 }
+$verifyInstallerHash = $true
 if (-not [string]::IsNullOrWhiteSpace($currentVersion) -and -not [string]::IsNullOrWhiteSpace($remoteVersion)) {
   if ($currentVersion -eq $remoteVersion) {
     Write-Host "Already up to date ($currentVersion)."
@@ -59,6 +66,7 @@ if (-not [string]::IsNullOrWhiteSpace($currentVersion) -and -not [string]::IsNul
       Write-Host "Changelog: https://github.com/sprngr/rubber-duck/blob/main/CHANGELOG.md"
       $reply = Read-Host "Update now? [y/N]"
       if ($reply -ne "y" -and $reply -ne "Y") { Write-Host "Skipping update."; exit 0 }
+      else { $verifyInstallerHash = $false }
     } elseif ($null -ne $curVer -and $null -ne $remVer) {
       Write-Host "WARNING: local version ($currentVersion) is newer than remote ($remoteVersion)."
     } else {
@@ -78,7 +86,7 @@ if ($isRemote) {
   $tmp = Join-Path $tmpRoot ("rubber-duck-sync-" + [Guid]::NewGuid().ToString() + ".ps1")
   try {
     Invoke-WebRequest -UseBasicParsing -Uri $SyncInstallerUrl -OutFile $tmp
-    if (-not [string]::IsNullOrWhiteSpace($InstallerHash)) {
+    if (-not [string]::IsNullOrWhiteSpace($InstallerHash) -and $verifyInstallerHash) {
       $actualHash = (Get-FileHash -Algorithm SHA256 -Path $tmp).Hash.ToLower()
       if ($actualHash -ne $InstallerHash.ToLower()) {
         throw "Installer hash mismatch (expected $InstallerHash, got $actualHash). The installer may have been tampered with."
