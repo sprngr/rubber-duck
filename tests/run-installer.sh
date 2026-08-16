@@ -163,5 +163,49 @@ run_test "dry-run multi-target layout"      test_dry_run_multi_target_layout
 run_test "sync default source"              test_sync_default_source
 run_test "sync wrapper content"             test_sync_wrapper_content
 
+# --- version_gt() unit tests (inline from sync-latest.sh.tmpl) ---
+version_gt() {
+  local IFS='.'
+  local a=(${1#v}) b=(${2#v})
+  for i in 0 1 2; do
+    local na=${a[$i]:-0} nb=${b[$i]:-0}
+    if (( na > nb )); then return 0; fi
+    if (( na < nb )); then return 1; fi
+  done
+  return 1
+}
+
+test_version_gt_equal() { ! version_gt "v2.2.0" "v2.2.0"; }
+test_version_gt_newer() { version_gt "v2.3.0" "v2.2.0"; }
+test_version_gt_older() { ! version_gt "v2.1.0" "v2.2.0"; }
+test_version_gt_patch() { version_gt "v2.2.1" "v2.2.0"; }
+test_version_gt_major() { version_gt "v3.0.0" "v2.9.9"; }
+test_version_gt_no_v_prefix() { version_gt "2.3.0" "2.2.0"; }
+test_version_gt_invalid() { ! version_gt "" "v2.2.0"; }
+
+run_test "version_gt equal"           test_version_gt_equal
+run_test "version_gt newer"           test_version_gt_newer
+run_test "version_gt older"           test_version_gt_older
+run_test "version_gt patch"           test_version_gt_patch
+run_test "version_gt major"           test_version_gt_major
+run_test "version_gt no v prefix"     test_version_gt_no_v_prefix
+run_test "version_gt invalid"         test_version_gt_invalid
+
+# --- Sync wrapper hash verification tests ---
+test_sync_wrapper_has_hash_check() {
+  bash "$sh_installer" install --opencode --source local --skip-skills --project || return 1
+  grep -q 'INSTALLER_HASH' .rubber-duck/sync-latest.sh || return 1
+  grep -q 'sha256sum\|shasum' .rubber-duck/sync-latest.sh || return 1
+}
+
+test_sync_wrapper_hash_no_placeholder() {
+  bash "$sh_installer" install --opencode --source local --skip-skills --project || return 1
+  grep -q '{{INSTALLER_HASH}}' .rubber-duck/sync-latest.sh && return 1
+  return 0
+}
+
+run_test "sync wrapper has hash check"       test_sync_wrapper_has_hash_check
+run_test "sync wrapper hash placeholder replaced" test_sync_wrapper_hash_no_placeholder
+
 printf '\n%d/%d passed, %d failed\n' "$((tests_run - failures))" "$tests_run" "$failures"
 exit $((failures > 0 ? 1 : 0))

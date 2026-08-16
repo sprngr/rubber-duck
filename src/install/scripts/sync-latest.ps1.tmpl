@@ -10,6 +10,15 @@ $InstallerHash = "{{INSTALLER_HASH}}"
 
 $isRemote = $SyncInstallerUrl -match '^https?://'
 
+# Detect current PowerShell host for re-invocation
+$psHost = $PSVersionInfo.PSExecutable
+if ([string]::IsNullOrWhiteSpace($psHost)) {
+  $psHost = "pwsh"
+  try { Get-Command pwsh -ErrorAction Stop | Out-Null } catch {
+    $psHost = "powershell"
+  }
+}
+
 # --- Version check ---
 $currentVersion = ""
 $manifest = if ($SyncScopeArg -eq "--project") { ".rubber-duck/manifest.json" } else { Join-Path $HOME ".config/rubber-duck/manifest.json" }
@@ -62,12 +71,12 @@ if ($isRemote) {
         throw "Installer hash mismatch (expected $InstallerHash, got $actualHash). The installer may have been tampered with."
       }
     }
-    & pwsh -NoProfile -File $tmp -Action sync $SyncScopeArg -Source web @args
+    & $psHost -NoProfile -File $tmp -Action sync $SyncScopeArg -Source web @args
     exit $LASTEXITCODE
   } finally {
     if (Test-Path $tmp) { Remove-Item -Force $tmp }
   }
 } else {
-  & pwsh -NoProfile -File $SyncInstallerUrl -Action sync $SyncScopeArg -Source local @args
+  & $psHost -NoProfile -File $SyncInstallerUrl -Action sync $SyncScopeArg -Source local @args
   exit $LASTEXITCODE
 }

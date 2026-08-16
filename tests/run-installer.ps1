@@ -180,5 +180,33 @@ Run-Test "sync default source"              { Test-SyncDefaultSource      }
 Run-Test "winps manifest structure"         { Test-WinPsManifestStructure }
 Run-Test "sync wrapper content"             { Test-SyncWrapperContent     }
 
+# --- Sync wrapper hash verification tests ---
+function Test-SyncWrapperHasHashCheck {
+  & pwsh -NoProfile -File $script:PsInstaller -Action install -Harness opencode -Source local -SkipSkills -Project | Out-Null
+  if ($LASTEXITCODE -ne 0) { throw "install failed" }
+  $content = Get-Content -Raw ".rubber-duck/sync-latest.ps1"
+  if (-not $content.Contains("InstallerHash")) { throw "hash check missing" }
+  if (-not $content.Contains("Get-FileHash")) { throw "SHA256 verification missing" }
+}
+
+function Test-SyncWrapperHashNoPlaceholder {
+  & pwsh -NoProfile -File $script:PsInstaller -Action install -Harness opencode -Source local -SkipSkills -Project | Out-Null
+  if ($LASTEXITCODE -ne 0) { throw "install failed" }
+  $content = Get-Content -Raw ".rubber-duck/sync-latest.ps1"
+  if ($content.Contains("{{INSTALLER_HASH}}")) { throw "placeholder not replaced" }
+}
+
+function Test-SyncWrapperPsHostDetection {
+  & pwsh -NoProfile -File $script:PsInstaller -Action install -Harness opencode -Source local -SkipSkills -Project | Out-Null
+  if ($LASTEXITCODE -ne 0) { throw "install failed" }
+  $content = Get-Content -Raw ".rubber-duck/sync-latest.ps1"
+  if (-not $content.Contains('$PSVersionInfo.PSExecutable')) { throw "psHost detection missing" }
+  if ($content.Contains("& pwsh ")) { throw "hardcoded pwsh still present" }
+}
+
+Run-Test "sync wrapper has hash check"            { Test-SyncWrapperHasHashCheck }
+Run-Test "sync wrapper hash placeholder replaced" { Test-SyncWrapperHashNoPlaceholder }
+Run-Test "sync wrapper psHost detection"          { Test-SyncWrapperPsHostDetection }
+
 "`n$($script:TestsRun - $script:Failures)/$($script:TestsRun) passed, $($script:Failures) failed"
 if ($script:Failures -gt 0) { exit 1 } else { exit 0 }

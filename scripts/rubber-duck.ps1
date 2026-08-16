@@ -86,8 +86,9 @@ function Get-ManifestPath {
 }
 
 # Build base args for sync replay. Unlike the bash sync_replay_cmd, this does
-# NOT append install-specific flags (SkipSkills, SkipAgentsMd, Extras) — the
-# caller is responsible for adding those based on context.
+# NOT append install-specific flags (SkipSkills, SkipAgentsMd, Extras).
+# The caller adds those per context. This divergence from bash sync_replay_cmd
+# is intentional: PowerShell parameter binding is explicit, not positional.
 function Get-SyncReplayArgs([string]$Action, [string]$HarnessCsv) {
   $args = @("-File", (Get-SyncScriptPath), "-Action", $Action, "-Harness", $HarnessCsv, "-Source", $Source, "-Branch", $Branch, "-RawBase", $RawBase)
   if ($Project) { $args += "-Project" } else { $args += "-Global" }
@@ -288,6 +289,13 @@ function rubber-duck {
       $syncGroups[$groupKey].Add($t)
     }
 
+    # Detect current PowerShell host for sync replay re-invocation
+    $psExe = $PSVersionInfo.PSExecutable
+    if ([string]::IsNullOrWhiteSpace($psExe)) {
+      $psExe = "pwsh"
+      try { Get-Command pwsh -ErrorAction Stop | Out-Null } catch { $psExe = "powershell" }
+    }
+
     foreach ($groupKey in $syncGroupOrder) {
       $parts = $groupKey -split '\|', 3
       $gInstallSkills = [bool]::Parse($parts[0])
@@ -301,7 +309,7 @@ function rubber-duck {
       if ($gExtras) { $syncArgs += "-Extras" }
       if ($DryRun) { $syncArgs += "-DryRun" }
       if ($AllowUntrustedSource) { $syncArgs += "-AllowUntrustedSource" }
-      & pwsh @syncArgs
+      & $psExe @syncArgs
       if ($LASTEXITCODE -ne 0) { throw "sync install failed for harness group: $groupHarness" }
     }
     if ($Prune) {
@@ -312,7 +320,7 @@ function rubber-duck {
           if ($SkipAgentsMd) { $syncArgs += "-SkipAgentsMd" }
           if ($DryRun) { $syncArgs += "-DryRun" }
           if ($AllowUntrustedSource) { $syncArgs += "-AllowUntrustedSource" }
-          & pwsh @syncArgs
+          & $psExe @syncArgs
           if ($LASTEXITCODE -ne 0) { throw "sync prune uninstall failed for target: $t" }
         }
       }

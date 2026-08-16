@@ -64,7 +64,15 @@ if (( SKIP_SYNC == 0 )); then
     trap cleanup EXIT
     curl -fsSL "${SYNC_INSTALLER_URL}" -o "${tmp_installer}"
     if [[ -n "${INSTALLER_HASH}" ]]; then
-      ACTUAL_HASH=$(sha256sum "${tmp_installer}" | awk '{print $1}')
+      ACTUAL_HASH=""
+      if command -v sha256sum >/dev/null 2>&1; then
+        ACTUAL_HASH=$(sha256sum "${tmp_installer}" | awk '{print $1}')
+      elif command -v shasum >/dev/null 2>&1; then
+        ACTUAL_HASH=$(shasum -a 256 "${tmp_installer}" | awk '{print $1}')
+      else
+        echo "ERROR: no sha256 tool available (sha256sum or shasum). Cannot verify installer." >&2
+        exit 1
+      fi
       if [[ "${ACTUAL_HASH}" != "${INSTALLER_HASH}" ]]; then
         echo "ERROR: installer hash mismatch (expected ${INSTALLER_HASH}, got ${ACTUAL_HASH})." >&2
         echo "The installer may have been tampered with. Aborting." >&2

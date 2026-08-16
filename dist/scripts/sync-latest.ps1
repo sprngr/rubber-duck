@@ -6,9 +6,18 @@ $ErrorActionPreference = "Stop"
 
 $SyncInstallerUrl = "{{SYNC_INSTALLER_URL}}"
 $SyncScopeArg = "{{SYNC_SCOPE_ARG}}"
-$InstallerHash = "ad44094393a051ff1a52ada41c00ef92e71df4ece5b856107c3c2a21fd04361a"
+$InstallerHash = "66c6ef5e823fb85b338d7956d50c4c0e2cfe9ceceed90dcf064c8ec0dcf0688a"
 
 $isRemote = $SyncInstallerUrl -match '^https?://'
+
+# Detect current PowerShell host for re-invocation
+$psHost = $PSVersionInfo.PSExecutable
+if ([string]::IsNullOrWhiteSpace($psHost)) {
+  $psHost = "pwsh"
+  try { Get-Command pwsh -ErrorAction Stop | Out-Null } catch {
+    $psHost = "powershell"
+  }
+}
 
 # --- Version check ---
 $currentVersion = ""
@@ -62,12 +71,12 @@ if ($isRemote) {
         throw "Installer hash mismatch (expected $InstallerHash, got $actualHash). The installer may have been tampered with."
       }
     }
-    & pwsh -NoProfile -File $tmp -Action sync $SyncScopeArg -Source web @args
+    & $psHost -NoProfile -File $tmp -Action sync $SyncScopeArg -Source web @args
     exit $LASTEXITCODE
   } finally {
     if (Test-Path $tmp) { Remove-Item -Force $tmp }
   }
 } else {
-  & pwsh -NoProfile -File $SyncInstallerUrl -Action sync $SyncScopeArg -Source local @args
+  & $psHost -NoProfile -File $SyncInstallerUrl -Action sync $SyncScopeArg -Source local @args
   exit $LASTEXITCODE
 }
