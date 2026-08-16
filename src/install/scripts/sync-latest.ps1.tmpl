@@ -7,6 +7,8 @@ $ErrorActionPreference = "Stop"
 $SyncInstallerUrl = "{{SYNC_INSTALLER_URL}}"
 $SyncScopeArg = "{{SYNC_SCOPE_ARG}}"
 
+$isRemote = $SyncInstallerUrl -match '^https?://'
+
 # --- Version check ---
 $currentVersion = ""
 $manifest = if ($SyncScopeArg -eq "--project") { ".rubber-duck/manifest.json" } else { Join-Path $HOME ".config/rubber-duck/manifest.json" }
@@ -17,7 +19,7 @@ if (Test-Path $manifest) {
   } catch { }
 }
 $remoteVersion = ""
-if ($SyncInstallerUrl -match '^https?://') {
+if ($isRemote) {
   try {
     $remoteVersion = (Invoke-WebRequest -UseBasicParsing -Uri "https://raw.githubusercontent.com/sprngr/rubber-duck/main/VERSION" -ErrorAction Stop).Content.Trim()
   } catch { }
@@ -40,7 +42,7 @@ if (-not [string]::IsNullOrWhiteSpace($currentVersion) -and -not [string]::IsNul
   }
 }
 
-if ($SyncInstallerUrl -match '^https?://') {
+if ($isRemote) {
   $tmpRoot = if ([string]::IsNullOrWhiteSpace($env:TEMP)) { [System.IO.Path]::GetTempPath() } else { $env:TEMP }
   $tmp = Join-Path $tmpRoot ("rubber-duck-sync-" + [Guid]::NewGuid().ToString() + ".ps1")
   try {

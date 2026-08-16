@@ -8,6 +8,9 @@ set -euo pipefail
 SYNC_INSTALLER_URL="{{SYNC_INSTALLER_URL}}"
 SYNC_SCOPE_FLAG="{{SYNC_SCOPE_FLAG}}"
 
+IS_REMOTE=0
+[[ "${SYNC_INSTALLER_URL}" == https://* || "${SYNC_INSTALLER_URL}" == http://* ]] && IS_REMOTE=1
+
 # --- Version check ---
 CURRENT_VERSION=""
 if [[ "${SYNC_SCOPE_FLAG}" == "--project" ]]; then
@@ -19,7 +22,7 @@ if [[ -f "${MANIFEST}" ]]; then
   CURRENT_VERSION=$(sed -n 's/.*"lastAppliedVersion":[[:space:]]*"\([^"]*\)".*/\1/p' "${MANIFEST}" 2>/dev/null || true)
 fi
 REMOTE_VERSION=""
-if [[ "${SYNC_INSTALLER_URL}" == https://* || "${SYNC_INSTALLER_URL}" == http://* ]]; then
+if (( IS_REMOTE )); then
   REMOTE_VERSION=$(curl -fsSL "https://raw.githubusercontent.com/sprngr/rubber-duck/main/VERSION" 2>/dev/null | tr -d '\r\n' || true)
 else
   LOCAL_VERSION_FILE="$(cd -- "$(dirname -- "${SYNC_INSTALLER_URL}")/.." && pwd)/VERSION"
@@ -41,7 +44,7 @@ if [[ -n "${CURRENT_VERSION}" && -n "${REMOTE_VERSION}" ]]; then
   fi
 fi
 
-if [[ "${SYNC_INSTALLER_URL}" == https://* || "${SYNC_INSTALLER_URL}" == http://* ]]; then
+if (( IS_REMOTE )); then
   tmp_installer="$(mktemp)"
   cleanup() { rm -f "${tmp_installer}"; }
   trap cleanup EXIT
