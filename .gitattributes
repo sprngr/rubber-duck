@@ -8,5 +8,6 @@
 *.json text eol=lf
 Makefile text eol=lf
 
-# Windows-specific scripts remain CRLF-friendly when needed
-*.ps1 text eol=crlf
+# PowerShell scripts: LF keeps generated artifacts byte-stable and hashes
+# equal to GitHub raw content (pwsh/PS 5.1 read LF fine)
+*.ps1 text eol=lf

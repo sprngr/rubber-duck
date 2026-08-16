@@ -22,9 +22,11 @@ fi
 if [[ -f "${MANIFEST}" ]]; then
   CURRENT_VERSION=$(sed -n 's/.*"lastAppliedVersion":[[:space:]]*"\([^"]*\)".*/\1/p' "${MANIFEST}" 2>/dev/null | tr -d '[:space:]' || true)
 fi
+REMOTE_BASE="${SYNC_INSTALLER_URL%/*/*}"
 REMOTE_VERSION=""
 if (( IS_REMOTE )); then
-  REMOTE_VERSION=$(curl -fsSL "https://raw.githubusercontent.com/sprngr/rubber-duck/main/VERSION" 2>/dev/null | tr -d '\r\n[:space:]' || true)
+  REMOTE_VERSION_URL="${REMOTE_BASE}/VERSION"
+  REMOTE_VERSION=$(curl -fsSL "${REMOTE_VERSION_URL}" 2>/dev/null | tr -d '\r\n[:space:]' || true)
 else
   LOCAL_VERSION_FILE="$(cd -- "$(dirname -- "${SYNC_INSTALLER_URL}")/.." && pwd)/VERSION"
   [[ -f "${LOCAL_VERSION_FILE}" ]] && REMOTE_VERSION=$(tr -d '\r\n[:space:]' < "${LOCAL_VERSION_FILE}" 2>/dev/null || true)
@@ -79,7 +81,7 @@ if (( SKIP_SYNC == 0 )); then
         exit 1
       fi
     fi
-    bash "${tmp_installer}" sync "${SYNC_SCOPE_FLAG}" --source web "$@"
+    bash "${tmp_installer}" sync "${SYNC_SCOPE_FLAG}" --source web --raw-base "${REMOTE_BASE}" "$@"
   else
     bash "${SYNC_INSTALLER_URL}" sync "${SYNC_SCOPE_FLAG}" --source local "$@"
   fi

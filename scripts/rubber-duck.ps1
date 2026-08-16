@@ -290,7 +290,8 @@ function rubber-duck {
     }
 
     # Detect current PowerShell host for sync replay re-invocation
-    $psExe = $PSVersionInfo.PSExecutable
+    $psExe = $null
+    try { $psExe = (Get-Process -Id $PID).Path } catch { }
     if ([string]::IsNullOrWhiteSpace($psExe)) {
       $psExe = "pwsh"
       try { Get-Command pwsh -ErrorAction Stop | Out-Null } catch { $psExe = "powershell" }
@@ -709,6 +710,13 @@ function Install-SyncWrapper {
     } finally {
       if (Test-Path $tmpTpl) { Remove-Item -Force $tmpTpl }
     }
+  }
+  # Pin hash to the installer actually running (file-backed installs).
+  # Piped installs have no file; keep committed hash as fallback.
+  $selfHash = Get-Sha256 $ScriptPath
+  if (-not [string]::IsNullOrWhiteSpace($selfHash)) {
+    $selfHash = $selfHash -replace '^sha256:', ''
+    $content = [regex]::Replace($content, '(?m)^\$InstallerHash = ".*"$', ('$InstallerHash = "' + $selfHash + '"'))
   }
   $content = $content.Replace("{{SYNC_SCOPE_ARG}}", $scopeArg)
   $content = $content.Replace("{{SYNC_INSTALLER_URL}}", $installerUrl)

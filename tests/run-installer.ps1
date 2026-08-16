@@ -200,13 +200,47 @@ function Test-SyncWrapperPsHostDetection {
   & pwsh -NoProfile -File $script:PsInstaller -Action install -Harness opencode -Source local -SkipSkills -Project | Out-Null
   if ($LASTEXITCODE -ne 0) { throw "install failed" }
   $content = Get-Content -Raw ".rubber-duck/sync-latest.ps1"
-  if (-not $content.Contains('$PSVersionInfo.PSExecutable')) { throw "psHost detection missing" }
+  if (-not $content.Contains('(Get-Process -Id $PID)')) { throw "psHost detection missing" }
   if ($content.Contains("& pwsh ")) { throw "hardcoded pwsh still present" }
 }
 
 Run-Test "sync wrapper has hash check"            { Test-SyncWrapperHasHashCheck }
 Run-Test "sync wrapper hash placeholder replaced" { Test-SyncWrapperHashNoPlaceholder }
+# End-to-end remote sync: web install from local HTTP server, wrapper
+# hash-verifies the downloaded installer, tampered installer aborts.
+function Test-SyncWrapperRemoteHashVerify {
+  $remote = "remote"
+  New-Item -ItemType Directory -Path $remote | Out-Null
+  Copy-Item -Recurse -Force (Join-Path $repoRoot "scripts") $remote
+  Copy-Item -Recurse -Force (Join-Path $repoRoot "dist") $remote
+  Copy-Item -Force (Join-Path $repoRoot "VERSION") $remote
+  $port = ([string](& python3 -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1",0)); print(s.getsockname()[1]); s.close()')).Trim()
+  $server = Start-Process python3 -ArgumentList @("-m","http.server",$port,"--bind","127.0.0.1","--directory",$remote) -PassThru
+  try {
+    for ($i = 0; $i -lt 20; $i++) {
+      try { Invoke-WebRequest -UseBasicParsing -Uri "http://127.0.0.1:$port/VERSION" -ErrorAction Stop | Out-Null; break }
+      catch { Start-Sleep -Milliseconds 200 }
+    }
+    & pwsh -NoProfile -File $script:PsInstaller -Action install -Harness opencode -Source web -RawBase "http://127.0.0.1:$port" -SkipSkills -AllowUntrustedSource -Project | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "web install failed" }
+    $content = Get-Content -Raw ".rubber-duck/sync-latest.ps1"
+    if ($content -notmatch '(?m)^\$InstallerHash = "[0-9a-f]{64}"') { throw "hash pin missing" }
+    if (-not $content.Contains("http://127.0.0.1:$port/scripts/rubber-duck.ps1")) { throw "installer URL not substituted" }
+    # Positive: downloaded installer matches pinned hash (raw-base forwarded).
+    & pwsh -NoProfile -File ".rubber-duck/sync-latest.ps1" -AllowUntrustedSource | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "positive sync failed" }
+    # Negative: tampered served installer must abort with hash mismatch.
+    Add-Content -Path (Join-Path $remote "scripts/rubber-duck.ps1") -Value "# tampered"
+    $out = & pwsh -NoProfile -File ".rubber-duck/sync-latest.ps1" -AllowUntrustedSource 2>&1 | Out-String
+    if ($LASTEXITCODE -eq 0) { throw "tampered sync should fail" }
+    if (-not $out.Contains("hash mismatch")) { throw "expected hash mismatch message" }
+  } finally {
+    if ($server -and -not $server.HasExited) { Stop-Process -Id $server.Id -Force }
+  }
+}
+
 Run-Test "sync wrapper psHost detection"          { Test-SyncWrapperPsHostDetection }
+Run-Test "sync wrapper remote hash verify"        { Test-SyncWrapperRemoteHashVerify }
 
 "`n$($script:TestsRun - $script:Failures)/$($script:TestsRun) passed, $($script:Failures) failed"
 if ($script:Failures -gt 0) { exit 1 } else { exit 0 }

@@ -6,12 +6,13 @@ $ErrorActionPreference = "Stop"
 
 $SyncInstallerUrl = "{{SYNC_INSTALLER_URL}}"
 $SyncScopeArg = "{{SYNC_SCOPE_ARG}}"
-$InstallerHash = "66c6ef5e823fb85b338d7956d50c4c0e2cfe9ceceed90dcf064c8ec0dcf0688a"
+$InstallerHash = "ab3ab37be46463b22c782f409a7c01a4a26152de2289338e863a0735c628cb6b"
 
 $isRemote = $SyncInstallerUrl -match '^https?://'
 
 # Detect current PowerShell host for re-invocation
-$psHost = $PSVersionInfo.PSExecutable
+$psHost = $null
+try { $psHost = (Get-Process -Id $PID).Path } catch { }
 if ([string]::IsNullOrWhiteSpace($psHost)) {
   $psHost = "pwsh"
   try { Get-Command pwsh -ErrorAction Stop | Out-Null } catch {
@@ -29,9 +30,15 @@ if (Test-Path $manifest) {
   } catch { }
 }
 $remoteVersion = ""
+$remoteBase = $SyncInstallerUrl
+for ($i = 0; $i -lt 2; $i++) {
+  $idx = $remoteBase.LastIndexOf("/")
+  if ($idx -gt 0) { $remoteBase = $remoteBase.Substring(0, $idx) }
+}
 if ($isRemote) {
+  $remoteVersionUrl = "$remoteBase/VERSION"
   try {
-    $remoteVersion = (Invoke-WebRequest -UseBasicParsing -Uri "https://raw.githubusercontent.com/sprngr/rubber-duck/main/VERSION" -ErrorAction Stop).Content.Trim()
+    $remoteVersion = (Invoke-WebRequest -UseBasicParsing -Uri $remoteVersionUrl -ErrorAction Stop).Content.Trim()
   } catch { }
 } else {
   $localVersionFile = Join-Path (Split-Path -Parent (Split-Path -Parent $SyncInstallerUrl)) "VERSION"
@@ -60,7 +67,13 @@ if (-not [string]::IsNullOrWhiteSpace($currentVersion) -and -not [string]::IsNul
   }
 }
 
+# Scope is embedded in $SyncScopeArg; strip it from forwarded args so
+# duplicate binding cannot occur. Raw-base derives from the installer URL
+# (user override allowed and kept).
+$forwardArgs = @($args | Where-Object { $_ -ne "-Project" -and $_ -ne "-Global" })
+
 if ($isRemote) {
+  if (-not ($args -contains "-RawBase")) { $forwardArgs += @("-RawBase", $remoteBase) }
   $tmpRoot = if ([string]::IsNullOrWhiteSpace($env:TEMP)) { [System.IO.Path]::GetTempPath() } else { $env:TEMP }
   $tmp = Join-Path $tmpRoot ("rubber-duck-sync-" + [Guid]::NewGuid().ToString() + ".ps1")
   try {
@@ -71,12 +84,12 @@ if ($isRemote) {
         throw "Installer hash mismatch (expected $InstallerHash, got $actualHash). The installer may have been tampered with."
       }
     }
-    & $psHost -NoProfile -File $tmp -Action sync $SyncScopeArg -Source web @args
+    & $psHost -NoProfile -File $tmp -Action sync $SyncScopeArg -Source web @forwardArgs
     exit $LASTEXITCODE
   } finally {
     if (Test-Path $tmp) { Remove-Item -Force $tmp }
   }
 } else {
-  & $psHost -NoProfile -File $SyncInstallerUrl -Action sync $SyncScopeArg -Source local @args
+  & $psHost -NoProfile -File $SyncInstallerUrl -Action sync $SyncScopeArg -Source local @forwardArgs
   exit $LASTEXITCODE
 }

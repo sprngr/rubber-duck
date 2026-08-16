@@ -33,10 +33,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Sync wrapper fallback templates removed from both installers. If the sync template cannot be fetched, the installer exits with a clear error instead of silently falling back to an embedded template.
 - Sync replay functions deduplicated: bash `sync_replay_install_cmd` + `sync_replay_uninstall_cmd` merged into `sync_replay_cmd`; PowerShell `Get-SyncReplayInstallArgs` + `Get-SyncReplayUninstallArgs` merged into `Get-SyncReplayArgs`.
 - Manifest template path extracted to `MANIFEST_TEMPLATE_PATH` constant (bash installer).
+- Sync wrapper version check derives the `VERSION` URL from the installer URL (branch/custom raw-base aware) instead of hardcoding `main`.
+- Bash installer writes sync wrapper tokens with `sed` instead of `python3`, removing the python3 dependency from the install path.
 
 ### Fixed
 
 - Bash installer: `running_piped()` function definition moved before the sync block that calls it, fixing a function-not-found error when running sync actions.
+- Sync wrapper hash pinning now computed from the installer file actually used (LF-normalized); previously the baked hash was computed over CRLF content, so every remote sync failed verification with a false "tampered" error.
+- CI drift: `*.ps1` line endings standardized to LF in `.gitattributes`; generated `dist/scripts/sync-latest.ps1` now byte-matches rendered output.
+- PowerShell sync wrapper host detection: replaced inert `$PSVersionInfo.PSExecutable` (not an automatic variable) with `(Get-Process -Id $PID).Path`.
+- PowerShell sync wrapper: scope is embedded in the wrapper; forwarded `-Project`/`-Global` args are filtered, so explicit scope flags no longer cause a duplicate-parameter binding error.
+- Sync wrapper now forwards the derived `raw-base` on remote sync, so installs from custom raw-bases/branches replay against the correct source instead of defaulting to `main`.
 
 ## [v2.1.4] - 2026-08-14
 

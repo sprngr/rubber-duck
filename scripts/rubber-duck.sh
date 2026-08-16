@@ -944,7 +944,7 @@ sync_wrapper_path() {
 }
 
 install_sync_wrapper() {
-  local target scope_flag tmp src_tpl installer_url
+  local target scope_flag tmp src_tpl installer_url installer_hash
   target="$(sync_wrapper_path)"
   scope_flag="--project"
   (( PROJECT_SCOPE == 0 )) && scope_flag="--global"
@@ -972,18 +972,17 @@ install_sync_wrapper() {
       exit 1
     fi
   fi
-  python3 - "${tmp}" "${scope_flag}" "${installer_url}" <<'PY'
-import pathlib
-import sys
-
-p = pathlib.Path(sys.argv[1])
-scope = sys.argv[2]
-url = sys.argv[3]
-content = p.read_text()
-content = content.replace("{{SYNC_SCOPE_FLAG}}", scope)
-content = content.replace("{{SYNC_INSTALLER_URL}}", url)
-p.write_text(content)
-PY
+  # Pin hash to the installer actually running: file-backed installs replace
+  # the committed (main-branch) hash so branch/custom raw-base syncs verify.
+  # Piped installs have no file, keep committed hash as fallback.
+  if [[ -n "${SCRIPT_PATH}" && -f "${SCRIPT_PATH}" ]]; then
+    if installer_hash="$(compute_sha256 "${SCRIPT_PATH}")"; then
+      installer_hash="${installer_hash#sha256:}"
+      sed -i "s|^INSTALLER_HASH=\".*\"|INSTALLER_HASH=\"${installer_hash}\"|g" "${tmp}"
+    fi
+  fi
+  sed -i "s|{{SYNC_SCOPE_FLAG}}|${scope_flag}|g" "${tmp}"
+  sed -i "s|{{SYNC_INSTALLER_URL}}|${installer_url}|g" "${tmp}"
   chmod +x "${tmp}"
   mv "${tmp}" "${target}"
   log "Installed sync helper -> ${target}"

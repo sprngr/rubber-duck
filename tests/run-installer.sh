@@ -205,7 +205,42 @@ test_sync_wrapper_hash_no_placeholder() {
 }
 
 run_test "sync wrapper has hash check"       test_sync_wrapper_has_hash_check
+# End-to-end remote sync: web install from local HTTP server, wrapper
+# hash-verifies the downloaded installer, tampered installer aborts.
+test_sync_wrapper_remote_hash_verify() {
+  local ws="$1" port server_pid out rc i
+  mkdir -p "$ws/remote"
+  cp -r "$repo_root/scripts" "$ws/remote/"
+  cp -r "$repo_root/dist" "$ws/remote/"
+  cp "$repo_root/VERSION" "$ws/remote/"
+  port=$(python3 -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1",0)); print(s.getsockname()[1]); s.close()')
+  python3 -m http.server "$port" --bind 127.0.0.1 --directory "$ws/remote" >/dev/null 2>&1 &
+  server_pid=$!
+  trap 'kill "${server_pid:-}" 2>/dev/null || true' EXIT
+  for i in $(seq 1 20); do
+    if curl -fsS "http://127.0.0.1:$port/VERSION" >/dev/null 2>&1; then break; fi
+    sleep 0.2
+  done
+
+  bash "$sh_installer" install --opencode --source web --raw-base "http://127.0.0.1:$port" --skip-skills --allow-untrusted-source --project || return 1
+  local wrapper=".rubber-duck/sync-latest.sh"
+  [[ -f "$wrapper" ]] || return 1
+  grep -q '^INSTALLER_HASH="[0-9a-f]\{64\}"' "$wrapper" || return 1
+  grep -Fq "http://127.0.0.1:$port/scripts/rubber-duck.sh" "$wrapper" || return 1
+
+  # Positive: downloaded installer matches pinned hash (raw-base forwarded).
+  bash "$wrapper" --allow-untrusted-source || return 1
+
+  # Negative: tampered served installer must abort with hash mismatch.
+  echo "# tampered" >> "$ws/remote/scripts/rubber-duck.sh"
+  out=$(bash "$wrapper" --allow-untrusted-source 2>&1) && rc=0 || rc=$?
+  [[ $rc -ne 0 ]] || return 1
+  echo "$out" | grep -q "hash mismatch" || return 1
+  return 0
+}
+
 run_test "sync wrapper hash placeholder replaced" test_sync_wrapper_hash_no_placeholder
+run_test "sync wrapper remote hash verify" test_sync_wrapper_remote_hash_verify
 
 printf '\n%d/%d passed, %d failed\n' "$((tests_run - failures))" "$tests_run" "$failures"
 exit $((failures > 0 ? 1 : 0))
