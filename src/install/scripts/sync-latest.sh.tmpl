@@ -37,6 +37,9 @@ version_gt() {
   local a=(${1#v}) b=(${2#v})
   for i in 0 1 2; do
     local na=${a[$i]:-0} nb=${b[$i]:-0}
+    if [[ ! "${na}" =~ ^[0-9]+$ || ! "${nb}" =~ ^[0-9]+$ ]]; then
+      return 2
+    fi
     if (( na > nb )); then return 0; fi
     if (( na < nb )); then return 1; fi
   done
@@ -45,17 +48,23 @@ version_gt() {
 if [[ -n "${CURRENT_VERSION}" && -n "${REMOTE_VERSION}" ]]; then
   if [[ "${CURRENT_VERSION}" == "${REMOTE_VERSION}" ]]; then
     echo "Already up to date (${CURRENT_VERSION})."
-  elif version_gt "${REMOTE_VERSION}" "${CURRENT_VERSION}"; then
-    echo "New version available: ${CURRENT_VERSION} -> ${REMOTE_VERSION}"
-    echo "Changelog: https://github.com/sprngr/rubber-duck/blob/main/CHANGELOG.md"
-    printf "Update now? [y/N] "
-    read -r REPLY
-    if [[ "${REPLY}" != "y" && "${REPLY}" != "Y" ]]; then
-      echo "Skipping update."
-      SKIP_SYNC=1
-    fi
   else
-    echo "WARNING: local version (${CURRENT_VERSION}) is newer than remote (${REMOTE_VERSION})."
+    version_gt "${REMOTE_VERSION}" "${CURRENT_VERSION}"
+    version_compare_rc=$?
+    if (( version_compare_rc == 0 )); then
+      echo "New version available: ${CURRENT_VERSION} -> ${REMOTE_VERSION}"
+      echo "Changelog: https://github.com/sprngr/rubber-duck/blob/main/CHANGELOG.md"
+      printf "Update now? [y/N] "
+      read -r REPLY
+      if [[ "${REPLY}" != "y" && "${REPLY}" != "Y" ]]; then
+        echo "Skipping update."
+        SKIP_SYNC=1
+      fi
+    elif (( version_compare_rc == 2 )); then
+      echo "Unable to compare versions: ${CURRENT_VERSION} vs ${REMOTE_VERSION}. Syncing anyway."
+    else
+      echo "WARNING: local version (${CURRENT_VERSION}) is newer than remote (${REMOTE_VERSION})."
+    fi
   fi
 fi
 

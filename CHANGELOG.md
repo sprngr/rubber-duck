@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - PowerShell sync wrapper host detection: replaced inert `$PSVersionInfo.PSExecutable` (not an automatic variable) with `(Get-Process -Id $PID).Path`.
 - PowerShell sync wrapper: scope is embedded in the wrapper; forwarded `-Project`/`-Global` args are filtered, so explicit scope flags no longer cause a duplicate-parameter binding error.
 - Sync wrapper now forwards the derived `raw-base` on remote sync, so installs from custom raw-bases/branches replay against the correct source instead of defaulting to `main`.
+- Bash sync wrapper version comparison no longer crashes on pre-release version strings (e.g. `v2.3.0-beta`); incomparable versions report "Unable to compare... syncing anyway", matching PowerShell behavior.
 
 ## [v2.1.4] - 2026-08-14
 

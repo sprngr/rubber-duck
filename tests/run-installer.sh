@@ -169,6 +169,9 @@ version_gt() {
   local a=(${1#v}) b=(${2#v})
   for i in 0 1 2; do
     local na=${a[$i]:-0} nb=${b[$i]:-0}
+    if [[ ! "${na}" =~ ^[0-9]+$ || ! "${nb}" =~ ^[0-9]+$ ]]; then
+      return 2
+    fi
     if (( na > nb )); then return 0; fi
     if (( na < nb )); then return 1; fi
   done
@@ -182,6 +185,11 @@ test_version_gt_patch() { version_gt "v2.2.1" "v2.2.0"; }
 test_version_gt_major() { version_gt "v3.0.0" "v2.9.9"; }
 test_version_gt_no_v_prefix() { version_gt "2.3.0" "2.2.0"; }
 test_version_gt_invalid() { ! version_gt "" "v2.2.0"; }
+test_version_gt_prerelease_incomparable() {
+  version_gt "v2.3.0-beta" "v2.3.0" && return 1
+  [[ $? -eq 2 ]] || return 1
+}
+test_version_gt_prerelease_higher_core() { version_gt "v2.4.0-rc1" "v2.3.0"; }
 
 run_test "version_gt equal"           test_version_gt_equal
 run_test "version_gt newer"           test_version_gt_newer
@@ -190,6 +198,8 @@ run_test "version_gt patch"           test_version_gt_patch
 run_test "version_gt major"           test_version_gt_major
 run_test "version_gt no v prefix"     test_version_gt_no_v_prefix
 run_test "version_gt invalid"         test_version_gt_invalid
+run_test "version_gt prerelease incomparable" test_version_gt_prerelease_incomparable
+run_test "version_gt prerelease higher core"  test_version_gt_prerelease_higher_core
 
 # --- Sync wrapper hash verification tests ---
 test_sync_wrapper_has_hash_check() {
