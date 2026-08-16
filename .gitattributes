@@ -8,5 +8,5 @@
 *.json text eol=lf
 Makefile text eol=lf
 
-# Windows-specific scripts remain CRLF-friendly when needed
-*.ps1 text eol=crlf
+# Windows-specific scripts
+*.ps1 text eol=lf
