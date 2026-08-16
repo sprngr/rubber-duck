@@ -7,6 +7,32 @@ $ErrorActionPreference = "Stop"
 $SyncInstallerUrl = "{{SYNC_INSTALLER_URL}}"
 $SyncScopeArg = "{{SYNC_SCOPE_ARG}}"
 
+# --- Version check ---
+$currentVersion = ""
+$manifest = if ($SyncScopeArg -eq "--project") { ".rubber-duck/manifest.json" } else { Join-Path $HOME ".config/rubber-duck/manifest.json" }
+if (Test-Path $manifest) {
+  try {
+    $m = Get-Content -Raw $manifest | ConvertFrom-Json
+    if ($m.source -and $m.source.lastAppliedVersion) { $currentVersion = [string]$m.source.lastAppliedVersion }
+  } catch { }
+}
+$remoteVersion = ""
+try {
+  $remoteVersion = (Invoke-WebRequest -UseBasicParsing -Uri "https://raw.githubusercontent.com/sprngr/rubber-duck/main/VERSION" -ErrorAction Stop).Content.Trim()
+} catch { }
+if (-not [string]::IsNullOrWhiteSpace($currentVersion) -and -not [string]::IsNullOrWhiteSpace($remoteVersion)) {
+  if ($currentVersion -eq $remoteVersion) {
+    Write-Host "Already up to date ($currentVersion)."
+  } elseif ([version]($currentVersion.TrimStart('v')) -lt [version]($remoteVersion.TrimStart('v'))) {
+    Write-Host "New version available: $currentVersion -> $remoteVersion"
+    Write-Host "Changelog: https://github.com/sprngr/rubber-duck/blob/main/CHANGELOG.md"
+    $reply = Read-Host "Update now? [y/N]"
+    if ($reply -ne "y" -and $reply -ne "Y") { Write-Host "Skipping update."; exit 0 }
+  } else {
+    Write-Host "WARNING: local version ($currentVersion) is newer than remote ($remoteVersion)."
+  }
+}
+
 if ($SyncInstallerUrl -match '^https?://') {
   $tmpRoot = if ([string]::IsNullOrWhiteSpace($env:TEMP)) { [System.IO.Path]::GetTempPath() } else { $env:TEMP }
   $tmp = Join-Path $tmpRoot ("rubber-duck-sync-" + [Guid]::NewGuid().ToString() + ".ps1")

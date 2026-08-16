@@ -8,6 +8,34 @@ set -euo pipefail
 SYNC_INSTALLER_URL="{{SYNC_INSTALLER_URL}}"
 SYNC_SCOPE_FLAG="{{SYNC_SCOPE_FLAG}}"
 
+# --- Version check ---
+CURRENT_VERSION=""
+if [[ "${SYNC_SCOPE_FLAG}" == "--project" ]]; then
+  MANIFEST=".rubber-duck/manifest.json"
+else
+  MANIFEST="${HOME}/.config/rubber-duck/manifest.json"
+fi
+if [[ -f "${MANIFEST}" ]]; then
+  CURRENT_VERSION=$(sed -n 's/.*"lastAppliedVersion":[[:space:]]*"\([^"]*\)".*/\1/p' "${MANIFEST}" 2>/dev/null || true)
+fi
+REMOTE_VERSION=""
+REMOTE_VERSION=$(curl -fsSL "https://raw.githubusercontent.com/sprngr/rubber-duck/main/VERSION" 2>/dev/null | tr -d '\r\n' || true)
+if [[ -n "${CURRENT_VERSION}" && -n "${REMOTE_VERSION}" ]]; then
+  if [[ "${CURRENT_VERSION}" == "${REMOTE_VERSION}" ]]; then
+    echo "Already up to date (${CURRENT_VERSION})."
+  elif printf '%s\n%s\n' "${CURRENT_VERSION}" "${REMOTE_VERSION}" | sort -V | tail -1 | grep -qxF "${REMOTE_VERSION}"; then
+    echo "New version available: ${CURRENT_VERSION} -> ${REMOTE_VERSION}"
+    echo "Changelog: https://github.com/sprngr/rubber-duck/blob/main/CHANGELOG.md"
+    printf "Update now? [y/N] "
+    read -r REPLY
+    if [[ "${REPLY}" != "y" && "${REPLY}" != "Y" ]]; then
+      echo "Skipping update."
+    fi
+  else
+    echo "WARNING: local version (${CURRENT_VERSION}) is newer than remote (${REMOTE_VERSION})."
+  fi
+fi
+
 if [[ "${SYNC_INSTALLER_URL}" == https://* || "${SYNC_INSTALLER_URL}" == http://* ]]; then
   tmp_installer="$(mktemp)"
   cleanup() { rm -f "${tmp_installer}"; }
