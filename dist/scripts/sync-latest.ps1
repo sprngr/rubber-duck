@@ -17,9 +17,16 @@ if (Test-Path $manifest) {
   } catch { }
 }
 $remoteVersion = ""
-try {
-  $remoteVersion = (Invoke-WebRequest -UseBasicParsing -Uri "https://raw.githubusercontent.com/sprngr/rubber-duck/main/VERSION" -ErrorAction Stop).Content.Trim()
-} catch { }
+if ($SyncInstallerUrl -match '^https?://') {
+  try {
+    $remoteVersion = (Invoke-WebRequest -UseBasicParsing -Uri "https://raw.githubusercontent.com/sprngr/rubber-duck/main/VERSION" -ErrorAction Stop).Content.Trim()
+  } catch { }
+} else {
+  $localVersionFile = Join-Path (Split-Path -Parent (Split-Path -Parent $SyncInstallerUrl)) "VERSION"
+  if (Test-Path $localVersionFile) {
+    try { $remoteVersion = (Get-Content -Raw $localVersionFile).Trim() } catch { }
+  }
+}
 if (-not [string]::IsNullOrWhiteSpace($currentVersion) -and -not [string]::IsNullOrWhiteSpace($remoteVersion)) {
   if ($currentVersion -eq $remoteVersion) {
     Write-Host "Already up to date ($currentVersion)."

@@ -19,7 +19,12 @@ if [[ -f "${MANIFEST}" ]]; then
   CURRENT_VERSION=$(sed -n 's/.*"lastAppliedVersion":[[:space:]]*"\([^"]*\)".*/\1/p' "${MANIFEST}" 2>/dev/null || true)
 fi
 REMOTE_VERSION=""
-REMOTE_VERSION=$(curl -fsSL "https://raw.githubusercontent.com/sprngr/rubber-duck/main/VERSION" 2>/dev/null | tr -d '\r\n' || true)
+if [[ "${SYNC_INSTALLER_URL}" == https://* || "${SYNC_INSTALLER_URL}" == http://* ]]; then
+  REMOTE_VERSION=$(curl -fsSL "https://raw.githubusercontent.com/sprngr/rubber-duck/main/VERSION" 2>/dev/null | tr -d '\r\n' || true)
+else
+  LOCAL_VERSION_FILE="$(cd -- "$(dirname -- "${SYNC_INSTALLER_URL}")/.." && pwd)/VERSION"
+  [[ -f "${LOCAL_VERSION_FILE}" ]] && REMOTE_VERSION=$(tr -d '\r\n' < "${LOCAL_VERSION_FILE}" 2>/dev/null || true)
+fi
 if [[ -n "${CURRENT_VERSION}" && -n "${REMOTE_VERSION}" ]]; then
   if [[ "${CURRENT_VERSION}" == "${REMOTE_VERSION}" ]]; then
     echo "Already up to date (${CURRENT_VERSION})."
