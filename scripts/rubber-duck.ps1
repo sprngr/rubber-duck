@@ -711,13 +711,6 @@ function Install-SyncWrapper {
       if (Test-Path $tmpTpl) { Remove-Item -Force $tmpTpl }
     }
   }
-  # Pin hash to the installer actually running (file-backed installs).
-  # Piped installs have no file; keep committed hash as fallback.
-  $selfHash = Get-Sha256 $ScriptPath
-  if (-not [string]::IsNullOrWhiteSpace($selfHash)) {
-    $selfHash = $selfHash -replace '^sha256:', ''
-    $content = [regex]::Replace($content, '(?m)^\$InstallerHash = ".*"$', ('$InstallerHash = "' + $selfHash + '"'))
-  }
   $content = $content.Replace("{{SYNC_SCOPE_ARG}}", $scopeArg)
   $content = $content.Replace("{{SYNC_INSTALLER_URL}}", $installerUrl)
   Set-Content -Path $target -Value $content

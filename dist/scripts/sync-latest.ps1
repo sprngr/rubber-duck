@@ -6,7 +6,6 @@ $ErrorActionPreference = "Stop"
 
 $SyncInstallerUrl = "{{SYNC_INSTALLER_URL}}"
 $SyncScopeArg = "{{SYNC_SCOPE_ARG}}"
-$InstallerHash = "ab3ab37be46463b22c782f409a7c01a4a26152de2289338e863a0735c628cb6b"
 
 $isRemote = $SyncInstallerUrl -match '^https?://'
 
@@ -52,7 +51,6 @@ if ($isRemote) {
     try { $remoteVersion = (Get-Content -Raw $localVersionFile).Trim() } catch { }
   }
 }
-$verifyInstallerHash = $true
 if (-not [string]::IsNullOrWhiteSpace($currentVersion) -and -not [string]::IsNullOrWhiteSpace($remoteVersion)) {
   if ($currentVersion -eq $remoteVersion) {
     Write-Host "Already up to date ($currentVersion)."
@@ -66,7 +64,6 @@ if (-not [string]::IsNullOrWhiteSpace($currentVersion) -and -not [string]::IsNul
       Write-Host "Changelog: https://github.com/sprngr/rubber-duck/blob/main/CHANGELOG.md"
       $reply = Read-Host "Update now? [y/N]"
       if ($reply -ne "y" -and $reply -ne "Y") { Write-Host "Skipping update."; exit 0 }
-      else { $verifyInstallerHash = $false }
     } elseif ($null -ne $curVer -and $null -ne $remVer) {
       Write-Host "WARNING: local version ($currentVersion) is newer than remote ($remoteVersion)."
     } else {
@@ -84,12 +81,6 @@ if ($isRemote) {
   $tmp = Join-Path $tmpRoot ("rubber-duck-sync-" + [Guid]::NewGuid().ToString() + ".ps1")
   try {
     Invoke-WebRequest -UseBasicParsing -Uri $SyncInstallerUrl -OutFile $tmp
-    if (-not [string]::IsNullOrWhiteSpace($InstallerHash) -and $verifyInstallerHash) {
-      $actualHash = (Get-FileHash -Algorithm SHA256 -Path $tmp).Hash.ToLower()
-      if ($actualHash -ne $InstallerHash.ToLower()) {
-        throw "Installer hash mismatch (expected $InstallerHash, got $actualHash). Installer content changed without a version bump."
-      }
-    }
     & $psHost -NoProfile -File $tmp -Action sync $SyncScopeArg -Source web @forwardArgs
     exit $LASTEXITCODE
   } finally {

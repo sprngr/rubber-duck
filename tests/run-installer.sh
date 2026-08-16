@@ -201,24 +201,10 @@ run_test "version_gt invalid"         test_version_gt_invalid
 run_test "version_gt prerelease incomparable" test_version_gt_prerelease_incomparable
 run_test "version_gt prerelease higher core"  test_version_gt_prerelease_higher_core
 
-# --- Sync wrapper hash verification tests ---
-test_sync_wrapper_has_hash_check() {
-  bash "$sh_installer" install --opencode --source local --skip-skills --project || return 1
-  grep -q 'INSTALLER_HASH' .rubber-duck/sync-latest.sh || return 1
-  grep -q 'sha256sum\|shasum' .rubber-duck/sync-latest.sh || return 1
-}
-
-test_sync_wrapper_hash_no_placeholder() {
-  bash "$sh_installer" install --opencode --source local --skip-skills --project || return 1
-  grep -q '{{INSTALLER_HASH}}' .rubber-duck/sync-latest.sh && return 1
-  return 0
-}
-
-run_test "sync wrapper has hash check"       test_sync_wrapper_has_hash_check
 # End-to-end remote sync: web install from local HTTP server, wrapper
-# hash-verifies the downloaded installer, tampered installer aborts.
-test_sync_wrapper_remote_hash_verify() {
-  local ws="$1" port server_pid out rc i
+# downloads the installer from the same base and runs sync.
+test_sync_wrapper_remote_sync() {
+  local ws="$1" port server_pid rc i
   mkdir -p "$ws/remote"
   cp -r "$repo_root/scripts" "$ws/remote/"
   cp -r "$repo_root/dist" "$ws/remote/"
@@ -235,25 +221,16 @@ test_sync_wrapper_remote_hash_verify() {
   bash "$sh_installer" install --opencode --source web --raw-base "http://127.0.0.1:$port" --skip-skills --allow-untrusted-source --project || return 1
   local wrapper=".rubber-duck/sync-latest.sh"
   [[ -f "$wrapper" ]] || return 1
-  grep -q '^INSTALLER_HASH="[0-9a-f]\{64\}"' "$wrapper" || return 1
   grep -Fq "http://127.0.0.1:$port/scripts/rubber-duck.sh" "$wrapper" || return 1
 
-  # Positive: downloaded installer matches pinned hash (raw-base forwarded).
+  # Same version: no prompt, sync runs (raw-base forwarded by wrapper).
   bash "$wrapper" --allow-untrusted-source || return 1
-
-  # Negative: tampered served installer must abort with hash mismatch.
-  echo "# tampered" >> "$ws/remote/scripts/rubber-duck.sh"
-  out=$(bash "$wrapper" --allow-untrusted-source 2>&1) && rc=0 || rc=$?
-  [[ $rc -ne 0 ]] || return 1
-  echo "$out" | grep -q "hash mismatch" || return 1
   return 0
 }
 
-run_test "sync wrapper hash placeholder replaced" test_sync_wrapper_hash_no_placeholder
-# Upgrade path: confirmed version bump skips the stale pin; wrapper
-# self-heals to the new installer's hash after sync.
-test_sync_wrapper_upgrade_skips_hash() {
-  local ws="$1" port server_pid out rc i new_hash
+# Upgrade path: version bump prompts; accepting syncs the new installer.
+test_sync_wrapper_upgrade() {
+  local ws="$1" port server_pid out rc i
   mkdir -p "$ws/remote"
   cp -r "$repo_root/scripts" "$ws/remote/"
   cp -r "$repo_root/dist" "$ws/remote/"
@@ -274,17 +251,15 @@ test_sync_wrapper_upgrade_skips_hash() {
   # Release v2.3.0: bump VERSION + change installer bytes.
   echo "v2.3.0" > "$ws/remote/VERSION"
   echo "# v2.3.0" >> "$ws/remote/scripts/rubber-duck.sh"
-  new_hash=$(sha256sum "$ws/remote/scripts/rubber-duck.sh" | awk '{print $1}')
 
   out=$(printf 'y\n' | bash "$wrapper" --allow-untrusted-source 2>&1) && rc=0 || rc=$?
   [[ $rc -eq 0 ]] || return 1
   echo "$out" | grep -q "New version available: v2.2.0 -> v2.3.0" || return 1
-  grep -q "^INSTALLER_HASH=\"${new_hash}\"" "$wrapper" || return 1
   return 0
 }
 
-run_test "sync wrapper remote hash verify" test_sync_wrapper_remote_hash_verify
-run_test "sync wrapper upgrade skips hash" test_sync_wrapper_upgrade_skips_hash
+run_test "sync wrapper remote sync" test_sync_wrapper_remote_sync
+run_test "sync wrapper upgrade"     test_sync_wrapper_upgrade
 
 printf '\n%d/%d passed, %d failed\n' "$((tests_run - failures))" "$tests_run" "$failures"
 exit $((failures > 0 ? 1 : 0))

@@ -7,7 +7,6 @@ set -euo pipefail
 
 SYNC_INSTALLER_URL="{{SYNC_INSTALLER_URL}}"
 SYNC_SCOPE_FLAG="{{SYNC_SCOPE_FLAG}}"
-INSTALLER_HASH="e8d14eba6c1a63b3e68018a36559d9b23b6b167a58180d26b5be63a8b0513a57"
 
 IS_REMOTE=0
 [[ "${SYNC_INSTALLER_URL}" == https://* || "${SYNC_INSTALLER_URL}" == http://* ]] && IS_REMOTE=1
@@ -31,7 +30,6 @@ else
   LOCAL_VERSION_FILE="$(cd -- "$(dirname -- "${SYNC_INSTALLER_URL}")/.." && pwd)/VERSION"
   [[ -f "${LOCAL_VERSION_FILE}" ]] && REMOTE_VERSION=$(tr -d '\r\n[:space:]' < "${LOCAL_VERSION_FILE}" 2>/dev/null || true)
 fi
-VERIFY_INSTALLER_HASH=1
 version_gt() {
   local IFS='.'
   local a=(${1#v}) b=(${2#v})
@@ -59,9 +57,6 @@ if [[ -n "${CURRENT_VERSION}" && -n "${REMOTE_VERSION}" ]]; then
       if [[ "${REPLY}" != "y" && "${REPLY}" != "Y" ]]; then
         echo "Skipping update."
         exit 0
-      else
-        # Bump accepted: old pin is stale by design; consent covers the change.
-        VERIFY_INSTALLER_HASH=0
       fi
     elif (( version_compare_rc == 2 )); then
       echo "Unable to compare versions: ${CURRENT_VERSION} vs ${REMOTE_VERSION}. Syncing anyway."
@@ -76,22 +71,6 @@ if (( IS_REMOTE )); then
   cleanup() { rm -f "${tmp_installer}"; }
   trap cleanup EXIT
   curl -fsSL "${SYNC_INSTALLER_URL}" -o "${tmp_installer}"
-  if [[ -n "${INSTALLER_HASH}" && ${VERIFY_INSTALLER_HASH} == 1 ]]; then
-    ACTUAL_HASH=""
-    if command -v sha256sum >/dev/null 2>&1; then
-      ACTUAL_HASH=$(sha256sum "${tmp_installer}" | awk '{print $1}')
-    elif command -v shasum >/dev/null 2>&1; then
-      ACTUAL_HASH=$(shasum -a 256 "${tmp_installer}" | awk '{print $1}')
-    else
-      echo "ERROR: no sha256 tool available (sha256sum or shasum). Cannot verify installer." >&2
-      exit 1
-    fi
-    if [[ "${ACTUAL_HASH}" != "${INSTALLER_HASH}" ]]; then
-      echo "ERROR: installer hash mismatch (expected ${INSTALLER_HASH}, got ${ACTUAL_HASH})." >&2
-      echo "Installer content changed without a version bump. Aborting." >&2
-      exit 1
-    fi
-  fi
   bash "${tmp_installer}" sync "${SYNC_SCOPE_FLAG}" --source web --raw-base "${REMOTE_BASE}" "$@"
 else
   bash "${SYNC_INSTALLER_URL}" sync "${SYNC_SCOPE_FLAG}" --source local "$@"

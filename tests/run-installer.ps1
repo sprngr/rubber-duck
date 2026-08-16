@@ -180,22 +180,6 @@ Run-Test "sync default source"              { Test-SyncDefaultSource      }
 Run-Test "winps manifest structure"         { Test-WinPsManifestStructure }
 Run-Test "sync wrapper content"             { Test-SyncWrapperContent     }
 
-# --- Sync wrapper hash verification tests ---
-function Test-SyncWrapperHasHashCheck {
-  & pwsh -NoProfile -File $script:PsInstaller -Action install -Harness opencode -Source local -SkipSkills -Project | Out-Null
-  if ($LASTEXITCODE -ne 0) { throw "install failed" }
-  $content = Get-Content -Raw ".rubber-duck/sync-latest.ps1"
-  if (-not $content.Contains("InstallerHash")) { throw "hash check missing" }
-  if (-not $content.Contains("Get-FileHash")) { throw "SHA256 verification missing" }
-}
-
-function Test-SyncWrapperHashNoPlaceholder {
-  & pwsh -NoProfile -File $script:PsInstaller -Action install -Harness opencode -Source local -SkipSkills -Project | Out-Null
-  if ($LASTEXITCODE -ne 0) { throw "install failed" }
-  $content = Get-Content -Raw ".rubber-duck/sync-latest.ps1"
-  if ($content.Contains("{{INSTALLER_HASH}}")) { throw "placeholder not replaced" }
-}
-
 function Test-SyncWrapperPsHostDetection {
   & pwsh -NoProfile -File $script:PsInstaller -Action install -Harness opencode -Source local -SkipSkills -Project | Out-Null
   if ($LASTEXITCODE -ne 0) { throw "install failed" }
@@ -204,11 +188,10 @@ function Test-SyncWrapperPsHostDetection {
   if ($content.Contains("& pwsh ")) { throw "hardcoded pwsh still present" }
 }
 
-Run-Test "sync wrapper has hash check"            { Test-SyncWrapperHasHashCheck }
-Run-Test "sync wrapper hash placeholder replaced" { Test-SyncWrapperHashNoPlaceholder }
+Run-Test "sync wrapper psHost detection"          { Test-SyncWrapperPsHostDetection }
 # End-to-end remote sync: web install from local HTTP server, wrapper
-# hash-verifies the downloaded installer, tampered installer aborts.
-function Test-SyncWrapperRemoteHashVerify {
+# downloads the installer from the same base and runs sync.
+function Test-SyncWrapperRemoteSync {
   $remote = "remote"
   New-Item -ItemType Directory -Path $remote | Out-Null
   Copy-Item -Recurse -Force (Join-Path $repoRoot "scripts") $remote
@@ -224,25 +207,17 @@ function Test-SyncWrapperRemoteHashVerify {
     & pwsh -NoProfile -File $script:PsInstaller -Action install -Harness opencode -Source web -RawBase "http://127.0.0.1:$port" -SkipSkills -AllowUntrustedSource -Project | Out-Null
     if ($LASTEXITCODE -ne 0) { throw "web install failed" }
     $content = Get-Content -Raw ".rubber-duck/sync-latest.ps1"
-    if ($content -notmatch '(?m)^\$InstallerHash = "[0-9a-f]{64}"') { throw "hash pin missing" }
     if (-not $content.Contains("http://127.0.0.1:$port/scripts/rubber-duck.ps1")) { throw "installer URL not substituted" }
-    # Positive: downloaded installer matches pinned hash (raw-base forwarded).
+    # Same version: no prompt, sync runs (raw-base forwarded by wrapper).
     & pwsh -NoProfile -File ".rubber-duck/sync-latest.ps1" -AllowUntrustedSource | Out-Null
-    if ($LASTEXITCODE -ne 0) { throw "positive sync failed" }
-    # Negative: tampered served installer must abort with hash mismatch.
-    Add-Content -Path (Join-Path $remote "scripts/rubber-duck.ps1") -Value "# tampered"
-    $out = & pwsh -NoProfile -File ".rubber-duck/sync-latest.ps1" -AllowUntrustedSource 2>&1 | Out-String
-    if ($LASTEXITCODE -eq 0) { throw "tampered sync should fail" }
-    if (-not $out.Contains("hash mismatch")) { throw "expected hash mismatch message" }
+    if ($LASTEXITCODE -ne 0) { throw "remote sync failed" }
   } finally {
     if ($server -and -not $server.HasExited) { Stop-Process -Id $server.Id -Force }
   }
 }
 
-Run-Test "sync wrapper psHost detection"          { Test-SyncWrapperPsHostDetection }
-# Upgrade path: confirmed version bump skips the stale pin; wrapper
-# self-heals to the new installer's hash after sync.
-function Test-SyncWrapperUpgradeSkipsHash {
+# Upgrade path: version bump prompts; accepting syncs the new installer.
+function Test-SyncWrapperUpgrade {
   $remote = "remote"
   New-Item -ItemType Directory -Path $remote | Out-Null
   Copy-Item -Recurse -Force (Join-Path $repoRoot "scripts") $remote
@@ -260,19 +235,16 @@ function Test-SyncWrapperUpgradeSkipsHash {
     # Release v2.3.0: bump VERSION + change installer bytes.
     Set-Content -Path (Join-Path $remote "VERSION") -Value "v2.3.0" -NoNewline
     Add-Content -Path (Join-Path $remote "scripts/rubber-duck.ps1") -Value "# v2.3.0"
-    $newHash = (Get-FileHash -Algorithm SHA256 -Path (Join-Path $remote "scripts/rubber-duck.ps1")).Hash.ToLowerInvariant()
     $out = 'y' | & pwsh -NoProfile -File ".rubber-duck/sync-latest.ps1" -AllowUntrustedSource 2>&1 | Out-String
     if ($LASTEXITCODE -ne 0) { throw "upgrade sync failed" }
     if (-not $out.Contains("New version available: v2.2.0 -> v2.3.0")) { throw "upgrade prompt missing" }
-    $content = Get-Content -Raw ".rubber-duck/sync-latest.ps1"
-    if ($content -notmatch ('(?m)^\$InstallerHash = "' + $newHash + '"')) { throw "wrapper not self-healed to new hash" }
   } finally {
     if ($server -and -not $server.HasExited) { Stop-Process -Id $server.Id -Force }
   }
 }
 
-Run-Test "sync wrapper remote hash verify"        { Test-SyncWrapperRemoteHashVerify }
-Run-Test "sync wrapper upgrade skips hash"        { Test-SyncWrapperUpgradeSkipsHash }
+Run-Test "sync wrapper remote sync"                { Test-SyncWrapperRemoteSync }
+Run-Test "sync wrapper upgrade"                    { Test-SyncWrapperUpgrade }
 
 "`n$($script:TestsRun - $script:Failures)/$($script:TestsRun) passed, $($script:Failures) failed"
 if ($script:Failures -gt 0) { exit 1 } else { exit 0 }

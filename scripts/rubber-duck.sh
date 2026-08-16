@@ -944,7 +944,7 @@ sync_wrapper_path() {
 }
 
 install_sync_wrapper() {
-  local target scope_flag tmp src_tpl installer_url installer_hash
+  local target scope_flag tmp src_tpl installer_url
   target="$(sync_wrapper_path)"
   scope_flag="--project"
   (( PROJECT_SCOPE == 0 )) && scope_flag="--global"
@@ -970,15 +970,6 @@ install_sync_wrapper() {
       err "missing sync wrapper template: ${RAW_BASE}/${SYNC_WRAPPER_TEMPLATE_REMOTE}. Run make build-harness."
       rm -f "${tmp}"
       exit 1
-    fi
-  fi
-  # Pin hash to the installer actually running: file-backed installs replace
-  # the committed (main-branch) hash so branch/custom raw-base syncs verify.
-  # Piped installs have no file, keep committed hash as fallback.
-  if [[ -n "${SCRIPT_PATH}" && -f "${SCRIPT_PATH}" ]]; then
-    if installer_hash="$(compute_sha256 "${SCRIPT_PATH}")"; then
-      installer_hash="${installer_hash#sha256:}"
-      sed -i "s|^INSTALLER_HASH=\".*\"|INSTALLER_HASH=\"${installer_hash}\"|g" "${tmp}"
     fi
   fi
   sed -i "s|{{SYNC_SCOPE_FLAG}}|${scope_flag}|g" "${tmp}"
