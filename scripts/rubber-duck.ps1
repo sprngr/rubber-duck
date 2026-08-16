@@ -708,6 +708,7 @@ try {
   if (Test-Path $tmp) { Remove-Item -Force $tmp }
 }
 '@
+  $fallbackTemplate = "# RUBBER_DUCK_VERSION: $($script:CanonicalVersion)`n" + $fallbackTemplate
   if ($script:EffectiveSource -eq "local") {
     $templatePath = Join-Path $RepoRoot "dist/scripts/sync-latest.ps1"
     if (-not (Test-Path $templatePath)) {

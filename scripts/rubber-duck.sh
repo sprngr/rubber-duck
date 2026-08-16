@@ -989,6 +989,7 @@ trap cleanup EXIT
 curl -fsSL "${SYNC_INSTALLER_URL}" -o "${tmp_installer}"
 bash "${tmp_installer}" sync "${SYNC_SCOPE_FLAG}" --source web "$@"
 EOF
+      sed -i "1 a\\# RUBBER_DUCK_VERSION: ${CANONICAL_VERSION}" "${tmp}"
     fi
   fi
   python3 - "${tmp}" "${scope_flag}" "${installer_url}" <<'PY'
