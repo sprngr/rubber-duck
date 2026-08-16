@@ -58,6 +58,7 @@ CLAUDE_PROJECT_AGENTS_DIR=".claude/agents"
 CLAUDE_PROJECT_POLICY_MD="CLAUDE.md"
 SYNC_WRAPPER_TEMPLATE_REMOTE="dist/scripts/sync-latest.sh"
 SYNC_WRAPPER_WRITTEN=0
+MANIFEST_TEMPLATE_PATH="dist/templates/manifest.template.json"
 
 AGENT_FILES=(
   "rubber-duck.md"
@@ -213,24 +214,18 @@ manifest_path() {
   fi
 }
 
-sync_replay_install_cmd() {
-  local harness_csv="$1" install_skills="$2" install_agents_md="$3" extras="$4"
-  CMD=(bash "${SCRIPT_PATH}" install --harness "${harness_csv}" --source "${SOURCE_MODE}" --branch "${BRANCH}" --raw-base "${RAW_BASE}")
+sync_replay_cmd() {
+  local action="$1" harness_csv="$2"
+  CMD=(bash "${SCRIPT_PATH}" "${action}" --harness "${harness_csv}" --source "${SOURCE_MODE}" --branch "${BRANCH}" --raw-base "${RAW_BASE}")
   if (( PROJECT_SCOPE == 1 )); then CMD+=(--project); else CMD+=(--global); fi
-  [[ "${install_skills}" == "false" ]] && CMD+=(--skip-skills)
-  [[ "${install_agents_md}" == "false" ]] && CMD+=(--skip-agents-md)
-  [[ "${extras}" == "true" ]] && CMD+=(--extras)
-  (( DRY_RUN == 1 )) && CMD+=(--dry-run)
-  (( ALLOW_UNTRUSTED_SOURCE == 1 )) && CMD+=(--allow-untrusted-source)
-  return 0
-}
-
-sync_replay_uninstall_cmd() {
-  local target_name="$1"
-  CMD=(bash "${SCRIPT_PATH}" uninstall --harness "${target_name}" --source "${SOURCE_MODE}" --branch "${BRANCH}" --raw-base "${RAW_BASE}")
-  if (( PROJECT_SCOPE == 1 )); then CMD+=(--project); else CMD+=(--global); fi
-  CMD+=(--skip-skills)
-  (( SKIP_AGENTS_MD == 1 )) && CMD+=(--skip-agents-md)
+  if [[ "${action}" == "install" ]]; then
+    [[ "${3:-}" == "false" ]] && CMD+=(--skip-skills)
+    [[ "${4:-}" == "false" ]] && CMD+=(--skip-agents-md)
+    [[ "${5:-}" == "true" ]] && CMD+=(--extras)
+  else
+    CMD+=(--skip-skills)
+    (( SKIP_AGENTS_MD == 1 )) && CMD+=(--skip-agents-md)
+  fi
   (( DRY_RUN == 1 )) && CMD+=(--dry-run)
   (( ALLOW_UNTRUSTED_SOURCE == 1 )) && CMD+=(--allow-untrusted-source)
   return 0
@@ -371,7 +366,7 @@ write_pins() {
   shift
   (( $# == 0 )) && return 0
   (( DRY_RUN == 1 )) && { log "[dry-run] pins update -> ${manifest_path}"; return 0; }
-  local template_path="${REPO_ROOT}/dist/templates/manifest.template.json"
+  local template_path="${REPO_ROOT}/${MANIFEST_TEMPLATE_PATH}"
   manifest_load "${manifest_path}" "${template_path}"
   local pair k v
   for pair in "$@"; do
@@ -655,7 +650,7 @@ if [[ "${ACTION}" == "sync" ]]; then
       IFS='|' read -r g_install_skills g_install_agents_md g_extras <<< "${group_key}"
       group_harness_csv="${SYNC_GROUP_TARGETS[$group_key]}"
 
-      sync_replay_install_cmd "${group_harness_csv}" "${g_install_skills}" "${g_install_agents_md}" "${g_extras}"
+      sync_replay_cmd install "${group_harness_csv}" "${g_install_skills}" "${g_install_agents_md}" "${g_extras}"
       "${CMD[@]}"
     done
   fi
@@ -663,7 +658,7 @@ if [[ "${ACTION}" == "sync" ]]; then
   if (( PRUNE == 1 )); then
     for T in opencode copilot claude; do
       if [[ -z "${SYNC_TARGET_SET[${T}]+x}" ]]; then
-        sync_replay_uninstall_cmd "${T}"
+        sync_replay_cmd uninstall "${T}"
         "${CMD[@]}"
       fi
     done
@@ -1175,7 +1170,7 @@ manifest_update_target() {
   local prior_version=""
   prior_version=$(read_prior_version "${MANIFEST_PATH}")
   warn_on_downgrade "${prior_version}" "${CANONICAL_VERSION}"
-  local template_path="${REPO_ROOT}/dist/templates/manifest.template.json"
+  local template_path="${REPO_ROOT}/${MANIFEST_TEMPLATE_PATH}"
   manifest_load "${MANIFEST_PATH}" "${template_path}"
   MF_SOURCE_MODE="${EFFECTIVE_SOURCE}"
   MF_SOURCE_REF="${BRANCH}"

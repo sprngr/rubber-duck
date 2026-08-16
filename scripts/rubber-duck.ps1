@@ -85,14 +85,8 @@ function Get-ManifestPath {
   return (Join-Path $HOME ".config/rubber-duck/manifest.json")
 }
 
-function Get-SyncReplayInstallArgs([string]$HarnessCsv) {
-  $args = @("-File", (Get-SyncScriptPath), "-Action", "install", "-Harness", $HarnessCsv, "-Source", $Source, "-Branch", $Branch, "-RawBase", $RawBase)
-  if ($Project) { $args += "-Project" } else { $args += "-Global" }
-  return $args
-}
-
-function Get-SyncReplayUninstallArgs([string]$HarnessCsv) {
-  $args = @("-File", (Get-SyncScriptPath), "-Action", "uninstall", "-Harness", $HarnessCsv, "-Source", $Source, "-Branch", $Branch, "-RawBase", $RawBase)
+function Get-SyncReplayArgs([string]$Action, [string]$HarnessCsv) {
+  $args = @("-File", (Get-SyncScriptPath), "-Action", $Action, "-Harness", $HarnessCsv, "-Source", $Source, "-Branch", $Branch, "-RawBase", $RawBase)
   if ($Project) { $args += "-Project" } else { $args += "-Global" }
   return $args
 }
@@ -298,7 +292,7 @@ function rubber-duck {
       $gExtras = [bool]::Parse($parts[2])
       $groupHarness = ($syncGroups[$groupKey] -join ",")
 
-      $syncArgs = Get-SyncReplayInstallArgs $groupHarness
+      $syncArgs = Get-SyncReplayArgs "install" $groupHarness
       if (-not $gInstallSkills) { $syncArgs += "-SkipSkills" }
       if (-not $gInstallAgentsMd) { $syncArgs += "-SkipAgentsMd" }
       if ($gExtras) { $syncArgs += "-Extras" }
@@ -310,7 +304,7 @@ function rubber-duck {
     if ($Prune) {
       foreach ($t in @("opencode","copilot","claude")) {
         if (-not $syncTargetSet.ContainsKey($t)) {
-          $syncArgs = Get-SyncReplayUninstallArgs $t
+          $syncArgs = Get-SyncReplayArgs "uninstall" $t
           $syncArgs += "-SkipSkills"
           if ($SkipAgentsMd) { $syncArgs += "-SkipAgentsMd" }
           if ($DryRun) { $syncArgs += "-DryRun" }
