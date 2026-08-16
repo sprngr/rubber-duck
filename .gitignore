@@ -2,7 +2,7 @@
 .claude/settings.local.json
 
 # Local notes
-.scratch
+.scratch/
 
 # Do not include local dev install files
 .agents
@@ -16,6 +16,8 @@ CLAUDE.md.bak.*
 *-skill-check-report.html
 *-eval-report.html
 */__pycache__
+*.diff
 
 # Rubber Duck local runtime state
 .rubber-duck/
+
