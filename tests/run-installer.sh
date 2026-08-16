@@ -142,6 +142,16 @@ test_sync_default_source() {
   bash "$sh_installer" sync --project --source local --skip-skills --policy self || return 1
 }
 
+# Install writes sync wrapper with correct scope and URL substitution.
+test_sync_wrapper_content() {
+  bash "$sh_installer" install --opencode --source local --skip-skills --project || return 1
+  [[ -f .rubber-duck/sync-latest.sh ]] || return 1
+  grep -q '\-\-project' .rubber-duck/sync-latest.sh || return 1
+  grep -q '{{SYNC_SCOPE_FLAG}}' .rubber-duck/sync-latest.sh && return 1
+  grep -q '{{SYNC_INSTALLER_URL}}' .rubber-duck/sync-latest.sh && return 1
+  grep -q 'RUBBER_DUCK_VERSION:' .rubber-duck/sync-latest.sh || return 1
+}
+
 # --- Test runner ---
 run_test "fresh install writes pins"        test_fresh_install_writes_pins
 run_test "reinstall verifies pins silently" test_reinstall_pins_verify
@@ -151,6 +161,7 @@ run_test "claude two-file layout"           test_claude_install_two_file_layout
 run_test "dry-run no writes"                test_dry_run_no_writes
 run_test "dry-run multi-target layout"      test_dry_run_multi_target_layout
 run_test "sync default source"              test_sync_default_source
+run_test "sync wrapper content"             test_sync_wrapper_content
 
 printf '\n%d/%d passed, %d failed\n' "$((tests_run - failures))" "$tests_run" "$failures"
 exit $((failures > 0 ? 1 : 0))

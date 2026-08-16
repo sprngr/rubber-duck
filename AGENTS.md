@@ -151,6 +151,8 @@ This repository contains source prompts, assembled skills, generated harness art
   - `make build` then `make check`.
 - Installer source mismatch:
   - Verify `dist/AGENTS.md` exists and is current.
+- `AGENTS.md` drift from `dist/AGENTS.md`:
+  - Run `.rubber-duck/sync-latest.sh`
 
 <!-- RUBBER_DUCK_MANAGED_BLOCK START -->
 <!-- RUBBER_DUCK_VERSION: v2.2.0 -->
@@ -273,6 +275,7 @@ Before any semantic change, require execution approval:
      - File exists: unified diff (`---`/`+++`/`@@` hunks, `-`/`+` prefixes)
      - File does not exist: full content in fenced code block, file path as header
      - One file per diff block
+     - Inline annotation above the diff hunks explaining each change
      - If any file violates phase constraints, split and re-propose before approval ask
   3. **Approval ask**: `Approve this scope? (examples: approve/ok/confirm)`
   4. **Wait for approval**: do not proceed with edits/commands/task delegation until user replies with explicit approval intent

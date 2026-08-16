@@ -156,6 +156,18 @@ function Test-WinPsManifestStructure {
   if (@($m.pins.PSObject.Properties.Name).Count -eq 0) { throw "pins empty" }
 }
 
+function Test-SyncWrapperContent {
+  & pwsh -NoProfile -File $script:PsInstaller -Action install -Harness opencode -Source local -SkipSkills -Project | Out-Null
+  if ($LASTEXITCODE -ne 0) { throw "install failed" }
+  $wrapper = ".rubber-duck/sync-latest.ps1"
+  if (-not (Test-Path $wrapper)) { throw "sync wrapper missing" }
+  $content = Get-Content -Raw $wrapper
+  if (-not $content.Contains("-Project")) { throw "scope flag not substituted" }
+  if ($content.Contains("{{SYNC_SCOPE_ARG}}")) { throw "scope token not replaced" }
+  if ($content.Contains("{{SYNC_INSTALLER_URL}}")) { throw "URL token not replaced" }
+  if (-not $content.Contains("RUBBER_DUCK_VERSION:")) { throw "version marker missing" }
+}
+
 # --- Test runner ---
 Run-Test "fresh install writes pins"        { Test-FreshInstallWritesPins }
 Run-Test "reinstall verifies pins silently" { Test-ReinstallVerifiesPins  }
@@ -166,6 +178,7 @@ Run-Test "dry-run no writes"                { Test-DryRunNoWrites         }
 Run-Test "dry-run multi-target layout"      { Test-DryRunMultiTargetLayout}
 Run-Test "sync default source"              { Test-SyncDefaultSource      }
 Run-Test "winps manifest structure"         { Test-WinPsManifestStructure }
+Run-Test "sync wrapper content"             { Test-SyncWrapperContent     }
 
 "`n$($script:TestsRun - $script:Failures)/$($script:TestsRun) passed, $($script:Failures) failed"
 if ($script:Failures -gt 0) { exit 1 } else { exit 0 }
