@@ -1329,4 +1329,11 @@ done
 if [[ "${ACTION}" == "install" || "${ACTION}" == "uninstall" ]]; then
   log ""
   log "🦆 quack"
+  if [[ "${ACTION}" == "install" ]]; then
+    if (( PROJECT_SCOPE == 1 )); then
+      log "To update: bash .rubber-duck/sync-latest.sh"
+    else
+      log "To update: bash ${HOME}/.config/rubber-duck/sync-latest.sh"
+    fi
+  fi
 fi

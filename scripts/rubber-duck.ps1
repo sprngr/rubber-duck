@@ -1048,6 +1048,13 @@ try {
   if ($Action -eq "install" -or $Action -eq "uninstall") {
     Log ""
     Log "🦆 quack"
+    if ($Action -eq "install") {
+      if ($Project) {
+        Log "To update: pwsh .rubber-duck/sync-latest.ps1"
+      } else {
+        Log "To update: pwsh $(Join-Path $HOME '.config/rubber-duck/sync-latest.ps1')"
+      }
+    }
   }
 }
 finally {
