@@ -75,9 +75,7 @@ if (-not [string]::IsNullOrWhiteSpace($currentVersion) -and -not [string]::IsNul
   }
 }
 
-# Scope is embedded in $SyncScopeArg; strip it from forwarded args so
-# duplicate binding cannot occur. Raw-base derives from the installer URL
-# (user override allowed and kept).
+# Scope is embedded; raw-base derives from installer URL (user override wins).
 $forwardArgs = @($args | Where-Object { $_ -ne "-Project" -and $_ -ne "-Global" })
 
 if ($isRemote) {
@@ -89,7 +87,7 @@ if ($isRemote) {
     if (-not [string]::IsNullOrWhiteSpace($InstallerHash) -and $verifyInstallerHash) {
       $actualHash = (Get-FileHash -Algorithm SHA256 -Path $tmp).Hash.ToLower()
       if ($actualHash -ne $InstallerHash.ToLower()) {
-        throw "Installer hash mismatch (expected $InstallerHash, got $actualHash). The installer may have been tampered with."
+        throw "Installer hash mismatch (expected $InstallerHash, got $actualHash). Installer content changed without a version bump."
       }
     }
     & $psHost -NoProfile -File $tmp -Action sync $SyncScopeArg -Source web @forwardArgs

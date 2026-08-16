@@ -31,7 +31,6 @@ else
   LOCAL_VERSION_FILE="$(cd -- "$(dirname -- "${SYNC_INSTALLER_URL}")/.." && pwd)/VERSION"
   [[ -f "${LOCAL_VERSION_FILE}" ]] && REMOTE_VERSION=$(tr -d '\r\n[:space:]' < "${LOCAL_VERSION_FILE}" 2>/dev/null || true)
 fi
-SKIP_SYNC=0
 VERIFY_INSTALLER_HASH=1
 version_gt() {
   local IFS='.'
@@ -59,10 +58,9 @@ if [[ -n "${CURRENT_VERSION}" && -n "${REMOTE_VERSION}" ]]; then
       read -r REPLY
       if [[ "${REPLY}" != "y" && "${REPLY}" != "Y" ]]; then
         echo "Skipping update."
-        SKIP_SYNC=1
+        exit 0
       else
-        # Confirmed bump: pin is regenerated per build, so a changed pin
-        # alongside a changed version is consent, not tampering.
+        # Bump accepted: old pin is stale by design; consent covers the change.
         VERIFY_INSTALLER_HASH=0
       fi
     elif (( version_compare_rc == 2 )); then
@@ -73,30 +71,28 @@ if [[ -n "${CURRENT_VERSION}" && -n "${REMOTE_VERSION}" ]]; then
   fi
 fi
 
-if (( SKIP_SYNC == 0 )); then
-  if (( IS_REMOTE )); then
-    tmp_installer="$(mktemp)"
-    cleanup() { rm -f "${tmp_installer}"; }
-    trap cleanup EXIT
-    curl -fsSL "${SYNC_INSTALLER_URL}" -o "${tmp_installer}"
-    if [[ -n "${INSTALLER_HASH}" && ${VERIFY_INSTALLER_HASH} == 1 ]]; then
-      ACTUAL_HASH=""
-      if command -v sha256sum >/dev/null 2>&1; then
-        ACTUAL_HASH=$(sha256sum "${tmp_installer}" | awk '{print $1}')
-      elif command -v shasum >/dev/null 2>&1; then
-        ACTUAL_HASH=$(shasum -a 256 "${tmp_installer}" | awk '{print $1}')
-      else
-        echo "ERROR: no sha256 tool available (sha256sum or shasum). Cannot verify installer." >&2
-        exit 1
-      fi
-      if [[ "${ACTUAL_HASH}" != "${INSTALLER_HASH}" ]]; then
-        echo "ERROR: installer hash mismatch (expected ${INSTALLER_HASH}, got ${ACTUAL_HASH})." >&2
-        echo "The installer may have been tampered with. Aborting." >&2
-        exit 1
-      fi
+if (( IS_REMOTE )); then
+  tmp_installer="$(mktemp)"
+  cleanup() { rm -f "${tmp_installer}"; }
+  trap cleanup EXIT
+  curl -fsSL "${SYNC_INSTALLER_URL}" -o "${tmp_installer}"
+  if [[ -n "${INSTALLER_HASH}" && ${VERIFY_INSTALLER_HASH} == 1 ]]; then
+    ACTUAL_HASH=""
+    if command -v sha256sum >/dev/null 2>&1; then
+      ACTUAL_HASH=$(sha256sum "${tmp_installer}" | awk '{print $1}')
+    elif command -v shasum >/dev/null 2>&1; then
+      ACTUAL_HASH=$(shasum -a 256 "${tmp_installer}" | awk '{print $1}')
+    else
+      echo "ERROR: no sha256 tool available (sha256sum or shasum). Cannot verify installer." >&2
+      exit 1
     fi
-    bash "${tmp_installer}" sync "${SYNC_SCOPE_FLAG}" --source web --raw-base "${REMOTE_BASE}" "$@"
-  else
-    bash "${SYNC_INSTALLER_URL}" sync "${SYNC_SCOPE_FLAG}" --source local "$@"
+    if [[ "${ACTUAL_HASH}" != "${INSTALLER_HASH}" ]]; then
+      echo "ERROR: installer hash mismatch (expected ${INSTALLER_HASH}, got ${ACTUAL_HASH})." >&2
+      echo "Installer content changed without a version bump. Aborting." >&2
+      exit 1
+    fi
   fi
+  bash "${tmp_installer}" sync "${SYNC_SCOPE_FLAG}" --source web --raw-base "${REMOTE_BASE}" "$@"
+else
+  bash "${SYNC_INSTALLER_URL}" sync "${SYNC_SCOPE_FLAG}" --source local "$@"
 fi
