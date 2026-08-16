@@ -80,7 +80,6 @@ function Test-RawBaseAllowed([string]$RawBaseUrl, [string]$Mode) {
   return $RawBaseUrl.StartsWith($AllowedRawBasePrefix)
 }
 
-# Phase 1 simplify stubs (wired in later phases).
 function Get-ManifestPath {
   if ($Project) { return ".rubber-duck/manifest.json" }
   return (Join-Path $HOME ".config/rubber-duck/manifest.json")
@@ -902,8 +901,6 @@ function Status {
 }
 
 function Doctor {
-  Resolve-Target
-  Resolve-Source
   Ensure-Dir $DestAgentsDir "agents dir"
   Ensure-Dir (Split-Path -Parent $DestPolicyMd) "policy parent"
   if ($PolicyMode -eq "file") {

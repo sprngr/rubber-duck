@@ -205,7 +205,6 @@ check_rawbase_allowed() {
   return 1
 }
 
-# Phase 1 simplify stubs (wired in later phases).
 manifest_path() {
   if (( PROJECT_SCOPE == 1 )); then
     printf '.rubber-duck/manifest.json'
@@ -608,7 +607,7 @@ if [[ "${ACTION}" == "sync" ]]; then
     err "manifest missing: ${MANIFEST_PATH}. Run install first."
     exit 1
   fi
-  if [[ "${0:-}" == "bash" || "${0:-}" == "sh" || "${0:-}" == "-" ]]; then
+  if running_piped; then
     err "sync requires file-backed execution (not piped)"
     exit 1
   fi
