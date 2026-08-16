@@ -926,7 +926,7 @@ function Update-ManifestTarget([string]$Operation, [string]$TargetName) {
   if (Test-Path $ManifestPath) {
     $manifest = Read-JsonAsHashtable $ManifestPath
   } else {
-    $templatePath = Join-Path $RepoRoot ".rubber-duck/manifest.template.json"
+    $templatePath = Join-Path $RepoRoot "dist/templates/manifest.template.json"
     if (Test-Path $templatePath) {
       $manifest = Read-JsonAsHashtable $templatePath
     }

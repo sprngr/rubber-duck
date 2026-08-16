@@ -199,7 +199,7 @@ Use PowerShell CLI for Windows-native environments.
   - Bash: `curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh -o /tmp/rubber-duck.sh && bash -n /tmp/rubber-duck.sh && bash /tmp/rubber-duck.sh <command>`
   - PowerShell: download script then execute.
 - For non-`main` sources, pass `--branch <name>` / `-Branch <name>` explicitly.
-- Fresh install seeds the manifest from `.rubber-duck/manifest.template.json` when running against a local checkout; web installs use built-in defaults.
+  - Fresh install seeds the manifest from `dist/templates/manifest.template.json` when running against a local checkout; web installs use built-in defaults.
 - Backup retention: before mutating a managed policy file (`AGENTS.md`, `CLAUDE.md`), the installer writes a `<file>.bak.<YYYYmmdd-HHMMSS>` copy alongside it. Only the most recent `<file>.bak.*` is kept per policy file; prior backups are pruned on install/uninstall to avoid accumulation. Applies to both bash and PowerShell installers.
 - Skills install default: project (`npx skills add <source> -y`).
 - `status` reports canonical version parsed from managed AGENTS artifact marker.

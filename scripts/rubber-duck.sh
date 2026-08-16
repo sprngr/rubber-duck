@@ -371,7 +371,7 @@ write_pins() {
   shift
   (( $# == 0 )) && return 0
   (( DRY_RUN == 1 )) && { log "[dry-run] pins update -> ${manifest_path}"; return 0; }
-  local template_path="${REPO_ROOT}/.rubber-duck/manifest.template.json"
+  local template_path="${REPO_ROOT}/dist/templates/manifest.template.json"
   manifest_load "${manifest_path}" "${template_path}"
   local pair k v
   for pair in "$@"; do
@@ -1189,7 +1189,7 @@ manifest_update_target() {
   local prior_version=""
   prior_version=$(read_prior_version "${MANIFEST_PATH}")
   warn_on_downgrade "${prior_version}" "${CANONICAL_VERSION}"
-  local template_path="${REPO_ROOT}/.rubber-duck/manifest.template.json"
+  local template_path="${REPO_ROOT}/dist/templates/manifest.template.json"
   manifest_load "${MANIFEST_PATH}" "${template_path}"
   MF_SOURCE_MODE="${EFFECTIVE_SOURCE}"
   MF_SOURCE_REF="${BRANCH}"
