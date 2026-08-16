@@ -602,6 +602,10 @@ fi
 
 MANIFEST_PATH="$(manifest_path)"
 
+running_piped() {
+  [[ "${0:-}" == "bash" || "${0:-}" == "sh" || "${0:-}" == "-" ]]
+}
+
 if [[ "${ACTION}" == "sync" ]]; then
   if [[ ! -f "${MANIFEST_PATH}" ]]; then
     err "manifest missing: ${MANIFEST_PATH}. Run install first."
@@ -728,10 +732,6 @@ resolve_target() {
       exit 1
       ;;
   esac
-}
-
-running_piped() {
-  [[ "${0:-}" == "bash" || "${0:-}" == "sh" || "${0:-}" == "-" ]]
 }
 
 has_local_sources() {
@@ -949,7 +949,7 @@ sync_wrapper_path() {
 }
 
 install_sync_wrapper() {
-  local target scope_flag tmp src_tpl line installer_url
+  local target scope_flag tmp src_tpl installer_url
   target="$(sync_wrapper_path)"
   scope_flag="--project"
   (( PROJECT_SCOPE == 0 )) && scope_flag="--global"
@@ -969,27 +969,12 @@ install_sync_wrapper() {
   if [[ "${EFFECTIVE_SOURCE}" == "local" ]]; then
     src_tpl="${REPO_ROOT}/dist/scripts/sync-latest.sh"
     [[ -f "${src_tpl}" ]] || { err "missing sync wrapper template: ${src_tpl}. Run make build-harness."; rm -f "${tmp}"; exit 1; }
-    while IFS= read -r line || [[ -n "${line}" ]]; do
-      printf '%s\n' "${line}" >> "${tmp}"
-    done < "${src_tpl}"
+    cp -f "${src_tpl}" "${tmp}"
   else
     if ! curl -fsSL "${RAW_BASE}/${SYNC_WRAPPER_TEMPLATE_REMOTE}" -o "${tmp}"; then
-      cat > "${tmp}" <<'EOF'
-#!/usr/bin/env bash
-set -euo pipefail
-
-# Fallback sync helper template.
-SYNC_INSTALLER_URL="{{SYNC_INSTALLER_URL}}"
-SYNC_SCOPE_FLAG="{{SYNC_SCOPE_FLAG}}"
-
-tmp_installer="$(mktemp)"
-cleanup() { rm -f "${tmp_installer}"; }
-trap cleanup EXIT
-
-curl -fsSL "${SYNC_INSTALLER_URL}" -o "${tmp_installer}"
-bash "${tmp_installer}" sync "${SYNC_SCOPE_FLAG}" --source web "$@"
-EOF
-      sed -i "1 a\\# RUBBER_DUCK_VERSION: ${CANONICAL_VERSION}" "${tmp}"
+      err "missing sync wrapper template: ${RAW_BASE}/${SYNC_WRAPPER_TEMPLATE_REMOTE}. Run make build-harness."
+      rm -f "${tmp}"
+      exit 1
     fi
   fi
   python3 - "${tmp}" "${scope_flag}" "${installer_url}" <<'PY'

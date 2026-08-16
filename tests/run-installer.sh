@@ -139,7 +139,7 @@ test_dry_run_multi_target_layout() {
 # sync path used to call rawBase allowlist before RAW_BASE default was applied.
 test_sync_default_source() {
   bash "$sh_installer" install --opencode --source local --skip-skills --policy self --project || return 1
-  bash "$sh_installer" sync --project --skip-skills --policy self || return 1
+  bash "$sh_installer" sync --project --source local --skip-skills --policy self || return 1
 }
 
 # --- Test runner ---

@@ -690,25 +690,6 @@ function Install-SyncWrapper {
   }
 
   $content = ""
-  $fallbackTemplate = @'
-$ErrorActionPreference = "Stop"
-
-# Fallback sync helper template.
-$SyncInstallerUrl = "{{SYNC_INSTALLER_URL}}"
-$SyncScopeArg = "{{SYNC_SCOPE_ARG}}"
-
-$tmpRoot = if ([string]::IsNullOrWhiteSpace($env:TEMP)) { [System.IO.Path]::GetTempPath() } else { $env:TEMP }
-$tmp = Join-Path $tmpRoot ("rubber-duck-sync-" + [Guid]::NewGuid().ToString() + ".ps1")
-
-try {
-  Invoke-WebRequest -UseBasicParsing -Uri $SyncInstallerUrl -OutFile $tmp
-  & pwsh -NoProfile -File $tmp -Action sync $SyncScopeArg -Source web @args
-  exit $LASTEXITCODE
-} finally {
-  if (Test-Path $tmp) { Remove-Item -Force $tmp }
-}
-'@
-  $fallbackTemplate = "# RUBBER_DUCK_VERSION: $($script:CanonicalVersion)`n" + $fallbackTemplate
   if ($script:EffectiveSource -eq "local") {
     $templatePath = Join-Path $RepoRoot "dist/scripts/sync-latest.ps1"
     if (-not (Test-Path $templatePath)) {
@@ -718,12 +699,8 @@ try {
   } else {
     $tmpTpl = Join-Path ([System.IO.Path]::GetTempPath()) ("rubber-duck-sync-template-" + [Guid]::NewGuid().ToString() + ".ps1")
     try {
-      try {
-        Invoke-WebRequest -UseBasicParsing -Uri "$RawBase/$($script:SyncWrapperTemplateRemotePath)" -OutFile $tmpTpl
-        $content = Get-Content -Raw $tmpTpl
-      } catch {
-        $content = $fallbackTemplate
-      }
+      Invoke-WebRequest -UseBasicParsing -Uri "$RawBase/$($script:SyncWrapperTemplateRemotePath)" -OutFile $tmpTpl
+      $content = Get-Content -Raw $tmpTpl
     } finally {
       if (Test-Path $tmpTpl) { Remove-Item -Force $tmpTpl }
     }
