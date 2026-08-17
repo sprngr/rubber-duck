@@ -223,11 +223,12 @@ The agent must already be installed for your target. Delegation runs through `du
  <details>
  <summary>Expand for full skill list + routing diagram</summary>
 
-  Rubber Duck packages 14 skills: 11 default + 3 extras.
+  Rubber Duck packages 15 skills: 12 default + 3 extras.
 
 ### Default skills (installed automatically)
 
 - quack — explicit route control
+- duck-policy — enforcement meta-skill (approval gates, safety carve-outs, Duck Ladder, style, debt markers)
 - duck-debug — Socratic debugging (trace + root-cause)
 - duck-debt — deferred-work ledger (read-only)
 - duck-design — option/tradeoff evaluation

@@ -20,23 +20,24 @@ This section defines the system-level architecture and operating contracts for R
 
 - Governor definition: [`src/agents/rubber-duck/`](../../src/agents/rubber-duck)
 - Explicit router skill: [`src/skills/quack/`](../../src/skills/quack)
+- Enforcement meta-skill: [`src/skills/duck-policy/`](../../src/skills/duck-policy)
 - Delegation subagent (see [05-harness-agent-config.md](./05-harness-agent-config.md)):
   - [`src/agents/duckling/`](../../src/agents/duckling)
 - Skills source: [`src/skills/`](../../src/skills)
 - Skills install artifacts: [`skills/`](../../skills)
-- Global operating policy: [`src/agents/AGENTS.md`](../../src/agents/AGENTS.md)
 
 ## Governance Boundaries
 
-### AGENTS.md vs CONTEXT.md
+### duck-policy vs CONTEXT.md
 
-`AGENTS.md` is rules and operating contract.  
+`duck-policy` (skill) is rules and operating contract.  
 `CONTEXT.md` is project memory and decisions.
 
-- **AGENTS.md**
+- **duck-policy**
   - defines agent behavior constraints
   - safety gates, approval flow, style constraints, hard boundaries
   - normative operating policy
+  - loaded at runtime by the governor (progressive disclosure)
 - **CONTEXT.md**
   - records project decisions and conventions
   - glossary, open questions, deferred debt, working memory
@@ -44,12 +45,12 @@ This section defines the system-level architecture and operating contracts for R
 
 Quick test:
 
-- “Must ask for `approve` before semantic edit” -> `AGENTS.md`
-- “Policy source moved to `dist/AGENTS.md` on 2026-08-04” -> `CONTEXT.md` (and maybe `CHANGELOG.md`)
+- "Must ask for `approve` before semantic edit" -> `duck-policy`
+- "Policy source moved to duck-policy skill on 2026-08-16" -> `CONTEXT.md` (and maybe `CHANGELOG.md`)
 
 Rule of thumb:
 
-- If violation can create unsafe or unauthorized behavior, put it in `AGENTS.md`.
+- If violation can create unsafe or unauthorized behavior, put it in `duck-policy`.
 - If it prevents re-derivation across sessions, put it in `CONTEXT.md`.
 
 ### CONTEXT.md vs CHANGELOG.md

@@ -69,6 +69,7 @@ DEFAULT_SKILLS=(
   "duck-debug"
   "duck-design"
   "duck-patch"
+  "duck-policy"
   "duck-refactor"
   "duck-review"
   "duck-risk"

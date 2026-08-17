@@ -18,13 +18,12 @@
 
 ## Decisions
 
-- **Policy authority split**: `AGENTS.md` is behavioral policy source of truth. `CONTEXT.md` stores project memory and decision history only. (date: 2026-08-04)
-- **Execution approval model updated**: explicit approval intent is required for assistant-initiated semantic changes; accepted intents are `approve`, `approved`, `ok`, `go ahead`, `confirm`, with bounded semantic scope unchanged. Procedural details live in `AGENTS.md`. (date: 2026-08-05)
+- **Policy authority split**: `duck-policy` skill and `rubber-duck` agent body are the behavioral policy source of truth. `CONTEXT.md` stores project memory and decision history only. (date: 2026-08-04; updated 2026-08-17)
+- **Execution approval model updated**: explicit approval intent is required for assistant-initiated semantic changes; accepted intents are `approve`, `approved`, `ok`, `go ahead`, `confirm`, with bounded semantic scope unchanged. Procedural details live in `duck-policy` skill. (date: 2026-08-05)
 - **Diff format rule adopted**: existing files use unified diff; new files use full-content block; one file per block. Canonical examples are in `src/shared/references/diff-format-examples.md`. (date: 2026-08-01)
-- **Installer skill-set split**: default 11 skills + optional extras 3 (`duck-adapt`, `duck-grill`, `duck-tape`); uninstall removes all 14 to prevent orphans; status reports extras separately. (date: 2026-08-01)
+- **Installer skill-set split**: default 12 skills + optional extras 3 (`duck-adapt`, `duck-grill`, `duck-tape`); uninstall removes all 15 to prevent orphans; status reports extras separately. (date: 2026-08-01; updated 2026-08-17)
 - **Validation suite expansion**: prompt validation moved to top-level `validation/` with fixtures and multi-turn coverage. (date: 2026-08-02)
 - **Validation baseline metrics captured**: suite size 31; best observed pass 23/31 (74%); typical range 18-23/31 due to wording variance; stable subset gate retained. (date: 2026-08-02)
-- **Installer policy source move**: installer policy source moved from repo-root `AGENTS.md` to built `dist/AGENTS.md`; source policy content comes from `src/agents/AGENTS.md`. (date: 2026-08-04)
 - **Assembly rules contract trimmed**: removed unenforced declarative keys from `build/agent-assembly.rules.json` and `build/skill-assembly.rules.json`; retained only actively enforced checks/invariants to reduce false-confidence surface. (date: 2026-08-05)
 - **Skill baseline assertion coverage expanded**: `build/skill-assembly.rules.json` `checks.skill_groups.all_skills` now covers all current source skills so baseline grouped assertions apply consistently. (date: 2026-08-05)
 - **Installer idempotence fix**: installer upsert no longer accumulates blank lines above managed block fences on repeated runs (bash + PowerShell). (date: 2026-08-04)
@@ -37,8 +36,8 @@
 - **Manifest schema v1 with pins**: `.rubber-duck/manifest.json` tracks `source`, `targets`, and `pins` (sha256 of installed artifacts). Pins are a dev-workflow change log enabling skip-unchanged reinstalls, not a security boundary. (date: 2026-08-12)
 - **rawBase allowlist**: installer only accepts sources under `https://raw.githubusercontent.com/sprngr/rubber-duck` unless `--allow-untrusted-source`/`-AllowUntrustedSource` is passed (emits warning). Prevents accidental fork installs. (date: 2026-08-12)
 - **Installer runtime dependency floor**: bash installer requires only bash 4+, awk, curl, coreutils. `python3` removed from installer path. (date: 2026-08-12)
-- **Single agent architecture**: `rubber-duck` agent body is canonical source of truth for all policy rules. AGENTS.md reduced to version marker. (date: 2026-08-16)
-- **duck-policy portable skill**: enforcement rules extracted to `duck-policy` skill, loadable by any agent. Agent body includes skill snippet at build time for progressive disclosure. (date: 2026-08-16)
+- **Single agent architecture**: `rubber-duck` agent body is canonical. AGENTS.md removed from source and build pipeline; installer generates version marker inline from `VERSION`. (date: 2026-08-16)
+- **duck-policy portable skill**: enforcement rules extracted to `duck-policy` skill, loadable by any agent. Governor loads it at runtime for progressive disclosure. (date: 2026-08-16)
 - **Installer template sources reorganized**: sync wrapper templates moved to `src/install/scripts/`, manifest template moved to `src/install/templates/`. Shared snippets (`src/shared/`) reserved for prompt/policy snippets only. Build outputs at `dist/scripts/` and `dist/templates/`. (date: 2026-08-16)
 - **Sync wrapper version check**: sync-latest scripts compare manifest `lastAppliedVersion` against remote/local `VERSION` file before syncing. Prompts user with version change and CHANGELOG link when newer version exists. Fallback templates removed; missing sync template is a hard error. Wrapper forwards the derived raw-base on remote sync; ps1 wrappers use `(Get-Process -Id $PID).Path` for host detection. (date: 2026-08-16)
 
@@ -47,7 +46,7 @@
 - **Source-first edits**: edit `src/*` files first; generated outputs are `skills/*` and `dist/*`.
 - **Build/check contract**: run `make build` after source edits and `make check` before commit.
 - **Installer parity**: keep `scripts/rubber-duck.sh` and `scripts/rubber-duck.ps1` functionally aligned for shared flags/behavior.
-- **Installer policy source**: local and web installer flows consume built `dist/AGENTS.md`.
+- **Installer policy source**: version marker generated inline from `VERSION` file (no `dist/AGENTS.md`).
 - **Routing model**: simple requests can stay conversational; workflow requests can route via `quack`.
 - **Skill routing classes**: inline-default (debug, debt, design, teach), delegated-default (patch, refactor, review, risk, simplify, triage), governor-invoked (adapt, grill), router-only (quack).
 - **Skill composition patterns**: debug->patch, review->risk->simplify, design->triage, teach->debug.
@@ -59,7 +58,7 @@
 - **Source-of-truth tree**: `src/` files are edited directly; `skills/` and `dist/` are generated outputs.
 - **Policy block fences**: `<!-- RUBBER_DUCK_MANAGED_BLOCK START -->` and `<!-- RUBBER_DUCK_MANAGED_BLOCK END -->` delimit installer-managed sections in target files.
 - **Diff format selection rule**: file existence determines diff format (unified diff for existing files, full-content block for new files).
-- **Default skills set**: 11 skills from `.claude-plugin/plugin.json`.
+- **Default skills set**: 12 skills from `.claude-plugin/plugin.json`.
 - **Extras skills set**: `duck-adapt`, `duck-grill`, `duck-tape`, installed only with extras flags.
 - **Validation fixtures**: scenario clusters live under `validation/fixtures/` for prompt-eval coverage.
 - **Guardrails drift check**: `scripts/check-guardrails-drift.sh` verifies vendored guardrails alignment.

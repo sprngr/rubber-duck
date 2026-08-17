@@ -15,9 +15,9 @@ For full architecture and policy details, use the canonical docs linked below.
 - Skill asset convention: [docs/architecture/07-skill-asset-convention.md](./architecture/07-skill-asset-convention.md)
 - Validation suite: [validation/README.md](../validation/README.md)
 - Validation runbook template: [validation/README.md](../validation/README.md) (Runbook section)
-- Validation test suite: [validation/test-prompts.json](../validation/test-prompts.json) (31 tests)
+- Validation test suite: [validation/test-prompts.json](../validation/test-prompts.json) (44 tests)
 - Test runner: [validation/run-validation-tests.py](../validation/run-validation-tests.py)
-- Global operating policy: [src/agents/AGENTS.md](../src/agents/AGENTS.md)
+- Enforcement meta-skill: [duck-policy](../src/skills/duck-policy/SKILL.md)
 - Install/update/uninstall CLI reference: [scripts/README.md](../scripts/README.md)
 
 ## System map
@@ -29,6 +29,10 @@ For full architecture and policy details, use the canonical docs linked below.
 ### Explicit router skill [default]
 
 - [quack](../src/skills/quack/SKILL.md) — alias-first intent resolver
+
+### Enforcement meta-skill [default]
+
+- [duck-policy](../src/skills/duck-policy/SKILL.md) — approval gates, safety carve-outs, Duck Ladder, style, debt markers. Loaded by the governor at session start.
 
 ### Duckling subagent
 

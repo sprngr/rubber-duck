@@ -83,7 +83,7 @@ User override always wins. Explicit delegation request forces duckling delegatio
 
 ## Install status
 
-- **Default (11):** quack, duck-debt, duck-debug, duck-design, duck-patch, duck-refactor, duck-review, duck-risk, duck-simplify, duck-teach, duck-triage. Installed automatically.
+- **Default (12):** quack, duck-policy, duck-debt, duck-debug, duck-design, duck-patch, duck-refactor, duck-review, duck-risk, duck-simplify, duck-teach, duck-triage. Installed automatically.
 - **Extras (3, --extras flag):** duck-adapt, duck-grill, duck-tape. Optional.
 
 If a skill is unavailable, check install with `scripts/rubber-duck.sh status`. Extras require the `--extras` flag at install time.
