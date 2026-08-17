@@ -37,15 +37,13 @@ function Print-Banner {
 function Resolve-CanonicalVersion {
   if ($script:EffectiveSource -eq "local") {
     $versionFile = Join-Path $RepoRoot "VERSION"
-    if (Test-Path $versionFile) {
-      $v = Get-VersionFromFile $versionFile
-      if (-not [string]::IsNullOrWhiteSpace($v)) { $script:CanonicalVersion = $v }
-    }
+    $v = Get-PlainVersion $versionFile
+    if (-not [string]::IsNullOrWhiteSpace($v)) { $script:CanonicalVersion = $v }
   } else {
     try {
       $tmp = [System.IO.Path]::GetTempFileName()
       Invoke-WebRequest -UseBasicParsing -Uri "$RawBase/VERSION" -OutFile $tmp -ErrorAction Stop | Out-Null
-      $v = Get-VersionFromFile $tmp
+      $v = Get-PlainVersion $tmp
       if (-not [string]::IsNullOrWhiteSpace($v)) { $script:CanonicalVersion = $v }
       Remove-Item -Force $tmp
     } catch { }
@@ -418,6 +416,14 @@ function Get-VersionFromFile([string]$Path) {
   $m = Select-String -Path $Path -Pattern 'RUBBER_DUCK_VERSION:\s*(v[0-9]+\.[0-9]+\.[0-9]+)' | Select-Object -First 1
   if ($null -eq $m) { return $null }
   return $m.Matches[0].Groups[1].Value
+}
+
+# Read a plain VERSION file (content like "v3.0.0"), trimmed. Returns $null if missing or malformed.
+function Get-PlainVersion([string]$Path) {
+  if (-not (Test-Path $Path)) { return $null }
+  $content = (Get-Content -Raw $Path).Trim()
+  if ($content -match '^(v[0-9]+\.[0-9]+\.[0-9]+)$') { return $content }
+  return $null
 }
 
 function Resolve-Target {

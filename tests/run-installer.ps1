@@ -223,6 +223,9 @@ function Test-SyncWrapperUpgrade {
   Copy-Item -Recurse -Force (Join-Path $repoRoot "scripts") $remote
   Copy-Item -Recurse -Force (Join-Path $repoRoot "dist") $remote
   Copy-Item -Force (Join-Path $repoRoot "VERSION") $remote
+  $curVer = (Get-Content -Raw (Join-Path $repoRoot "VERSION")).Trim()
+  $parts = $curVer.TrimStart('v') -split '\.'
+  $nextVer = "v$($parts[0]).$($parts[1]).$([int]$parts[2] + 1)"
   $port = ([string](& python3 -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1",0)); print(s.getsockname()[1]); s.close()')).Trim()
   $server = Start-Process python3 -ArgumentList @("-m","http.server",$port,"--bind","127.0.0.1","--directory",$remote) -PassThru
   try {
@@ -232,12 +235,12 @@ function Test-SyncWrapperUpgrade {
     }
     & pwsh -NoProfile -File $script:PsInstaller -Action install -Harness opencode -Source web -RawBase "http://127.0.0.1:$port" -SkipSkills -AllowUntrustedSource -Project | Out-Null
     if ($LASTEXITCODE -ne 0) { throw "web install failed" }
-    # Release v2.3.0: bump VERSION + change installer bytes.
-    Set-Content -Path (Join-Path $remote "VERSION") -Value "v2.3.0" -NoNewline
-    Add-Content -Path (Join-Path $remote "scripts/rubber-duck.ps1") -Value "# v2.3.0"
+    # Release next version: bump VERSION + change installer bytes.
+    Set-Content -Path (Join-Path $remote "VERSION") -Value $nextVer -NoNewline
+    Add-Content -Path (Join-Path $remote "scripts/rubber-duck.ps1") -Value "# $nextVer"
     $out = 'y' | & pwsh -NoProfile -File ".rubber-duck/sync-latest.ps1" -AllowUntrustedSource 2>&1 | Out-String
     if ($LASTEXITCODE -ne 0) { throw "upgrade sync failed" }
-    if (-not $out.Contains("New version available: v2.2.0 -> v2.3.0")) { throw "upgrade prompt missing" }
+    if (-not $out.Contains("New version available: $curVer -> $nextVer")) { throw "upgrade prompt missing" }
   } finally {
     if ($server -and -not $server.HasExited) { Stop-Process -Id $server.Id -Force }
   }

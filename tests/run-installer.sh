@@ -230,11 +230,13 @@ test_sync_wrapper_remote_sync() {
 
 # Upgrade path: version bump prompts; accepting syncs the new installer.
 test_sync_wrapper_upgrade() {
-  local ws="$1" port server_pid out rc i
+  local ws="$1" port server_pid out rc i cur_ver next_ver
   mkdir -p "$ws/remote"
   cp -r "$repo_root/scripts" "$ws/remote/"
   cp -r "$repo_root/dist" "$ws/remote/"
   cp "$repo_root/VERSION" "$ws/remote/"
+  cur_ver="$(tr -d '[:space:]' < "$repo_root/VERSION")"
+  next_ver="$(printf '%s' "$cur_ver" | awk -F. '{printf "%s.%s.%d", $1, $2, $3+1}')"
   port=$(python3 -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1",0)); print(s.getsockname()[1]); s.close()')
   python3 -m http.server "$port" --bind 127.0.0.1 --directory "$ws/remote" >/dev/null 2>&1 &
   server_pid=$!
@@ -248,13 +250,13 @@ test_sync_wrapper_upgrade() {
   local wrapper=".rubber-duck/sync-latest.sh"
   [[ -f "$wrapper" ]] || return 1
 
-  # Release v2.3.0: bump VERSION + change installer bytes.
-  echo "v2.3.0" > "$ws/remote/VERSION"
-  echo "# v2.3.0" >> "$ws/remote/scripts/rubber-duck.sh"
+  # Release next version: bump VERSION + change installer bytes.
+  echo "$next_ver" > "$ws/remote/VERSION"
+  echo "# $next_ver" >> "$ws/remote/scripts/rubber-duck.sh"
 
   out=$(printf 'y\n' | bash "$wrapper" --allow-untrusted-source 2>&1) && rc=0 || rc=$?
   [[ $rc -eq 0 ]] || return 1
-  echo "$out" | grep -q "New version available: v2.2.0 -> v2.3.0" || return 1
+  echo "$out" | grep -q "New version available: ${cur_ver} -> ${next_ver}" || return 1
   return 0
 }
 

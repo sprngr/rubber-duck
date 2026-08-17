@@ -141,9 +141,7 @@ BANNER
 resolve_canonical_version() {
   local v=""
   if [[ "${EFFECTIVE_SOURCE}" == "local" ]]; then
-    local version_file="${REPO_ROOT}/VERSION"
-    [[ -f "${version_file}" ]] || return 0
-    v="$(extract_version_from_file "${version_file}" 2>/dev/null)"
+    v="$(read_plain_version "${REPO_ROOT}/VERSION" 2>/dev/null)" || true
   else
     command -v curl >/dev/null 2>&1 || return 0
     local tmp
@@ -152,7 +150,7 @@ resolve_canonical_version() {
       rm -f "${tmp}"
       return 0
     fi
-    v="$(extract_version_from_file "${tmp}" 2>/dev/null)"
+    v="$(read_plain_version "${tmp}" 2>/dev/null)" || true
     rm -f "${tmp}"
   fi
   [[ -n "${v}" ]] && CANONICAL_VERSION="${v}"
@@ -379,6 +377,13 @@ extract_version_from_file() {
     match($0, /RUBBER_DUCK_VERSION:[[:space:]]*(v[0-9]+\.[0-9]+\.[0-9]+)/, m) { print m[1]; found=1; exit 0 }
     END { if (!found) exit 1 }
   ' "${source_file}"
+}
+
+# Read a plain VERSION file (content like "v3.0.0"), trimmed. Returns 1 if missing.
+read_plain_version() {
+  local f="$1"
+  [[ -f "${f}" ]] || return 1
+  tr -d '[:space:]' < "${f}"
 }
 
 if [[ $# -gt 0 ]]; then
@@ -716,7 +721,7 @@ prepare_sources() {
       err "local source selected but repo artifacts not found. Use --source web or run from repo checkout."
       exit 1
     fi
-    if v="$(extract_version_from_file "${REPO_ROOT}/VERSION" 2>/dev/null)"; then
+    if v="$(read_plain_version "${REPO_ROOT}/VERSION" 2>/dev/null)"; then
       CANONICAL_VERSION="${v}"
     fi
     generate_agents_md "${TMP_DIR}/AGENTS.md"
