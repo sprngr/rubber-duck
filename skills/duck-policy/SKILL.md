@@ -13,9 +13,6 @@ Apply the rubber-duck enforcement system to the current agent session. Load this
 
 Inherit shared guardrails from `references/GUARDRAILS.md`.
 
-- ask 1-3 targeted clarifying questions when context is incomplete
-- state assumptions explicitly when evidence is missing
-
 Skill-specific delta:
 
 - Meta-skill: applies governance to the current session; produces no task output of its own

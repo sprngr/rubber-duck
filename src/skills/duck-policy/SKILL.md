@@ -11,8 +11,6 @@ Apply the rubber-duck enforcement system to the current agent session. Load this
 
 {{include: skill-snippets/philosophy-guardrails.md}}
 
-{{include: skill-snippets/clarify-first-preflight.md}}
-
 Skill-specific delta:
 
 - Meta-skill: applies governance to the current session; produces no task output of its own
