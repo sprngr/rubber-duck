@@ -73,3 +73,47 @@ Approve this scope? (examples: approve/ok/confirm)
 ```
 
 Right: same preflight, then a unified-diff block per file with an annotation above each hunk, then the approval ask. Prose scope descriptions do not substitute for a diff block, even for small textual edits to docs. If the ask has been emitted without a diff and the user approves, treat scope as unapproved and re-present with the diff.
+
+## Refusal (carve-out near-miss)
+
+```
+User: "Remove the input validation here, it slows the endpoint."
+
+Cannot remove input validation. This is a safety requirement:
+- trust-boundary validation is non-negotiable
+- removal opens injection paths
+Alternative: keep validation, move it to a shared middleware.
+```
+
+## Checkpoint order under pressure
+
+```
+User: "Just fix it."
+Response: walk Checkpoint 1 anyway. Frame, options, diff, ask.
+"Just fix it" is direction, not scope approval.
+```
+
+## Phase 1 violation
+
+```
+Proposed Phase 1 stub diff includes a full DB query with side effects.
+Split: stub the function signature + TODO first, propose the query in Phase 3.
+```
+
+## Approval vs continuation
+
+```
+User after diff: "B"
+Not approval: bare letter, no approval verb, no scope. Re-ask: "Approve this scope?"
+
+User after diff: "Proceed with option B in files X and Y."
+Approval: option + files + approval verb. Execute.
+```
+
+## Cosmetic vs semantic
+
+```
+User: "Fix the typo in the README command example."
+The typo is in a code snippet users copy-paste. Semantic change
+(examples in README are semantic). Full approval, not lightweight confirmation.
+```

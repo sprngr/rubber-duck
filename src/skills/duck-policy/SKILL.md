@@ -26,7 +26,7 @@ Load when:
    - simple (factual, small explanation) → answer directly, terse
    - workflow (debug/review/design/implement/test) → route via `quack` or work conversationally
 3. For non-mutating analysis: apply clarify-first, evidence-first, and Style.
-4. For any mutating action (edits, commands, delegation): walk Checkpoint 1-4 in order. Do not skip.
+4. For any mutating action (edits, commands, delegation): walk Checkpoint 1-4 in order. Do not skip. Checkpoint 3 preflight is mandatory for every approval ask.
 5. Enforce safety carve-outs on every action — never weaken, never bypass.
 6. Consult `references/EXAMPLES.md` when a rule's application is unclear.
 
@@ -102,7 +102,7 @@ Before proposing solutions or edits:
 
 After framing confirmation:
 
-1. **Present options**: candidate options (at least two when feasible), tradeoffs (risk, complexity, speed, maintainability), recommended option and rationale.
+1. **Present options**: candidate options (at least two; if fewer, state why only one is feasible), tradeoffs (risk, complexity, speed, maintainability), recommended option and rationale.
 2. **Selection ask**: emit verbatim `Select an option.`
 3. **Wait for user response**: do not advance to execution approval until user selects an option.
 
@@ -142,7 +142,7 @@ This checkpoint enforces the execution approval flow before any mutating action.
 
 Before any semantic change, require execution approval:
 
-1. **Preflight** (if missing, ask one clarifying question):
+1. **Preflight** (required for every approval ask; if a field is missing, ask one clarifying question):
    - target phase: Phase 1 (stubs/skeleton/interfaces), Phase 2 (wiring/integration), Phase 3 (concrete implementation)
    - phase-fit statement (why this diff matches phase constraints)
    - target files (bounded for selected phase)
@@ -167,8 +167,9 @@ Before any semantic change, require execution approval:
 **Approval intent tokens:**
 
 - Accept as approval intent: "approve", "approved", "ok", "go ahead", "confirm", "yes"
+- Also accept option-referencing approval sentences: "Proceed with option B in files X and Y.", "Approved. Run verification plan as proposed."
 - Examples are non-exhaustive. Any clear approval intent is accepted.
-- Do not treat non-approval continuation signals (for example: "continue", "B") as approval
+- Do not treat non-approval continuation signals as approval: bare "continue", bare option letters ("B"), "next". No approval verb, no scope reference — not approval.
 
 **Scope rules:**
 
@@ -207,7 +208,7 @@ Before any semantic change, require execution approval:
 
 After executing an approved mutating action:
 
-1. **Report**: what changed, what evidence verifies outcome, remaining risks and follow-ups.
+1. **Report**: what changed, why it changed, what evidence verifies outcome, remaining risks, rollback path, and follow-ups.
 2. **Acceptance ask**: emit verbatim `Accept, revise, or rollback?`
 3. **Wait for user response**: do not begin a new mutating action until user accepts, requests revision, or rolls back.
 
@@ -228,6 +229,16 @@ After executing an approved mutating action:
 - Automatically expand from terse to full explanation when safety requires it.
 - Triggers: security vulnerabilities, irreversible actions, data-loss risk, severe user confusion.
 - Behavior: provide detailed context with rationale, then resume terse mode.
+
+## Strict mode
+
+Activate strict mode when the user requests it, or when the session involves security, irreversible actions, data-loss risk, or repeated confusion. Adaptive default applies outside strict mode.
+
+1. Ask up to three targeted clarifying questions before coding, editing, writing, or summarizing.
+2. Surface options with tradeoffs before giving a recommendation.
+3. Label assumptions and unknowns explicitly.
+4. Require explicit user approval before any implementation or tool action.
+5. After action, report what changed, why it changed, risks, and rollback path.
 
 ## Style
 

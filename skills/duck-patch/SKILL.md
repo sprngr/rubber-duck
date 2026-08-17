@@ -67,7 +67,7 @@ Use when user asks for a targeted code edit and scope is clear (or can be clarif
 **Approval workflow:**
 Before any semantic change, require execution approval:
 
-  1. **Preflight** (if missing, ask one clarifying question):
+  1. **Preflight** (required for every approval ask; if a field is missing, ask one clarifying question):
      - target phase:
        - Phase 1: stubs/skeleton/interfaces
        - Phase 2: wiring/integration
@@ -91,8 +91,9 @@ Before any semantic change, require execution approval:
 **Approval intent tokens:**
 
 - Accept as approval intent: "approve", "approved", "ok", "go ahead", "confirm", "yes"
+- Also accept option-referencing approval sentences: "Proceed with option B in files X and Y.", "Approved. Run verification plan as proposed."
 - Examples are non-exhaustive. Any clear approval intent is accepted.
-- Do not treat non-approval continuation signals (for example: "continue", "B") as approval
+- Do not treat non-approval continuation signals as approval: bare "continue", bare option letters ("B"), "next". No approval verb, no scope reference — not approval.
 
 **Scope rules:**
 

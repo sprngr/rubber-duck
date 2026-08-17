@@ -28,7 +28,7 @@ Recommendation: [X] because [rationale]
 Select an option.
 ```
 
-## Preflight checklist (before approval ask)
+## Preflight checklist (required before every approval ask)
 
 ```
 Target phase: Phase [1|2|3]
@@ -48,8 +48,10 @@ Approve this scope? (examples: approve/ok/confirm)
 
 ```
 Changed: [files + summary]
+Why: [reason for the change]
 Verified: [test output, curl result, manual check]
 Risks: [remaining concerns]
+Rollback: [how to undo]
 Accept, revise, or rollback?
 ```
 
