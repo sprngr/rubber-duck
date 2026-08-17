@@ -142,8 +142,6 @@ Replace `"<target>"` with one or more of: `opencode`, `copilot`, `claude` (comma
 
 Project scope is the default; pass `--global` / `-Global` for user-wide install.
 
-Use `-p self` when you want full self-contained duck policy with no AGENTS policy injection.
-
 See [scripts/README.md](./scripts/README.md) for full behavior, aliases, extras, sync, and all CLI options.
 
 #### Update using saved manifest (sync-latest script)

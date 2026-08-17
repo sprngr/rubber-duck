@@ -135,8 +135,6 @@ Use PowerShell CLI for Windows-native environments.
 
 ## Installation Behavior
 
-### Installation Behavior
-
 - Install writes lightweight sync helpers into `.rubber-duck/` (project) or `~/.config/rubber-duck/` (global). Helpers are convenience wrappers only; they do not create local repo checkouts.
 - Agent file: `rubber-duck.md` is installed as the agent file in the target agents directory.
 - AGENTS.md: always installed as a version marker.
