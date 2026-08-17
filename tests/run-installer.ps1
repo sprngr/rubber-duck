@@ -56,7 +56,7 @@ function Test-FreshInstallWritesPins {
   $pins = $d.pins
   if (-not $pins) { throw "no pins" }
   $keys = @($pins.PSObject.Properties.Name)
-  if ($keys.Count -lt 3) { throw "pin count $($keys.Count) < 3" }
+  if ($keys.Count -lt 2) { throw "pin count $($keys.Count) < 2" }
   foreach ($k in $keys) {
     if (-not $pins.$k.StartsWith("sha256:")) { throw "pin $k missing sha256 prefix" }
   }
@@ -92,15 +92,14 @@ function Test-RawBaseAllowlist {
   $out = & pwsh -NoProfile -File $script:PsInstaller -Action install -Harness opencode -Source web -RawBase "https://evil.example/foo" -SkipSkills -Project -AllowUntrustedSource 2>&1
   if (-not ($out -match "allowlist bypassed")) { throw "expected allowlist bypassed warning" }
 }
-function Test-ClaudeTwoFileLayout {
+function Test-ClaudeInstallAgentOnly {
   & pwsh -NoProfile -File $script:PsInstaller -Action install -Harness claude -Source local -SkipSkills -Project | Out-Null
   if ($LASTEXITCODE -ne 0) { throw "install failed" }
-  if (-not (Test-Path "CLAUDE.md")) { throw "CLAUDE.md missing" }
-  if (-not (Test-Path "AGENTS.md")) { throw "AGENTS.md missing" }
   if (-not (Test-Path ".claude/agents/rubber-duck.md")) { throw "claude agent missing" }
+  # 3.x: no CLAUDE.md / AGENTS.md managed block is written.
+  if (Test-Path "CLAUDE.md") { throw "CLAUDE.md unexpectedly written" }
   $d = Get-Content -Raw ".rubber-duck/manifest.json" | ConvertFrom-Json
   $pins = $d.pins
-  if (-not $pins."dist/claude/CLAUDE.md") { throw "claude policy pin missing" }
   if (-not $pins."dist/claude/agents/rubber-duck.md") { throw "claude agent pin missing" }
 }
 function Test-DryRunNoWrites {
@@ -173,7 +172,7 @@ Run-Test "fresh install writes pins"        { Test-FreshInstallWritesPins }
 Run-Test "reinstall verifies pins silently" { Test-ReinstallVerifiesPins  }
 Run-Test "sync round-trip"                  { Test-SyncRoundTrip          }
 Run-Test "rawBase allowlist"                { Test-RawBaseAllowlist       }
-Run-Test "claude two-file layout"           { Test-ClaudeTwoFileLayout    }
+Run-Test "claude install agent only"        { Test-ClaudeInstallAgentOnly }
 Run-Test "dry-run no writes"                { Test-DryRunNoWrites         }
 Run-Test "dry-run multi-target layout"      { Test-DryRunMultiTargetLayout}
 Run-Test "sync default source"              { Test-SyncDefaultSource      }

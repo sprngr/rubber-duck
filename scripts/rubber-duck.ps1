@@ -50,17 +50,6 @@ function Resolve-CanonicalVersion {
   }
 }
 
-# Generate the AGENTS.md managed block content inline.
-# This is a version marker — policy content lives in the agent body.
-function Generate-AgentsMd([string]$OutPath) {
-  $version = if ($script:CanonicalVersion) { $script:CanonicalVersion } else { "unknown" }
-  @"
-<!-- RUBBER_DUCK_VERSION: $version -->
-<!-- Policy content lives in the rubber-duck agent body. -->
-<!-- This file is a version marker for sync and install workflows. -->
-"@ | Set-Content -Path $OutPath -NoNewline
-}
-
 # Exact rawBase prefix required unless -AllowUntrustedSource is set.
 $AllowedRawBasePrefix = "https://raw.githubusercontent.com/sprngr/rubber-duck"
 
@@ -358,9 +347,7 @@ if ($script:RunningPiped) {
   if ([string]::IsNullOrWhiteSpace($RepoRoot)) { $RepoRoot = $ScriptDir }
 }
 $script:LocalAgentsDir = $null
-$script:LocalPolicyFile = $null
 $script:RemoteAgentsPath = $null
-$script:RemotePolicyPath = $null
 $script:PolicyMode = "managed_block"  # managed_block|file
 $script:CanonicalVersion = "unknown"
 
@@ -411,13 +398,6 @@ function Ensure-Dir([string]$Path, [string]$Label) {
   }
 }
 
-function Get-VersionFromFile([string]$Path) {
-  if (-not (Test-Path $Path)) { return $null }
-  $m = Select-String -Path $Path -Pattern 'RUBBER_DUCK_VERSION:\s*(v[0-9]+\.[0-9]+\.[0-9]+)' | Select-Object -First 1
-  if ($null -eq $m) { return $null }
-  return $m.Matches[0].Groups[1].Value
-}
-
 # Read a plain VERSION file (content like "v3.0.0"), trimmed. Returns $null if missing or malformed.
 function Get-PlainVersion([string]$Path) {
   if (-not (Test-Path $Path)) { return $null }
@@ -459,9 +439,7 @@ function Resolve-Target {
     if ([string]::IsNullOrWhiteSpace($policyParent)) { $policyParent = "." }
     $script:DestClaudeAgentsMd = Join-Path $policyParent "AGENTS.md"
     $script:PolicyMode = "file"
-    $script:LocalPolicyFile = Join-Path $RepoRoot "dist/claude/CLAUDE.md"
     $script:LocalAgentsDir = Join-Path $RepoRoot "dist/claude/agents"
-    $script:RemotePolicyPath = "dist/claude/CLAUDE.md"
     $script:RemoteAgentsPath = "dist/claude/agents"
     return
   }
@@ -489,7 +467,6 @@ function Resolve-Target {
 }
 
 function Has-LocalSources {
-  if ($script:PolicyMode -eq "file" -and -not (Test-Path $script:LocalPolicyFile)) { return $false }
   foreach ($f in $AgentFiles) {
     if (-not (Test-Path (Join-Path $script:LocalAgentsDir $f))) { return $false }
   }
@@ -522,20 +499,12 @@ function Download-Sources {
   New-Item -ItemType Directory -Force -Path $script:TmpDir | Out-Null
 
   if ($script:EffectiveSource -eq "local") {
-    if ($script:PolicyMode -eq "file") {
-      Copy-Item -Force $script:LocalPolicyFile (Join-Path $script:TmpDir "CLAUDE.md")
-    }
-    Generate-AgentsMd (Join-Path $script:TmpDir "AGENTS.md")
     foreach ($f in $AgentFiles) {
       Copy-Item -Force (Join-Path $script:LocalAgentsDir $f) (Join-Path $script:TmpDir $f)
     }
     return
   }
 
-  if ($script:PolicyMode -eq "file") {
-    Invoke-WebRequest -UseBasicParsing -Uri "$RawBase/$($script:RemotePolicyPath)" -OutFile (Join-Path $script:TmpDir "CLAUDE.md")
-  }
-  Generate-AgentsMd (Join-Path $script:TmpDir "AGENTS.md")
   foreach ($f in $AgentFiles) {
     Invoke-WebRequest -UseBasicParsing -Uri "$RawBase/$($script:RemoteAgentsPath)/$f" -OutFile (Join-Path $script:TmpDir $f)
   }
@@ -586,51 +555,15 @@ function Backup-Md([string]$Target) {
   Log "Backup created: $backup"
 }
 
-function Upsert-ManagedBlock([string]$Target, [string]$ContentFile) {
-  if ($DryRun) { Log "[dry-run] upsert managed block in $Target"; return }
-  $parent = Split-Path -Parent $Target
-  if (-not [string]::IsNullOrWhiteSpace($parent)) {
-    New-Item -ItemType Directory -Force -Path $parent | Out-Null
-  }
-  if (-not (Test-Path $Target)) { New-Item -ItemType File -Force -Path $Target | Out-Null }
-  $current = if (Test-Path $Target) { Get-Content -Raw $Target } else { "" }
-  # Prune existing managed block before writing new one.
-  # This handles 2.x->3.x migration where old blocks are larger.
-  if ($current -match [regex]::Escape($ManagedStart)) {
-    Log "Pruning existing managed block from $Target"
-  }
-  $stripped = Strip-ManagedBlockText $current
-  $stripped = $stripped -replace "(\r?\n)+$",""
-  $policy = Get-Content -Raw $ContentFile
-  $policy = $policy -replace "(\r?\n)+$",""
-  $parts = New-Object System.Collections.Generic.List[string]
-  if (-not [string]::IsNullOrWhiteSpace($stripped)) {
-    $parts.Add($stripped)
-    $parts.Add("")
-  }
-  $parts.Add($ManagedStart)
-  if (-not [string]::IsNullOrEmpty($policy)) { $parts.Add($policy) }
-  $parts.Add($ManagedEnd)
-  $next = ($parts -join "`n")
-  Set-Content -Path $Target -Value $next
-}
-
 function Remove-ManagedBlock([string]$Target) {
   if ($DryRun) { Log "[dry-run] remove managed block from $Target"; return }
   if (-not (Test-Path $Target)) { return }
   $current = Get-Content -Raw $Target
-  $stripped = Strip-ManagedBlockText $current
-  Set-Content -Path $Target -Value $stripped
-}
-
-function Install-PolicyFile {
-  # Claude targets keep a two-file layout (CLAUDE.md -> @AGENTS.md include,
-  # AGENTS.md -> policy). Upsert managed blocks into both so user-authored
-  # content in either file is preserved instead of clobbered.
-  Upsert-ManagedBlock $DestClaudeAgentsMd (Join-Path $script:TmpDir "AGENTS.md")
-  Upsert-ManagedBlock $DestPolicyMd (Join-Path $script:TmpDir "CLAUDE.md")
-  Log "Installed policy block -> $DestPolicyMd"
-  Log "Installed policy block -> $DestClaudeAgentsMd"
+  if ($current -match [regex]::Escape($ManagedStart)) {
+    Log "Removing managed block from $Target (3.x migration)"
+    $stripped = Strip-ManagedBlockText $current
+    Set-Content -Path $Target -Value $stripped
+  }
 }
 
 function Remove-PolicyFile {
@@ -828,29 +761,14 @@ function Skills-Status {
   }
 }
 
-function Has-ManagedBlock([string]$Target) {
-  if (-not (Test-Path $Target)) { return $false }
-  $text = Get-Content -Raw $Target
-  return $text.Contains($ManagedStart) -and $text.Contains($ManagedEnd)
-}
-
-function Report-PolicyBlock([string]$Target) {
-  $state = if (Has-ManagedBlock $Target) { "present" } else { "missing" }
-  Log "AGENTS policy block ($(Split-Path -Leaf $Target)): $state"
-}
-
 function Status {
-  $v = Get-VersionFromFile $DestPolicyMd
-  if (-not [string]::IsNullOrWhiteSpace($v)) { $script:CanonicalVersion = $v }
   Log "agents_dir: $DestAgentsDir"
-  Log "policy_md: $DestPolicyMd"
+  Log "version: $script:CanonicalVersion"
   $installed = 0
   foreach ($f in $AgentFiles) {
     if (Test-Path (Join-Path $DestAgentsDir $f)) { $installed++ }
   }
   Log "agents: $installed/$($AgentFiles.Count) present"
-  Report-PolicyBlock $DestPolicyMd
-  if ($PolicyMode -eq "file") { Report-PolicyBlock $DestClaudeAgentsMd }
 }
 
 function Doctor {
@@ -977,10 +895,10 @@ try {
         }
         Backup-Md $DestPolicyMd
         if ($PolicyMode -eq "managed_block") {
-          Upsert-ManagedBlock $DestPolicyMd (Join-Path $script:TmpDir "AGENTS.md")
+          Remove-ManagedBlock $DestPolicyMd
         } else {
           Backup-Md $DestClaudeAgentsMd
-          Install-PolicyFile
+          Remove-PolicyFile
         }
         Status
         Update-ManifestTarget "install" $script:Target
@@ -990,14 +908,6 @@ try {
           $h = Get-Sha256 (Join-Path $script:TmpDir $pinF)
           if ($h) { $pinPairs[(Get-AgentRemotePinKey $pinF)] = $h }
         }
-        $pinPolicyTmp = Join-Path $script:TmpDir "AGENTS.md"
-        $pinPath = "managed-block"
-        if ($PolicyMode -eq "file") {
-          $pinPolicyTmp = Join-Path $script:TmpDir "CLAUDE.md"
-          $pinPath = $script:RemotePolicyPath
-        }
-        $h = Get-Sha256 $pinPolicyTmp
-        if ($h) { $pinPairs[$pinPath] = $h }
         Write-Pins $pinManifestPath $pinPairs
       }
       "uninstall" {

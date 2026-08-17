@@ -45,7 +45,7 @@ test_fresh_install_writes_pins() {
 import json, sys
 d = json.load(open(".rubber-duck/manifest.json"))
 pins = d.get("pins", {})
-if len(pins) < 3: sys.exit(1)
+if len(pins) < 2: sys.exit(1)
 if not all(v.startswith("sha256:") for v in pins.values()): sys.exit(1)
 '
 }
@@ -93,17 +93,16 @@ test_rawbase_allowlist() {
   echo "$out" | grep -q "allowlist bypassed" || return 1
 }
 
-# Claude install: two-file layout (CLAUDE.md + sibling AGENTS.md) with pins.
-test_claude_install_two_file_layout() {
+# Claude install: agent only, no policy file, no managed block.
+test_claude_install_agent_only() {
   bash "$sh_installer" install --claude --source local --skip-skills --project || return 1
-  [[ -f CLAUDE.md ]] || return 1
-  [[ -f AGENTS.md ]] || return 1
   [[ -f .claude/agents/rubber-duck.md ]] || return 1
+  # 3.x: no CLAUDE.md / AGENTS.md managed block is written.
+  [[ ! -f CLAUDE.md ]] || return 1
   python3 -c '
 import json
 d = json.load(open(".rubber-duck/manifest.json"))
 pins = d.get("pins", {})
-assert "dist/claude/CLAUDE.md" in pins, "claude policy pin missing"
 assert "dist/claude/agents/rubber-duck.md" in pins, "claude agent pin missing"
 '
 }
@@ -157,7 +156,7 @@ run_test "fresh install writes pins"        test_fresh_install_writes_pins
 run_test "reinstall verifies pins silently" test_reinstall_pins_verify
 run_test "sync round-trip"                  test_sync_round_trip
 run_test "rawBase allowlist"                test_rawbase_allowlist
-run_test "claude two-file layout"           test_claude_install_two_file_layout
+run_test "claude install agent only"        test_claude_install_agent_only
 run_test "dry-run no writes"                test_dry_run_no_writes
 run_test "dry-run multi-target layout"      test_dry_run_multi_target_layout
 run_test "sync default source"              test_sync_default_source

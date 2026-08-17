@@ -28,9 +28,7 @@ fi
 
 REPO_ROOT="$(cd -- "${SCRIPT_DIR}/.." 2>/dev/null && pwd || pwd)"
 LOCAL_AGENTS_DIR=""
-LOCAL_POLICY_FILE=""
 REMOTE_AGENTS_PATH=""
-REMOTE_POLICY_PATH=""
 POLICY_MODE="managed_block"  # managed_block|file
 CANONICAL_VERSION="unknown"
 
@@ -370,15 +368,6 @@ read_prior_version() {
   printf '%s' "${MF_SOURCE_LAST_APPLIED_VERSION}"
 }
 
-extract_version_from_file() {
-  local source_file="$1"
-  [[ -f "${source_file}" ]] || return 1
-  awk '
-    match($0, /RUBBER_DUCK_VERSION:[[:space:]]*(v[0-9]+\.[0-9]+\.[0-9]+)/, m) { print m[1]; found=1; exit 0 }
-    END { if (!found) exit 1 }
-  ' "${source_file}"
-}
-
 # Read a plain VERSION file (content like "v3.0.0"), trimmed. Returns 1 if missing.
 read_plain_version() {
   local f="$1"
@@ -652,9 +641,7 @@ resolve_target() {
       fi
       DEST_CLAUDE_AGENTS_MD="$(dirname -- "${DEST_POLICY_MD}")/AGENTS.md"
       POLICY_MODE="file"
-      LOCAL_POLICY_FILE="${REPO_ROOT}/dist/claude/CLAUDE.md"
       LOCAL_AGENTS_DIR="${REPO_ROOT}/dist/claude/agents"
-      REMOTE_POLICY_PATH="dist/claude/CLAUDE.md"
       REMOTE_AGENTS_PATH="dist/claude/agents"
       ;;
     *)
@@ -665,9 +652,6 @@ resolve_target() {
 }
 
 has_local_sources() {
-  if [[ "${POLICY_MODE}" == "file" ]]; then
-    [[ -f "${LOCAL_POLICY_FILE}" ]] || return 1
-  fi
   for f in "${AGENT_FILES[@]}"; do
     [[ -f "${LOCAL_AGENTS_DIR}/${f}" ]] || return 1
   done
@@ -700,18 +684,6 @@ require_cmd() {
   command -v "${cmd}" >/dev/null 2>&1 || { err "required command missing: ${cmd}"; exit 1; }
 }
 
-# Generate the AGENTS.md managed block content inline.
-# This is a version marker — policy content lives in the agent body.
-generate_agents_md() {
-  local out="$1"
-  local version="${CANONICAL_VERSION:-unknown}"
-  cat > "${out}" <<EOF
-<!-- RUBBER_DUCK_VERSION: ${version} -->
-<!-- Policy content lives in the rubber-duck agent body. -->
-<!-- This file is a version marker for sync and install workflows. -->
-EOF
-}
-
 prepare_sources() {
   TMP_DIR="$(mktemp -d)"
   trap 'rm -rf "${TMP_DIR}"' EXIT
@@ -724,10 +696,6 @@ prepare_sources() {
     if v="$(read_plain_version "${REPO_ROOT}/VERSION" 2>/dev/null)"; then
       CANONICAL_VERSION="${v}"
     fi
-    generate_agents_md "${TMP_DIR}/AGENTS.md"
-    if [[ "${POLICY_MODE}" == "file" ]]; then
-      cp -f "${LOCAL_POLICY_FILE}" "${TMP_DIR}/CLAUDE.md"
-    fi
     for f in "${AGENT_FILES[@]}"; do
       cp -f "${LOCAL_AGENTS_DIR}/${f}" "${TMP_DIR}/${f}"
     done
@@ -735,13 +703,8 @@ prepare_sources() {
   fi
 
   require_cmd curl
-  # Fetch remote VERSION to embed in generated managed block.
   if v="$(curl -fsSL "${RAW_BASE}/VERSION" 2>/dev/null)"; then
     CANONICAL_VERSION="${v}"
-  fi
-  generate_agents_md "${TMP_DIR}/AGENTS.md"
-  if [[ "${POLICY_MODE}" == "file" ]]; then
-    curl -fsSL "${RAW_BASE}/${REMOTE_POLICY_PATH}" -o "${TMP_DIR}/CLAUDE.md"
   fi
   for f in "${AGENT_FILES[@]}"; do
     curl -fsSL "${RAW_BASE}/${REMOTE_AGENTS_PATH}/${f}" -o "${TMP_DIR}/${f}"
@@ -767,20 +730,6 @@ strip_managed_block() {
   local tmp
   tmp="$(mktemp)"
   strip_managed_block_to_file "${target}" "${tmp}"
-  mv "${tmp}" "${target}"
-}
-
-trim_trailing_blank_lines() {
-  local target="$1"
-  local tmp
-  tmp="$(mktemp)"
-  awk '
-    { lines[NR] = $0 }
-    $0 ~ /[^[:space:]]/ { last = NR }
-    END {
-      for (i = 1; i <= last; i++) print lines[i]
-    }
-  ' "${target}" > "${tmp}"
   mv "${tmp}" "${target}"
 }
 
@@ -811,36 +760,6 @@ backup_md() {
   log "Backup created: ${backup}"
 }
 
-upsert_managed_block() {
-  local target="${1:-${DEST_POLICY_MD}}"
-  local content_file="${2:-${TMP_DIR}/AGENTS.md}"
-  if (( DRY_RUN == 1 )); then
-    log "[dry-run] upsert managed block in ${target}"
-    return
-  fi
-  mkdir -p "$(dirname -- "${target}")"
-  touch "${target}"
-  # Prune existing managed block before writing new one.
-  # This handles 2.x→3.x migration where old blocks are larger.
-  if grep -Fq "${MANAGED_START}" "${target}" 2>/dev/null; then
-    log "Pruning existing managed block from ${target}"
-  fi
-  strip_managed_block "${target}"
-  trim_trailing_blank_lines "${target}"
-  local tmp_out
-  tmp_out="$(mktemp)"
-  {
-    if [[ -s "${target}" ]]; then
-      cat "${target}"
-      printf '\n'
-    fi
-    printf '%s\n' "${MANAGED_START}"
-    cat "${content_file}"
-    printf '%s\n' "${MANAGED_END}"
-  } > "${tmp_out}"
-  mv "${tmp_out}" "${target}"
-}
-
 remove_managed_block() {
   local target="${1:-${DEST_POLICY_MD}}"
   if (( DRY_RUN == 1 )); then
@@ -848,18 +767,9 @@ remove_managed_block() {
     return
   fi
   [[ -f "${target}" ]] || return 0
-  strip_managed_block "${target}"
-}
-
-install_policy_file() {
-  # Claude targets keep a two-file layout (CLAUDE.md -> @AGENTS.md include,
-  # AGENTS.md -> policy). Upsert managed blocks into both so user-authored
-  # content in either file is preserved instead of clobbered.
-  upsert_managed_block "${DEST_CLAUDE_AGENTS_MD}" "${TMP_DIR}/AGENTS.md"
-  upsert_managed_block "${DEST_POLICY_MD}" "${TMP_DIR}/CLAUDE.md"
-  if (( DRY_RUN == 0 )); then
-    log "Installed policy block -> ${DEST_POLICY_MD}"
-    log "Installed policy block -> ${DEST_CLAUDE_AGENTS_MD}"
+  if has_managed_block "${target}"; then
+    log "Removing managed block from ${target} (3.x migration)"
+    strip_managed_block "${target}"
   fi
 }
 
@@ -1050,25 +960,14 @@ has_managed_block() {
   grep -Fq "${MANAGED_START}" "${target}" && grep -Fq "${MANAGED_END}" "${target}"
 }
 
-report_policy_block() {
-  local target="$1" state="missing"
-  has_managed_block "${target}" && state="present"
-  log "AGENTS policy block (${target##*/}): ${state}"
-}
-
 status() {
-  if v="$(extract_version_from_file "${DEST_POLICY_MD}" 2>/dev/null)"; then
-    CANONICAL_VERSION="${v}"
-  fi
   log "agents_dir: ${DEST_AGENTS_DIR}"
-  log "policy_md: ${DEST_POLICY_MD}"
+  log "version: ${CANONICAL_VERSION}"
   local installed=0
   for f in "${AGENT_FILES[@]}"; do
     [[ -f "${DEST_AGENTS_DIR}/${f}" ]] && installed=$((installed + 1))
   done
   log "agents: ${installed}/${#AGENT_FILES[@]} present"
-  report_policy_block "${DEST_POLICY_MD}"
-  [[ "${POLICY_MODE}" == "file" ]] && report_policy_block "${DEST_CLAUDE_AGENTS_MD}"
   return 0
 }
 
@@ -1197,10 +1096,10 @@ for TARGET in "${TARGETS[@]}"; do
       fi
       backup_md "${DEST_POLICY_MD}"
       if [[ "${POLICY_MODE}" == "managed_block" ]]; then
-        upsert_managed_block
+        remove_managed_block
       else
         backup_md "${DEST_CLAUDE_AGENTS_MD}"
-        install_policy_file
+        remove_policy_file
       fi
       status
       manifest_update_target "install" "${TARGET}"
@@ -1208,13 +1107,6 @@ for TARGET in "${TARGETS[@]}"; do
       for pin_f in "${AGENT_FILES[@]}"; do
         pin_h=$(compute_sha256 "${TMP_DIR}/${pin_f}") && PIN_PAIRS+=("$(agent_remote_pin_key "${pin_f}")=${pin_h}")
       done
-      pin_policy="${TMP_DIR}/AGENTS.md"
-      pin_path="managed-block"
-      if [[ "${POLICY_MODE}" == "file" ]]; then
-        pin_policy="${TMP_DIR}/CLAUDE.md"
-        pin_path="${REMOTE_POLICY_PATH}"
-      fi
-      pin_h=$(compute_sha256 "${pin_policy}") && PIN_PAIRS+=("${pin_path}=${pin_h}")
       write_pins "${MANIFEST_PATH}" "${PIN_PAIRS[@]}"
       ;;
     uninstall)
