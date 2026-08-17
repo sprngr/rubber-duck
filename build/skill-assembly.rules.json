@@ -47,9 +47,6 @@
         "duck-triage",
         "duck-tape"
       ],
-      "policy_skills": [
-        "duck-policy"
-      ],
       "skills_with_ladder": [
         "duck-debug",
         "duck-design",
@@ -71,9 +68,6 @@
       "all_skills": [
         "{{include: skill-snippets/philosophy-guardrails.md}}",
         "{{include: skill-snippets/clarify-first-preflight.md}}"
-      ],
-      "policy_skills": [
-        "{{include: skill-snippets/philosophy-guardrails.md}}"
       ],
       "skills_with_ladder": [
         "{{include: skill-snippets/duck-ladder-core.md}}"

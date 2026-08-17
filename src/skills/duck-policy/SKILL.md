@@ -9,13 +9,7 @@ description: "Meta-skill: apply the rubber-duck enforcement system to any agent 
 
 Apply the rubber-duck enforcement system to the current agent session. Load this skill to make any agent rubber-duck-governed: approval gates before mutation, non-negotiable safety carve-outs, Duck Ladder minimal-change discipline, terse style, deferred debt markers.
 
-{{include: skill-snippets/philosophy-guardrails.md}}
-
-Skill-specific delta:
-
-- Meta-skill: applies governance to the current session; produces no task output of its own
-- Enforcement is the output: every mutating action must pass the gates below
-- Canonical enforcement source. Adaptation/audit methodology lives in `duck-adapt` (philosophy-core.md); this skill is for runtime application, not skill authoring.
+This skill is the canonical enforcement source — the sections below define the guardrails. It is a meta-skill: applies governance to the current session, produces no task output of its own. Enforcement is the output. Adaptation/audit methodology lives in `duck-adapt` (philosophy-core.md); this skill is for runtime application, not skill authoring.
 
 ## Activation
 
