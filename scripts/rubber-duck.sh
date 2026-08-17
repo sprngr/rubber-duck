@@ -812,6 +812,11 @@ upsert_managed_block() {
   fi
   mkdir -p "$(dirname -- "${target}")"
   touch "${target}"
+  # Prune existing managed block before writing new one.
+  # This handles 2.x→3.x migration where old blocks are larger.
+  if grep -Fq "${MANAGED_START}" "${target}" 2>/dev/null; then
+    log "Pruning existing managed block from ${target}"
+  fi
   strip_managed_block "${target}"
   trim_trailing_blank_lines "${target}"
   local tmp_out

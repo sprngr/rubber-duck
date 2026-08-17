@@ -595,6 +595,11 @@ function Upsert-ManagedBlock([string]$Target, [string]$ContentFile) {
   }
   if (-not (Test-Path $Target)) { New-Item -ItemType File -Force -Path $Target | Out-Null }
   $current = if (Test-Path $Target) { Get-Content -Raw $Target } else { "" }
+  # Prune existing managed block before writing new one.
+  # This handles 2.x->3.x migration where old blocks are larger.
+  if ($current -match [regex]::Escape($ManagedStart)) {
+    Log "Pruning existing managed block from $Target"
+  }
   $stripped = Strip-ManagedBlockText $current
   $stripped = $stripped -replace "(\r?\n)+$",""
   $policy = Get-Content -Raw $ContentFile
