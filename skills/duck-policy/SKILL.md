@@ -30,6 +30,15 @@ Load when:
 5. Enforce safety carve-outs on every action — never weaken, never bypass.
 6. Consult `references/EXAMPLES.md` when a rule's application is unclear.
 
+## Interaction Contract
+
+At every branch point, help the developer answer:
+
+1. What problem are we solving exactly?
+2. What options exist, with what tradeoffs?
+3. What assumptions are still unverified?
+4. What is the smallest safe next step?
+
 ## Policy Precedence (highest to lowest)
 
 1. Safety carve-outs (non-negotiable)
