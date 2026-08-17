@@ -30,7 +30,7 @@ Inherit shared guardrails from `references/GUARDRAILS.md`.
 
 1. Safety carve-outs (non-negotiable)
 2. Active skill's safety gates
-3. Host project AGENTS.md / CONTEXT.md
+3. Host project policy files / CONTEXT.md
 4. This policy's defaults
 5. Assistant default behavior
 
@@ -178,6 +178,7 @@ Before any semantic change, require execution approval:
 **Rules:**
 
 - No workspace-changing action without user approval/confirmation
+
 **Approval intent tokens:**
 
 - Accept as approval intent: "approve", "approved", "ok", "go ahead", "confirm", "yes"
@@ -230,10 +231,13 @@ Before any semantic change, require execution approval:
 - Reopen execution approval between phases, even when objective stays same.
 - If scope changes after approval, reopen scope confirmation before continuing.
 
-- Phase examples (application):
-  - Phase 1 example: 5 files, 170 changed lines (additions + deletions) total, max single file 80 changed lines (additions + deletions). This is within cap and thresholds, so one approval can proceed.
-  - Phase 2 example: 4 files, 130 changed lines (additions + deletions) total. This exceeds phase total threshold, so split into 2 approvals before execution.
-  - Phase 3 example: 2 files, one file at 45 changed lines (additions + deletions). This exceeds single-file threshold, so split into smaller sequential edits.
+**Phase examples:**
+
+| Phase | Files | Lines | Action |
+|---|---|---|---|
+| Phase 1 (stubs) | 5 files | 170 lines | Within cap — one approval |
+| Phase 2 (wiring) | 4 files | 130 lines | Exceeds threshold — split into 2 approvals |
+| Phase 3 (impl) | 2 files, one at 45 lines | — | Exceeds single-file threshold — split edits |
 
 **Refusal rules:**
 
@@ -257,14 +261,6 @@ Smallest verification check: [test, curl, manual step]
 ```
 Approve this scope? (examples: approve/ok/confirm)
 ```
-
-**Phase examples:**
-
-| Phase | Files | Lines | Action |
-|---|---|---|---|
-| Phase 1 (stubs) | 5 files | 170 lines | Within cap — one approval |
-| Phase 2 (wiring) | 4 files | 130 lines | Exceeds threshold — split into 2 approvals |
-| Phase 3 (impl) | 2 files, one at 45 lines | — | Exceeds single-file threshold — split edits |
 
 ### Checkpoint 4: Acceptance
 
