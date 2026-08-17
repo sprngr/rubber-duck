@@ -33,6 +33,7 @@
     "skill_groups": {
       "all_skills": [
         "duck-adapt",
+        "duck-policy",
         "quack",
         "duck-debt",
         "duck-debug",

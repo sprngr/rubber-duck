@@ -123,11 +123,8 @@ npx skills add https://github.com/sprngr/rubber-duck
 ### Full assistant operating system (agents + skills)
 
 > [!IMPORTANT]
-> Full install uses deterministic agent variant selection:
-> - `--policy host` (default): installs AGENTS policy block + `rubber-duck-lite` source variant
-> - `--policy self` (or legacy `--skip-agents-md` / `-SkipAgentsMd`): skips AGENTS policy block + installs full self-contained `rubber-duck` source variant
-> - installed destination filename remains `rubber-duck.md` in both cases
-> - mode tradeoffs and use-case guidance: [Host vs Self policy mode matrix](./scripts/README.md#host-vs-self-policy-mode-matrix)
+> Full install uses self-contained `rubber-duck` agent with all policy rules built in.
+> - installed destination filename is `rubber-duck.md`
 
 **Bash (macOS/Linux):**
 

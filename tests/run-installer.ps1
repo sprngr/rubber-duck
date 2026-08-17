@@ -101,7 +101,7 @@ function Test-ClaudeTwoFileLayout {
   $d = Get-Content -Raw ".rubber-duck/manifest.json" | ConvertFrom-Json
   $pins = $d.pins
   if (-not $pins."dist/claude/CLAUDE.md") { throw "claude policy pin missing" }
-  if (-not $pins."dist/claude/agents/rubber-duck-lite.md") { throw "claude lite agent pin missing" }
+  if (-not $pins."dist/claude/agents/rubber-duck.md") { throw "claude agent pin missing" }
 }
 function Test-DryRunNoWrites {
   & pwsh -NoProfile -File $script:PsInstaller -Action install -Harness opencode -Source local -SkipSkills -Project -DryRun | Out-Null
@@ -126,9 +126,9 @@ function Test-DryRunMultiTargetLayout {
 # Sync with default source (auto). Regression guard for RawBase ordering bug:
 # sync path used to call Test-RawBaseAllowed before RawBase default was applied.
 function Test-SyncDefaultSource {
-  & pwsh -NoProfile -File $script:PsInstaller -Action install -Harness opencode -Source local -SkipSkills -Policy self -Project | Out-Null
+  & pwsh -NoProfile -File $script:PsInstaller -Action install -Harness opencode -Source local -SkipSkills -Project | Out-Null
   if ($LASTEXITCODE -ne 0) { throw "install failed" }
-  & pwsh -NoProfile -File $script:PsInstaller -Action sync -Project -SkipSkills -Policy self | Out-Null
+  & pwsh -NoProfile -File $script:PsInstaller -Action sync -Project -SkipSkills | Out-Null
   if ($LASTEXITCODE -ne 0) { throw "sync with default source failed" }
 }
 

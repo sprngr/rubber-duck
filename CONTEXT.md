@@ -37,12 +37,10 @@
 - **Manifest schema v1 with pins**: `.rubber-duck/manifest.json` tracks `source`, `targets`, and `pins` (sha256 of installed artifacts). Pins are a dev-workflow change log enabling skip-unchanged reinstalls, not a security boundary. (date: 2026-08-12)
 - **rawBase allowlist**: installer only accepts sources under `https://raw.githubusercontent.com/sprngr/rubber-duck` unless `--allow-untrusted-source`/`-AllowUntrustedSource` is passed (emits warning). Prevents accidental fork installs. (date: 2026-08-12)
 - **Installer runtime dependency floor**: bash installer requires only bash 4+, awk, curl, coreutils. `python3` removed from installer path. (date: 2026-08-12)
-- **Installer policy mode model**: installer now uses semantic policy mode selection (`--policy`/`-Policy` with `host|self`, `host` default). Legacy skip flag remains as alias for `self` with explicit host+skip conflict guard. (date: 2026-08-14)
-- **Deterministic duck variant install**: policy mode controls installer source artifact selection (`host` -> `rubber-duck-lite`, `self` -> full `rubber-duck`) while installed destination filename remains `rubber-duck.md`. (date: 2026-08-14)
-- **Lite duck workflow parity tightened**: lite prompt now includes explicit workflow-choice wait gate and parity-critical workflow controls without duplicating full AGENTS policy body. (date: 2026-08-14)
+- **Single agent architecture**: `rubber-duck` agent body is canonical source of truth for all policy rules. `rubber-duck-lite` removed. AGENTS.md reduced to version marker. (date: 2026-08-16)
+- **duck-policy portable skill**: enforcement rules extracted to `duck-policy` skill, loadable by any agent. Agent body includes skill snippet at build time for progressive disclosure. (date: 2026-08-16)
 - **Installer template sources reorganized**: sync wrapper templates moved to `src/install/scripts/`, manifest template moved to `src/install/templates/`. Shared snippets (`src/shared/`) reserved for prompt/policy snippets only. Build outputs at `dist/scripts/` and `dist/templates/`. (date: 2026-08-16)
 - **Sync wrapper version check**: sync-latest scripts compare manifest `lastAppliedVersion` against remote/local `VERSION` file before syncing. Prompts user with version change and CHANGELOG link when newer version exists. Fallback templates removed; missing sync template is a hard error. Wrapper forwards the derived raw-base on remote sync; ps1 wrappers use `(Get-Process -Id $PID).Path` for host detection. (date: 2026-08-16)
-- **Lite duck intentional omissions**: `rubber-duck-lite` omits Duck Ladder (fix-direction guidance), Auto-Clarity (safety-triggered explanation expansion), and Checkpoint 1-4 decision checkpoints from the full `rubber-duck` body. Lite retains safety gate fallback, workflow routing, clarify-first, and safety carve-outs. (date: 2026-08-16)
 
 ## Conventions
 
@@ -123,12 +121,9 @@ Multi-harness installer branch (`2.1.0-multi-harness-install`) landed:
 
 ### 2026-08-14
 
-Policy-mode and lite-variant refactor landed:
+Architecture consolidation:
 
-- Added semantic installer policy mode flags: `--policy|-p host|self` and `-Policy/-p host|self` (`host` default).
-- Kept `--skip-agents-md` / `-SkipAgentsMd` as legacy alias for `self`.
-- Added deterministic artifact selection by mode:
-  - `host` installs AGENTS policy block and sources `rubber-duck-lite`
-  - `self` skips AGENTS policy block writes and sources full `rubber-duck`
-- Added Host vs Self tradeoff matrix to `scripts/README.md`; README quick start links to matrix.
-- Tightened `rubber-duck-lite` workflow behavior to wait for approach selection before continuing workflow path.
+- Removed `rubber-duck-lite` agent. Single self-contained `rubber-duck` agent is canonical.
+- Stripped `AGENTS.md` to version marker only. Policy content lives in agent body.
+- Extracted `duck-policy` portable skill for non-duck agents.
+- Validation suite: 44 tests, no variant system.

@@ -7,13 +7,8 @@ param(
   [string]$Harness,
   [switch]$Global,
   [switch]$Project = $true,
-  [string]$ClaudeMd,
   [string]$Branch = "main",
   [switch]$SkipSkills,
-  [switch]$SkipAgentsMd,
-  [Alias("p")]
-  [ValidateSet("host","self")]
-  [string]$Policy = "host",
   [switch]$Extras,
   [switch]$DryRun,
   [switch]$Prune,
@@ -86,7 +81,7 @@ function Get-ManifestPath {
 }
 
 # Build base args for sync replay. Unlike the bash sync_replay_cmd, this does
-# NOT append install-specific flags (SkipSkills, SkipAgentsMd, Extras).
+# NOT append install-specific flags (SkipSkills, Extras).
 # The caller adds those per context. This divergence from bash sync_replay_cmd
 # is intentional: PowerShell parameter binding is explicit, not positional.
 function Get-SyncReplayArgs([string]$Action, [string]$HarnessCsv) {
@@ -177,15 +172,6 @@ function Read-PriorVersion([string]$ManifestPath) {
 }
 
 function rubber-duck {
-  $skipAgentsMdSpecified = $MyInvocation.BoundParameters.ContainsKey("SkipAgentsMd")
-  $policySpecified = $MyInvocation.BoundParameters.ContainsKey("Policy")
-  if ($Policy -eq "self") {
-    $SkipAgentsMd = $true
-  }
-  if ($policySpecified -and $Policy -eq "host" -and $skipAgentsMdSpecified) {
-    throw "Conflicting flags: -Policy host cannot be combined with -SkipAgentsMd."
-  }
-
   $LegacyTargets = @()
   if ($OpenCode) { $LegacyTargets += "opencode" }
   if ($Copilot) { $LegacyTargets += "copilot" }
@@ -223,9 +209,6 @@ function rubber-duck {
 
   if ($Prune -and $Action -ne "sync") {
     throw "-Prune is only valid with sync."
-  }
-  if (-not [string]::IsNullOrWhiteSpace($ClaudeMd) -and -not ($SelectedTargets -contains "claude")) {
-    throw "-ClaudeMd applies only when claude target is selected."
   }
   # Auto-detect branch from RUBBER_DUCK_SOURCE_URL if not explicitly set
   if ($Branch -eq "main" -and -not [string]::IsNullOrWhiteSpace($env:RUBBER_DUCK_SOURCE_URL)) {
@@ -306,7 +289,6 @@ function rubber-duck {
 
       $syncArgs = Get-SyncReplayArgs "install" $groupHarness
       if (-not $gInstallSkills) { $syncArgs += "-SkipSkills" }
-      if (-not $gInstallAgentsMd) { $syncArgs += "-SkipAgentsMd" }
       if ($gExtras) { $syncArgs += "-Extras" }
       if ($DryRun) { $syncArgs += "-DryRun" }
       if ($AllowUntrustedSource) { $syncArgs += "-AllowUntrustedSource" }
@@ -318,7 +300,6 @@ function rubber-duck {
         if (-not $syncTargetSet.ContainsKey($t)) {
           $syncArgs = Get-SyncReplayArgs "uninstall" $t
           $syncArgs += "-SkipSkills"
-          if ($SkipAgentsMd) { $syncArgs += "-SkipAgentsMd" }
           if ($DryRun) { $syncArgs += "-DryRun" }
           if ($AllowUntrustedSource) { $syncArgs += "-AllowUntrustedSource" }
           & $psExe @syncArgs
@@ -389,16 +370,8 @@ $AgentFiles = @(
   "duckling.md"
 )
 
-function Get-AgentSourceFile([string]$DestFile) {
-  if ($DestFile -eq "rubber-duck.md" -and -not $SkipAgentsMd) {
-    return "rubber-duck-lite.md"
-  }
-  return $DestFile
-}
-
 function Get-AgentRemotePinKey([string]$DestFile) {
-  $src = Get-AgentSourceFile $DestFile
-  return "$($script:RemoteAgentsPath)/$src"
+  return "$($script:RemoteAgentsPath)/$DestFile"
 }
 
 $DefaultSkills = @(
@@ -465,10 +438,10 @@ function Resolve-Target {
     $script:Target = "claude"
     if ($Project) {
       $script:DestAgentsDir = ".claude/agents"
-      $script:DestPolicyMd = if ([string]::IsNullOrWhiteSpace($ClaudeMd)) { "CLAUDE.md" } else { $ClaudeMd }
+      $script:DestPolicyMd = "CLAUDE.md"
     } else {
       $script:DestAgentsDir = Join-Path $HOME ".claude/agents"
-      $script:DestPolicyMd = if ([string]::IsNullOrWhiteSpace($ClaudeMd)) { (Join-Path $HOME ".claude/CLAUDE.md") } else { $ClaudeMd }
+      $script:DestPolicyMd = Join-Path $HOME ".claude/CLAUDE.md"
     }
     $policyParent = Split-Path -Parent $script:DestPolicyMd
     if ([string]::IsNullOrWhiteSpace($policyParent)) { $policyParent = "." }
@@ -511,8 +484,7 @@ function Has-LocalSources {
   if (-not (Test-Path $script:LocalPolicyFile)) { return $false }
   if ($script:PolicyMode -eq "file" -and -not (Test-Path $script:LocalAgentsPolicyFile)) { return $false }
   foreach ($f in $AgentFiles) {
-    $src = Get-AgentSourceFile $f
-    if (-not (Test-Path (Join-Path $script:LocalAgentsDir $src))) { return $false }
+    if (-not (Test-Path (Join-Path $script:LocalAgentsDir $f))) { return $false }
   }
   return $true
 }
@@ -550,8 +522,7 @@ function Download-Sources {
       Copy-Item -Force $script:LocalAgentsPolicyFile (Join-Path $script:TmpDir "AGENTS.md")
     }
     foreach ($f in $AgentFiles) {
-      $src = Get-AgentSourceFile $f
-      Copy-Item -Force (Join-Path $script:LocalAgentsDir $src) (Join-Path $script:TmpDir $f)
+      Copy-Item -Force (Join-Path $script:LocalAgentsDir $f) (Join-Path $script:TmpDir $f)
     }
     $v = Get-VersionFromFile (Join-Path $script:TmpDir "AGENTS.md")
     if (-not [string]::IsNullOrWhiteSpace($v)) { $script:CanonicalVersion = $v }
@@ -565,8 +536,7 @@ function Download-Sources {
     Invoke-WebRequest -UseBasicParsing -Uri "$RawBase/$($script:RemoteAgentsPolicyPath)" -OutFile (Join-Path $script:TmpDir "AGENTS.md")
   }
   foreach ($f in $AgentFiles) {
-    $src = Get-AgentSourceFile $f
-    Invoke-WebRequest -UseBasicParsing -Uri "$RawBase/$($script:RemoteAgentsPath)/$src" -OutFile (Join-Path $script:TmpDir $f)
+    Invoke-WebRequest -UseBasicParsing -Uri "$RawBase/$($script:RemoteAgentsPath)/$f" -OutFile (Join-Path $script:TmpDir $f)
   }
   $v = Get-VersionFromFile (Join-Path $script:TmpDir "AGENTS.md")
   if (-not [string]::IsNullOrWhiteSpace($v)) { $script:CanonicalVersion = $v }
@@ -618,7 +588,6 @@ function Backup-Md([string]$Target) {
 }
 
 function Upsert-ManagedBlock([string]$Target, [string]$ContentFile) {
-  if ($SkipAgentsMd) { return }
   if ($DryRun) { Log "[dry-run] upsert managed block in $Target"; return }
   $parent = Split-Path -Parent $Target
   if (-not [string]::IsNullOrWhiteSpace($parent)) {
@@ -643,7 +612,6 @@ function Upsert-ManagedBlock([string]$Target, [string]$ContentFile) {
 }
 
 function Remove-ManagedBlock([string]$Target) {
-  if ($SkipAgentsMd) { return }
   if ($DryRun) { Log "[dry-run] remove managed block from $Target"; return }
   if (-not (Test-Path $Target)) { return }
   $current = Get-Content -Raw $Target
@@ -652,7 +620,6 @@ function Remove-ManagedBlock([string]$Target) {
 }
 
 function Install-PolicyFile {
-  if ($SkipAgentsMd) { return }
   # Claude targets keep a two-file layout (CLAUDE.md -> @AGENTS.md include,
   # AGENTS.md -> policy). Upsert managed blocks into both so user-authored
   # content in either file is preserved instead of clobbered.
@@ -663,7 +630,6 @@ function Install-PolicyFile {
 }
 
 function Remove-PolicyFile {
-  if ($SkipAgentsMd) { return }
   # Strip only our managed blocks; user content in these files is left intact.
   Remove-ManagedBlock $DestPolicyMd
   Remove-ManagedBlock $DestClaudeAgentsMd
@@ -865,7 +831,6 @@ function Has-ManagedBlock([string]$Target) {
 }
 
 function Report-PolicyBlock([string]$Target) {
-  if ($SkipAgentsMd) { Log "AGENTS policy block ($(Split-Path -Leaf $Target)): skipped (-SkipAgentsMd)"; return }
   $state = if (Has-ManagedBlock $Target) { "present" } else { "missing" }
   Log "AGENTS policy block ($(Split-Path -Leaf $Target)): $state"
 }
@@ -928,7 +893,7 @@ function Update-ManifestTarget([string]$Operation, [string]$TargetName) {
     $manifest["targets"][$TargetName] = @{
       enabled = $true
       scope = $(if ($Project) { "project" } else { "global" })
-      installAgentsMd = (-not $SkipAgentsMd)
+      installAgentsMd = $true
       installSkills = (-not $SkipSkills)
       extras = [bool]$Extras
     }
@@ -1006,14 +971,12 @@ try {
           Install-SyncWrapper
           $script:SyncWrapperWritten = $true
         }
-        if (-not $SkipAgentsMd) {
-          Backup-Md $DestPolicyMd
-          if ($PolicyMode -eq "managed_block") {
-            Upsert-ManagedBlock $DestPolicyMd (Join-Path $script:TmpDir "AGENTS.md")
-          } else {
-            Backup-Md $DestClaudeAgentsMd
-            Install-PolicyFile
-          }
+        Backup-Md $DestPolicyMd
+        if ($PolicyMode -eq "managed_block") {
+          Upsert-ManagedBlock $DestPolicyMd (Join-Path $script:TmpDir "AGENTS.md")
+        } else {
+          Backup-Md $DestClaudeAgentsMd
+          Install-PolicyFile
         }
         Status
         Update-ManifestTarget "install" $script:Target
@@ -1023,27 +986,23 @@ try {
           $h = Get-Sha256 (Join-Path $script:TmpDir $pinF)
           if ($h) { $pinPairs[(Get-AgentRemotePinKey $pinF)] = $h }
         }
-        if (-not $SkipAgentsMd) {
-          $pinPolicyTmp = Join-Path $script:TmpDir "AGENTS.md"
-          if ($PolicyMode -eq "file") { $pinPolicyTmp = Join-Path $script:TmpDir "CLAUDE.md" }
-          $h = Get-Sha256 $pinPolicyTmp
-          if ($h) { $pinPairs[$script:RemotePolicyPath] = $h }
-        }
+        $pinPolicyTmp = Join-Path $script:TmpDir "AGENTS.md"
+        if ($PolicyMode -eq "file") { $pinPolicyTmp = Join-Path $script:TmpDir "CLAUDE.md" }
+        $h = Get-Sha256 $pinPolicyTmp
+        if ($h) { $pinPairs[$script:RemotePolicyPath] = $h }
         Write-Pins $pinManifestPath $pinPairs
       }
       "uninstall" {
         Doctor
         Download-Sources
         Uninstall-Agents
-        if (-not $SkipAgentsMd) {
-          Backup-Md $DestPolicyMd
-          if ($PolicyMode -eq "managed_block") {
-            Remove-ManagedBlock $DestPolicyMd
-          } else {
-            Backup-Md $DestClaudeAgentsMd
+        Backup-Md $DestPolicyMd
+        if ($PolicyMode -eq "managed_block") {
+          Remove-ManagedBlock $DestPolicyMd
+        } else {
+          Backup-Md $DestClaudeAgentsMd
             Remove-PolicyFile
           }
-        }
         Status
         Update-ManifestTarget "uninstall" $script:Target
       }

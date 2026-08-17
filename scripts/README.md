@@ -14,12 +14,10 @@ CLI reference for install/update/uninstall tooling.
 
 `--project` scope is the default; pass `--global` for user-wide install.
 
-Agent variant selection is deterministic:
-- `--policy host` (default): install AGENTS policy block + `rubber-duck-lite` source variant
-- `--policy self` (legacy alias: `--skip-agents-md` / `-SkipAgentsMd`): skip AGENTS policy block + install full self-contained `rubber-duck` source variant
-- destination filename remains `rubber-duck.md` in both modes
-
-See [Host vs Self policy mode matrix](#host-vs-self-policy-mode-matrix) for tradeoffs and recommended use cases.
+Agent selection is straightforward:
+- `rubber-duck.md` is installed as the agent file
+- AGENTS.md is always installed (version marker)
+- destination filename is `rubber-duck.md`
 
 Sync targets from a manifest:
 
@@ -84,8 +82,6 @@ Opt out of default install steps or adjust source to fit your workflow. All opti
 | Flag (Bash) | Flag (PowerShell) | Effect |
 | --- | --- | --- |
 | `--skip-skills` | `-SkipSkills` | Skip `npx skills add/remove/list` |
-| `--policy <host\|self>` (`-p`) | `-Policy host\|self` (`-p`) | Policy mode selection (`host` default, `self` skips AGENTS policy install) |
-| `--skip-agents-md` | `-SkipAgentsMd` | Legacy alias for `--policy self` / `-Policy self` |
 | `--dry-run` | `-DryRun` | Print planned actions without writing |
 | `--prune` | `-Prune` | With `sync`: remove managed targets not enabled in manifest |
 | `--source <auto\|local\|web>` | `-Source auto\|local\|web` | Pick artifact + skills source (`auto` default) |
@@ -105,11 +101,8 @@ Use Bash CLI for Linux/macOS and shell-based CI.
 | `--opencode` | switch | Use opencode paths (required target; pick exactly one of `--claude/--copilot/--opencode`) |
 | `--global`  | switch | Apply global scope to selected target (opt into global; skills follow unless `--skip-skills`) |
 | `--project` | switch | Apply project scope to selected target (default; skills follow unless `--skip-skills`) |
-| `--claude-md <path>` | value | Claude target `CLAUDE.md` path override (default for `--claude`; project default when `--project` also set) |
 | `--branch <name>` | value | Branch to install from (default: `main`; pass explicitly for non-main installs) |
-| `--policy <host\|self>`, `-p <host\|self>` | value | Policy mode (`host` default; `self` skips AGENTS policy install) |
 | `--skip-skills` | switch | Skip `npx skills add/remove/list` |
-| `--skip-agents-md` | switch | Legacy alias for `--policy self` |
 | `--source <auto\|local\|web>` | value | Artifact + skills source selection (`auto` default; `local` derives repo path, `web` derives GitHub URL) |
 | `--raw-base <url>` | value | Raw GitHub base URL for web source |
 | `--prune` | switch | With `sync`, uninstall managed targets not enabled in manifest |
@@ -131,11 +124,8 @@ Use PowerShell CLI for Windows-native environments.
 | `-OpenCode` | switch | Use opencode paths (required target; pick exactly one of `-Claude/-Copilot/-OpenCode`) |
 | `-Global` | switch | Apply global scope to selected target (opt into global; skills follow unless `-SkipSkills`) |
 | `-Project` | switch | Apply project scope to selected target (default; skills follow unless `-SkipSkills`) |
-| `-ClaudeMd <path>` | value | Claude target `CLAUDE.md` path override (default for `-Claude`; project default when `-Project` also set) |
 | `-Branch <name>` | value | Branch to install from (default: `main`) |
-| `-Policy host\|self`, `-p host\|self` | value | Policy mode (`host` default; `self` skips AGENTS policy install) |
 | `-SkipSkills` | switch | Skip `npx skills add/remove/list` |
-| `-SkipAgentsMd` | switch | Legacy alias for `-Policy self` |
 | `-Source auto\|local\|web` | value | Artifact + skills source selection (`auto` default; `local` derives repo path, `web` derives GitHub URL) |
 | `-RawBase <url>` | value | Raw GitHub base URL for web source |
 | `-Prune` | switch | With `sync`, uninstall managed targets not enabled in manifest |
@@ -145,58 +135,11 @@ Use PowerShell CLI for Windows-native environments.
 
 ## Installation Behavior
 
-### Host vs Self policy mode matrix
-
-| Area | `--policy host` (default) | `--policy self` |
-| --- | --- | --- |
-| Policy location | Managed block in target `AGENTS.md` (Claude uses two-file layout) | Inside installed `rubber-duck.md` agent artifact |
-| Installed duck artifact source | `rubber-duck-lite` | full `rubber-duck` |
-| Installed filename | `rubber-duck.md` | `rubber-duck.md` |
-| Cross-agent policy coverage | Yes, policy can govern non-duck agents too | No centralized cross-agent policy injection |
-| Duck prompt size | Smaller | Larger |
-| Update model | Centralized AGENTS-managed policy + lite artifact updates | Full self-contained duck artifact updates |
-| Project AGENTS ownership | Installer writes managed block | AGENTS policy injection path stays untouched |
-| Mutating safety source | AGENTS policy canonical, lite fallback if AGENTS absent | Self-contained in duck artifact |
-| Best fit | Shared policy across workflows/agents | Keep project AGENTS focused on app/team policy |
-
-### Mode and Flag Constraints & Target Path Behavior
-
-- Target selection:
-  - choose exactly one target style:
-    - harness list:
-      - Bash: `--harness "opencode,copilot,claude"` (one or more)
-      - PowerShell: `-Harness "opencode,copilot,claude"` (one or more)
-    - legacy single-target flags:
-      - Bash: exactly one of `--opencode` / `--copilot` / `--claude`
-      - PowerShell: exactly one of `-OpenCode` / `-Copilot` / `-Claude`
-  - mixing harness list with legacy target flags is invalid
-  - `sync` is manifest-driven and ignores CLI target flags/harness list
-- Claude target:
-  - global (`--claude --global` / `-Claude -Global`): writes/removes managed `~/.claude/CLAUDE.md` and sibling `~/.claude/AGENTS.md`
-  - project (default) (`--claude --project` / `-Claude -Project`): writes/removes managed project `CLAUDE.md` and sibling `AGENTS.md`
-  - backups before mutation:
-    - `CLAUDE.md.bak.<YYYYmmdd-HHMMSS>`
-    - `AGENTS.md.bak.<YYYYmmdd-HHMMSS>`
-  - Options:
-    - `--claude-md` / `-ClaudeMd` requires claude to be selected (via harness list or legacy claude flag).
-- Copilot target:
-  - global (`--copilot --global` / `-Copilot -Global`): uses `~/.copilot/agents` + `~/.copilot/AGENTS.md`
-  - project (default) (`--copilot --project` / `-Copilot -Project`): uses `.github/agents` + project-root `AGENTS.md`
-  - backup before mutation: `AGENTS.md.bak.<YYYYmmdd-HHMMSS>`
-- OpenCode target:
-  - global (`--opencode --global` / `-OpenCode -Global`): uses `~/.config/opencode/agents` + `~/.config/opencode/AGENTS.md`
-  - project (default) (`--opencode --project` / `-OpenCode -Project`): uses `.opencode/agents` + project-root `AGENTS.md`
-  - backup before mutation: `AGENTS.md.bak.<YYYYmmdd-HHMMSS>`
-
-### Installation Notes
+### Installation Behavior
 
 - Install writes lightweight sync helpers into `.rubber-duck/` (project) or `~/.config/rubber-duck/` (global). Helpers are convenience wrappers only; they do not create local repo checkouts.
-- Agent variant selection:
-  - `--policy host` (default) installs managed AGENTS policy + `rubber-duck-lite` source artifact
-  - `--policy self` installs full self-contained `rubber-duck` source artifact and skips AGENTS policy block install
-  - destination file written to target agents directory remains `rubber-duck.md`
-  - conflict rule: explicit host mode plus legacy skip flag in same command is invalid
-  - **Deprecated:** `--skip-agents-md` / `-SkipAgentsMd` will be removed in a future release. Use `--policy self` / `-Policy self` instead.
+- Agent file: `rubber-duck.md` is installed as the agent file in the target agents directory.
+- AGENTS.md: always installed as a version marker.
 
 - Installer supports web invocation:
   - Bash: `curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh -o /tmp/rubber-duck.sh && bash -n /tmp/rubber-duck.sh && bash /tmp/rubber-duck.sh <command>`

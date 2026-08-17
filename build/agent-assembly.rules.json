@@ -47,10 +47,6 @@
       {
         "file": "src/shared/policy-snippets/approval-phase-examples.md",
         "contains": "Phase 1 example"
-      },
-      {
-        "file": "src/agents/AGENTS.md",
-        "contains": "{{include: policy-snippets/approval-workflow-core.md}}"
       }
     ],
     "agent_groups": {
@@ -66,14 +62,13 @@
     },
     "group_assertions": {
       "policy_baseline_agents": [
-        "{{include: policy-snippets/decision-ownership.md}}",
-        "{{include: policy-snippets/evidence-first.md}}"
+        "{{include: skill-snippets/duck-policy.md}}"
       ],
       "mutating_gate_agents": [
-        "{{include: policy-snippets/mutating-action-gate.md}}"
+        "{{include: skill-snippets/duck-policy.md}}"
       ],
       "safety_agents": [
-        "{{include: policy-snippets/safety-carveouts.md}}"
+        "{{include: skill-snippets/duck-policy.md}}"
       ]
     }
   }

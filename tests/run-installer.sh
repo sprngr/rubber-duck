@@ -104,7 +104,7 @@ import json
 d = json.load(open(".rubber-duck/manifest.json"))
 pins = d.get("pins", {})
 assert "dist/claude/CLAUDE.md" in pins, "claude policy pin missing"
-assert "dist/claude/agents/rubber-duck-lite.md" in pins, "claude lite agent pin missing"
+assert "dist/claude/agents/rubber-duck.md" in pins, "claude agent pin missing"
 '
 }
 
@@ -138,8 +138,8 @@ test_dry_run_multi_target_layout() {
 # Sync with default source (auto). Regression guard for RAW_BASE ordering bug:
 # sync path used to call rawBase allowlist before RAW_BASE default was applied.
 test_sync_default_source() {
-  bash "$sh_installer" install --opencode --source local --skip-skills --policy self --project || return 1
-  bash "$sh_installer" sync --project --source local --skip-skills --policy self || return 1
+  bash "$sh_installer" install --opencode --source local --skip-skills --project || return 1
+  bash "$sh_installer" sync --project --source local --skip-skills || return 1
 }
 
 # Install writes sync wrapper with correct scope and URL substitution.

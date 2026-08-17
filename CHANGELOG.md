@@ -5,6 +5,30 @@ All notable changes to Rubber Duck will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v3.0.0] - 2026-08-16
+
+### Added
+
+- `duck-policy` portable skill: enforcement rules (approval gates, safety carve-outs, Duck Ladder, Style, Auto-Clarity, Boundaries, Deferred Debt Markers) extracted to loadable skill for non-duck agents.
+
+### Changed
+
+- **Architecture consolidation:** single self-contained `rubber-duck` agent is canonical. `rubber-duck-lite` removed.
+- `AGENTS.md` reduced to version marker only. Policy content lives in agent body.
+- Agent body includes `duck-policy` skill snippet at build time (85 lines source, 366 lines rendered).
+- Validation suite: 44 tests, variant system removed.
+- Build rules updated: agent group assertions check skill-snippet include.
+
+### Removed
+
+- `rubber-duck-lite` agent variant (source files, build artifacts, installer mapping).
+- `--policy host|self` flag from both installers.
+- `--skip-agents-md` / `-SkipAgentsMd` flag from both installers.
+- `--claude-md` / `-ClaudeMd` flag from both installers.
+- `--variant` and `--no-agents-policy` flags from validation runner.
+- Lite-only validation tests (V40-V43).
+- Policy mode installer tests.
+
 ## [v2.2.0] - 2026-08-14
 
 ### Added
@@ -16,18 +40,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **Deprecation:** `--skip-agents-md` / `-SkipAgentsMd` is now a legacy alias for `--policy self` / `-Policy self`. It will be removed in a future release. Migrate to `--policy self`.
-- Installer policy mode is now semantic and explicit (`--policy host|self`, `host` default, conflict guard for host + legacy skip flag).
+- `--skip-agents-md` / `-SkipAgentsMd` skips AGENTS policy block installation.
 - Sync wrapper version comparison uses POSIX-compatible bash function instead of GNU `sort -V`.
-- Deterministic duck artifact selection by policy mode:
-  - `host`: installer sources `rubber-duck-lite` artifact
-  - `self`: installer sources full self-contained `rubber-duck` artifact
-  - installed destination filename remains `rubber-duck.md` in both modes
-- Installer docs now include canonical Host vs Self policy mode matrix in `scripts/README.md`, and README quick-start note links to this matrix.
-- Lite duck behavior parity tightened for workflow routing:
-  - explicit workflow-choice prompt template
-  - explicit wait-for-selection gate after approach choice
-  - clarified quack handoff/output constraints, clarify-first depth, and unsafe-simplification refusal line
 - Installer template sources moved from `src/shared/install-templates/` to `src/install/scripts/` (sync wrappers) and `src/install/templates/` (manifest template). Build outputs remain at `dist/scripts/` and `dist/templates/`.
 - Sync wrapper fallback templates removed from both installers. If the sync template cannot be fetched, the installer exits with a clear error instead of silently falling back to an embedded template.
 - Sync replay functions deduplicated: bash `sync_replay_install_cmd` + `sync_replay_uninstall_cmd` merged into `sync_replay_cmd`; PowerShell `Get-SyncReplayInstallArgs` + `Get-SyncReplayUninstallArgs` merged into `Get-SyncReplayArgs`.

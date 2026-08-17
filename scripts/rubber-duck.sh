@@ -7,15 +7,10 @@ SEEN_TARGET_COUNT=0
 HARNESS_CSV=""
 PRUNE=0
 TARGETS=()
-CLAUDE_MD=""
 PROJECT_SCOPE=1
 SEEN_PROJECT=0
 SEEN_GLOBAL=0
 SKIP_SKILLS=0
-SKIP_AGENTS_MD=0
-SEEN_SKIP_AGENTS_MD=0
-POLICY_VARIANT="host"  # host|self
-SEEN_POLICY_VARIANT=0
 SKILLS_CLI="skills@^1.5.21"  # pinned npx CLI package spec
 SOURCE_MODE="auto"  # auto|local|web
 BRANCH="main"  # default branch
@@ -65,20 +60,9 @@ AGENT_FILES=(
   "duckling.md"
 )
 
-agent_source_file() {
-  local dest_file="$1"
-  if [[ "${dest_file}" == "rubber-duck.md" && ${SKIP_AGENTS_MD} -eq 0 ]]; then
-    printf 'rubber-duck-lite.md'
-    return
-  fi
-  printf '%s' "${dest_file}"
-}
-
 agent_remote_pin_key() {
   local dest_file="$1"
-  local src_file
-  src_file="$(agent_source_file "${dest_file}")"
-  printf '%s/%s' "${REMOTE_AGENTS_PATH}" "${src_file}"
+  printf '%s/%s' "${REMOTE_AGENTS_PATH}" "${dest_file}"
 }
 
 # Default skills: the set declared in .claude-plugin/plugin.json.
@@ -115,11 +99,8 @@ Options:
   --harness <list>                  Comma-separated harness list (opencode,copilot,claude)
   --global                          Apply global scope to selected target (and skills, unless --skip-skills)
   --project                         Apply project scope to selected target (and skills, unless --skip-skills)
-  --claude-md <path>                Claude target memory file path override
   --branch <name>                   Branch to install from (default: main, auto-detects from URL)
-  --policy, -p <host|self>          Policy mode (default: host). self skips AGENTS policy install
   --skip-skills                     Skip npx skills add/remove/list
-  --skip-agents-md                  Legacy alias for --policy self (backward compatibility)
   --source <auto|local|web>         Artifact + skills source (default: auto)
   --raw-base <url>                  Raw GitHub base for web source
   --prune                           With sync: remove managed targets not in manifest
@@ -137,8 +118,6 @@ Examples:
   scripts/rubber-duck.sh install --copilot --global
   scripts/rubber-duck.sh install --claude --skip-skills
   scripts/rubber-duck.sh sync --project
-  scripts/rubber-duck.sh sync --project --prune --skip-skills --policy self
-  scripts/rubber-duck.sh install --opencode --policy self
   scripts/rubber-duck.sh install --opencode --source local
   curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh -o /tmp/rubber-duck.sh && bash -n /tmp/rubber-duck.sh && bash /tmp/rubber-duck.sh install --opencode
   curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/v2-quackening/scripts/rubber-duck.sh -o /tmp/rubber-duck.sh && bash -n /tmp/rubber-duck.sh && bash /tmp/rubber-duck.sh install --opencode --branch v2-quackening
@@ -220,11 +199,9 @@ sync_replay_cmd() {
   if (( PROJECT_SCOPE == 1 )); then CMD+=(--project); else CMD+=(--global); fi
   if [[ "${action}" == "install" ]]; then
     [[ "${3:-}" == "false" ]] && CMD+=(--skip-skills)
-    [[ "${4:-}" == "false" ]] && CMD+=(--skip-agents-md)
-    [[ "${5:-}" == "true" ]] && CMD+=(--extras)
+    [[ "${4:-}" == "true" ]] && CMD+=(--extras)
   else
     CMD+=(--skip-skills)
-    (( SKIP_AGENTS_MD == 1 )) && CMD+=(--skip-agents-md)
   fi
   (( DRY_RUN == 1 )) && CMD+=(--dry-run)
   (( ALLOW_UNTRUSTED_SOURCE == 1 )) && CMD+=(--allow-untrusted-source)
@@ -443,22 +420,8 @@ while [[ $# -gt 0 ]]; do
       SEEN_GLOBAL=1
       shift
       ;;
-    --claude-md)
-      CLAUDE_MD="${2:-}"
-      shift 2
-      ;;
-    --policy|-p)
-      POLICY_VARIANT="${2:-}"
-      SEEN_POLICY_VARIANT=1
-      shift 2
-      ;;
     --skip-skills)
       SKIP_SKILLS=1
-      shift
-      ;;
-    --skip-agents-md)
-      SKIP_AGENTS_MD=1
-      SEEN_SKIP_AGENTS_MD=1
       shift
       ;;
     --source)
@@ -500,30 +463,6 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
-
-case "${POLICY_VARIANT}" in
-  host|self) ;;
-  *)
-    err "invalid --policy value: ${POLICY_VARIANT} (expected: host|self)"
-    exit 1
-    ;;
-esac
-
-# New semantic mode. self is equivalent to legacy skip flag.
-if [[ "${POLICY_VARIANT}" == "self" ]]; then
-  SKIP_AGENTS_MD=1
-fi
-
-# Conflict only when user explicitly asks for host and legacy skip in same invocation.
-if (( SEEN_POLICY_VARIANT == 1 )) && [[ "${POLICY_VARIANT}" == "host" ]] && (( SEEN_SKIP_AGENTS_MD == 1 )); then
-  err "conflicting flags: --policy host cannot be combined with --skip-agents-md"
-  exit 1
-fi
-
-# Legacy-only path sets equivalent policy marker.
-if (( SEEN_POLICY_VARIANT == 0 )) && (( SEEN_SKIP_AGENTS_MD == 1 )); then
-  POLICY_VARIANT="self"
-fi
 
 if (( SEEN_PROJECT == 1 && SEEN_GLOBAL == 1 )); then
   err "cannot combine --project and --global"
@@ -590,10 +529,6 @@ HAS_CLAUDE=0
 for T in "${TARGETS[@]}"; do
   [[ "${T}" == "claude" ]] && HAS_CLAUDE=1
 done
-if [[ -n "${CLAUDE_MD}" && ${HAS_CLAUDE} -eq 0 ]]; then
-  err "--claude-md applies only when claude target is selected"
-  exit 1
-fi
 
 MANIFEST_PATH="$(manifest_path)"
 
@@ -708,10 +643,10 @@ resolve_target() {
     claude)
       if (( PROJECT_SCOPE == 1 )); then
         DEST_AGENTS_DIR="${CLAUDE_PROJECT_AGENTS_DIR}"
-        DEST_POLICY_MD="${CLAUDE_MD:-${CLAUDE_PROJECT_POLICY_MD}}"
+        DEST_POLICY_MD="${CLAUDE_PROJECT_POLICY_MD}"
       else
         DEST_AGENTS_DIR="${CLAUDE_AGENTS_DIR}"
-        DEST_POLICY_MD="${CLAUDE_MD:-${CLAUDE_POLICY_MD}}"
+        DEST_POLICY_MD="${CLAUDE_POLICY_MD}"
       fi
       DEST_CLAUDE_AGENTS_MD="$(dirname -- "${DEST_POLICY_MD}")/AGENTS.md"
       POLICY_MODE="file"
@@ -735,9 +670,7 @@ has_local_sources() {
     [[ -f "${LOCAL_POLICY_AGENTS_FILE}" ]] || return 1
   fi
   for f in "${AGENT_FILES[@]}"; do
-    local src_f
-    src_f="$(agent_source_file "${f}")"
-    [[ -f "${LOCAL_AGENTS_DIR}/${src_f}" ]] || return 1
+    [[ -f "${LOCAL_AGENTS_DIR}/${f}" ]] || return 1
   done
   return 0
 }
@@ -784,9 +717,7 @@ prepare_sources() {
       cp -f "${LOCAL_POLICY_AGENTS_FILE}" "${TMP_DIR}/AGENTS.md"
     fi
     for f in "${AGENT_FILES[@]}"; do
-      local src_f
-      src_f="$(agent_source_file "${f}")"
-      cp -f "${LOCAL_AGENTS_DIR}/${src_f}" "${TMP_DIR}/${f}"
+      cp -f "${LOCAL_AGENTS_DIR}/${f}" "${TMP_DIR}/${f}"
     done
     if v="$(extract_version_from_file "${TMP_DIR}/AGENTS.md" 2>/dev/null)"; then
       CANONICAL_VERSION="${v}"
@@ -802,9 +733,7 @@ prepare_sources() {
     curl -fsSL "${RAW_BASE}/${REMOTE_POLICY_AGENTS_PATH}" -o "${TMP_DIR}/AGENTS.md"
   fi
   for f in "${AGENT_FILES[@]}"; do
-    local src_f
-    src_f="$(agent_source_file "${f}")"
-    curl -fsSL "${RAW_BASE}/${REMOTE_AGENTS_PATH}/${src_f}" -o "${TMP_DIR}/${f}"
+    curl -fsSL "${RAW_BASE}/${REMOTE_AGENTS_PATH}/${f}" -o "${TMP_DIR}/${f}"
   done
   if v="$(extract_version_from_file "${TMP_DIR}/AGENTS.md" 2>/dev/null)"; then
     CANONICAL_VERSION="${v}"
@@ -875,7 +804,6 @@ backup_md() {
 }
 
 upsert_managed_block() {
-  (( SKIP_AGENTS_MD == 1 )) && return 0
   local target="${1:-${DEST_POLICY_MD}}"
   local content_file="${2:-${TMP_DIR}/AGENTS.md}"
   if (( DRY_RUN == 1 )); then
@@ -901,7 +829,6 @@ upsert_managed_block() {
 }
 
 remove_managed_block() {
-  (( SKIP_AGENTS_MD == 1 )) && return 0
   local target="${1:-${DEST_POLICY_MD}}"
   if (( DRY_RUN == 1 )); then
     log "[dry-run] remove managed block from ${target}"
@@ -912,7 +839,6 @@ remove_managed_block() {
 }
 
 install_policy_file() {
-  (( SKIP_AGENTS_MD == 1 )) && return 0
   # Claude targets keep a two-file layout (CLAUDE.md -> @AGENTS.md include,
   # AGENTS.md -> policy). Upsert managed blocks into both so user-authored
   # content in either file is preserved instead of clobbered.
@@ -925,7 +851,6 @@ install_policy_file() {
 }
 
 remove_policy_file() {
-  (( SKIP_AGENTS_MD == 1 )) && return 0
   # Strip only our managed blocks; user content in these files is left intact.
   remove_managed_block "${DEST_POLICY_MD}"
   remove_managed_block "${DEST_CLAUDE_AGENTS_MD}"
@@ -1114,7 +1039,6 @@ has_managed_block() {
 
 report_policy_block() {
   local target="$1" state="missing"
-  (( SKIP_AGENTS_MD == 1 )) && { log "AGENTS policy block (${target##*/}): skipped (--skip-agents-md)"; return 0; }
   has_managed_block "${target}" && state="present"
   log "AGENTS policy block (${target##*/}): ${state}"
 }
@@ -1175,8 +1099,7 @@ manifest_update_target() {
     MF_TARGET_ENABLED["${target_name}"]="true"
     if (( PROJECT_SCOPE == 1 )); then MF_TARGET_SCOPE["${target_name}"]="project"
     else MF_TARGET_SCOPE["${target_name}"]="global"; fi
-    if (( SKIP_AGENTS_MD == 1 )); then MF_TARGET_INSTALL_AGENTS_MD["${target_name}"]="false"
-    else MF_TARGET_INSTALL_AGENTS_MD["${target_name}"]="true"; fi
+    MF_TARGET_INSTALL_AGENTS_MD["${target_name}"]="true"
     if (( SKIP_SKILLS == 1 )); then MF_TARGET_INSTALL_SKILLS["${target_name}"]="false"
     else MF_TARGET_INSTALL_SKILLS["${target_name}"]="true"; fi
     if (( EXTRAS == 1 )); then MF_TARGET_EXTRAS["${target_name}"]="true"
@@ -1259,14 +1182,12 @@ for TARGET in "${TARGETS[@]}"; do
         install_sync_wrapper
         SYNC_WRAPPER_WRITTEN=1
       fi
-      if (( SKIP_AGENTS_MD == 0 )); then
-        backup_md "${DEST_POLICY_MD}"
-        if [[ "${POLICY_MODE}" == "managed_block" ]]; then
-          upsert_managed_block
-        else
-          backup_md "${DEST_CLAUDE_AGENTS_MD}"
-          install_policy_file
-        fi
+      backup_md "${DEST_POLICY_MD}"
+      if [[ "${POLICY_MODE}" == "managed_block" ]]; then
+        upsert_managed_block
+      else
+        backup_md "${DEST_CLAUDE_AGENTS_MD}"
+        install_policy_file
       fi
       status
       manifest_update_target "install" "${TARGET}"
@@ -1274,25 +1195,21 @@ for TARGET in "${TARGETS[@]}"; do
       for pin_f in "${AGENT_FILES[@]}"; do
         pin_h=$(compute_sha256 "${TMP_DIR}/${pin_f}") && PIN_PAIRS+=("$(agent_remote_pin_key "${pin_f}")=${pin_h}")
       done
-      if (( SKIP_AGENTS_MD == 0 )); then
-        pin_policy="${TMP_DIR}/AGENTS.md"
-        [[ "${POLICY_MODE}" == "file" ]] && pin_policy="${TMP_DIR}/CLAUDE.md"
-        pin_h=$(compute_sha256 "${pin_policy}") && PIN_PAIRS+=("${REMOTE_POLICY_PATH}=${pin_h}")
-      fi
+      pin_policy="${TMP_DIR}/AGENTS.md"
+      [[ "${POLICY_MODE}" == "file" ]] && pin_policy="${TMP_DIR}/CLAUDE.md"
+      pin_h=$(compute_sha256 "${pin_policy}") && PIN_PAIRS+=("${REMOTE_POLICY_PATH}=${pin_h}")
       write_pins "${MANIFEST_PATH}" "${PIN_PAIRS[@]}"
       ;;
     uninstall)
       doctor
       prepare_sources
       uninstall_agents
-      if (( SKIP_AGENTS_MD == 0 )); then
-        backup_md "${DEST_POLICY_MD}"
-        if [[ "${POLICY_MODE}" == "managed_block" ]]; then
-          remove_managed_block
-        else
-          backup_md "${DEST_CLAUDE_AGENTS_MD}"
-          remove_policy_file
-        fi
+      backup_md "${DEST_POLICY_MD}"
+      if [[ "${POLICY_MODE}" == "managed_block" ]]; then
+        remove_managed_block
+      else
+        backup_md "${DEST_CLAUDE_AGENTS_MD}"
+        remove_policy_file
       fi
       status
       manifest_update_target "uninstall" "${TARGET}"
