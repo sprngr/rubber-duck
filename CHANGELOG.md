@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **Architecture consolidation:** single self-contained `rubber-duck` agent is canonical. `rubber-duck-lite` removed.
+- **Architecture consolidation:** single self-contained `rubber-duck` agent is canonical.
 - `AGENTS.md` reduced to version marker only. Policy content lives in agent body.
 - Agent body includes `duck-policy` skill snippet at build time (85 lines source, 366 lines rendered).
 - Validation suite: 44 tests, variant system removed.
@@ -21,23 +21,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-- `rubber-duck-lite` agent variant (source files, build artifacts, installer mapping).
 - `--policy host|self` flag from both installers.
 - `--skip-agents-md` / `-SkipAgentsMd` flag from both installers.
 - `--claude-md` / `-ClaudeMd` flag from both installers.
 - `--variant` and `--no-agents-policy` flags from validation runner.
-- Lite-only validation tests (V40-V43).
+- Variant-only validation tests.
 - Policy mode installer tests.
-
-### Fixed
-
-- Installer now prunes stale `rubber-duck-lite.md` files from agent directories during install (2.x→3.x migration).
 
 ## [v2.2.0] - 2026-08-14
 
 ### Added
 
-- Deterministic agent variant selection by policy mode: `--policy host` (default) installs `rubber-duck-lite` + AGENTS managed block; `--policy self` installs full self-contained `rubber-duck`. Destination filename remains `rubber-duck.md` in both modes.
 - Sync wrapper scripts now check for newer versions before syncing. Compares manifest `lastAppliedVersion` against the remote `VERSION` file (web installs) or local `VERSION` file (local installs). Prompts user with version change and CHANGELOG link when an update is available.
 - Installer displays sync update hint after successful install (e.g. `To update: bash .rubber-duck/sync-latest.sh`).
 - `RUBBER_DUCK_VERSION` comment embedded in generated sync wrapper scripts for diagnostics.

@@ -709,7 +709,6 @@ function Install-Agents {
 }
 
 # Remove agent files that are no longer part of the installation.
-# Handles 2.x->3.x migration by pruning stale rubber-duck-lite.md files.
 $script:StaleAgentFiles = @("rubber-duck-lite.md")
 
 function Cleanup-StaleAgents {

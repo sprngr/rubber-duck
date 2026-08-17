@@ -37,7 +37,7 @@
 - **Manifest schema v1 with pins**: `.rubber-duck/manifest.json` tracks `source`, `targets`, and `pins` (sha256 of installed artifacts). Pins are a dev-workflow change log enabling skip-unchanged reinstalls, not a security boundary. (date: 2026-08-12)
 - **rawBase allowlist**: installer only accepts sources under `https://raw.githubusercontent.com/sprngr/rubber-duck` unless `--allow-untrusted-source`/`-AllowUntrustedSource` is passed (emits warning). Prevents accidental fork installs. (date: 2026-08-12)
 - **Installer runtime dependency floor**: bash installer requires only bash 4+, awk, curl, coreutils. `python3` removed from installer path. (date: 2026-08-12)
-- **Single agent architecture**: `rubber-duck` agent body is canonical source of truth for all policy rules. `rubber-duck-lite` removed. AGENTS.md reduced to version marker. (date: 2026-08-16)
+- **Single agent architecture**: `rubber-duck` agent body is canonical source of truth for all policy rules. AGENTS.md reduced to version marker. (date: 2026-08-16)
 - **duck-policy portable skill**: enforcement rules extracted to `duck-policy` skill, loadable by any agent. Agent body includes skill snippet at build time for progressive disclosure. (date: 2026-08-16)
 - **Installer template sources reorganized**: sync wrapper templates moved to `src/install/scripts/`, manifest template moved to `src/install/templates/`. Shared snippets (`src/shared/`) reserved for prompt/policy snippets only. Build outputs at `dist/scripts/` and `dist/templates/`. (date: 2026-08-16)
 - **Sync wrapper version check**: sync-latest scripts compare manifest `lastAppliedVersion` against remote/local `VERSION` file before syncing. Prompts user with version change and CHANGELOG link when newer version exists. Fallback templates removed; missing sync template is a hard error. Wrapper forwards the derived raw-base on remote sync; ps1 wrappers use `(Get-Process -Id $PID).Path` for host detection. (date: 2026-08-16)
@@ -123,7 +123,7 @@ Multi-harness installer branch (`2.1.0-multi-harness-install`) landed:
 
 Architecture consolidation:
 
-- Removed `rubber-duck-lite` agent. Single self-contained `rubber-duck` agent is canonical.
+- Single self-contained `rubber-duck` agent is canonical.
 - Stripped `AGENTS.md` to version marker only. Policy content lives in agent body.
 - Extracted `duck-policy` portable skill for non-duck agents.
 - Validation suite: 44 tests, no variant system.

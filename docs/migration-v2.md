@@ -74,7 +74,7 @@ v3 consolidates to a single self-contained agent, extracts enforcement rules to 
 
 | Area | v2 | v3 |
 | --- | --- | --- |
-| Agent variants | `rubber-duck` (full) + `rubber-duck-lite` | Single `rubber-duck` (self-contained) |
+| Agent variants | Multiple agent variants | Single `rubber-duck` (self-contained) |
 | Policy source | Split between agent body + AGENTS.md | Agent body only (AGENTS.md = version marker) |
 | Enforcement rules | Inline in agent body | Extracted to `duck-policy` skill |
 | Installer flags | `--policy host\|self`, `--skip-agents-md`, `--claude-md` | None of these |
@@ -96,7 +96,7 @@ Enforcement rules (approval gates, safety carve-outs, Duck Ladder, Style, Auto-C
 
 1. Install the new self-contained `rubber-duck.md` (overwrites old)
 2. Replace the old AGENTS.md managed block with new 3-line version marker
-3. Remove stale `rubber-duck-lite.md` files from agent directories
+3. Remove any stale agent files no longer part of the installation
 4. Update manifest pins
 
 ```bash
@@ -105,5 +105,5 @@ curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rub
 
 **Manual cleanup (optional):**
 
-- Remove any `rubber-duck-lite.md` files from `.opencode/agents/`, `.claude/agents/`, `.github/agents/`
+- Remove any stale agent files from `.opencode/agents/`, `.claude/agents/`, `.github/agents/`
 - Remove any custom AGENTS.md content that referenced the old policy mode flags
