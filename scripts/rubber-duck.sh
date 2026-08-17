@@ -29,10 +29,8 @@ fi
 REPO_ROOT="$(cd -- "${SCRIPT_DIR}/.." 2>/dev/null && pwd || pwd)"
 LOCAL_AGENTS_DIR=""
 LOCAL_POLICY_FILE=""
-LOCAL_POLICY_AGENTS_FILE=""
 REMOTE_AGENTS_PATH=""
 REMOTE_POLICY_PATH=""
-REMOTE_POLICY_AGENTS_PATH=""
 POLICY_MODE="managed_block"  # managed_block|file
 CANONICAL_VERSION="unknown"
 
@@ -140,21 +138,23 @@ BANNER
 }
 
 resolve_canonical_version() {
-  local src="" v=""
+  local v=""
   if [[ "${EFFECTIVE_SOURCE}" == "local" ]]; then
-    src="${REPO_ROOT}/dist/AGENTS.md"
-    [[ -f "${src}" ]] || return 0
+    local version_file="${REPO_ROOT}/VERSION"
+    [[ -f "${version_file}" ]] || return 0
+    v="$(extract_version_from_file "${version_file}" 2>/dev/null)"
   else
     command -v curl >/dev/null 2>&1 || return 0
-    src="$(mktemp)"
-    if ! curl -fsSL "${RAW_BASE}/${REMOTE_POLICY_PATH:-dist/AGENTS.md}" -o "${src}" 2>/dev/null; then
-      rm -f "${src}"
+    local tmp
+    tmp="$(mktemp)"
+    if ! curl -fsSL "${RAW_BASE}/VERSION" -o "${tmp}" 2>/dev/null; then
+      rm -f "${tmp}"
       return 0
     fi
+    v="$(extract_version_from_file "${tmp}" 2>/dev/null)"
+    rm -f "${tmp}"
   fi
-  v="$(extract_version_from_file "${src}" 2>/dev/null)" && [[ -n "${v}" ]] && CANONICAL_VERSION="${v}"
-  [[ "${EFFECTIVE_SOURCE}" != "local" ]] && rm -f "${src}"
-  return 0
+  [[ -n "${v}" ]] && CANONICAL_VERSION="${v}"
 }
 
 # Exact rawBase prefix required unless --allow-untrusted-source is set.
@@ -613,13 +613,11 @@ resolve_target() {
         DEST_POLICY_MD="${OPENCODE_AGENTS_MD}"
       fi
       POLICY_MODE="managed_block"
-      LOCAL_POLICY_FILE="${REPO_ROOT}/dist/AGENTS.md"
       if [[ -d "${REPO_ROOT}/dist/opencode/agents" ]]; then
         LOCAL_AGENTS_DIR="${REPO_ROOT}/dist/opencode/agents"
       else
         LOCAL_AGENTS_DIR="${REPO_ROOT}/agents"
       fi
-      REMOTE_POLICY_PATH="dist/AGENTS.md"
       REMOTE_AGENTS_PATH="dist/opencode/agents"
       ;;
     copilot)
@@ -631,13 +629,11 @@ resolve_target() {
         DEST_POLICY_MD="${COPILOT_AGENTS_MD}"
       fi
       POLICY_MODE="managed_block"
-      LOCAL_POLICY_FILE="${REPO_ROOT}/dist/AGENTS.md"
       if [[ -d "${REPO_ROOT}/dist/copilot/agents" ]]; then
         LOCAL_AGENTS_DIR="${REPO_ROOT}/dist/copilot/agents"
       else
         LOCAL_AGENTS_DIR="${REPO_ROOT}/agents"
       fi
-      REMOTE_POLICY_PATH="dist/AGENTS.md"
       REMOTE_AGENTS_PATH="dist/copilot/agents"
       ;;
     claude)
@@ -651,10 +647,8 @@ resolve_target() {
       DEST_CLAUDE_AGENTS_MD="$(dirname -- "${DEST_POLICY_MD}")/AGENTS.md"
       POLICY_MODE="file"
       LOCAL_POLICY_FILE="${REPO_ROOT}/dist/claude/CLAUDE.md"
-      LOCAL_POLICY_AGENTS_FILE="${REPO_ROOT}/dist/AGENTS.md"
       LOCAL_AGENTS_DIR="${REPO_ROOT}/dist/claude/agents"
       REMOTE_POLICY_PATH="dist/claude/CLAUDE.md"
-      REMOTE_POLICY_AGENTS_PATH="dist/AGENTS.md"
       REMOTE_AGENTS_PATH="dist/claude/agents"
       ;;
     *)
@@ -665,9 +659,8 @@ resolve_target() {
 }
 
 has_local_sources() {
-  [[ -f "${LOCAL_POLICY_FILE}" ]] || return 1
   if [[ "${POLICY_MODE}" == "file" ]]; then
-    [[ -f "${LOCAL_POLICY_AGENTS_FILE}" ]] || return 1
+    [[ -f "${LOCAL_POLICY_FILE}" ]] || return 1
   fi
   for f in "${AGENT_FILES[@]}"; do
     [[ -f "${LOCAL_AGENTS_DIR}/${f}" ]] || return 1
@@ -701,6 +694,18 @@ require_cmd() {
   command -v "${cmd}" >/dev/null 2>&1 || { err "required command missing: ${cmd}"; exit 1; }
 }
 
+# Generate the AGENTS.md managed block content inline.
+# This is a version marker — policy content lives in the agent body.
+generate_agents_md() {
+  local out="$1"
+  local version="${CANONICAL_VERSION:-unknown}"
+  cat > "${out}" <<EOF
+<!-- RUBBER_DUCK_VERSION: ${version} -->
+<!-- Policy content lives in the rubber-duck agent body. -->
+<!-- This file is a version marker for sync and install workflows. -->
+EOF
+}
+
 prepare_sources() {
   TMP_DIR="$(mktemp -d)"
   trap 'rm -rf "${TMP_DIR}"' EXIT
@@ -710,34 +715,31 @@ prepare_sources() {
       err "local source selected but repo artifacts not found. Use --source web or run from repo checkout."
       exit 1
     fi
-    if [[ "${POLICY_MODE}" == "managed_block" ]]; then
-      cp -f "${LOCAL_POLICY_FILE}" "${TMP_DIR}/AGENTS.md"
-    else
+    if v="$(extract_version_from_file "${REPO_ROOT}/VERSION" 2>/dev/null)"; then
+      CANONICAL_VERSION="${v}"
+    fi
+    generate_agents_md "${TMP_DIR}/AGENTS.md"
+    if [[ "${POLICY_MODE}" == "file" ]]; then
       cp -f "${LOCAL_POLICY_FILE}" "${TMP_DIR}/CLAUDE.md"
-      cp -f "${LOCAL_POLICY_AGENTS_FILE}" "${TMP_DIR}/AGENTS.md"
     fi
     for f in "${AGENT_FILES[@]}"; do
       cp -f "${LOCAL_AGENTS_DIR}/${f}" "${TMP_DIR}/${f}"
     done
-    if v="$(extract_version_from_file "${TMP_DIR}/AGENTS.md" 2>/dev/null)"; then
-      CANONICAL_VERSION="${v}"
-    fi
     return
   fi
 
   require_cmd curl
-  if [[ "${POLICY_MODE}" == "managed_block" ]]; then
-    curl -fsSL "${RAW_BASE}/${REMOTE_POLICY_PATH}" -o "${TMP_DIR}/AGENTS.md"
-  else
+  # Fetch remote VERSION to embed in generated managed block.
+  if v="$(curl -fsSL "${RAW_BASE}/VERSION" 2>/dev/null)"; then
+    CANONICAL_VERSION="${v}"
+  fi
+  generate_agents_md "${TMP_DIR}/AGENTS.md"
+  if [[ "${POLICY_MODE}" == "file" ]]; then
     curl -fsSL "${RAW_BASE}/${REMOTE_POLICY_PATH}" -o "${TMP_DIR}/CLAUDE.md"
-    curl -fsSL "${RAW_BASE}/${REMOTE_POLICY_AGENTS_PATH}" -o "${TMP_DIR}/AGENTS.md"
   fi
   for f in "${AGENT_FILES[@]}"; do
     curl -fsSL "${RAW_BASE}/${REMOTE_AGENTS_PATH}/${f}" -o "${TMP_DIR}/${f}"
   done
-  if v="$(extract_version_from_file "${TMP_DIR}/AGENTS.md" 2>/dev/null)"; then
-    CANONICAL_VERSION="${v}"
-  fi
 }
 
 strip_managed_block_to_file() {
@@ -1201,8 +1203,12 @@ for TARGET in "${TARGETS[@]}"; do
         pin_h=$(compute_sha256 "${TMP_DIR}/${pin_f}") && PIN_PAIRS+=("$(agent_remote_pin_key "${pin_f}")=${pin_h}")
       done
       pin_policy="${TMP_DIR}/AGENTS.md"
-      [[ "${POLICY_MODE}" == "file" ]] && pin_policy="${TMP_DIR}/CLAUDE.md"
-      pin_h=$(compute_sha256 "${pin_policy}") && PIN_PAIRS+=("${REMOTE_POLICY_PATH}=${pin_h}")
+      pin_path="managed-block"
+      if [[ "${POLICY_MODE}" == "file" ]]; then
+        pin_policy="${TMP_DIR}/CLAUDE.md"
+        pin_path="${REMOTE_POLICY_PATH}"
+      fi
+      pin_h=$(compute_sha256 "${pin_policy}") && PIN_PAIRS+=("${pin_path}=${pin_h}")
       write_pins "${MANIFEST_PATH}" "${PIN_PAIRS[@]}"
       ;;
     uninstall)

@@ -4,7 +4,6 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CANONICAL="$ROOT/src/shared/references/GUARDRAILS.md"
 REPO_AGENTS="$ROOT/AGENTS.md"
-DIST_AGENTS="$ROOT/dist/AGENTS.md"
 VERSION_FILE="$ROOT/VERSION"
 MANAGED_START="<!-- RUBBER_DUCK_MANAGED_BLOCK START -->"
 MANAGED_END="<!-- RUBBER_DUCK_MANAGED_BLOCK END -->"
@@ -15,10 +14,6 @@ if [ ! -f "$CANONICAL" ]; then
 fi
 if [ ! -f "$REPO_AGENTS" ]; then
   echo "Missing repository AGENTS file: $REPO_AGENTS" >&2
-  exit 1
-fi
-if [ ! -f "$DIST_AGENTS" ]; then
-  echo "Missing dist AGENTS file: $DIST_AGENTS" >&2
   exit 1
 fi
 if [ ! -f "$VERSION_FILE" ]; then
@@ -48,6 +43,7 @@ for skill_dir in "$ROOT"/skills/*; do
   fi
 done
 
+# Verify managed block in repo AGENTS.md is well-formed.
 managed_tmp="$(mktemp)"
 cleanup() { rm -f "$managed_tmp"; }
 trap cleanup EXIT
@@ -61,14 +57,6 @@ if ! awk -v start="$MANAGED_START" -v end="$MANAGED_END" '
   }
 ' "$REPO_AGENTS" > "$managed_tmp"; then
   echo "Managed policy block missing or malformed in: $REPO_AGENTS" >&2
-  failed=1
-elif ! cmp -s "$managed_tmp" "$DIST_AGENTS"; then
-  echo "Drift detected: managed block in AGENTS.md differs from dist/AGENTS.md" >&2
-  failed=1
-fi
-
-if ! grep -Fq "RUBBER_DUCK_VERSION: ${VERSION_VALUE}" "$DIST_AGENTS"; then
-  echo "Drift detected: dist/AGENTS.md version marker does not match VERSION (${VERSION_VALUE})" >&2
   failed=1
 fi
 

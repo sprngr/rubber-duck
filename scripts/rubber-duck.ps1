@@ -35,23 +35,32 @@ function Print-Banner {
 }
 
 function Resolve-CanonicalVersion {
-  $src = $null
   if ($script:EffectiveSource -eq "local") {
-    $candidate = Join-Path $RepoRoot "dist/AGENTS.md"
-    if (Test-Path $candidate) { $src = $candidate }
+    $versionFile = Join-Path $RepoRoot "VERSION"
+    if (Test-Path $versionFile) {
+      $v = Get-VersionFromFile $versionFile
+      if (-not [string]::IsNullOrWhiteSpace($v)) { $script:CanonicalVersion = $v }
+    }
   } else {
     try {
       $tmp = [System.IO.Path]::GetTempFileName()
-      $remote = if ($script:RemotePolicyPath) { $script:RemotePolicyPath } else { "dist/AGENTS.md" }
-      Invoke-WebRequest -UseBasicParsing -Uri "$RawBase/$remote" -OutFile $tmp -ErrorAction Stop | Out-Null
-      $src = $tmp
-    } catch { $src = $null }
+      Invoke-WebRequest -UseBasicParsing -Uri "$RawBase/VERSION" -OutFile $tmp -ErrorAction Stop | Out-Null
+      $v = Get-VersionFromFile $tmp
+      if (-not [string]::IsNullOrWhiteSpace($v)) { $script:CanonicalVersion = $v }
+      Remove-Item -Force $tmp
+    } catch { }
   }
-  if ($src) {
-    $v = Get-VersionFromFile $src
-    if (-not [string]::IsNullOrWhiteSpace($v)) { $script:CanonicalVersion = $v }
-    if ($script:EffectiveSource -ne "local" -and (Test-Path $src)) { Remove-Item -Force $src }
-  }
+}
+
+# Generate the AGENTS.md managed block content inline.
+# This is a version marker — policy content lives in the agent body.
+function Generate-AgentsMd([string]$OutPath) {
+  $version = if ($script:CanonicalVersion) { $script:CanonicalVersion } else { "unknown" }
+  @"
+<!-- RUBBER_DUCK_VERSION: $version -->
+<!-- Policy content lives in the rubber-duck agent body. -->
+<!-- This file is a version marker for sync and install workflows. -->
+"@ | Set-Content -Path $OutPath -NoNewline
 }
 
 # Exact rawBase prefix required unless -AllowUntrustedSource is set.
@@ -352,10 +361,8 @@ if ($script:RunningPiped) {
 }
 $script:LocalAgentsDir = $null
 $script:LocalPolicyFile = $null
-$script:LocalAgentsPolicyFile = $null
 $script:RemoteAgentsPath = $null
 $script:RemotePolicyPath = $null
-$script:RemoteAgentsPolicyPath = $null
 $script:PolicyMode = "managed_block"  # managed_block|file
 $script:CanonicalVersion = "unknown"
 
@@ -423,13 +430,11 @@ function Resolve-Target {
       $script:DestPolicyMd = Join-Path $HOME ".config/opencode/AGENTS.md"
     }
     $script:PolicyMode = "managed_block"
-    $script:LocalPolicyFile = Join-Path $RepoRoot "dist/AGENTS.md"
     if (Test-Path (Join-Path $RepoRoot "dist/opencode/agents")) {
       $script:LocalAgentsDir = Join-Path $RepoRoot "dist/opencode/agents"
     } else {
       $script:LocalAgentsDir = Join-Path $RepoRoot "agents"
     }
-    $script:RemotePolicyPath = "dist/AGENTS.md"
     $script:RemoteAgentsPath = "dist/opencode/agents"
     return
   }
@@ -448,10 +453,8 @@ function Resolve-Target {
     $script:DestClaudeAgentsMd = Join-Path $policyParent "AGENTS.md"
     $script:PolicyMode = "file"
     $script:LocalPolicyFile = Join-Path $RepoRoot "dist/claude/CLAUDE.md"
-    $script:LocalAgentsPolicyFile = Join-Path $RepoRoot "dist/AGENTS.md"
     $script:LocalAgentsDir = Join-Path $RepoRoot "dist/claude/agents"
     $script:RemotePolicyPath = "dist/claude/CLAUDE.md"
-    $script:RemoteAgentsPolicyPath = "dist/AGENTS.md"
     $script:RemoteAgentsPath = "dist/claude/agents"
     return
   }
@@ -466,13 +469,11 @@ function Resolve-Target {
       $script:DestPolicyMd = Join-Path $HOME ".copilot/AGENTS.md"
     }
     $script:PolicyMode = "managed_block"
-    $script:LocalPolicyFile = Join-Path $RepoRoot "dist/AGENTS.md"
     if (Test-Path (Join-Path $RepoRoot "dist/copilot/agents")) {
       $script:LocalAgentsDir = Join-Path $RepoRoot "dist/copilot/agents"
     } else {
       $script:LocalAgentsDir = Join-Path $RepoRoot "agents"
     }
-    $script:RemotePolicyPath = "dist/AGENTS.md"
     $script:RemoteAgentsPath = "dist/copilot/agents"
     return
   }
@@ -481,8 +482,7 @@ function Resolve-Target {
 }
 
 function Has-LocalSources {
-  if (-not (Test-Path $script:LocalPolicyFile)) { return $false }
-  if ($script:PolicyMode -eq "file" -and -not (Test-Path $script:LocalAgentsPolicyFile)) { return $false }
+  if ($script:PolicyMode -eq "file" -and -not (Test-Path $script:LocalPolicyFile)) { return $false }
   foreach ($f in $AgentFiles) {
     if (-not (Test-Path (Join-Path $script:LocalAgentsDir $f))) { return $false }
   }
@@ -515,31 +515,23 @@ function Download-Sources {
   New-Item -ItemType Directory -Force -Path $script:TmpDir | Out-Null
 
   if ($script:EffectiveSource -eq "local") {
-    if ($script:PolicyMode -eq "managed_block") {
-      Copy-Item -Force $script:LocalPolicyFile (Join-Path $script:TmpDir "AGENTS.md")
-    } else {
+    if ($script:PolicyMode -eq "file") {
       Copy-Item -Force $script:LocalPolicyFile (Join-Path $script:TmpDir "CLAUDE.md")
-      Copy-Item -Force $script:LocalAgentsPolicyFile (Join-Path $script:TmpDir "AGENTS.md")
     }
+    Generate-AgentsMd (Join-Path $script:TmpDir "AGENTS.md")
     foreach ($f in $AgentFiles) {
       Copy-Item -Force (Join-Path $script:LocalAgentsDir $f) (Join-Path $script:TmpDir $f)
     }
-    $v = Get-VersionFromFile (Join-Path $script:TmpDir "AGENTS.md")
-    if (-not [string]::IsNullOrWhiteSpace($v)) { $script:CanonicalVersion = $v }
     return
   }
 
-  if ($script:PolicyMode -eq "managed_block") {
-    Invoke-WebRequest -UseBasicParsing -Uri "$RawBase/$($script:RemotePolicyPath)" -OutFile (Join-Path $script:TmpDir "AGENTS.md")
-  } else {
+  if ($script:PolicyMode -eq "file") {
     Invoke-WebRequest -UseBasicParsing -Uri "$RawBase/$($script:RemotePolicyPath)" -OutFile (Join-Path $script:TmpDir "CLAUDE.md")
-    Invoke-WebRequest -UseBasicParsing -Uri "$RawBase/$($script:RemoteAgentsPolicyPath)" -OutFile (Join-Path $script:TmpDir "AGENTS.md")
   }
+  Generate-AgentsMd (Join-Path $script:TmpDir "AGENTS.md")
   foreach ($f in $AgentFiles) {
     Invoke-WebRequest -UseBasicParsing -Uri "$RawBase/$($script:RemoteAgentsPath)/$f" -OutFile (Join-Path $script:TmpDir $f)
   }
-  $v = Get-VersionFromFile (Join-Path $script:TmpDir "AGENTS.md")
-  if (-not [string]::IsNullOrWhiteSpace($v)) { $script:CanonicalVersion = $v }
 }
 
 function Cleanup-Sources {
@@ -992,9 +984,13 @@ try {
           if ($h) { $pinPairs[(Get-AgentRemotePinKey $pinF)] = $h }
         }
         $pinPolicyTmp = Join-Path $script:TmpDir "AGENTS.md"
-        if ($PolicyMode -eq "file") { $pinPolicyTmp = Join-Path $script:TmpDir "CLAUDE.md" }
+        $pinPath = "managed-block"
+        if ($PolicyMode -eq "file") {
+          $pinPolicyTmp = Join-Path $script:TmpDir "CLAUDE.md"
+          $pinPath = $script:RemotePolicyPath
+        }
         $h = Get-Sha256 $pinPolicyTmp
-        if ($h) { $pinPairs[$script:RemotePolicyPath] = $h }
+        if ($h) { $pinPairs[$pinPath] = $h }
         Write-Pins $pinManifestPath $pinPairs
       }
       "uninstall" {

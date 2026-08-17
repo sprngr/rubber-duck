@@ -124,7 +124,6 @@ npx skills add https://github.com/sprngr/rubber-duck
 
 > [!IMPORTANT]
 > Full install uses self-contained `rubber-duck` agent with all policy rules built in.
-> - installed destination filename is `rubber-duck.md`
 
 **Bash (macOS/Linux):**
 

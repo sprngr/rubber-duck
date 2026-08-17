@@ -23,8 +23,6 @@ POLICY_SNIPPETS_DIR="${REPO_ROOT}/src/shared/policy-snippets"
 SKILL_SNIPPETS_DIR="${REPO_ROOT}/src/shared/skill-snippets"
 INSTALL_SCRIPTS_DIR="${REPO_ROOT}/src/install/scripts"
 INSTALL_TEMPLATES_DIR="${REPO_ROOT}/src/install/templates"
-SRC_AGENTS_POLICY_MD="${SRC_AGENTS_DIR}/AGENTS.md"
-DIST_AGENTS_POLICY_MD="${REPO_ROOT}/dist/AGENTS.md"
 DIST_SCRIPTS_DIR="${REPO_ROOT}/dist/scripts"
 DIST_TEMPLATES_DIR="${REPO_ROOT}/dist/templates"
 DIST_SYNC_SH="${DIST_SCRIPTS_DIR}/sync-latest.sh"
@@ -294,11 +292,6 @@ cat > "${CLAUDE_MD_TMP}" <<'EOF'
 @AGENTS.md
 EOF
 render_or_check_file "${CLAUDE_MD_TMP}" "${CLAUDE_MD_OUT}"
-
-# Build installer policy source at dist root.
-AGENTS_MD_TMP="${TMP_DIR}/AGENTS.md"
-render_body_markdown "${SRC_AGENTS_POLICY_MD}" "${AGENTS_MD_TMP}"
-render_or_check_file "${AGENTS_MD_TMP}" "${DIST_AGENTS_POLICY_MD}"
 
 # Build sync wrapper templates at dist/scripts.
 SYNC_SH_TMP="${TMP_DIR}/sync-latest.sh"
