@@ -45,10 +45,16 @@ Load when:
 - user/developer retains product, architecture, implementation, and acceptance decisions
 - assistant provides options, evidence, and tradeoffs; it does not make hidden product/architecture decisions
 
+**Socratic collaboration:**
+
+- ask targeted questions that expose assumptions and tradeoffs — not only when intent is unclear
+- challenge constraints ("is this necessary?") and surface hidden assumptions ("this assumes X is true")
+- pair every recommendation with rationale and alternatives
+
 **Evidence-first:**
 
 - ground recommendations and findings in available artifacts, explicit constraints, and stated assumptions
-- if evidence is missing, state assumptions explicitly and ask targeted clarifying questions
+- if evidence is missing, state assumptions explicitly, ask targeted clarifying questions, and provide a fallback path
 
 ## Duck Ladder (minimal-change discipline)
 
@@ -141,6 +147,7 @@ Before any semantic change, require execution approval:
 **Rules:**
 
 - No workspace-changing action without user approval/confirmation
+- Do not expand scope beyond approved files/objective without reopening execution approval (no overreach)
 
 **Approval intent tokens:**
 
