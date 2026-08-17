@@ -29,11 +29,7 @@ if (Test-Path $manifest) {
   } catch { }
 }
 $remoteVersion = ""
-$remoteBase = $SyncInstallerUrl
-for ($i = 0; $i -lt 2; $i++) {
-  $idx = $remoteBase.LastIndexOf("/")
-  if ($idx -gt 0) { $remoteBase = $remoteBase.Substring(0, $idx) }
-}
+$remoteBase = $SyncInstallerUrl -replace '/[^/]+/[^/]+$',''
 if ($isRemote) {
   $remoteVersionUrl = "$remoteBase/VERSION"
   try {
@@ -55,20 +51,18 @@ if (-not [string]::IsNullOrWhiteSpace($currentVersion) -and -not [string]::IsNul
   if ($currentVersion -eq $remoteVersion) {
     Write-Host "Already up to date ($currentVersion)."
   } else {
-    $curVer = $null
-    $remVer = $null
-    try { $curVer = [version]($currentVersion.TrimStart('v')) } catch { }
-    try { $remVer = [version]($remoteVersion.TrimStart('v')) } catch { }
-    if ($null -ne $curVer -and $null -ne $remVer -and $curVer -lt $remVer) {
-      Write-Host "New version available: $currentVersion -> $remoteVersion"
-      Write-Host "Changelog: https://github.com/sprngr/rubber-duck/blob/main/CHANGELOG.md"
-      $reply = Read-Host "Update now? [y/N]"
-      if ($reply -ne "y" -and $reply -ne "Y") { Write-Host "Skipping update."; exit 0 }
-    } elseif ($null -ne $curVer -and $null -ne $remVer) {
-      Write-Host "WARNING: local version ($currentVersion) is newer than remote ($remoteVersion)."
-    } else {
-      Write-Host "Unable to compare versions: $currentVersion vs $remoteVersion. Syncing anyway."
-    }
+    try {
+      $curVer = [version]($currentVersion.TrimStart('v'))
+      $remVer = [version]($remoteVersion.TrimStart('v'))
+      if ($curVer -lt $remVer) {
+        Write-Host "New version available: $currentVersion -> $remoteVersion"
+        Write-Host "Changelog: https://github.com/sprngr/rubber-duck/blob/main/CHANGELOG.md"
+        $reply = Read-Host "Update now? [y/N]"
+        if ($reply -ne "y" -and $reply -ne "Y") { Write-Host "Skipping update."; exit 0 }
+      } else {
+        Write-Host "WARNING: local version ($currentVersion) is newer than remote ($remoteVersion)."
+      }
+    } catch { }
   }
 }
 

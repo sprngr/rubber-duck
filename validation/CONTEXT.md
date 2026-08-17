@@ -6,15 +6,15 @@ Behavior regression suite for Rubber Duck governor + skills. Verifies governor g
 
 ## Structure
 
-- `test-prompts.json` — 44 tests (V01-V44), machine-readable
+- `test-prompts.json` — 48 tests (V01-V48), machine-readable
 - `run-validation-tests.py` — automated runner (opencode harness, bwrap sandbox, fixtures, multi-turn)
 - `fixtures/` — 11 synthetic workspace clusters for evidence-grounded tests
 - `README.md` — test catalog, runbook, smokecheck, automated testing docs
 
 ## Test categories
 
-- **Critical (13):** V02, V11, V12, V13, V29, V30, V31, V32, V33, V34, V40, V42, V44 — approval gates, safety carve-outs, no silent execution
-- **High (21):** V03-V04, V07-V09, V14-V16, V19-V24, V26-V27, V35-V37, V40, V41, V43 — routing, boundary compliance, skill behavior, Duck Ladder, Auto-Clarity
+- **Critical (14):** V02, V11, V12, V13, V29, V30, V31, V32, V33, V34, V40, V42, V44, V48 — approval gates, safety carve-outs, no silent execution, no overreach
+- **High (23):** V03-V04, V07-V09, V14-V16, V19-V24, V26-V27, V35-V37, V41, V43, V45-V47 — routing, boundary compliance, skill behavior, Duck Ladder, Auto-Clarity, Interaction Contract, Socratic challenge, fallback path
 - **Medium (10):** V01, V05-V06, V10, V17-V18, V25, V28, V38-V39 — style, formatting, heartbeat, debt markers, CONTEXT.md loading
 
 ## Runner features
@@ -32,7 +32,7 @@ Behavior regression suite for Rubber Duck governor + skills. Verifies governor g
 | Fixture | Tests | Contents |
 |---|---|---|
 | `shared` | (referenced by auth, monolith, rollout, tape-state, tape-marker) | `CONTEXT.md`, `docs/adr/ADR-001-db-choice.md` |
-| `auth` | V02, V23, V42 | `src/auth/{middleware,token,routes}.ts` with auth bug + JWT surface |
+| `auth` | V02, V23, V42, V46 | `src/auth/{middleware,token,routes}.ts` with auth bug + JWT surface |
 | `app` | V06 | `src/{container,logger}.ts`, `src/services/{userService,emailService}.ts` with DI pattern |
 | `monolith` | V07 | `src/{main,db,auth,orders,billing}.ts` with shared DB coupling |
 | `parser` | V08 | `src/parser.ts`, `tests/parser.test.ts` with CSV parser + missing test scenarios |
@@ -45,11 +45,11 @@ Behavior regression suite for Rubber Duck governor + skills. Verifies governor g
 
 ## Pass rate state
 
-**As of 2026-08-16:**
+**As of 2026-08-17:**
 
-- Suite size: 44 tests
+- Suite size: 48 tests
 - Previous best: 23/31 (74%) on original 35-test suite
-- New tests (V36-V44) not yet calibrated against live execution
+- New tests (V36-V48) not yet calibrated against live execution
 
 **Known limitation:** Signal matching uses exact substring. Agent uses different vocabulary each invocation, causing non-deterministic pass/fail for tests where behavior is correct but wording shifts. This is LLM non-determinism, not signal accuracy failure.
 
@@ -62,7 +62,7 @@ Behavior regression suite for Rubber Duck governor + skills. Verifies governor g
 
 ## Conventions
 
-- Test IDs: V01-V44, sequential, never reused
+- Test IDs: V01-V48, sequential, never reused
 - Fixtures: synthetic but realistic, committed (`.duck-tape/.gitignore` files have `*` commented out)
 - Severity tags: Critical / High / Medium
 - `follow_ups` capped at 5 turns (`--max-follow-up-turns`)

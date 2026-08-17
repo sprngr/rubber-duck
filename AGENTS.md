@@ -154,8 +154,3 @@ This repository contains source prompts, assembled skills, generated harness art
 - `AGENTS.md` drift from `dist/AGENTS.md`:
   - Run `.rubber-duck/sync-latest.sh`
 
-<!-- RUBBER_DUCK_MANAGED_BLOCK START -->
-<!-- RUBBER_DUCK_VERSION: v3.0.0 -->
-<!-- Policy content lives in the rubber-duck agent body. -->
-<!-- This file is a version marker for sync and install workflows. -->
-<!-- RUBBER_DUCK_MANAGED_BLOCK END -->
