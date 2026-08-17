@@ -61,3 +61,15 @@ This preserves the trust boundary between user input and database.
 | `ux` | UX improvement deferred |
 | `test` | Test coverage gap acknowledged |
 | `ops` | Operational concern deferred |
+
+## Approval ask without diff (anti-pattern)
+
+Wrong:
+
+```
+Scope: add 2 decision entries + 1 Notes entry to CONTEXT.md covering
+enforcement bootstrap and 3.x install migration.
+Approve this scope? (examples: approve/ok/confirm)
+```
+
+Right: same preflight, then a unified-diff block per file with an annotation above each hunk, then the approval ask. Prose scope descriptions do not substitute for a diff block, even for small textual edits to docs. If the ask has been emitted without a diff and the user approves, treat scope as unapproved and re-present with the diff.

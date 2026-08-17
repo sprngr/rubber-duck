@@ -90,19 +90,23 @@ For all assistant-initiated mutating actions, use these checkpoints in order. Us
 
 ### Checkpoint 1: Problem framing
 
-- Current understanding of issue.
-- Scope boundaries.
-- Constraints and non-goals.
+Before proposing solutions or edits:
 
-**Required user confirmation:** confirm or revise.
+1. **Frame**: current understanding of issue, scope boundaries, constraints and non-goals.
+2. **Confirmation ask**: emit verbatim `Confirm or revise?`
+3. **Wait for user response**: do not advance to solution selection until user confirms or revises.
+
+**Required user confirmation:** explicit confirmation intent (confirm or revise).
 
 ### Checkpoint 2: Solution selection
 
-- Candidate options (at least two when feasible).
-- Tradeoffs (risk, complexity, speed, maintainability).
-- Recommended option and rationale.
+After framing confirmation:
 
-**Required user confirmation:** explicit option selection.
+1. **Present options**: candidate options (at least two when feasible), tradeoffs (risk, complexity, speed, maintainability), recommended option and rationale.
+2. **Selection ask**: emit verbatim `Select an option.`
+3. **Wait for user response**: do not advance to execution approval until user selects an option.
+
+**Required user confirmation:** explicit option selection intent.
 
 ### Checkpoint 3: Execution approval (workspace-changing action gate)
 
@@ -144,11 +148,12 @@ Before any semantic change, require execution approval:
    - target files (bounded for selected phase)
    - expected behavior change
    - smallest verification check
-2. **Present list of changes broken down by file as formatted diff**
+2. **Present list of changes broken down by file as formatted diff** (required for every semantic change, no size or textual-only carve-out)
    - File exists: unified diff (`---`/`+++`/`@@` hunks, `-`/`+` prefixes)
    - File does not exist: full content in fenced code block, file path as header
    - One file per diff block
    - Inline an annotation above the diff hunks explaining each change
+   - Prose scope descriptions do not substitute for a diff block
    - If any file violates phase constraints, split and re-propose before approval ask
 3. **Approval ask**: `Approve this scope? (examples: approve/ok/confirm)`
 4. **Wait for approval**: do not proceed with edits/commands/task delegation until user replies with explicit approval intent
@@ -156,6 +161,7 @@ Before any semantic change, require execution approval:
 **Rules:**
 
 - No workspace-changing action without user approval/confirmation
+- Approval ask is invalid without an accompanying diff block in the same message; if user approves an ask that lacked a diff, treat scope as unapproved and re-present with the diff before executing
 - Do not expand scope beyond approved files/objective without reopening execution approval (no overreach)
 
 **Approval intent tokens:**
@@ -199,11 +205,13 @@ Before any semantic change, require execution approval:
 
 ### Checkpoint 4: Acceptance
 
-- What was changed.
-- What evidence verifies outcome.
-- Remaining risks and follow-ups.
+After executing an approved mutating action:
 
-**Required user confirmation:** accept, request revision, or rollback.
+1. **Report**: what changed, what evidence verifies outcome, remaining risks and follow-ups.
+2. **Acceptance ask**: emit verbatim `Accept, revise, or rollback?`
+3. **Wait for user response**: do not begin a new mutating action until user accepts, requests revision, or rolls back.
+
+**Required user confirmation:** explicit acceptance intent (accept, revise, or rollback).
 
 ### Safety carve-outs (non-negotiable)
 

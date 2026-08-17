@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `duck-policy` portable skill: enforcement rules (approval gates, safety carve-outs, Duck Ladder, Style, Auto-Clarity, Boundaries, Deferred Debt Markers) extracted to loadable skill for non-duck agents.
+- Sync wrapper scripts now check for newer versions before syncing. Compares manifest `lastAppliedVersion` against the remote `VERSION` file (web installs) or local `VERSION` file (local installs). Prompts user with version change and CHANGELOG link when an update is available.
+- Installer displays sync update hint after successful install (e.g. `To update: bash .rubber-duck/sync-latest.sh`).
+- `RUBBER_DUCK_VERSION` comment embedded in generated sync wrapper scripts for diagnostics.
 
 ### Changed
 
@@ -18,6 +21,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Agent body includes `duck-policy` skill snippet at build time (85 lines source, 366 lines rendered).
 - Validation suite: 44 tests, variant system removed.
 - Build rules updated: agent group assertions check skill-snippet include.
+- Sync wrapper version comparison uses POSIX-compatible bash function instead of GNU `sort -V`.
+- Installer template sources moved from `src/shared/install-templates/` to `src/install/scripts/` (sync wrappers) and `src/install/templates/` (manifest template). Build outputs remain at `dist/scripts/` and `dist/templates/`.
+- Sync wrapper fallback templates removed from both installers. If the sync template cannot be fetched, the installer exits with a clear error instead of silently falling back to an embedded template.
+- Sync replay functions deduplicated: bash `sync_replay_install_cmd` + `sync_replay_uninstall_cmd` merged into `sync_replay_cmd`; PowerShell `Get-SyncReplayInstallArgs` + `Get-SyncReplayUninstallArgs` merged into `Get-SyncReplayArgs`.
+- Manifest template path extracted to `MANIFEST_TEMPLATE_PATH` constant (bash installer).
+- Sync wrapper version check derives the `VERSION` URL from the installer URL (branch/custom raw-base aware) instead of hardcoding `main`.
+- Bash installer writes sync wrapper tokens with `sed` instead of `python3`, removing the python3 dependency from the install path.
 
 ### Removed
 
@@ -27,25 +37,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `--variant` and `--no-agents-policy` flags from validation runner.
 - Variant-only validation tests.
 - Policy mode installer tests.
-
-## [v2.2.0] - 2026-08-14
-
-### Added
-
-- Sync wrapper scripts now check for newer versions before syncing. Compares manifest `lastAppliedVersion` against the remote `VERSION` file (web installs) or local `VERSION` file (local installs). Prompts user with version change and CHANGELOG link when an update is available.
-- Installer displays sync update hint after successful install (e.g. `To update: bash .rubber-duck/sync-latest.sh`).
-- `RUBBER_DUCK_VERSION` comment embedded in generated sync wrapper scripts for diagnostics.
-
-### Changed
-
-- `--skip-agents-md` / `-SkipAgentsMd` skips AGENTS policy block installation.
-- Sync wrapper version comparison uses POSIX-compatible bash function instead of GNU `sort -V`.
-- Installer template sources moved from `src/shared/install-templates/` to `src/install/scripts/` (sync wrappers) and `src/install/templates/` (manifest template). Build outputs remain at `dist/scripts/` and `dist/templates/`.
-- Sync wrapper fallback templates removed from both installers. If the sync template cannot be fetched, the installer exits with a clear error instead of silently falling back to an embedded template.
-- Sync replay functions deduplicated: bash `sync_replay_install_cmd` + `sync_replay_uninstall_cmd` merged into `sync_replay_cmd`; PowerShell `Get-SyncReplayInstallArgs` + `Get-SyncReplayUninstallArgs` merged into `Get-SyncReplayArgs`.
-- Manifest template path extracted to `MANIFEST_TEMPLATE_PATH` constant (bash installer).
-- Sync wrapper version check derives the `VERSION` URL from the installer URL (branch/custom raw-base aware) instead of hardcoding `main`.
-- Bash installer writes sync wrapper tokens with `sed` instead of `python3`, removing the python3 dependency from the install path.
 
 ### Fixed
 

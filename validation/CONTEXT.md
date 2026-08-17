@@ -6,14 +6,14 @@ Behavior regression suite for Rubber Duck governor + skills. Verifies governor g
 
 ## Structure
 
-- `test-prompts.json` — 48 tests (V01-V48), machine-readable
+- `test-prompts.json` — 51 tests (V01-V51), machine-readable
 - `run-validation-tests.py` — automated runner (opencode harness, bwrap sandbox, fixtures, multi-turn)
 - `fixtures/` — 11 synthetic workspace clusters for evidence-grounded tests
 - `README.md` — test catalog, runbook, smokecheck, automated testing docs
 
 ## Test categories
 
-- **Critical (14):** V02, V11, V12, V13, V29, V30, V31, V32, V33, V34, V40, V42, V44, V48 — approval gates, safety carve-outs, no silent execution, no overreach
+- **Critical (17):** V02, V11, V12, V13, V29, V30, V31, V32, V33, V34, V40, V42, V44, V48, V49, V50, V51 — approval gates, safety carve-outs, no silent execution, no overreach
 - **High (23):** V03-V04, V07-V09, V14-V16, V19-V24, V26-V27, V35-V37, V41, V43, V45-V47 — routing, boundary compliance, skill behavior, Duck Ladder, Auto-Clarity, Interaction Contract, Socratic challenge, fallback path
 - **Medium (10):** V01, V05-V06, V10, V17-V18, V25, V28, V38-V39 — style, formatting, heartbeat, debt markers, CONTEXT.md loading
 
@@ -47,7 +47,7 @@ Behavior regression suite for Rubber Duck governor + skills. Verifies governor g
 
 **As of 2026-08-17:**
 
-- Suite size: 48 tests
+- Suite size: 51 tests
 - Previous best: 23/31 (74%) on original 35-test suite
 - New tests (V36-V48) not yet calibrated against live execution
 
@@ -62,7 +62,7 @@ Behavior regression suite for Rubber Duck governor + skills. Verifies governor g
 
 ## Conventions
 
-- Test IDs: V01-V48, sequential, never reused
+- Test IDs: V01-V51, sequential, never reused
 - Fixtures: synthetic but realistic, committed (`.duck-tape/.gitignore` files have `*` commented out)
 - Severity tags: Critical / High / Medium
 - `follow_ups` capped at 5 turns (`--max-follow-up-turns`)
