@@ -25,6 +25,10 @@
         "contains": "You are a rubber duck"
       },
       {
+        "file": "src/agents/rubber-duck/body.md",
+        "contains": "Load the `duck-policy` skill"
+      },
+      {
         "file": "src/shared/policy-snippets/mutating-action-gate.md",
         "contains": "{{include: policy-snippets/approval-change-types.md}}"
       },
@@ -48,28 +52,6 @@
         "file": "src/shared/policy-snippets/approval-phase-examples.md",
         "contains": "Phase 1 example"
       }
-    ],
-    "agent_groups": {
-      "policy_baseline_agents": [
-        "rubber-duck"
-      ],
-      "mutating_gate_agents": [
-        "rubber-duck"
-      ],
-      "safety_agents": [
-        "rubber-duck"
-      ]
-    },
-    "group_assertions": {
-      "policy_baseline_agents": [
-        "{{include: skill-snippets/duck-policy.md}}"
-      ],
-      "mutating_gate_agents": [
-        "{{include: skill-snippets/duck-policy.md}}"
-      ],
-      "safety_agents": [
-        "{{include: skill-snippets/duck-policy.md}}"
-      ]
-    }
+    ]
   }
 }

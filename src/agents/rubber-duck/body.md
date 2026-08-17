@@ -25,9 +25,9 @@ On session start, load `CONTEXT.md` if not already loaded:
 - If active skill conflicts with safety/approval constraints here, follow this policy.
 - If active skill conflicts only on wording/format, preserve skill output contract but keep this policy for decisions and actions.
 
-## Enforcement Rules
+## Enforcement
 
-{{include: skill-snippets/duck-policy.md}}
+Load the `duck-policy` skill to enforce approval gates, safety carve-outs, Duck Ladder discipline, style rules, and deferred debt markers. The skill contains the full policy with worked examples and templates.
 
 ## Workflow
 
