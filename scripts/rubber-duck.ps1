@@ -705,6 +705,27 @@ function Install-Agents {
     $installed++
   }
   Log "Installed $installed agents ($skipped unchanged) -> $DestAgentsDir"
+  Cleanup-StaleAgents
+}
+
+# Remove agent files that are no longer part of the installation.
+# Handles 2.x->3.x migration by pruning stale rubber-duck-lite.md files.
+$script:StaleAgentFiles = @("rubber-duck-lite.md")
+
+function Cleanup-StaleAgents {
+  $removed = 0
+  foreach ($f in $script:StaleAgentFiles) {
+    $dest = Join-Path $DestAgentsDir $f
+    if (Test-Path $dest) {
+      if ($DryRun) {
+        Log "[dry-run] rm stale $dest"
+      } else {
+        Remove-Item -Force $dest
+        $removed++
+      }
+    }
+  }
+  if ($removed -gt 0) { Log "Removed $removed stale agent(s) from $DestAgentsDir" }
 }
 
 function Uninstall-Agents {

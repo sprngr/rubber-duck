@@ -29,6 +29,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Lite-only validation tests (V40-V43).
 - Policy mode installer tests.
 
+### Fixed
+
+- Installer now prunes stale `rubber-duck-lite.md` files from agent directories during install (2.x→3.x migration).
+
 ## [v2.2.0] - 2026-08-14
 
 ### Added

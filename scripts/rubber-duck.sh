@@ -928,6 +928,7 @@ install_agents() {
     installed=$((installed + 1))
   done
   log "Installed ${installed} agents (${skipped} unchanged) -> ${DEST_AGENTS_DIR}"
+  cleanup_stale_agents
 }
 
 uninstall_agents() {
@@ -945,6 +946,27 @@ uninstall_agents() {
     fi
   done
   log "Removed ${removed} agents from ${DEST_AGENTS_DIR}"
+}
+
+# Remove agent files that are no longer part of the installation.
+# Handles 2.x→3.x migration by pruning stale rubber-duck-lite.md files.
+STALE_AGENT_FILES=(
+  "rubber-duck-lite.md"
+)
+
+cleanup_stale_agents() {
+  local removed=0
+  for f in "${STALE_AGENT_FILES[@]}"; do
+    if [[ -f "${DEST_AGENTS_DIR}/${f}" ]]; then
+      if (( DRY_RUN == 1 )); then
+        log "[dry-run] rm stale ${DEST_AGENTS_DIR}/${f}"
+      else
+        rm -f "${DEST_AGENTS_DIR}/${f}"
+        removed=$((removed + 1))
+      fi
+    fi
+  done
+  (( removed > 0 )) && log "Removed ${removed} stale agent(s) from ${DEST_AGENTS_DIR}"
 }
 
 skills_install() {
