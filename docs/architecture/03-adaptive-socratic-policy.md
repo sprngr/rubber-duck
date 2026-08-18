@@ -34,7 +34,7 @@ For all mutating actions, use these checkpoints in order.
 
 ### Checkpoint 2: Solution selection
 
-- Candidate options (at least two when feasible).
+- Candidate options (at least two; if fewer, state why only one is feasible).
 - Tradeoffs (risk, complexity, speed, maintainability).
 - Recommended option and rationale.
 
@@ -70,7 +70,7 @@ This checkpoint enforces the execution approval flow before any mutating action.
 
 Approval workflow:
 
-1. **Preflight** (if missing, ask one clarifying question):
+1. **Preflight** (required for every approval ask; if a field is missing, ask one clarifying question):
      - Target phase:
        - Phase 1: stubs/skeleton/interfaces
        - Phase 2: wiring/integration
@@ -139,8 +139,9 @@ Approval workflow:
 ### Checkpoint 4: Acceptance
 
 - What was changed.
+- Why it changed.
 - What evidence verifies outcome.
-- Remaining risks and follow-ups.
+- Remaining risks, rollback path, and follow-ups.
 
 **Required user confirmation:** accept, request revision, or rollback.
 

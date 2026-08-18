@@ -1,0 +1,94 @@
+$ErrorActionPreference = "Stop"
+
+# RUBBER_DUCK_VERSION: v3.0.0
+# Generated wrapper template source.
+# Installer will substitute scope token and source URL token.
+
+$SyncInstallerUrl = "{{SYNC_INSTALLER_URL}}"
+$SyncScopeArg = "{{SYNC_SCOPE_ARG}}"
+
+$isRemote = $SyncInstallerUrl -match '^https?://'
+
+# Detect current PowerShell host for re-invocation.
+# NOTE: Mirrored in scripts/rubber-duck.ps1 (sync replay path).
+# If you change one, update the other.
+$psHost = $null
+try { $psHost = (Get-Process -Id $PID).Path } catch { }
+if ([string]::IsNullOrWhiteSpace($psHost)) {
+  $psHost = "pwsh"
+  try { Get-Command pwsh -ErrorAction Stop | Out-Null } catch {
+    $psHost = "powershell"
+  }
+}
+
+# --- Version check ---
+$currentVersion = ""
+$manifest = if ($SyncScopeArg -eq "-Project") { ".rubber-duck/manifest.json" } else { Join-Path $HOME ".config/rubber-duck/manifest.json" }
+if (Test-Path $manifest) {
+  try {
+    $m = Get-Content -Raw $manifest | ConvertFrom-Json
+    if ($m.source -and $m.source.lastAppliedVersion) { $currentVersion = [string]$m.source.lastAppliedVersion }
+  } catch { }
+}
+$remoteVersion = ""
+$remoteBase = $SyncInstallerUrl -replace '/[^/]+/[^/]+$',''
+if ($isRemote) {
+  $remoteVersionUrl = "$remoteBase/VERSION"
+  try {
+    $resp = Invoke-WebRequest -UseBasicParsing -Uri $remoteVersionUrl -ErrorAction Stop
+    if ($resp.Content -is [byte[]]) {
+      $remoteVersion = [System.Text.Encoding]::UTF8.GetString($resp.Content)
+    } else {
+      $remoteVersion = [string]$resp.Content
+    }
+    $remoteVersion = $remoteVersion.Trim()
+  } catch { }
+} else {
+  $localVersionFile = Join-Path (Split-Path -Parent (Split-Path -Parent $SyncInstallerUrl)) "VERSION"
+  if (Test-Path $localVersionFile) {
+    try { $remoteVersion = (Get-Content -Raw $localVersionFile).Trim() } catch { }
+  }
+}
+if (-not [string]::IsNullOrWhiteSpace($currentVersion) -and -not [string]::IsNullOrWhiteSpace($remoteVersion)) {
+  if ($currentVersion -eq $remoteVersion) {
+    Write-Host "Already up to date ($currentVersion)."
+  } else {
+    try {
+      $curVer = [version]($currentVersion.TrimStart('v'))
+      $remVer = [version]($remoteVersion.TrimStart('v'))
+      if ($curVer -lt $remVer) {
+        Write-Host "New version available: $currentVersion -> $remoteVersion"
+        Write-Host "Changelog: https://github.com/sprngr/rubber-duck/blob/main/CHANGELOG.md"
+        $reply = Read-Host "Update now? [y/N]"
+        if ($reply -ne "y" -and $reply -ne "Y") { Write-Host "Skipping update."; exit 0 }
+      } else {
+        Write-Host "WARNING: local version ($currentVersion) is newer than remote ($remoteVersion)."
+      }
+    } catch { }
+  }
+}
+
+# Reject user-supplied scope flags: wrapper is scope-locked at install time.
+foreach ($a in $args) {
+  if ($a -eq "-Project" -or $a -eq "-Global") {
+    Write-Error "sync-latest.ps1: cannot override scope; wrapper is scoped to $SyncScopeArg. Re-run installer with the desired scope to change."
+    exit 2
+  }
+}
+$forwardArgs = @($args)
+
+if ($isRemote) {
+  if (-not ($args -contains "-RawBase")) { $forwardArgs += @("-RawBase", $remoteBase) }
+  $tmpRoot = if ([string]::IsNullOrWhiteSpace($env:TEMP)) { [System.IO.Path]::GetTempPath() } else { $env:TEMP }
+  $tmp = Join-Path $tmpRoot ("rubber-duck-sync-" + [Guid]::NewGuid().ToString() + ".ps1")
+  try {
+    Invoke-WebRequest -UseBasicParsing -Uri $SyncInstallerUrl -OutFile $tmp
+    & $psHost -NoProfile -File $tmp -Action sync $SyncScopeArg -Source web @forwardArgs
+    exit $LASTEXITCODE
+  } finally {
+    if (Test-Path $tmp) { Remove-Item -Force $tmp }
+  }
+} else {
+  & $psHost -NoProfile -File $SyncInstallerUrl -Action sync $SyncScopeArg -Source local @forwardArgs
+  exit $LASTEXITCODE
+}

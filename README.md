@@ -122,6 +122,9 @@ npx skills add https://github.com/sprngr/rubber-duck
 
 ### Full assistant operating system (agents + skills)
 
+> [!IMPORTANT]
+> Full install uses self-contained `rubber-duck` agent with all policy rules built in.
+
 **Bash (macOS/Linux):**
 
 ```bash
@@ -134,16 +137,20 @@ curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rub
 $p = Join-Path $env:TEMP "rubber-duck.ps1"; irm https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.ps1 -OutFile $p; & $p -Action install -Harness "<target>"
 ```
 
-Replace `"<target>"` with one or more of: `opencode`, `copilot`, `claude` (comma-separated in quotes). Project scope is the default; pass `--global` / `-Global` for user-wide install. See [scripts/README.md](./scripts/README.md) for skip flags, extras, sync, and all CLI options.
+Replace `"<target>"` with one or more of: `opencode`, `copilot`, `claude` (comma-separated in quotes).
 
-### Update using saved manifest (basic sync)
+Project scope is the default; pass `--global` / `-Global` for user-wide install.
 
-Use this after initial install when target and scope are already in manifest.
+See [scripts/README.md](./scripts/README.md) for full behavior, aliases, extras, sync, and all CLI options.
 
-Bash local example (Supported by Bash and Powershell via web & local)
-```bash
-./scripts/rubber-duck.sh sync
-```
+#### Update using saved manifest (sync-latest script)
+
+After install, lightweight sync helpers are generated based on the installer script used:
+
+- project scope: `.rubber-duck/sync-latest.sh` and `.rubber-duck/sync-latest.ps1`
+- global scope: `~/.config/rubber-duck/sync-latest.sh` and `~/.config/rubber-duck/sync-latest.ps1`
+
+Helpers check for newer versions before syncing. If an update is available, they prompt with the version change (e.g. `v2.2.0 -> v2.3.0`) and a link to the [CHANGELOG](https://github.com/sprngr/rubber-duck/blob/main/CHANGELOG.md). The helper then downloads the latest installer from GitHub, runs `sync` with the correct scope, and removes the temp installer file on exit.
 
 ## Verify after install
 
@@ -216,11 +223,12 @@ The agent must already be installed for your target. Delegation runs through `du
  <details>
  <summary>Expand for full skill list + routing diagram</summary>
 
-  Rubber Duck packages 14 skills: 11 default + 3 extras.
+  Rubber Duck packages 15 skills: 12 default + 3 extras.
 
 ### Default skills (installed automatically)
 
 - quack — explicit route control
+- duck-policy — enforcement meta-skill (approval gates, safety carve-outs, Duck Ladder, style, debt markers)
 - duck-debug — Socratic debugging (trace + root-cause)
 - duck-debt — deferred-work ledger (read-only)
 - duck-design — option/tradeoff evaluation

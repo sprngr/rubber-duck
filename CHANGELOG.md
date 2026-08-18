@@ -5,6 +5,62 @@ All notable changes to Rubber Duck will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v3.0.0] - 2026-08-17
+
+### Added
+
+- `duck-policy` portable skill: enforcement rules (approval gates, safety carve-outs, Duck Ladder, Style, Auto-Clarity, Boundaries, Deferred Debt Markers) extracted to loadable skill for non-duck agents.
+- Sync wrapper scripts now check for newer versions before syncing. Compares manifest `lastAppliedVersion` against the remote `VERSION` file (web installs) or local `VERSION` file (local installs). Prompts user with version change and CHANGELOG link when an update is available.
+- Installer displays sync update hint after successful install (e.g. `To update: bash .rubber-duck/sync-latest.sh`).
+- `RUBBER_DUCK_VERSION` comment embedded in generated sync wrapper scripts for diagnostics.
+
+### Changed
+
+- **Architecture consolidation:** single self-contained `rubber-duck` agent is canonical.
+- `AGENTS.md` reduced to version marker only. Policy content lives in agent body.
+- Agent body includes `duck-policy` skill snippet at build time (85 lines source, 366 lines rendered).
+- Validation suite: 44 tests, variant system removed.
+- Build rules updated: agent group assertions check skill-snippet include.
+- Sync wrapper version comparison uses POSIX-compatible bash function instead of GNU `sort -V`.
+- Installer template sources moved from `src/shared/install-templates/` to `src/install/scripts/` (sync wrappers) and `src/install/templates/` (manifest template). Build outputs remain at `dist/scripts/` and `dist/templates/`.
+- Sync wrapper fallback templates removed from both installers. If the sync template cannot be fetched, the installer exits with a clear error instead of silently falling back to an embedded template.
+- Sync replay functions deduplicated: bash `sync_replay_install_cmd` + `sync_replay_uninstall_cmd` merged into `sync_replay_cmd`; PowerShell `Get-SyncReplayInstallArgs` + `Get-SyncReplayUninstallArgs` merged into `Get-SyncReplayArgs`.
+- Manifest template path extracted to `MANIFEST_TEMPLATE_PATH` constant (bash installer).
+- Sync wrapper version check derives the `VERSION` URL from the installer URL (branch/custom raw-base aware) instead of hardcoding `main`.
+- Bash installer substitutes sync wrapper tokens via bash parameter expansion — no `sed` or `python3` dependency; portable across GNU and BSD sed environments (macOS).
+- Rubber-duck agent bootstrap prose trimmed: rule structure and enforcement teeth preserved; redundant meta-guidance dropped.
+- Approval-intent lexicon tightened: a bare option letter (e.g. `B`) with no approval verb is no longer treated as approval. Users must include an approval verb or option-referencing sentence (e.g. `approve`, `Proceed with option B in files X and Y`).
+
+### Removed
+
+- `--policy host|self` flag from both installers.
+- `--skip-agents-md` / `-SkipAgentsMd` flag from both installers.
+- `--claude-md` / `-ClaudeMd` flag from both installers.
+- `--variant` and `--no-agents-policy` flags from validation runner.
+- Variant-only validation tests.
+- Policy mode installer tests.
+
+### Fixed
+
+- Bash installer: `running_piped()` function definition moved before the sync block that calls it, fixing a function-not-found error when running sync actions.
+- CI drift: `*.ps1` line endings standardized to LF in `.gitattributes`; generated `dist/scripts/sync-latest.ps1` now byte-matches rendered output.
+- PowerShell sync wrapper host detection: replaced inert `$PSVersionInfo.PSExecutable` (not an automatic variable) with `(Get-Process -Id $PID).Path`.
+- Sync wrappers (bash + PowerShell): scope is embedded at install time. User-supplied `--project`/`--global` (bash) or `-Project`/`-Global` (PowerShell) now exits the wrapper with a clear error instead of being silently filtered. Re-run the installer to change scope.
+- Sync wrapper now forwards the derived `raw-base` on remote sync, so installs from custom raw-bases/branches replay against the correct source instead of defaulting to `main`.
+- Bash sync wrapper version comparison no longer crashes on pre-release version strings (e.g. `v2.3.0-beta`); incomparable versions report "Unable to compare... syncing anyway", matching PowerShell behavior.
+- Bash installer `VERSION` file reader now validates format (`^v\d+\.\d+\.\d+$`) matching PowerShell; malformed content no longer poisons manifest state or breaks sync-wrapper version compare.
+- Legacy managed policy block migration (3.x upgrade path): installer emits a prominent notice before removing the block and always writes a timestamped `.bak` backup preserving any user content that was inside the block. Fresh installs no longer create spurious `.bak` files when no legacy block exists.
+- Installer `doctor` fails fast with a clear message if called before target resolution (previously relied on caller order silently).
+
+## [v2.1.4] - 2026-08-14
+
+### Changed
+
+- Policy/version sync stabilization:
+  - aligned repository managed policy block version markers with generated `dist/AGENTS.md`
+  - re-synced installer-managed AGENTS policy content to remove guardrails drift between root `AGENTS.md` managed block and built policy artifact
+  - preserved managed-block source contract (`src/agents/AGENTS.md` -> `dist/AGENTS.md` -> installer-managed target files)
+
 
 ## [v2.1.3] - 2026-08-14
 

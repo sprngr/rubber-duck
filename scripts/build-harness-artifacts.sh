@@ -21,8 +21,16 @@ RULES_FILE="${REPO_ROOT}/build/agent-assembly.rules.json"
 SRC_AGENTS_DIR="${REPO_ROOT}/src/agents"
 POLICY_SNIPPETS_DIR="${REPO_ROOT}/src/shared/policy-snippets"
 SKILL_SNIPPETS_DIR="${REPO_ROOT}/src/shared/skill-snippets"
-SRC_AGENTS_POLICY_MD="${SRC_AGENTS_DIR}/AGENTS.md"
-DIST_AGENTS_POLICY_MD="${REPO_ROOT}/dist/AGENTS.md"
+INSTALL_SCRIPTS_DIR="${REPO_ROOT}/src/install/scripts"
+INSTALL_TEMPLATES_DIR="${REPO_ROOT}/src/install/templates"
+DIST_SCRIPTS_DIR="${REPO_ROOT}/dist/scripts"
+DIST_TEMPLATES_DIR="${REPO_ROOT}/dist/templates"
+DIST_SYNC_SH="${DIST_SCRIPTS_DIR}/sync-latest.sh"
+DIST_SYNC_PS1="${DIST_SCRIPTS_DIR}/sync-latest.ps1"
+SYNC_SH_TEMPLATE="${INSTALL_SCRIPTS_DIR}/sync-latest.sh.tmpl"
+SYNC_PS1_TEMPLATE="${INSTALL_SCRIPTS_DIR}/sync-latest.ps1.tmpl"
+MANIFEST_TEMPLATE_SRC="${INSTALL_TEMPLATES_DIR}/manifest.template.json"
+MANIFEST_TEMPLATE_DIST="${DIST_TEMPLATES_DIR}/manifest.template.json"
 VERSION_FILE="${REPO_ROOT}/VERSION"
 VERSION_TOKEN="__RUBBER_DUCK_VERSION__"
 VERSION_FENCE="<!-- RUBBER_DUCK_VERSION: ${VERSION_TOKEN} -->"
@@ -122,6 +130,19 @@ render_body_markdown() {
   : > "${out}"
   render_body_with_includes "${src}" "${out}" "" || { rm -f "${out}"; return 1; }
   return 0
+}
+
+# Plain copy of a template file. Token substitution happens at install time.
+copy_template() {
+  local src="$1"
+  local out="$2"
+
+  if [[ ! -f "${src}" ]]; then
+    printf 'ERROR: missing sync wrapper template: %s\n' "${src}" >&2
+    return 1
+  fi
+
+  cp -f "${src}" "${out}"
 }
 
 resolve_policy_include_path_if_match() {
@@ -260,6 +281,8 @@ fi
 mkdir -p "${CLAUDE_AGENT_DIR}"
 mkdir -p "${OPENCODE_AGENT_DIR}"
 mkdir -p "${COPILOT_AGENT_DIR}"
+mkdir -p "${DIST_SCRIPTS_DIR}"
+mkdir -p "${DIST_TEMPLATES_DIR}"
 
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "${TMP_DIR}"' EXIT
@@ -271,10 +294,19 @@ cat > "${CLAUDE_MD_TMP}" <<'EOF'
 EOF
 render_or_check_file "${CLAUDE_MD_TMP}" "${CLAUDE_MD_OUT}"
 
-# Build installer policy source at dist root.
-AGENTS_MD_TMP="${TMP_DIR}/AGENTS.md"
-render_body_markdown "${SRC_AGENTS_POLICY_MD}" "${AGENTS_MD_TMP}"
-render_or_check_file "${AGENTS_MD_TMP}" "${DIST_AGENTS_POLICY_MD}"
+# Build sync wrapper templates at dist/scripts.
+SYNC_SH_TMP="${TMP_DIR}/sync-latest.sh"
+copy_template "${SYNC_SH_TEMPLATE}" "${SYNC_SH_TMP}"
+render_or_check_file "${SYNC_SH_TMP}" "${DIST_SYNC_SH}"
+
+SYNC_PS1_TMP="${TMP_DIR}/sync-latest.ps1"
+copy_template "${SYNC_PS1_TEMPLATE}" "${SYNC_PS1_TMP}"
+render_or_check_file "${SYNC_PS1_TMP}" "${DIST_SYNC_PS1}"
+
+# Build manifest template at dist/templates.
+MANIFEST_TEMPLATE_TMP="${TMP_DIR}/manifest.template.json"
+copy_template "${MANIFEST_TEMPLATE_SRC}" "${MANIFEST_TEMPLATE_TMP}"
+render_or_check_file "${MANIFEST_TEMPLATE_TMP}" "${MANIFEST_TEMPLATE_DIST}"
 
 # Render each agent for every harness: harness frontmatter + shared body.
 for name in "${CONFIG_AGENTS[@]}"; do

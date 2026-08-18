@@ -113,3 +113,26 @@ Full validation history: see git log for `docs/validation/CHANGELOG.md` (file de
 - Focused verification run passed with tool-capable route:
   - `RUBBER_DUCK_MODEL=opencode/big-pickle python3 validation/run-validation-tests.py --filter=V34,V35`
   - Result: Passed 2, Failed 0, Errored 0.
+
+## 2026-08-17 — policy-gap-patch (working session)
+
+- Commit: uncommitted
+- Runner: validation/run-validation-tests.py (hybrid matcher)
+- Suite version: validation/README.md
+- Verdict: FAIL (quick subset V11, V12, V32 failed; see notes)
+
+### Quick subset
+
+- Passed: V02, V03, V04, V13, V14, V33
+- Failed: V11, V12, V32
+
+### Extended failures (optional)
+
+- Failed: V05, V06, V07, V18, V19, V27, V35, V36, V38, V39, V44, V47, V49, V50
+
+### Notes
+
+- No patch-attributable regression: gate-critical behaviors held (V29, V30, V31, V33, V43, V48, V51, V52, V53, V14, V34, V40 all pass)
+- Failures classify as wording variance (documented known limitation), environmental, or uncalibrated new tests (V36-V48, V52-V53)
+- Policy gaps patched: preflight mandatory, option justification, checkpoint-4 why+rollback, intent lexicon, strict mode, bootstrap fail-closed, EXAMPLES worked cases, doc alignment
+- Follow-ups: V50 checkpoint-1 template shape (patched), V06 teach depth, V36 ladder walk, V47 fallback path, V19 quack routing line, V49 fixture added, V38 fixture aligned

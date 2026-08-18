@@ -14,6 +14,11 @@ CLI reference for install/update/uninstall tooling.
 
 `--project` scope is the default; pass `--global` for user-wide install.
 
+Agent selection is straightforward:
+- `rubber-duck.md` is installed as the agent file
+- AGENTS.md is always installed (version marker)
+- destination filename is `rubber-duck.md`
+
 Sync targets from a manifest:
 
 ```bash
@@ -22,6 +27,42 @@ Sync targets from a manifest:
 
 # Also remove managed targets not enabled in the manifest
 ./scripts/rubber-duck.sh sync --project --prune
+```
+
+Generated sync helpers (created during `install`):
+
+- project scope:
+  - `.rubber-duck/sync-latest.sh`
+  - `.rubber-duck/sync-latest.ps1`
+- global scope:
+  - `~/.config/rubber-duck/sync-latest.sh`
+  - `~/.config/rubber-duck/sync-latest.ps1`
+
+Behavior:
+- check for newer version before syncing (compares manifest `lastAppliedVersion` against remote/local `VERSION`)
+- if newer version available, prompt with version change and CHANGELOG link
+- run matching installer source used during install:
+  - local install source -> local installer path from current checkout
+  - web install source -> downloaded installer from configured raw base
+- run `sync` with matching scope (`--project/--global` or `-Project/-Global`)
+- remove downloaded temp installer on exit (web mode)
+
+Examples:
+
+```bash
+# project scope helper
+.rubber-duck/sync-latest.sh
+
+# project scope helper with prune
+.rubber-duck/sync-latest.sh --prune
+```
+
+```powershell
+# project scope helper
+pwsh -NoProfile -File .rubber-duck/sync-latest.ps1
+
+# project scope helper with prune
+pwsh -NoProfile -File .rubber-duck/sync-latest.ps1 -Prune
 ```
 
 ## Commands
@@ -41,7 +82,6 @@ Opt out of default install steps or adjust source to fit your workflow. All opti
 | Flag (Bash) | Flag (PowerShell) | Effect |
 | --- | --- | --- |
 | `--skip-skills` | `-SkipSkills` | Skip `npx skills add/remove/list` |
-| `--skip-agents-md` | `-SkipAgentsMd` | Skip AGENTS.md managed policy block install/remove |
 | `--dry-run` | `-DryRun` | Print planned actions without writing |
 | `--prune` | `-Prune` | With `sync`: remove managed targets not enabled in manifest |
 | `--source <auto\|local\|web>` | `-Source auto\|local\|web` | Pick artifact + skills source (`auto` default) |
@@ -61,10 +101,8 @@ Use Bash CLI for Linux/macOS and shell-based CI.
 | `--opencode` | switch | Use opencode paths (required target; pick exactly one of `--claude/--copilot/--opencode`) |
 | `--global`  | switch | Apply global scope to selected target (opt into global; skills follow unless `--skip-skills`) |
 | `--project` | switch | Apply project scope to selected target (default; skills follow unless `--skip-skills`) |
-| `--claude-md <path>` | value | Claude target `CLAUDE.md` path override (default for `--claude`; project default when `--project` also set) |
 | `--branch <name>` | value | Branch to install from (default: `main`; pass explicitly for non-main installs) |
 | `--skip-skills` | switch | Skip `npx skills add/remove/list` |
-| `--skip-agents-md` | switch | Skip AGENTS.md policy block install/remove |
 | `--source <auto\|local\|web>` | value | Artifact + skills source selection (`auto` default; `local` derives repo path, `web` derives GitHub URL) |
 | `--raw-base <url>` | value | Raw GitHub base URL for web source |
 | `--prune` | switch | With `sync`, uninstall managed targets not enabled in manifest |
@@ -86,10 +124,8 @@ Use PowerShell CLI for Windows-native environments.
 | `-OpenCode` | switch | Use opencode paths (required target; pick exactly one of `-Claude/-Copilot/-OpenCode`) |
 | `-Global` | switch | Apply global scope to selected target (opt into global; skills follow unless `-SkipSkills`) |
 | `-Project` | switch | Apply project scope to selected target (default; skills follow unless `-SkipSkills`) |
-| `-ClaudeMd <path>` | value | Claude target `CLAUDE.md` path override (default for `-Claude`; project default when `-Project` also set) |
 | `-Branch <name>` | value | Branch to install from (default: `main`) |
 | `-SkipSkills` | switch | Skip `npx skills add/remove/list` |
-| `-SkipAgentsMd` | switch | Skip AGENTS.md policy block install/remove |
 | `-Source auto\|local\|web` | value | Artifact + skills source selection (`auto` default; `local` derives repo path, `web` derives GitHub URL) |
 | `-RawBase <url>` | value | Raw GitHub base URL for web source |
 | `-Prune` | switch | With `sync`, uninstall managed targets not enabled in manifest |
@@ -99,42 +135,15 @@ Use PowerShell CLI for Windows-native environments.
 
 ## Installation Behavior
 
-### Mode and Flag Constraints & Target Path Behavior
-
-- Target selection:
-  - choose exactly one target style:
-    - harness list:
-      - Bash: `--harness "opencode,copilot,claude"` (one or more)
-      - PowerShell: `-Harness "opencode,copilot,claude"` (one or more)
-    - legacy single-target flags:
-      - Bash: exactly one of `--opencode` / `--copilot` / `--claude`
-      - PowerShell: exactly one of `-OpenCode` / `-Copilot` / `-Claude`
-  - mixing harness list with legacy target flags is invalid
-  - `sync` is manifest-driven and ignores CLI target flags/harness list
-- Claude target:
-  - global (`--claude --global` / `-Claude -Global`): writes/removes managed `~/.claude/CLAUDE.md` and sibling `~/.claude/AGENTS.md`
-  - project (default) (`--claude --project` / `-Claude -Project`): writes/removes managed project `CLAUDE.md` and sibling `AGENTS.md`
-  - backups before mutation:
-    - `CLAUDE.md.bak.<YYYYmmdd-HHMMSS>`
-    - `AGENTS.md.bak.<YYYYmmdd-HHMMSS>`
-  - Options:
-    - `--claude-md` / `-ClaudeMd` requires claude to be selected (via harness list or legacy claude flag).
-- Copilot target:
-  - global (`--copilot --global` / `-Copilot -Global`): uses `~/.copilot/agents` + `~/.copilot/AGENTS.md`
-  - project (default) (`--copilot --project` / `-Copilot -Project`): uses `.github/agents` + project-root `AGENTS.md`
-  - backup before mutation: `AGENTS.md.bak.<YYYYmmdd-HHMMSS>`
-- OpenCode target:
-  - global (`--opencode --global` / `-OpenCode -Global`): uses `~/.config/opencode/agents` + `~/.config/opencode/AGENTS.md`
-  - project (default) (`--opencode --project` / `-OpenCode -Project`): uses `.opencode/agents` + project-root `AGENTS.md`
-  - backup before mutation: `AGENTS.md.bak.<YYYYmmdd-HHMMSS>`
-
-### Installation Notes
+- Install writes lightweight sync helpers into `.rubber-duck/` (project) or `~/.config/rubber-duck/` (global). Helpers are convenience wrappers only; they do not create local repo checkouts.
+- Agent file: `rubber-duck.md` is installed as the agent file in the target agents directory.
+- AGENTS.md: always installed as a version marker.
 
 - Installer supports web invocation:
   - Bash: `curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh -o /tmp/rubber-duck.sh && bash -n /tmp/rubber-duck.sh && bash /tmp/rubber-duck.sh <command>`
   - PowerShell: download script then execute.
 - For non-`main` sources, pass `--branch <name>` / `-Branch <name>` explicitly.
-- Fresh install seeds the manifest from `.rubber-duck/manifest.template.json` when running against a local checkout; web installs use built-in defaults.
+  - Fresh install seeds the manifest from `dist/templates/manifest.template.json` when running against a local checkout; web installs use built-in defaults.
 - Backup retention: before mutating a managed policy file (`AGENTS.md`, `CLAUDE.md`), the installer writes a `<file>.bak.<YYYYmmdd-HHMMSS>` copy alongside it. Only the most recent `<file>.bak.*` is kept per policy file; prior backups are pruned on install/uninstall to avoid accumulation. Applies to both bash and PowerShell installers.
 - Skills install default: project (`npx skills add <source> -y`).
 - `status` reports canonical version parsed from managed AGENTS artifact marker.
@@ -166,11 +175,11 @@ Use PowerShell CLI for Windows-native environments.
 
 ### Skills Sets
 
-Default skills (11) match `.claude-plugin/plugin.json`: quack, duck-debt, duck-debug, duck-design, duck-patch, duck-refactor, duck-review, duck-risk, duck-simplify, duck-teach, duck-triage.
+Default skills (12) match `.claude-plugin/plugin.json`: quack, duck-policy, duck-debt, duck-debug, duck-design, duck-patch, duck-refactor, duck-review, duck-risk, duck-simplify, duck-teach, duck-triage.
 
 Extras skills (3): duck-adapt, duck-grill, duck-tape. Installed only with `--extras` (bash) / `-Extras` (PowerShell). Optional by default.
 
-`uninstall` removes all 14 skills (default + extras) regardless of flag so no orphan skills remain. `status` reports extras separately as optional (present/missing count).
+`uninstall` removes all 15 skills (default + extras) regardless of flag so no orphan skills remain. `status` reports extras separately as optional (present/missing count).
 
 Skills install scope: each install/uninstall run passes `-a <agent>` for every selected harness (`opencode`, `github-copilot`, `claude-code`), so skills only land in the harnesses you asked for. Multi-target invocations collapse to a single `npx skills` call.
 

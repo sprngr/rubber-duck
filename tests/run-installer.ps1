@@ -56,7 +56,7 @@ function Test-FreshInstallWritesPins {
   $pins = $d.pins
   if (-not $pins) { throw "no pins" }
   $keys = @($pins.PSObject.Properties.Name)
-  if ($keys.Count -lt 3) { throw "pin count $($keys.Count) < 3" }
+  if ($keys.Count -lt 2) { throw "pin count $($keys.Count) < 2" }
   foreach ($k in $keys) {
     if (-not $pins.$k.StartsWith("sha256:")) { throw "pin $k missing sha256 prefix" }
   }
@@ -92,15 +92,14 @@ function Test-RawBaseAllowlist {
   $out = & pwsh -NoProfile -File $script:PsInstaller -Action install -Harness opencode -Source web -RawBase "https://evil.example/foo" -SkipSkills -Project -AllowUntrustedSource 2>&1
   if (-not ($out -match "allowlist bypassed")) { throw "expected allowlist bypassed warning" }
 }
-function Test-ClaudeTwoFileLayout {
+function Test-ClaudeInstallAgentOnly {
   & pwsh -NoProfile -File $script:PsInstaller -Action install -Harness claude -Source local -SkipSkills -Project | Out-Null
   if ($LASTEXITCODE -ne 0) { throw "install failed" }
-  if (-not (Test-Path "CLAUDE.md")) { throw "CLAUDE.md missing" }
-  if (-not (Test-Path "AGENTS.md")) { throw "AGENTS.md missing" }
   if (-not (Test-Path ".claude/agents/rubber-duck.md")) { throw "claude agent missing" }
+  # 3.x: no CLAUDE.md / AGENTS.md managed block is written.
+  if (Test-Path "CLAUDE.md") { throw "CLAUDE.md unexpectedly written" }
   $d = Get-Content -Raw ".rubber-duck/manifest.json" | ConvertFrom-Json
   $pins = $d.pins
-  if (-not $pins."dist/claude/CLAUDE.md") { throw "claude policy pin missing" }
   if (-not $pins."dist/claude/agents/rubber-duck.md") { throw "claude agent pin missing" }
 }
 function Test-DryRunNoWrites {
@@ -126,9 +125,9 @@ function Test-DryRunMultiTargetLayout {
 # Sync with default source (auto). Regression guard for RawBase ordering bug:
 # sync path used to call Test-RawBaseAllowed before RawBase default was applied.
 function Test-SyncDefaultSource {
-  & pwsh -NoProfile -File $script:PsInstaller -Action install -Harness opencode -Source local -SkipSkills -SkipAgentsMd -Project | Out-Null
+  & pwsh -NoProfile -File $script:PsInstaller -Action install -Harness opencode -Source local -SkipSkills -Project | Out-Null
   if ($LASTEXITCODE -ne 0) { throw "install failed" }
-  & pwsh -NoProfile -File $script:PsInstaller -Action sync -Project -SkipSkills -SkipAgentsMd | Out-Null
+  & pwsh -NoProfile -File $script:PsInstaller -Action sync -Project -SkipSkills | Out-Null
   if ($LASTEXITCODE -ne 0) { throw "sync with default source failed" }
 }
 
@@ -156,16 +155,137 @@ function Test-WinPsManifestStructure {
   if (@($m.pins.PSObject.Properties.Name).Count -eq 0) { throw "pins empty" }
 }
 
+function Test-SyncWrapperContent {
+  & pwsh -NoProfile -File $script:PsInstaller -Action install -Harness opencode -Source local -SkipSkills -Project | Out-Null
+  if ($LASTEXITCODE -ne 0) { throw "install failed" }
+  $wrapper = ".rubber-duck/sync-latest.ps1"
+  if (-not (Test-Path $wrapper)) { throw "sync wrapper missing" }
+  $content = Get-Content -Raw $wrapper
+  if ($content -notmatch '(?m)^\$SyncScopeArg\s*=\s*"-Project"$') { throw "scope arg not substituted" }
+  if ($content -notmatch '(?m)^\$SyncInstallerUrl\s*=\s*".+"$') { throw "installer URL not substituted" }
+  if ($content.Contains("{{SYNC_SCOPE_ARG}}")) { throw "scope token not replaced" }
+  if ($content.Contains("{{SYNC_INSTALLER_URL}}")) { throw "URL token not replaced" }
+  if (-not $content.Contains("RUBBER_DUCK_VERSION:")) { throw "version marker missing" }
+}
+
+# Legacy managed block on upgrade: user content preserved in backup, block stripped.
+function Test-ManagedBlockMigrationPreservesContent {
+  $agents = @(
+    "Preamble line",
+    "",
+    "<!-- RUBBER_DUCK_MANAGED_BLOCK START -->",
+    "USER CUSTOM MARKER",
+    "<!-- RUBBER_DUCK_MANAGED_BLOCK END -->",
+    "",
+    "Trailer line"
+  ) -join "`n"
+  Set-Content -Path "AGENTS.md" -Value $agents -NoNewline
+  $out = & pwsh -NoProfile -File $script:PsInstaller -Action install -Harness opencode -Source local -SkipSkills -Project 2>&1 | Out-String
+  if ($LASTEXITCODE -ne 0) { throw "install failed" }
+  if ($out -notmatch "Legacy managed policy block detected") { throw "migration notice missing" }
+  $now = Get-Content -Raw "AGENTS.md"
+  if ($now -match "RUBBER_DUCK_MANAGED_BLOCK") { throw "managed block not stripped" }
+  if ($now -match "USER CUSTOM MARKER") { throw "user content not stripped from AGENTS.md" }
+  if ($now -notmatch "Preamble line") { throw "preamble lost" }
+  if ($now -notmatch "Trailer line") { throw "trailer lost" }
+  $bak = Get-ChildItem -Path "AGENTS.md.bak.*" -ErrorAction SilentlyContinue | Select-Object -First 1
+  if (-not $bak) { throw "backup file missing" }
+  $bakContent = Get-Content -Raw $bak.FullName
+  if ($bakContent -notmatch "USER CUSTOM MARKER") { throw "backup does not preserve user content" }
+}
+
+# Fresh install (no prior AGENTS.md): no spurious backup files.
+function Test-FreshInstallNoSpuriousBackup {
+  Remove-Item -Force -ErrorAction SilentlyContinue "AGENTS.md","CLAUDE.md"
+  Remove-Item -Force -ErrorAction SilentlyContinue "AGENTS.md.bak.*","CLAUDE.md.bak.*"
+  & pwsh -NoProfile -File $script:PsInstaller -Action install -Harness opencode -Source local -SkipSkills -Project | Out-Null
+  if ($LASTEXITCODE -ne 0) { throw "install failed" }
+  $baks = Get-ChildItem -Path "AGENTS.md.bak.*" -ErrorAction SilentlyContinue
+  if ($baks) { throw "spurious backup created on fresh install" }
+}
+
 # --- Test runner ---
 Run-Test "fresh install writes pins"        { Test-FreshInstallWritesPins }
 Run-Test "reinstall verifies pins silently" { Test-ReinstallVerifiesPins  }
 Run-Test "sync round-trip"                  { Test-SyncRoundTrip          }
 Run-Test "rawBase allowlist"                { Test-RawBaseAllowlist       }
-Run-Test "claude two-file layout"           { Test-ClaudeTwoFileLayout    }
+Run-Test "claude install agent only"        { Test-ClaudeInstallAgentOnly }
 Run-Test "dry-run no writes"                { Test-DryRunNoWrites         }
 Run-Test "dry-run multi-target layout"      { Test-DryRunMultiTargetLayout}
 Run-Test "sync default source"              { Test-SyncDefaultSource      }
 Run-Test "winps manifest structure"         { Test-WinPsManifestStructure }
+Run-Test "sync wrapper content"             { Test-SyncWrapperContent     }
+Run-Test "managed block migration preserves content" { Test-ManagedBlockMigrationPreservesContent }
+Run-Test "fresh install no spurious backup" { Test-FreshInstallNoSpuriousBackup }
+
+function Test-SyncWrapperPsHostDetection {
+  & pwsh -NoProfile -File $script:PsInstaller -Action install -Harness opencode -Source local -SkipSkills -Project | Out-Null
+  if ($LASTEXITCODE -ne 0) { throw "install failed" }
+  $content = Get-Content -Raw ".rubber-duck/sync-latest.ps1"
+  if (-not $content.Contains('(Get-Process -Id $PID)')) { throw "psHost detection missing" }
+  if ($content.Contains("& pwsh ")) { throw "hardcoded pwsh still present" }
+}
+
+Run-Test "sync wrapper psHost detection"          { Test-SyncWrapperPsHostDetection }
+# End-to-end remote sync: web install from local HTTP server, wrapper
+# downloads the installer from the same base and runs sync.
+function Test-SyncWrapperRemoteSync {
+  $remote = "remote"
+  New-Item -ItemType Directory -Path $remote | Out-Null
+  Copy-Item -Recurse -Force (Join-Path $repoRoot "scripts") $remote
+  Copy-Item -Recurse -Force (Join-Path $repoRoot "dist") $remote
+  Copy-Item -Force (Join-Path $repoRoot "VERSION") $remote
+  $port = ([string](& python3 -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1",0)); print(s.getsockname()[1]); s.close()')).Trim()
+  $server = Start-Process python3 -ArgumentList @("-m","http.server",$port,"--bind","127.0.0.1","--directory",$remote) -PassThru
+  try {
+    for ($i = 0; $i -lt 20; $i++) {
+      try { Invoke-WebRequest -UseBasicParsing -Uri "http://127.0.0.1:$port/VERSION" -ErrorAction Stop | Out-Null; break }
+      catch { Start-Sleep -Milliseconds 200 }
+    }
+    & pwsh -NoProfile -File $script:PsInstaller -Action install -Harness opencode -Source web -RawBase "http://127.0.0.1:$port" -SkipSkills -AllowUntrustedSource -Project | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "web install failed" }
+    $content = Get-Content -Raw ".rubber-duck/sync-latest.ps1"
+    if (-not $content.Contains("http://127.0.0.1:$port/scripts/rubber-duck.ps1")) { throw "installer URL not substituted" }
+    # Same version: no prompt, sync runs (raw-base forwarded by wrapper).
+    & pwsh -NoProfile -File ".rubber-duck/sync-latest.ps1" -AllowUntrustedSource | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "remote sync failed" }
+  } finally {
+    if ($server -and -not $server.HasExited) { Stop-Process -Id $server.Id -Force }
+  }
+}
+
+# Upgrade path: version bump prompts; accepting syncs the new installer.
+function Test-SyncWrapperUpgrade {
+  $remote = "remote"
+  New-Item -ItemType Directory -Path $remote | Out-Null
+  Copy-Item -Recurse -Force (Join-Path $repoRoot "scripts") $remote
+  Copy-Item -Recurse -Force (Join-Path $repoRoot "dist") $remote
+  Copy-Item -Force (Join-Path $repoRoot "VERSION") $remote
+  $curVer = (Get-Content -Raw (Join-Path $repoRoot "VERSION")).Trim()
+  $parts = $curVer.TrimStart('v') -split '\.'
+  $nextVer = "v$($parts[0]).$($parts[1]).$([int]$parts[2] + 1)"
+  $port = ([string](& python3 -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1",0)); print(s.getsockname()[1]); s.close()')).Trim()
+  $server = Start-Process python3 -ArgumentList @("-m","http.server",$port,"--bind","127.0.0.1","--directory",$remote) -PassThru
+  try {
+    for ($i = 0; $i -lt 20; $i++) {
+      try { Invoke-WebRequest -UseBasicParsing -Uri "http://127.0.0.1:$port/VERSION" -ErrorAction Stop | Out-Null; break }
+      catch { Start-Sleep -Milliseconds 200 }
+    }
+    & pwsh -NoProfile -File $script:PsInstaller -Action install -Harness opencode -Source web -RawBase "http://127.0.0.1:$port" -SkipSkills -AllowUntrustedSource -Project | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "web install failed" }
+    # Release next version: bump VERSION + change installer bytes.
+    Set-Content -Path (Join-Path $remote "VERSION") -Value $nextVer -NoNewline
+    Add-Content -Path (Join-Path $remote "scripts/rubber-duck.ps1") -Value "# $nextVer"
+    $out = 'y' | & pwsh -NoProfile -File ".rubber-duck/sync-latest.ps1" -AllowUntrustedSource 2>&1 | Out-String
+    if ($LASTEXITCODE -ne 0) { throw "upgrade sync failed" }
+    if (-not $out.Contains("New version available: $curVer -> $nextVer")) { throw "upgrade prompt missing" }
+  } finally {
+    if ($server -and -not $server.HasExited) { Stop-Process -Id $server.Id -Force }
+  }
+}
+
+Run-Test "sync wrapper remote sync"                { Test-SyncWrapperRemoteSync }
+Run-Test "sync wrapper upgrade"                    { Test-SyncWrapperUpgrade }
 
 "`n$($script:TestsRun - $script:Failures)/$($script:TestsRun) passed, $($script:Failures) failed"
 if ($script:Failures -gt 0) { exit 1 } else { exit 0 }

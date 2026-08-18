@@ -49,13 +49,12 @@ Existing `TODO(decision-debt):` markers still parse under `duck-debt` broad mode
 
 New flags:
 
-- `--skip-agents-md` / `-SkipAgentsMd` — install skills only, leave existing AGENTS.md untouched.
 - `--branch` / `-Branch` — install from a non-main branch (testing).
 - `--extras` / `-Extras` — install optional skills (duck-adapt, duck-grill, duck-tape).
 
 ## AGENTS.md
 
-v2 uses managed-block fencing. The installer adds fences when writing AGENTS.md to user directories. Source file has no fences. If you hand-edited the managed block in v1, re-run the installer to reconcile.
+v2 uses managed-block fencing. The installer adds fences when writing AGENTS.md to user directories. Policy content now lives in the agent body; AGENTS.md is a version marker only.
 
 ## Reinstall
 
@@ -65,4 +64,46 @@ Fresh install recommended:
 curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh -o /tmp/rubber-duck.sh && bash -n /tmp/rubber-duck.sh && bash /tmp/rubber-duck.sh install --<target>
 ```
 
-Use `--skip-agents-md` to preserve existing AGENTS.md customizations outside the managed block.
+---
+
+# Migrating from v2.x to v3
+
+v3 consolidates to a single self-contained agent, extracts enforcement rules to a portable skill, and simplifies the installer by removing policy mode flags.
+
+## What changed
+
+| Area | v2 | v3 |
+| --- | --- | --- |
+| Agent variants | Multiple agent variants | Single `rubber-duck` (self-contained) |
+| Policy source | Split between agent body + AGENTS.md | Agent body only (AGENTS.md = version marker) |
+| Enforcement rules | Inline in agent body | Extracted to `duck-policy` skill |
+| Installer flags | `--policy host\|self`, `--skip-agents-md`, `--claude-md` | None of these |
+| Validation tests | 48 tests with variant system | 44 tests, no variants |
+
+## Removed flags
+
+- `--policy host|self` / `-Policy host|self` — no longer needed (single agent)
+- `--skip-agents-md` / `-SkipAgentsMd` — no longer needed (AGENTS.md is a version marker)
+- `--claude-md` / `-ClaudeMd` — removed (use default CLAUDE.md path)
+
+## New: duck-policy skill
+
+Enforcement rules (approval gates, safety carve-outs, Duck Ladder, Style, Auto-Clarity, Boundaries, Deferred Debt Markers) are now available as a portable skill. Any agent can load `duck-policy` to gain Rubber Duck philosophy enforcement.
+
+## Migration
+
+**Automatic:** re-run the installer. It will:
+
+1. Install the new self-contained `rubber-duck.md` (overwrites old)
+2. Replace the old AGENTS.md managed block with new 3-line version marker
+3. Remove any stale agent files no longer part of the installation
+4. Update manifest pins
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh -o /tmp/rubber-duck.sh && bash -n /tmp/rubber-duck.sh && bash /tmp/rubber-duck.sh install --<target>
+```
+
+**Manual cleanup (optional):**
+
+- Remove any stale agent files from `.opencode/agents/`, `.claude/agents/`, `.github/agents/`
+- Remove any custom AGENTS.md content that referenced the old policy mode flags

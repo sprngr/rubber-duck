@@ -7,12 +7,10 @@ SEEN_TARGET_COUNT=0
 HARNESS_CSV=""
 PRUNE=0
 TARGETS=()
-CLAUDE_MD=""
 PROJECT_SCOPE=1
 SEEN_PROJECT=0
 SEEN_GLOBAL=0
 SKIP_SKILLS=0
-SKIP_AGENTS_MD=0
 SKILLS_CLI="skills@^1.5.21"  # pinned npx CLI package spec
 SOURCE_MODE="auto"  # auto|local|web
 BRANCH="main"  # default branch
@@ -30,11 +28,7 @@ fi
 
 REPO_ROOT="$(cd -- "${SCRIPT_DIR}/.." 2>/dev/null && pwd || pwd)"
 LOCAL_AGENTS_DIR=""
-LOCAL_POLICY_FILE=""
-LOCAL_POLICY_AGENTS_FILE=""
 REMOTE_AGENTS_PATH=""
-REMOTE_POLICY_PATH=""
-REMOTE_POLICY_AGENTS_PATH=""
 POLICY_MODE="managed_block"  # managed_block|file
 CANONICAL_VERSION="unknown"
 
@@ -53,11 +47,19 @@ CLAUDE_AGENTS_DIR="${HOME}/.claude/agents"
 CLAUDE_POLICY_MD="${HOME}/.claude/CLAUDE.md"
 CLAUDE_PROJECT_AGENTS_DIR=".claude/agents"
 CLAUDE_PROJECT_POLICY_MD="CLAUDE.md"
+SYNC_WRAPPER_TEMPLATE_REMOTE="dist/scripts/sync-latest.sh"
+SYNC_WRAPPER_WRITTEN=0
+MANIFEST_TEMPLATE_PATH="dist/templates/manifest.template.json"
 
 AGENT_FILES=(
   "rubber-duck.md"
   "duckling.md"
 )
+
+agent_remote_pin_key() {
+  local dest_file="$1"
+  printf '%s/%s' "${REMOTE_AGENTS_PATH}" "${dest_file}"
+}
 
 # Default skills: the set declared in .claude-plugin/plugin.json.
 DEFAULT_SKILLS=(
@@ -65,6 +67,7 @@ DEFAULT_SKILLS=(
   "duck-debug"
   "duck-design"
   "duck-patch"
+  "duck-policy"
   "duck-refactor"
   "duck-review"
   "duck-risk"
@@ -93,10 +96,8 @@ Options:
   --harness <list>                  Comma-separated harness list (opencode,copilot,claude)
   --global                          Apply global scope to selected target (and skills, unless --skip-skills)
   --project                         Apply project scope to selected target (and skills, unless --skip-skills)
-  --claude-md <path>                Claude target memory file path override
   --branch <name>                   Branch to install from (default: main, auto-detects from URL)
   --skip-skills                     Skip npx skills add/remove/list
-  --skip-agents-md                  Skip AGENTS.md policy block install/remove
   --source <auto|local|web>         Artifact + skills source (default: auto)
   --raw-base <url>                  Raw GitHub base for web source
   --prune                           With sync: remove managed targets not in manifest
@@ -114,7 +115,6 @@ Examples:
   scripts/rubber-duck.sh install --copilot --global
   scripts/rubber-duck.sh install --claude --skip-skills
   scripts/rubber-duck.sh sync --project
-  scripts/rubber-duck.sh sync --project --prune --skip-skills --skip-agents-md
   scripts/rubber-duck.sh install --opencode --source local
   curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rubber-duck.sh -o /tmp/rubber-duck.sh && bash -n /tmp/rubber-duck.sh && bash /tmp/rubber-duck.sh install --opencode
   curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/v2-quackening/scripts/rubber-duck.sh -o /tmp/rubber-duck.sh && bash -n /tmp/rubber-duck.sh && bash /tmp/rubber-duck.sh install --opencode --branch v2-quackening
@@ -137,21 +137,21 @@ BANNER
 }
 
 resolve_canonical_version() {
-  local src="" v=""
+  local v=""
   if [[ "${EFFECTIVE_SOURCE}" == "local" ]]; then
-    src="${REPO_ROOT}/dist/AGENTS.md"
-    [[ -f "${src}" ]] || return 0
+    v="$(read_plain_version "${REPO_ROOT}/VERSION" 2>/dev/null)" || true
   else
     command -v curl >/dev/null 2>&1 || return 0
-    src="$(mktemp)"
-    if ! curl -fsSL "${RAW_BASE}/${REMOTE_POLICY_PATH:-dist/AGENTS.md}" -o "${src}" 2>/dev/null; then
-      rm -f "${src}"
+    local tmp
+    tmp="$(mktemp)"
+    if ! curl -fsSL "${RAW_BASE}/VERSION" -o "${tmp}" 2>/dev/null; then
+      rm -f "${tmp}"
       return 0
     fi
+    v="$(read_plain_version "${tmp}" 2>/dev/null)" || true
+    rm -f "${tmp}"
   fi
-  v="$(extract_version_from_file "${src}" 2>/dev/null)" && [[ -n "${v}" ]] && CANONICAL_VERSION="${v}"
-  [[ "${EFFECTIVE_SOURCE}" != "local" ]] && rm -f "${src}"
-  return 0
+  [[ -n "${v}" ]] && CANONICAL_VERSION="${v}"
 }
 
 # Exact rawBase prefix required unless --allow-untrusted-source is set.
@@ -180,6 +180,37 @@ check_rawbase_allowed() {
   (( ALLOW_UNTRUSTED_SOURCE == 1 )) && { warn "rawBase allowlist bypassed: ${raw_base}"; return 0; }
   [[ "${raw_base}" == "${ALLOWED_RAW_BASE_PREFIX}"* ]] && return 0
   return 1
+}
+
+manifest_path() {
+  if (( PROJECT_SCOPE == 1 )); then
+    printf '.rubber-duck/manifest.json'
+  else
+    printf '%s/.config/rubber-duck/manifest.json' "${HOME}"
+  fi
+}
+
+sync_replay_cmd() {
+  local action="$1" harness_csv="$2"
+  CMD=(bash "${SCRIPT_PATH}" "${action}" --harness "${harness_csv}" --source "${SOURCE_MODE}" --branch "${BRANCH}" --raw-base "${RAW_BASE}")
+  if (( PROJECT_SCOPE == 1 )); then CMD+=(--project); else CMD+=(--global); fi
+  if [[ "${action}" == "install" ]]; then
+    [[ "${3:-}" == "false" ]] && CMD+=(--skip-skills)
+    [[ "${4:-}" == "true" ]] && CMD+=(--extras)
+  else
+    CMD+=(--skip-skills)
+  fi
+  (( DRY_RUN == 1 )) && CMD+=(--dry-run)
+  (( ALLOW_UNTRUSTED_SOURCE == 1 )) && CMD+=(--allow-untrusted-source)
+  return 0
+}
+
+rawbase_check_mode() {
+  if [[ -n "${EFFECTIVE_SOURCE:-}" ]]; then
+    printf '%s' "${EFFECTIVE_SOURCE}"
+  else
+    printf '%s' "${SOURCE_MODE}"
+  fi
 }
 
 # --- Manifest handling (pure bash, no python3) ---
@@ -309,7 +340,7 @@ write_pins() {
   shift
   (( $# == 0 )) && return 0
   (( DRY_RUN == 1 )) && { log "[dry-run] pins update -> ${manifest_path}"; return 0; }
-  local template_path="${REPO_ROOT}/.rubber-duck/manifest.template.json"
+  local template_path="${REPO_ROOT}/${MANIFEST_TEMPLATE_PATH}"
   manifest_load "${manifest_path}" "${template_path}"
   local pair k v
   for pair in "$@"; do
@@ -337,13 +368,14 @@ read_prior_version() {
   printf '%s' "${MF_SOURCE_LAST_APPLIED_VERSION}"
 }
 
-extract_version_from_file() {
-  local source_file="$1"
-  [[ -f "${source_file}" ]] || return 1
-  awk '
-    match($0, /RUBBER_DUCK_VERSION:[[:space:]]*(v[0-9]+\.[0-9]+\.[0-9]+)/, m) { print m[1]; found=1; exit 0 }
-    END { if (!found) exit 1 }
-  ' "${source_file}"
+# Read a plain VERSION file (content like "v3.0.0"), trimmed. Returns 1 if missing or malformed.
+read_plain_version() {
+  local f="$1"
+  [[ -f "${f}" ]] || return 1
+  local content
+  content="$(tr -d '[:space:]' < "${f}")"
+  [[ "${content}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || return 1
+  printf '%s' "${content}"
 }
 
 if [[ $# -gt 0 ]]; then
@@ -386,16 +418,8 @@ while [[ $# -gt 0 ]]; do
       SEEN_GLOBAL=1
       shift
       ;;
-    --claude-md)
-      CLAUDE_MD="${2:-}"
-      shift 2
-      ;;
     --skip-skills)
       SKIP_SKILLS=1
-      shift
-      ;;
-    --skip-agents-md)
-      SKIP_AGENTS_MD=1
       shift
       ;;
     --source)
@@ -503,27 +527,23 @@ HAS_CLAUDE=0
 for T in "${TARGETS[@]}"; do
   [[ "${T}" == "claude" ]] && HAS_CLAUDE=1
 done
-if [[ -n "${CLAUDE_MD}" && ${HAS_CLAUDE} -eq 0 ]]; then
-  err "--claude-md applies only when claude target is selected"
-  exit 1
-fi
 
-if (( PROJECT_SCOPE == 1 )); then
-  MANIFEST_PATH=".rubber-duck/manifest.json"
-else
-  MANIFEST_PATH="${HOME}/.config/rubber-duck/manifest.json"
-fi
+MANIFEST_PATH="$(manifest_path)"
+
+running_piped() {
+  [[ "${0:-}" == "bash" || "${0:-}" == "sh" || "${0:-}" == "-" ]]
+}
 
 if [[ "${ACTION}" == "sync" ]]; then
   if [[ ! -f "${MANIFEST_PATH}" ]]; then
     err "manifest missing: ${MANIFEST_PATH}. Run install first."
     exit 1
   fi
-  if [[ "${0:-}" == "bash" || "${0:-}" == "sh" || "${0:-}" == "-" ]]; then
+  if running_piped; then
     err "sync requires file-backed execution (not piped)"
     exit 1
   fi
-  check_rawbase_allowed "${RAW_BASE}" "${SOURCE_MODE}" || { err "rawBase not in allowlist: ${RAW_BASE}. Use --allow-untrusted-source to override."; exit 1; }
+  check_rawbase_allowed "${RAW_BASE}" "$(rawbase_check_mode)" || { err "rawBase not in allowlist: ${RAW_BASE}. Use --allow-untrusted-source to override."; exit 1; }
   manifest_load "${MANIFEST_PATH}"
   SYNC_TARGETS=()
   for T in "${MF_TARGET_NAMES[@]}"; do
@@ -563,13 +583,7 @@ if [[ "${ACTION}" == "sync" ]]; then
       IFS='|' read -r g_install_skills g_install_agents_md g_extras <<< "${group_key}"
       group_harness_csv="${SYNC_GROUP_TARGETS[$group_key]}"
 
-      CMD=(bash "${SCRIPT_PATH}" install --harness "${group_harness_csv}" --source "${SOURCE_MODE}" --branch "${BRANCH}" --raw-base "${RAW_BASE}")
-      if (( PROJECT_SCOPE == 1 )); then CMD+=(--project); else CMD+=(--global); fi
-      [[ "${g_install_skills}" == "false" ]] && CMD+=(--skip-skills)
-      [[ "${g_install_agents_md}" == "false" ]] && CMD+=(--skip-agents-md)
-      [[ "${g_extras}" == "true" ]] && CMD+=(--extras)
-      (( DRY_RUN == 1 )) && CMD+=(--dry-run)
-      (( ALLOW_UNTRUSTED_SOURCE == 1 )) && CMD+=(--allow-untrusted-source)
+      sync_replay_cmd install "${group_harness_csv}" "${g_install_skills}" "${g_install_agents_md}" "${g_extras}"
       "${CMD[@]}"
     done
   fi
@@ -577,12 +591,7 @@ if [[ "${ACTION}" == "sync" ]]; then
   if (( PRUNE == 1 )); then
     for T in opencode copilot claude; do
       if [[ -z "${SYNC_TARGET_SET[${T}]+x}" ]]; then
-        CMD=(bash "${SCRIPT_PATH}" uninstall --harness "${T}" --source "${SOURCE_MODE}" --branch "${BRANCH}" --raw-base "${RAW_BASE}")
-        if (( PROJECT_SCOPE == 1 )); then CMD+=(--project); else CMD+=(--global); fi
-        CMD+=(--skip-skills)
-        (( SKIP_AGENTS_MD == 1 )) && CMD+=(--skip-agents-md)
-        (( DRY_RUN == 1 )) && CMD+=(--dry-run)
-        (( ALLOW_UNTRUSTED_SOURCE == 1 )) && CMD+=(--allow-untrusted-source)
+        sync_replay_cmd uninstall "${T}"
         "${CMD[@]}"
       fi
     done
@@ -602,13 +611,11 @@ resolve_target() {
         DEST_POLICY_MD="${OPENCODE_AGENTS_MD}"
       fi
       POLICY_MODE="managed_block"
-      LOCAL_POLICY_FILE="${REPO_ROOT}/dist/AGENTS.md"
       if [[ -d "${REPO_ROOT}/dist/opencode/agents" ]]; then
         LOCAL_AGENTS_DIR="${REPO_ROOT}/dist/opencode/agents"
       else
         LOCAL_AGENTS_DIR="${REPO_ROOT}/agents"
       fi
-      REMOTE_POLICY_PATH="dist/AGENTS.md"
       REMOTE_AGENTS_PATH="dist/opencode/agents"
       ;;
     copilot)
@@ -620,30 +627,24 @@ resolve_target() {
         DEST_POLICY_MD="${COPILOT_AGENTS_MD}"
       fi
       POLICY_MODE="managed_block"
-      LOCAL_POLICY_FILE="${REPO_ROOT}/dist/AGENTS.md"
       if [[ -d "${REPO_ROOT}/dist/copilot/agents" ]]; then
         LOCAL_AGENTS_DIR="${REPO_ROOT}/dist/copilot/agents"
       else
         LOCAL_AGENTS_DIR="${REPO_ROOT}/agents"
       fi
-      REMOTE_POLICY_PATH="dist/AGENTS.md"
       REMOTE_AGENTS_PATH="dist/copilot/agents"
       ;;
     claude)
       if (( PROJECT_SCOPE == 1 )); then
         DEST_AGENTS_DIR="${CLAUDE_PROJECT_AGENTS_DIR}"
-        DEST_POLICY_MD="${CLAUDE_MD:-${CLAUDE_PROJECT_POLICY_MD}}"
+        DEST_POLICY_MD="${CLAUDE_PROJECT_POLICY_MD}"
       else
         DEST_AGENTS_DIR="${CLAUDE_AGENTS_DIR}"
-        DEST_POLICY_MD="${CLAUDE_MD:-${CLAUDE_POLICY_MD}}"
+        DEST_POLICY_MD="${CLAUDE_POLICY_MD}"
       fi
       DEST_CLAUDE_AGENTS_MD="$(dirname -- "${DEST_POLICY_MD}")/AGENTS.md"
       POLICY_MODE="file"
-      LOCAL_POLICY_FILE="${REPO_ROOT}/dist/claude/CLAUDE.md"
-      LOCAL_POLICY_AGENTS_FILE="${REPO_ROOT}/dist/AGENTS.md"
       LOCAL_AGENTS_DIR="${REPO_ROOT}/dist/claude/agents"
-      REMOTE_POLICY_PATH="dist/claude/CLAUDE.md"
-      REMOTE_POLICY_AGENTS_PATH="dist/AGENTS.md"
       REMOTE_AGENTS_PATH="dist/claude/agents"
       ;;
     *)
@@ -653,15 +654,7 @@ resolve_target() {
   esac
 }
 
-running_piped() {
-  [[ "${0:-}" == "bash" || "${0:-}" == "sh" || "${0:-}" == "-" ]]
-}
-
 has_local_sources() {
-  [[ -f "${LOCAL_POLICY_FILE}" ]] || return 1
-  if [[ "${POLICY_MODE}" == "file" ]]; then
-    [[ -f "${LOCAL_POLICY_AGENTS_FILE}" ]] || return 1
-  fi
   for f in "${AGENT_FILES[@]}"; do
     [[ -f "${LOCAL_AGENTS_DIR}/${f}" ]] || return 1
   done
@@ -703,34 +696,22 @@ prepare_sources() {
       err "local source selected but repo artifacts not found. Use --source web or run from repo checkout."
       exit 1
     fi
-    if [[ "${POLICY_MODE}" == "managed_block" ]]; then
-      cp -f "${LOCAL_POLICY_FILE}" "${TMP_DIR}/AGENTS.md"
-    else
-      cp -f "${LOCAL_POLICY_FILE}" "${TMP_DIR}/CLAUDE.md"
-      cp -f "${LOCAL_POLICY_AGENTS_FILE}" "${TMP_DIR}/AGENTS.md"
+    if v="$(read_plain_version "${REPO_ROOT}/VERSION" 2>/dev/null)"; then
+      CANONICAL_VERSION="${v}"
     fi
     for f in "${AGENT_FILES[@]}"; do
       cp -f "${LOCAL_AGENTS_DIR}/${f}" "${TMP_DIR}/${f}"
     done
-    if v="$(extract_version_from_file "${TMP_DIR}/AGENTS.md" 2>/dev/null)"; then
-      CANONICAL_VERSION="${v}"
-    fi
     return
   fi
 
   require_cmd curl
-  if [[ "${POLICY_MODE}" == "managed_block" ]]; then
-    curl -fsSL "${RAW_BASE}/${REMOTE_POLICY_PATH}" -o "${TMP_DIR}/AGENTS.md"
-  else
-    curl -fsSL "${RAW_BASE}/${REMOTE_POLICY_PATH}" -o "${TMP_DIR}/CLAUDE.md"
-    curl -fsSL "${RAW_BASE}/${REMOTE_POLICY_AGENTS_PATH}" -o "${TMP_DIR}/AGENTS.md"
+  if v="$(curl -fsSL "${RAW_BASE}/VERSION" 2>/dev/null)"; then
+    CANONICAL_VERSION="${v}"
   fi
   for f in "${AGENT_FILES[@]}"; do
     curl -fsSL "${RAW_BASE}/${REMOTE_AGENTS_PATH}/${f}" -o "${TMP_DIR}/${f}"
   done
-  if v="$(extract_version_from_file "${TMP_DIR}/AGENTS.md" 2>/dev/null)"; then
-    CANONICAL_VERSION="${v}"
-  fi
 }
 
 strip_managed_block_to_file() {
@@ -752,20 +733,6 @@ strip_managed_block() {
   local tmp
   tmp="$(mktemp)"
   strip_managed_block_to_file "${target}" "${tmp}"
-  mv "${tmp}" "${target}"
-}
-
-trim_trailing_blank_lines() {
-  local target="$1"
-  local tmp
-  tmp="$(mktemp)"
-  awk '
-    { lines[NR] = $0 }
-    $0 ~ /[^[:space:]]/ { last = NR }
-    END {
-      for (i = 1; i <= last; i++) print lines[i]
-    }
-  ' "${target}" > "${tmp}"
   mv "${tmp}" "${target}"
 }
 
@@ -796,65 +763,95 @@ backup_md() {
   log "Backup created: ${backup}"
 }
 
-upsert_managed_block() {
-  (( SKIP_AGENTS_MD == 1 )) && return 0
-  local target="${1:-${DEST_POLICY_MD}}"
-  local content_file="${2:-${TMP_DIR}/AGENTS.md}"
-  if (( DRY_RUN == 1 )); then
-    log "[dry-run] upsert managed block in ${target}"
-    return
-  fi
-  mkdir -p "$(dirname -- "${target}")"
-  touch "${target}"
-  strip_managed_block "${target}"
-  trim_trailing_blank_lines "${target}"
-  local tmp_out
-  tmp_out="$(mktemp)"
-  {
-    if [[ -s "${target}" ]]; then
-      cat "${target}"
-      printf '\n'
-    fi
-    printf '%s\n' "${MANAGED_START}"
-    cat "${content_file}"
-    printf '%s\n' "${MANAGED_END}"
-  } > "${tmp_out}"
-  mv "${tmp_out}" "${target}"
-}
-
 remove_managed_block() {
-  (( SKIP_AGENTS_MD == 1 )) && return 0
   local target="${1:-${DEST_POLICY_MD}}"
   if (( DRY_RUN == 1 )); then
     log "[dry-run] remove managed block from ${target}"
     return
   fi
   [[ -f "${target}" ]] || return 0
-  strip_managed_block "${target}"
-}
-
-install_policy_file() {
-  (( SKIP_AGENTS_MD == 1 )) && return 0
-  # Claude targets keep a two-file layout (CLAUDE.md -> @AGENTS.md include,
-  # AGENTS.md -> policy). Upsert managed blocks into both so user-authored
-  # content in either file is preserved instead of clobbered.
-  upsert_managed_block "${DEST_CLAUDE_AGENTS_MD}" "${TMP_DIR}/AGENTS.md"
-  upsert_managed_block "${DEST_POLICY_MD}" "${TMP_DIR}/CLAUDE.md"
-  if (( DRY_RUN == 0 )); then
-    log "Installed policy block -> ${DEST_POLICY_MD}"
-    log "Installed policy block -> ${DEST_CLAUDE_AGENTS_MD}"
+  if has_managed_block "${target}"; then
+    log "Removing managed block from ${target} (3.x migration)"
+    strip_managed_block "${target}"
   fi
 }
 
-remove_policy_file() {
-  (( SKIP_AGENTS_MD == 1 )) && return 0
-  # Strip only our managed blocks; user content in these files is left intact.
-  remove_managed_block "${DEST_POLICY_MD}"
-  remove_managed_block "${DEST_CLAUDE_AGENTS_MD}"
-  if (( DRY_RUN == 0 )); then
-    log "Removed policy block from ${DEST_POLICY_MD}"
-    log "Removed policy block from ${DEST_CLAUDE_AGENTS_MD}"
+# Handle legacy managed-block migration for the resolved target.
+# When notify=1 (install), emit a prominent notice before touching files.
+# Only backs up + strips files that actually contain the legacy block.
+strip_legacy_policy_blocks() {
+  local notify="${1:-0}"
+  local targets=( "${DEST_POLICY_MD}" )
+  if [[ "${POLICY_MODE}" != "managed_block" ]]; then
+    targets+=( "${DEST_CLAUDE_AGENTS_MD}" )
   fi
+  local any=0
+  local t
+  for t in "${targets[@]}"; do
+    has_managed_block "${t}" && any=1
+  done
+  if (( any == 0 )); then
+    return 0
+  fi
+  if (( notify == 1 )); then
+    log ""
+    log "!! Legacy managed policy block detected (3.x migration)"
+    log "   Policy now loads via the duck-policy skill; the block will be removed."
+    log "   A timestamped .bak file will be written next to each affected file."
+  fi
+  for t in "${targets[@]}"; do
+    if has_managed_block "${t}"; then
+      backup_md "${t}"
+      remove_managed_block "${t}"
+    fi
+  done
+}
+
+sync_wrapper_path() {
+  if (( PROJECT_SCOPE == 1 )); then
+    printf '.rubber-duck/sync-latest.sh'
+  else
+    printf '%s/.config/rubber-duck/sync-latest.sh' "${HOME}"
+  fi
+}
+
+install_sync_wrapper() {
+  local target scope_flag tmp src_tpl installer_url
+  target="$(sync_wrapper_path)"
+  scope_flag="--project"
+  (( PROJECT_SCOPE == 0 )) && scope_flag="--global"
+
+  if (( DRY_RUN == 1 )); then
+    log "[dry-run] write sync helper -> ${target}"
+    return 0
+  fi
+
+  mkdir -p "$(dirname -- "${target}")"
+  tmp="$(mktemp)"
+  if [[ "${EFFECTIVE_SOURCE}" == "local" ]]; then
+    installer_url="${SCRIPT_PATH}"
+  else
+    installer_url="${RAW_BASE}/scripts/rubber-duck.sh"
+  fi
+  if [[ "${EFFECTIVE_SOURCE}" == "local" ]]; then
+    src_tpl="${REPO_ROOT}/dist/scripts/sync-latest.sh"
+    [[ -f "${src_tpl}" ]] || { err "missing sync wrapper template: ${src_tpl}. Run make build-harness."; rm -f "${tmp}"; exit 1; }
+    cp -f "${src_tpl}" "${tmp}"
+  else
+    if ! curl -fsSL "${RAW_BASE}/${SYNC_WRAPPER_TEMPLATE_REMOTE}" -o "${tmp}"; then
+      err "missing sync wrapper template: ${RAW_BASE}/${SYNC_WRAPPER_TEMPLATE_REMOTE}. Run make build-harness."
+      rm -f "${tmp}"
+      exit 1
+    fi
+  fi
+  local content
+  content="$(<"${tmp}")"
+  content="${content//\{\{SYNC_SCOPE_FLAG\}\}/${scope_flag}}"
+  content="${content//\{\{SYNC_INSTALLER_URL\}\}/${installer_url}}"
+  printf '%s' "${content}" > "${tmp}"
+  chmod +x "${tmp}"
+  mv "${tmp}" "${target}"
+  log "Installed sync helper -> ${target}"
 }
 
 install_agents() {
@@ -990,30 +987,22 @@ has_managed_block() {
   grep -Fq "${MANAGED_START}" "${target}" && grep -Fq "${MANAGED_END}" "${target}"
 }
 
-report_policy_block() {
-  local target="$1" state="missing"
-  (( SKIP_AGENTS_MD == 1 )) && { log "AGENTS policy block (${target##*/}): skipped (--skip-agents-md)"; return 0; }
-  has_managed_block "${target}" && state="present"
-  log "AGENTS policy block (${target##*/}): ${state}"
-}
-
 status() {
-  if v="$(extract_version_from_file "${DEST_POLICY_MD}" 2>/dev/null)"; then
-    CANONICAL_VERSION="${v}"
-  fi
   log "agents_dir: ${DEST_AGENTS_DIR}"
-  log "policy_md: ${DEST_POLICY_MD}"
+  log "version: ${CANONICAL_VERSION}"
   local installed=0
   for f in "${AGENT_FILES[@]}"; do
     [[ -f "${DEST_AGENTS_DIR}/${f}" ]] && installed=$((installed + 1))
   done
   log "agents: ${installed}/${#AGENT_FILES[@]} present"
-  report_policy_block "${DEST_POLICY_MD}"
-  [[ "${POLICY_MODE}" == "file" ]] && report_policy_block "${DEST_CLAUDE_AGENTS_MD}"
   return 0
 }
 
 doctor() {
+  if [[ -z "${DEST_AGENTS_DIR:-}" || -z "${DEST_POLICY_MD:-}" || -z "${POLICY_MODE:-}" ]]; then
+    err "doctor: call resolve_target before doctor (unresolved target)"
+    exit 1
+  fi
   require_cmd awk
   require_cmd cp
   if [[ "${EFFECTIVE_SOURCE}" == "web" ]]; then require_cmd curl; fi
@@ -1038,7 +1027,7 @@ manifest_update_target() {
   local prior_version=""
   prior_version=$(read_prior_version "${MANIFEST_PATH}")
   warn_on_downgrade "${prior_version}" "${CANONICAL_VERSION}"
-  local template_path="${REPO_ROOT}/.rubber-duck/manifest.template.json"
+  local template_path="${REPO_ROOT}/${MANIFEST_TEMPLATE_PATH}"
   manifest_load "${MANIFEST_PATH}" "${template_path}"
   MF_SOURCE_MODE="${EFFECTIVE_SOURCE}"
   MF_SOURCE_REF="${BRANCH}"
@@ -1053,8 +1042,7 @@ manifest_update_target() {
     MF_TARGET_ENABLED["${target_name}"]="true"
     if (( PROJECT_SCOPE == 1 )); then MF_TARGET_SCOPE["${target_name}"]="project"
     else MF_TARGET_SCOPE["${target_name}"]="global"; fi
-    if (( SKIP_AGENTS_MD == 1 )); then MF_TARGET_INSTALL_AGENTS_MD["${target_name}"]="false"
-    else MF_TARGET_INSTALL_AGENTS_MD["${target_name}"]="true"; fi
+    MF_TARGET_INSTALL_AGENTS_MD["${target_name}"]="true"
     if (( SKIP_SKILLS == 1 )); then MF_TARGET_INSTALL_SKILLS["${target_name}"]="false"
     else MF_TARGET_INSTALL_SKILLS["${target_name}"]="true"; fi
     if (( EXTRAS == 1 )); then MF_TARGET_EXTRAS["${target_name}"]="true"
@@ -1089,7 +1077,7 @@ case "${EFFECTIVE_SOURCE}" in
     ;;
 esac
 
-check_rawbase_allowed "${RAW_BASE}" "${EFFECTIVE_SOURCE}" || { err "rawBase not in allowlist: ${RAW_BASE}. Use --allow-untrusted-source to override."; exit 1; }
+check_rawbase_allowed "${RAW_BASE}" "$(rawbase_check_mode)" || { err "rawBase not in allowlist: ${RAW_BASE}. Use --allow-untrusted-source to override."; exit 1; }
 
 # Pre-loop header (install/uninstall only)
 if [[ "${ACTION}" == "install" || "${ACTION}" == "uninstall" ]]; then
@@ -1133,41 +1121,24 @@ for TARGET in "${TARGETS[@]}"; do
       doctor
       prepare_sources
       install_agents
-      if (( SKIP_AGENTS_MD == 0 )); then
-        backup_md "${DEST_POLICY_MD}"
-        if [[ "${POLICY_MODE}" == "managed_block" ]]; then
-          upsert_managed_block
-        else
-          backup_md "${DEST_CLAUDE_AGENTS_MD}"
-          install_policy_file
-        fi
+      if (( SYNC_WRAPPER_WRITTEN == 0 )); then
+        install_sync_wrapper
+        SYNC_WRAPPER_WRITTEN=1
       fi
+      strip_legacy_policy_blocks 1
       status
       manifest_update_target "install" "${TARGET}"
       PIN_PAIRS=()
       for pin_f in "${AGENT_FILES[@]}"; do
-        pin_h=$(compute_sha256 "${TMP_DIR}/${pin_f}") && PIN_PAIRS+=("${REMOTE_AGENTS_PATH}/${pin_f}=${pin_h}")
+        pin_h=$(compute_sha256 "${TMP_DIR}/${pin_f}") && PIN_PAIRS+=("$(agent_remote_pin_key "${pin_f}")=${pin_h}")
       done
-      if (( SKIP_AGENTS_MD == 0 )); then
-        pin_policy="${TMP_DIR}/AGENTS.md"
-        [[ "${POLICY_MODE}" == "file" ]] && pin_policy="${TMP_DIR}/CLAUDE.md"
-        pin_h=$(compute_sha256 "${pin_policy}") && PIN_PAIRS+=("${REMOTE_POLICY_PATH}=${pin_h}")
-      fi
       write_pins "${MANIFEST_PATH}" "${PIN_PAIRS[@]}"
       ;;
     uninstall)
       doctor
       prepare_sources
       uninstall_agents
-      if (( SKIP_AGENTS_MD == 0 )); then
-        backup_md "${DEST_POLICY_MD}"
-        if [[ "${POLICY_MODE}" == "managed_block" ]]; then
-          remove_managed_block
-        else
-          backup_md "${DEST_CLAUDE_AGENTS_MD}"
-          remove_policy_file
-        fi
-      fi
+      strip_legacy_policy_blocks 0
       status
       manifest_update_target "uninstall" "${TARGET}"
       ;;
@@ -1188,4 +1159,11 @@ done
 if [[ "${ACTION}" == "install" || "${ACTION}" == "uninstall" ]]; then
   log ""
   log "🦆 quack"
+  if [[ "${ACTION}" == "install" ]]; then
+    if (( PROJECT_SCOPE == 1 )); then
+      log "To update: bash .rubber-duck/sync-latest.sh"
+    else
+      log "To update: bash ${HOME}/.config/rubber-duck/sync-latest.sh"
+    fi
+  fi
 fi

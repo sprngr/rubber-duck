@@ -7,13 +7,5 @@
     "lastAppliedVersion": "v0.0.0"
   },
   "pins": {},
-  "targets": {
-    "opencode": {
-      "enabled": true,
-      "scope": "project",
-      "installAgentsMd": true,
-      "installSkills": true,
-      "extras": false
-    }
-  }
+  "targets": {}
 }
