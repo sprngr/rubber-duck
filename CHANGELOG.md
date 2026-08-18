@@ -5,7 +5,7 @@ All notable changes to Rubber Duck will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [v3.0.0] - 2026-08-16
+## [v3.0.0] - 2026-08-17
 
 ### Added
 
@@ -27,7 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Sync replay functions deduplicated: bash `sync_replay_install_cmd` + `sync_replay_uninstall_cmd` merged into `sync_replay_cmd`; PowerShell `Get-SyncReplayInstallArgs` + `Get-SyncReplayUninstallArgs` merged into `Get-SyncReplayArgs`.
 - Manifest template path extracted to `MANIFEST_TEMPLATE_PATH` constant (bash installer).
 - Sync wrapper version check derives the `VERSION` URL from the installer URL (branch/custom raw-base aware) instead of hardcoding `main`.
-- Bash installer writes sync wrapper tokens with `sed` instead of `python3`, removing the python3 dependency from the install path.
+- Bash installer substitutes sync wrapper tokens via bash parameter expansion — no `sed` or `python3` dependency; portable across GNU and BSD sed environments (macOS).
+- Rubber-duck agent bootstrap prose trimmed: rule structure and enforcement teeth preserved; redundant meta-guidance dropped.
 - Approval-intent lexicon tightened: a bare option letter (e.g. `B`) with no approval verb is no longer treated as approval. Users must include an approval verb or option-referencing sentence (e.g. `approve`, `Proceed with option B in files X and Y`).
 
 ### Removed
@@ -47,6 +48,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Sync wrappers (bash + PowerShell): scope is embedded at install time. User-supplied `--project`/`--global` (bash) or `-Project`/`-Global` (PowerShell) now exits the wrapper with a clear error instead of being silently filtered. Re-run the installer to change scope.
 - Sync wrapper now forwards the derived `raw-base` on remote sync, so installs from custom raw-bases/branches replay against the correct source instead of defaulting to `main`.
 - Bash sync wrapper version comparison no longer crashes on pre-release version strings (e.g. `v2.3.0-beta`); incomparable versions report "Unable to compare... syncing anyway", matching PowerShell behavior.
+- Bash installer `VERSION` file reader now validates format (`^v\d+\.\d+\.\d+$`) matching PowerShell; malformed content no longer poisons manifest state or breaks sync-wrapper version compare.
+- Legacy managed policy block migration (3.x upgrade path): installer emits a prominent notice before removing the block and always writes a timestamped `.bak` backup preserving any user content that was inside the block. Fresh installs no longer create spurious `.bak` files when no legacy block exists.
+- Installer `doctor` fails fast with a clear message if called before target resolution (previously relied on caller order silently).
 
 ## [v2.1.4] - 2026-08-14
 
