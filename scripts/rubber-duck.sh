@@ -368,11 +368,14 @@ read_prior_version() {
   printf '%s' "${MF_SOURCE_LAST_APPLIED_VERSION}"
 }
 
-# Read a plain VERSION file (content like "v3.0.0"), trimmed. Returns 1 if missing.
+# Read a plain VERSION file (content like "v3.0.0"), trimmed. Returns 1 if missing or malformed.
 read_plain_version() {
   local f="$1"
   [[ -f "${f}" ]] || return 1
-  tr -d '[:space:]' < "${f}"
+  local content
+  content="$(tr -d '[:space:]' < "${f}")"
+  [[ "${content}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || return 1
+  printf '%s' "${content}"
 }
 
 if [[ $# -gt 0 ]]; then
@@ -773,14 +776,35 @@ remove_managed_block() {
   fi
 }
 
-remove_policy_file() {
-  # Strip only our managed blocks; user content in these files is left intact.
-  remove_managed_block "${DEST_POLICY_MD}"
-  remove_managed_block "${DEST_CLAUDE_AGENTS_MD}"
-  if (( DRY_RUN == 0 )); then
-    log "Removed policy block from ${DEST_POLICY_MD}"
-    log "Removed policy block from ${DEST_CLAUDE_AGENTS_MD}"
+# Handle legacy managed-block migration for the resolved target.
+# When notify=1 (install), emit a prominent notice before touching files.
+# Only backs up + strips files that actually contain the legacy block.
+strip_legacy_policy_blocks() {
+  local notify="${1:-0}"
+  local targets=( "${DEST_POLICY_MD}" )
+  if [[ "${POLICY_MODE}" != "managed_block" ]]; then
+    targets+=( "${DEST_CLAUDE_AGENTS_MD}" )
   fi
+  local any=0
+  local t
+  for t in "${targets[@]}"; do
+    has_managed_block "${t}" && any=1
+  done
+  if (( any == 0 )); then
+    return 0
+  fi
+  if (( notify == 1 )); then
+    log ""
+    log "!! Legacy managed policy block detected (3.x migration)"
+    log "   Policy now loads via the duck-policy skill; the block will be removed."
+    log "   A timestamped .bak file will be written next to each affected file."
+  fi
+  for t in "${targets[@]}"; do
+    if has_managed_block "${t}"; then
+      backup_md "${t}"
+      remove_managed_block "${t}"
+    fi
+  done
 }
 
 sync_wrapper_path() {
@@ -820,8 +844,11 @@ install_sync_wrapper() {
       exit 1
     fi
   fi
-  sed -i "s|{{SYNC_SCOPE_FLAG}}|${scope_flag}|g" "${tmp}"
-  sed -i "s|{{SYNC_INSTALLER_URL}}|${installer_url}|g" "${tmp}"
+  local content
+  content="$(<"${tmp}")"
+  content="${content//\{\{SYNC_SCOPE_FLAG\}\}/${scope_flag}}"
+  content="${content//\{\{SYNC_INSTALLER_URL\}\}/${installer_url}}"
+  printf '%s' "${content}" > "${tmp}"
   chmod +x "${tmp}"
   mv "${tmp}" "${target}"
   log "Installed sync helper -> ${target}"
@@ -972,6 +999,10 @@ status() {
 }
 
 doctor() {
+  if [[ -z "${DEST_AGENTS_DIR:-}" || -z "${DEST_POLICY_MD:-}" || -z "${POLICY_MODE:-}" ]]; then
+    err "doctor: call resolve_target before doctor (unresolved target)"
+    exit 1
+  fi
   require_cmd awk
   require_cmd cp
   if [[ "${EFFECTIVE_SOURCE}" == "web" ]]; then require_cmd curl; fi
@@ -1094,13 +1125,7 @@ for TARGET in "${TARGETS[@]}"; do
         install_sync_wrapper
         SYNC_WRAPPER_WRITTEN=1
       fi
-      backup_md "${DEST_POLICY_MD}"
-      if [[ "${POLICY_MODE}" == "managed_block" ]]; then
-        remove_managed_block
-      else
-        backup_md "${DEST_CLAUDE_AGENTS_MD}"
-        remove_policy_file
-      fi
+      strip_legacy_policy_blocks 1
       status
       manifest_update_target "install" "${TARGET}"
       PIN_PAIRS=()
@@ -1113,13 +1138,7 @@ for TARGET in "${TARGETS[@]}"; do
       doctor
       prepare_sources
       uninstall_agents
-      backup_md "${DEST_POLICY_MD}"
-      if [[ "${POLICY_MODE}" == "managed_block" ]]; then
-        remove_managed_block
-      else
-        backup_md "${DEST_CLAUDE_AGENTS_MD}"
-        remove_policy_file
-      fi
+      strip_legacy_policy_blocks 0
       status
       manifest_update_target "uninstall" "${TARGET}"
       ;;

@@ -9,7 +9,9 @@ $SyncScopeArg = "{{SYNC_SCOPE_ARG}}"
 
 $isRemote = $SyncInstallerUrl -match '^https?://'
 
-# Detect current PowerShell host for re-invocation
+# Detect current PowerShell host for re-invocation.
+# NOTE: Mirrored in scripts/rubber-duck.ps1 (sync replay path).
+# If you change one, update the other.
 $psHost = $null
 try { $psHost = (Get-Process -Id $PID).Path } catch { }
 if ([string]::IsNullOrWhiteSpace($psHost)) {
@@ -66,8 +68,14 @@ if (-not [string]::IsNullOrWhiteSpace($currentVersion) -and -not [string]::IsNul
   }
 }
 
-# Scope is embedded; raw-base derives from installer URL (user override wins).
-$forwardArgs = @($args | Where-Object { $_ -ne "-Project" -and $_ -ne "-Global" })
+# Reject user-supplied scope flags: wrapper is scope-locked at install time.
+foreach ($a in $args) {
+  if ($a -eq "-Project" -or $a -eq "-Global") {
+    Write-Error "sync-latest.ps1: cannot override scope; wrapper is scoped to $SyncScopeArg. Re-run installer with the desired scope to change."
+    exit 2
+  }
+}
+$forwardArgs = @($args)
 
 if ($isRemote) {
   if (-not ($args -contains "-RawBase")) { $forwardArgs += @("-RawBase", $remoteBase) }

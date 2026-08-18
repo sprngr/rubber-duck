@@ -145,10 +145,44 @@ test_sync_default_source() {
 test_sync_wrapper_content() {
   bash "$sh_installer" install --opencode --source local --skip-skills --project || return 1
   [[ -f .rubber-duck/sync-latest.sh ]] || return 1
-  grep -q '\-\-project' .rubber-duck/sync-latest.sh || return 1
+  grep -qE '^SYNC_SCOPE_FLAG="--project"$' .rubber-duck/sync-latest.sh || return 1
+  grep -qE '^SYNC_INSTALLER_URL=".+"$' .rubber-duck/sync-latest.sh || return 1
   grep -q '{{SYNC_SCOPE_FLAG}}' .rubber-duck/sync-latest.sh && return 1
   grep -q '{{SYNC_INSTALLER_URL}}' .rubber-duck/sync-latest.sh && return 1
   grep -q 'RUBBER_DUCK_VERSION:' .rubber-duck/sync-latest.sh || return 1
+}
+
+# Legacy managed block on upgrade: user content preserved in backup, block stripped.
+test_managed_block_migration_preserves_content() {
+  cat > AGENTS.md <<'EOF'
+Preamble line
+
+<!-- RUBBER_DUCK_MANAGED_BLOCK START -->
+USER CUSTOM MARKER
+<!-- RUBBER_DUCK_MANAGED_BLOCK END -->
+
+Trailer line
+EOF
+  local out
+  out=$(bash "$sh_installer" install --opencode --source local --skip-skills --project 2>&1) || return 1
+  echo "$out" | grep -q "Legacy managed policy block detected" || return 1
+  grep -q "RUBBER_DUCK_MANAGED_BLOCK" AGENTS.md && return 1
+  grep -q "USER CUSTOM MARKER" AGENTS.md && return 1
+  grep -q "Preamble line" AGENTS.md || return 1
+  grep -q "Trailer line" AGENTS.md || return 1
+  local bak
+  bak=$(ls AGENTS.md.bak.* 2>/dev/null | head -1)
+  [[ -n "$bak" ]] || return 1
+  grep -q "USER CUSTOM MARKER" "$bak" || return 1
+  return 0
+}
+
+# Fresh install (no prior AGENTS.md): no spurious backup files.
+test_fresh_install_no_spurious_backup() {
+  rm -f AGENTS.md AGENTS.md.bak.* CLAUDE.md CLAUDE.md.bak.*
+  bash "$sh_installer" install --opencode --source local --skip-skills --project || return 1
+  ls AGENTS.md.bak.* >/dev/null 2>&1 && return 1
+  return 0
 }
 
 # --- Test runner ---
@@ -161,6 +195,8 @@ run_test "dry-run no writes"                test_dry_run_no_writes
 run_test "dry-run multi-target layout"      test_dry_run_multi_target_layout
 run_test "sync default source"              test_sync_default_source
 run_test "sync wrapper content"             test_sync_wrapper_content
+run_test "managed block migration preserves content" test_managed_block_migration_preserves_content
+run_test "fresh install no spurious backup" test_fresh_install_no_spurious_backup
 
 # --- version_gt() unit tests (inline from sync-latest.sh.tmpl) ---
 version_gt() {

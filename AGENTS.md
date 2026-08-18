@@ -24,7 +24,7 @@ This repository contains source prompts, assembled skills, generated harness art
   - `src/install/scripts/` - sync wrapper templates
   - `src/install/templates/` - manifest template
 - `skills/` - built skill artifacts generated from `src/skills/*`
-- `dist/` - built harness artifacts generated from `src/agents/*` (including `dist/AGENTS.md`)
+- `dist/` - built harness artifacts generated from `src/agents/*`
   - `dist/scripts/` - generated sync wrapper scripts
   - `dist/templates/` - generated manifest template
 - `scripts/` - build, check, and installer scripts (`rubber-duck.sh`, `rubber-duck.ps1`)
@@ -82,8 +82,6 @@ This repository contains source prompts, assembled skills, generated harness art
 - Build flow:
   - skills: `src/skills/*` -> `skills/*`
   - harness artifacts: `src/agents/*` -> `dist/*`
-- Installer policy source:
-  - built policy file is `dist/AGENTS.md`
 - Managed policy block fences:
   - `<!-- RUBBER_DUCK_MANAGED_BLOCK START -->`
   - `<!-- RUBBER_DUCK_MANAGED_BLOCK END -->`
@@ -111,8 +109,8 @@ This repository contains source prompts, assembled skills, generated harness art
 ## Installer Invariants
 
 - Keep `scripts/rubber-duck.sh` and `scripts/rubber-duck.ps1` in feature parity.
-- Policy source for installers is built artifact: `dist/AGENTS.md`.
-- Managed block operations must be idempotent.
+- Policy loads via the `duck-policy` skill at agent session start.
+- Managed block operations (legacy migration) must be idempotent.
 - Local source mode must work from repo checkout.
 - Web source mode must work for remote install flows.
 
@@ -150,7 +148,7 @@ This repository contains source prompts, assembled skills, generated harness art
 - Stale generated artifacts:
   - `make build` then `make check`.
 - Installer source mismatch:
-  - Verify `dist/AGENTS.md` exists and is current.
-- `AGENTS.md` drift from `dist/AGENTS.md`:
-  - Run `.rubber-duck/sync-latest.sh`
+  - Verify `dist/` artifacts are current: `make build && make check`.
+- Legacy managed policy block detected on install:
+  - 3.x moves policy into the `duck-policy` skill; installer strips the block and writes a `.bak.<timestamp>` backup next to the target file.
 

@@ -47,6 +47,17 @@ if [[ -n "${CURRENT_VERSION}" && -n "${REMOTE_VERSION}" ]]; then
   fi
 fi
 
+# Reject user-supplied scope flags: wrapper is scope-locked at install time.
+for arg in "$@"; do
+  case "${arg}" in
+    --project|--global)
+      echo "sync-latest.sh: cannot override scope; wrapper is scoped to ${SYNC_SCOPE_FLAG}." >&2
+      echo "  Re-run installer with the desired scope to change." >&2
+      exit 2
+      ;;
+  esac
+done
+
 if (( IS_REMOTE )); then
   tmp_installer="$(mktemp)"
   cleanup() { rm -f "${tmp_installer}"; }

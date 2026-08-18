@@ -132,7 +132,8 @@ render_body_markdown() {
   return 0
 }
 
-render_sync_template() {
+# Plain copy of a template file. Token substitution happens at install time.
+copy_template() {
   local src="$1"
   local out="$2"
 
@@ -295,16 +296,16 @@ render_or_check_file "${CLAUDE_MD_TMP}" "${CLAUDE_MD_OUT}"
 
 # Build sync wrapper templates at dist/scripts.
 SYNC_SH_TMP="${TMP_DIR}/sync-latest.sh"
-render_sync_template "${SYNC_SH_TEMPLATE}" "${SYNC_SH_TMP}"
+copy_template "${SYNC_SH_TEMPLATE}" "${SYNC_SH_TMP}"
 render_or_check_file "${SYNC_SH_TMP}" "${DIST_SYNC_SH}"
 
 SYNC_PS1_TMP="${TMP_DIR}/sync-latest.ps1"
-render_sync_template "${SYNC_PS1_TEMPLATE}" "${SYNC_PS1_TMP}"
+copy_template "${SYNC_PS1_TEMPLATE}" "${SYNC_PS1_TMP}"
 render_or_check_file "${SYNC_PS1_TMP}" "${DIST_SYNC_PS1}"
 
 # Build manifest template at dist/templates.
 MANIFEST_TEMPLATE_TMP="${TMP_DIR}/manifest.template.json"
-render_sync_template "${MANIFEST_TEMPLATE_SRC}" "${MANIFEST_TEMPLATE_TMP}"
+copy_template "${MANIFEST_TEMPLATE_SRC}" "${MANIFEST_TEMPLATE_TMP}"
 render_or_check_file "${MANIFEST_TEMPLATE_TMP}" "${MANIFEST_TEMPLATE_DIST}"
 
 # Render each agent for every harness: harness frontmatter + shared body.

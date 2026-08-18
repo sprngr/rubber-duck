@@ -76,14 +76,27 @@ function Get-ManifestPath {
   return (Join-Path $HOME ".config/rubber-duck/manifest.json")
 }
 
-# Build base args for sync replay. Unlike the bash sync_replay_cmd, this does
-# NOT append install-specific flags (SkipSkills, Extras).
-# The caller adds those per context. This divergence from bash sync_replay_cmd
-# is intentional: PowerShell parameter binding is explicit, not positional.
-function Get-SyncReplayArgs([string]$Action, [string]$HarnessCsv) {
-  $args = @("-File", (Get-SyncScriptPath), "-Action", $Action, "-Harness", $HarnessCsv, "-Source", $Source, "-Branch", $Branch, "-RawBase", $RawBase)
-  if ($Project) { $args += "-Project" } else { $args += "-Global" }
-  return $args
+# Build full sync-replay args. Mirrors bash sync_replay_cmd shape:
+# helper appends install-specific flags, dry-run, and allow-untrusted so
+# call sites reduce to a single invocation.
+function Get-SyncReplayArgs {
+  param(
+    [string]$Action,
+    [string]$HarnessCsv,
+    [switch]$SkipSkills,
+    [switch]$Extras
+  )
+  $syncArgs = @("-File", (Get-SyncScriptPath), "-Action", $Action, "-Harness", $HarnessCsv, "-Source", $Source, "-Branch", $Branch, "-RawBase", $RawBase)
+  if ($Project) { $syncArgs += "-Project" } else { $syncArgs += "-Global" }
+  if ($Action -eq "install") {
+    if ($SkipSkills) { $syncArgs += "-SkipSkills" }
+    if ($Extras) { $syncArgs += "-Extras" }
+  } else {
+    $syncArgs += "-SkipSkills"
+  }
+  if ($DryRun) { $syncArgs += "-DryRun" }
+  if ($AllowUntrustedSource) { $syncArgs += "-AllowUntrustedSource" }
+  return $syncArgs
 }
 
 function Get-SyncScriptPath {
@@ -268,7 +281,9 @@ function rubber-duck {
       $syncGroups[$groupKey].Add($t)
     }
 
-    # Detect current PowerShell host for sync replay re-invocation
+    # Detect current PowerShell host for sync replay re-invocation.
+    # NOTE: Mirrored in src/install/scripts/sync-latest.ps1.tmpl.
+    # If you change one, update the other.
     $psExe = $null
     try { $psExe = (Get-Process -Id $PID).Path } catch { }
     if ([string]::IsNullOrWhiteSpace($psExe)) {
@@ -283,11 +298,7 @@ function rubber-duck {
       $gExtras = [bool]::Parse($parts[2])
       $groupHarness = ($syncGroups[$groupKey] -join ",")
 
-      $syncArgs = Get-SyncReplayArgs "install" $groupHarness
-      if (-not $gInstallSkills) { $syncArgs += "-SkipSkills" }
-      if ($gExtras) { $syncArgs += "-Extras" }
-      if ($DryRun) { $syncArgs += "-DryRun" }
-      if ($AllowUntrustedSource) { $syncArgs += "-AllowUntrustedSource" }
+      $syncArgs = Get-SyncReplayArgs "install" $groupHarness -SkipSkills:(-not $gInstallSkills) -Extras:$gExtras
       & $psExe @syncArgs
       if ($LASTEXITCODE -ne 0) { throw "sync install failed for harness group: $groupHarness" }
     }
@@ -295,9 +306,6 @@ function rubber-duck {
       foreach ($t in @("opencode","copilot","claude")) {
         if (-not $syncTargetSet.ContainsKey($t)) {
           $syncArgs = Get-SyncReplayArgs "uninstall" $t
-          $syncArgs += "-SkipSkills"
-          if ($DryRun) { $syncArgs += "-DryRun" }
-          if ($AllowUntrustedSource) { $syncArgs += "-AllowUntrustedSource" }
           & $psExe @syncArgs
           if ($LASTEXITCODE -ne 0) { throw "sync prune uninstall failed for target: $t" }
         }
@@ -555,6 +563,12 @@ function Backup-Md([string]$Target) {
   Log "Backup created: $backup"
 }
 
+function Test-ManagedBlock([string]$Target) {
+  if (-not (Test-Path $Target)) { return $false }
+  $current = Get-Content -Raw $Target
+  return ($current -match [regex]::Escape($ManagedStart)) -and ($current -match [regex]::Escape($ManagedEnd))
+}
+
 function Remove-ManagedBlock([string]$Target) {
   if ($DryRun) { Log "[dry-run] remove managed block from $Target"; return }
   if (-not (Test-Path $Target)) { return }
@@ -566,12 +580,32 @@ function Remove-ManagedBlock([string]$Target) {
   }
 }
 
-function Remove-PolicyFile {
-  # Strip only our managed blocks; user content in these files is left intact.
-  Remove-ManagedBlock $DestPolicyMd
-  Remove-ManagedBlock $DestClaudeAgentsMd
-  Log "Removed policy block from $DestPolicyMd"
-  Log "Removed policy block from $DestClaudeAgentsMd"
+# Handle legacy managed-block migration for the resolved target.
+# When -Notify (install), emit a prominent notice before touching files.
+# Only backs up + strips files that actually contain the legacy block.
+function Strip-LegacyPolicyBlocks {
+  param([switch]$Notify)
+  $targets = @($DestPolicyMd)
+  if ($PolicyMode -ne "managed_block") {
+    $targets += $DestClaudeAgentsMd
+  }
+  $any = $false
+  foreach ($t in $targets) {
+    if (Test-ManagedBlock $t) { $any = $true }
+  }
+  if (-not $any) { return }
+  if ($Notify) {
+    Log ""
+    Log "!! Legacy managed policy block detected (3.x migration)"
+    Log "   Policy now loads via the duck-policy skill; the block will be removed."
+    Log "   A timestamped .bak file will be written next to each affected file."
+  }
+  foreach ($t in $targets) {
+    if (Test-ManagedBlock $t) {
+      Backup-Md $t
+      Remove-ManagedBlock $t
+    }
+  }
 }
 
 function Get-SyncWrapperPath {
@@ -772,6 +806,9 @@ function Status {
 }
 
 function Doctor {
+  if ([string]::IsNullOrWhiteSpace($DestAgentsDir) -or [string]::IsNullOrWhiteSpace($DestPolicyMd) -or [string]::IsNullOrWhiteSpace($PolicyMode)) {
+    throw "Doctor: call Resolve-Target before Doctor (unresolved target)"
+  }
   Ensure-Dir $DestAgentsDir "agents dir"
   Ensure-Dir (Split-Path -Parent $DestPolicyMd) "policy parent"
   if ($PolicyMode -eq "file") {
@@ -893,13 +930,7 @@ try {
           Install-SyncWrapper
           $script:SyncWrapperWritten = $true
         }
-        Backup-Md $DestPolicyMd
-        if ($PolicyMode -eq "managed_block") {
-          Remove-ManagedBlock $DestPolicyMd
-        } else {
-          Backup-Md $DestClaudeAgentsMd
-          Remove-PolicyFile
-        }
+        Strip-LegacyPolicyBlocks -Notify
         Status
         Update-ManifestTarget "install" $script:Target
         $pinManifestPath = Get-ManifestPath
@@ -914,13 +945,7 @@ try {
         Doctor
         Download-Sources
         Uninstall-Agents
-        Backup-Md $DestPolicyMd
-        if ($PolicyMode -eq "managed_block") {
-          Remove-ManagedBlock $DestPolicyMd
-        } else {
-          Backup-Md $DestClaudeAgentsMd
-            Remove-PolicyFile
-          }
+        Strip-LegacyPolicyBlocks
         Status
         Update-ManifestTarget "uninstall" $script:Target
       }

@@ -161,10 +161,47 @@ function Test-SyncWrapperContent {
   $wrapper = ".rubber-duck/sync-latest.ps1"
   if (-not (Test-Path $wrapper)) { throw "sync wrapper missing" }
   $content = Get-Content -Raw $wrapper
-  if (-not $content.Contains("-Project")) { throw "scope flag not substituted" }
+  if ($content -notmatch '(?m)^\$SyncScopeArg\s*=\s*"-Project"$') { throw "scope arg not substituted" }
+  if ($content -notmatch '(?m)^\$SyncInstallerUrl\s*=\s*".+"$') { throw "installer URL not substituted" }
   if ($content.Contains("{{SYNC_SCOPE_ARG}}")) { throw "scope token not replaced" }
   if ($content.Contains("{{SYNC_INSTALLER_URL}}")) { throw "URL token not replaced" }
   if (-not $content.Contains("RUBBER_DUCK_VERSION:")) { throw "version marker missing" }
+}
+
+# Legacy managed block on upgrade: user content preserved in backup, block stripped.
+function Test-ManagedBlockMigrationPreservesContent {
+  $agents = @(
+    "Preamble line",
+    "",
+    "<!-- RUBBER_DUCK_MANAGED_BLOCK START -->",
+    "USER CUSTOM MARKER",
+    "<!-- RUBBER_DUCK_MANAGED_BLOCK END -->",
+    "",
+    "Trailer line"
+  ) -join "`n"
+  Set-Content -Path "AGENTS.md" -Value $agents -NoNewline
+  $out = & pwsh -NoProfile -File $script:PsInstaller -Action install -Harness opencode -Source local -SkipSkills -Project 2>&1 | Out-String
+  if ($LASTEXITCODE -ne 0) { throw "install failed" }
+  if ($out -notmatch "Legacy managed policy block detected") { throw "migration notice missing" }
+  $now = Get-Content -Raw "AGENTS.md"
+  if ($now -match "RUBBER_DUCK_MANAGED_BLOCK") { throw "managed block not stripped" }
+  if ($now -match "USER CUSTOM MARKER") { throw "user content not stripped from AGENTS.md" }
+  if ($now -notmatch "Preamble line") { throw "preamble lost" }
+  if ($now -notmatch "Trailer line") { throw "trailer lost" }
+  $bak = Get-ChildItem -Path "AGENTS.md.bak.*" -ErrorAction SilentlyContinue | Select-Object -First 1
+  if (-not $bak) { throw "backup file missing" }
+  $bakContent = Get-Content -Raw $bak.FullName
+  if ($bakContent -notmatch "USER CUSTOM MARKER") { throw "backup does not preserve user content" }
+}
+
+# Fresh install (no prior AGENTS.md): no spurious backup files.
+function Test-FreshInstallNoSpuriousBackup {
+  Remove-Item -Force -ErrorAction SilentlyContinue "AGENTS.md","CLAUDE.md"
+  Remove-Item -Force -ErrorAction SilentlyContinue "AGENTS.md.bak.*","CLAUDE.md.bak.*"
+  & pwsh -NoProfile -File $script:PsInstaller -Action install -Harness opencode -Source local -SkipSkills -Project | Out-Null
+  if ($LASTEXITCODE -ne 0) { throw "install failed" }
+  $baks = Get-ChildItem -Path "AGENTS.md.bak.*" -ErrorAction SilentlyContinue
+  if ($baks) { throw "spurious backup created on fresh install" }
 }
 
 # --- Test runner ---
@@ -178,6 +215,8 @@ Run-Test "dry-run multi-target layout"      { Test-DryRunMultiTargetLayout}
 Run-Test "sync default source"              { Test-SyncDefaultSource      }
 Run-Test "winps manifest structure"         { Test-WinPsManifestStructure }
 Run-Test "sync wrapper content"             { Test-SyncWrapperContent     }
+Run-Test "managed block migration preserves content" { Test-ManagedBlockMigrationPreservesContent }
+Run-Test "fresh install no spurious backup" { Test-FreshInstallNoSpuriousBackup }
 
 function Test-SyncWrapperPsHostDetection {
   & pwsh -NoProfile -File $script:PsInstaller -Action install -Harness opencode -Source local -SkipSkills -Project | Out-Null
