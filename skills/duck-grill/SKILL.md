@@ -8,7 +8,7 @@ license: MIT
 metadata:
   author: sprngr
   version: v2.1.0
-  RUBBER_DUCK_VERSION: v3.0.0
+  RUBBER_DUCK_VERSION: v3.1.0
 ---
 
 Grilling interview 🦆. Batch up to 3 questions per turn. Challenge assumptions. Ground in evidence.

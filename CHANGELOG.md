@@ -5,6 +5,34 @@ All notable changes to Rubber Duck will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v3.1.0] - 2026-08-19
+
+### Added
+
+- Session-start hook (opt-in `--session-hook` / `-SessionHook`): deterministically
+  causes the `rubber-duck` agent to load the `duck-policy` skill at session start.
+  - OpenCode: plugin installed to `.opencode/plugins/session-start.js` registers
+    rubber-duck sessions and injects the startup directive into the system prompt
+    on every model call (`experimental.chat.system.transform`).
+  - Claude Code: scripts installed to `.claude/hooks/` and a `SessionStart` hook
+    merged into `.claude/settings.local.json` (idempotent). Fires only when the
+    rubber-duck agent is active, detected via hook input `agent_type`.
+  - Build emits hook artifacts to `dist/opencode/hooks/` and `dist/claude/hooks/`.
+  - Installer (bash + PowerShell parity): install/uninstall of hook artifacts,
+    manifest pins, and per-target `sessionHook` tracking replayed on `sync`.
+  - The rubber-duck agent body keeps its Enforcement Bootstrap mandate as a
+    fallback when the hook is not installed.
+  - Copilot support pending (deferred; see plan doc).
+
+### Changed
+
+- OpenCode plugin uses system-level directive injection (system prompt) instead of
+  user-message injection, so the model treats the directive as an instruction
+  rather than a suggestion.
+- Sync replay fixes a latent off-by-one where extras were matched against the
+  install-agents-md flag; extras and the new session-hook flag now map to the
+  correct positional arguments.
+
 ## [v3.0.0] - 2026-08-17
 
 ### Added
