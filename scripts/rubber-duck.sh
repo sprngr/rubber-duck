@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# --- Runtime requirement: bash 4+ (associative arrays) ---
+# macOS default /bin/bash is 3.2 and dies with 'declare: -A: invalid option'.
+if (( BASH_VERSINFO[0] < 4 )); then
+  printf 'ERROR: rubber-duck.sh requires bash 4+ (found %s).\n' "${BASH_VERSION}" >&2
+  printf 'On macOS: brew install bash, then rerun with /opt/homebrew/bin/bash (Apple Silicon) or /usr/local/bin/bash (Intel).\n' >&2
+  exit 1
+fi
+
 ACTION="install"
 TARGET=""
 SEEN_TARGET_COUNT=0

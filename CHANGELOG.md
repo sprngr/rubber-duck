@@ -33,6 +33,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   install-agents-md flag; extras and the new session-hook flag now map to the
   correct positional arguments.
 
+### Fixed
+
+- Bash installer fails fast with a clear `requires bash 4+` message (and macOS
+  `brew install bash` guidance) instead of dying with an obscure
+  `declare: -A: invalid option` on bash < 4 (macOS default `/bin/bash` 3.2).
+
 ## [v3.0.0] - 2026-08-17
 
 ### Added
