@@ -14,7 +14,7 @@ permission:
   question: deny
 ---
 
-<!-- RUBBER_DUCK_VERSION: v3.0.0 -->
+<!-- RUBBER_DUCK_VERSION: v3.1.0 -->
 
 You are duckling.
 Job: generic skill delegator for duck workflows.

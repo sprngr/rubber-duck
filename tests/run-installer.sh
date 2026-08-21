@@ -185,6 +185,27 @@ test_fresh_install_no_spurious_backup() {
   return 0
 }
 
+# bash < 4 (macOS default /bin/bash 3.2) fails fast with a clear message,
+# not 'declare: -A: invalid option'. Skips when no bash 3 is installed.
+test_version_guard_rejects_bash3() {
+  local old_bash=""
+  for b in /bin/bash /usr/bin/bash; do
+    if [[ -x "$b" ]] && [[ "$("$b" -c 'printf %s "${BASH_VERSINFO[0]}"')" == "3" ]]; then
+      old_bash="$b"
+      break
+    fi
+  done
+  [[ -n "$old_bash" ]] || return 0  # no bash 3 available: skip
+  if "$old_bash" "$sh_installer" --help >/dev/null 2>&1; then
+    return 1  # guard missing: bash 3 ran the script
+  fi
+  local out
+  out=$("$old_bash" "$sh_installer" --help 2>&1 || true)
+  echo "$out" | grep -q "requires bash 4+" || return 1
+  echo "$out" | grep -q "declare: -A" && return 1
+  return 0
+}
+
 # --- Test runner ---
 run_test "fresh install writes pins"        test_fresh_install_writes_pins
 run_test "reinstall verifies pins silently" test_reinstall_pins_verify
@@ -197,6 +218,7 @@ run_test "sync default source"              test_sync_default_source
 run_test "sync wrapper content"             test_sync_wrapper_content
 run_test "managed block migration preserves content" test_managed_block_migration_preserves_content
 run_test "fresh install no spurious backup" test_fresh_install_no_spurious_backup
+run_test "bash3 version guard"              test_version_guard_rejects_bash3
 
 # --- version_gt() unit tests (inline from sync-latest.sh.tmpl) ---
 version_gt() {
