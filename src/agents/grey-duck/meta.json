@@ -1,0 +1,25 @@
+{
+  "name": "grey-duck",
+  "description": "Grey duck research-synthesis partner for non-coding purposes. Sibling of rubber-duck reusing the same duck-policy enforcement core.",
+  "harnesses": {
+    "claude": {
+      "tools": "Read, Glob, Grep, Edit, Write, Bash, Agent, Skill, AskUserQuestion",
+      "initialPrompt": true,
+      "color": "grey"
+    },
+    "opencode": {
+      "name": "🪿",
+      "mode": "all",
+      "permission": {
+        "read": "allow",
+        "edit": "allow",
+        "task": "allow",
+        "skill": "allow",
+        "lsp": "allow",
+        "question": "allow",
+        "doom_loop": "allow"
+      },
+      "color": "#9E9E9E"
+    }
+  }
+}
