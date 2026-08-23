@@ -61,7 +61,7 @@ agent_remote_pin_key() {
   printf '%s/%s' "${REMOTE_AGENTS_PATH}" "${dest_file}"
 }
 
-# Default skills: the set declared in .claude-plugin/plugin.json.
+# Default skills: the 12-skill default set (registry: build/skill-assembly.rules.json).
 DEFAULT_SKILLS=(
   "duck-debt"
   "duck-debug"
@@ -82,6 +82,7 @@ EXTRAS_SKILLS=(
   "duck-adapt"
   "duck-grill"
   "duck-tape"
+  "duck-tidy"
 )
 
 usage() {
@@ -102,7 +103,7 @@ Options:
   --raw-base <url>                  Raw GitHub base for web source
   --prune                           With sync: remove managed targets not in manifest
   --dry-run                         Print planned actions only
-  --extras                          Also install extras skills (duck-adapt, duck-grill, duck-tape)
+  --extras                          Also install extras skills (duck-adapt, duck-grill, duck-tape, duck-tidy)
   --allow-untrusted-source          Skip rawBase allowlist check (dangerous; forks/custom mirrors)
   -h, --help                        Show help
 

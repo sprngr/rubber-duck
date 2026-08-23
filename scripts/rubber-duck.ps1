@@ -393,7 +393,8 @@ $DefaultSkills = @(
 $ExtrasSkills = @(
   "duck-adapt",
   "duck-grill",
-  "duck-tape"
+  "duck-tape",
+  "duck-tidy"
 )
 
 # Ensure directory exists; in dry-run mode warn without creating.

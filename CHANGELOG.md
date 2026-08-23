@@ -5,6 +5,12 @@ All notable changes to Rubber Duck will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- `duck-tidy` extras skill (stub): audit-first cleanup for stale/outdated comments and non-CONTEXT docs. Installed with `--extras` / `-Extras`. Evidence rules: contradicts current code, describes removed behavior, worktree-only add/remove never merged. Carve-outs: TODO markers (duck-debt), ADR/design notes flag-only, CONTEXT.md/.duck-tape (duck-tape). Method bodies pending.
+
 ## [v3.0.0] - 2026-08-17
 
 ### Added

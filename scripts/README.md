@@ -86,7 +86,7 @@ Opt out of default install steps or adjust source to fit your workflow. All opti
 | `--prune` | `-Prune` | With `sync`: remove managed targets not enabled in manifest |
 | `--source <auto\|local\|web>` | `-Source auto\|local\|web` | Pick artifact + skills source (`auto` default) |
 | `--branch <name>` | `-Branch <name>` | Install from non-`main` branch |
-| `--extras` | `-Extras` | Also install extras skills (duck-adapt, duck-grill, duck-tape) |
+| `--extras` | `-Extras` | Also install extras skills (duck-adapt, duck-grill, duck-tape, duck-tidy) |
 | `--allow-untrusted-source` | `-AllowUntrustedSource` | Skip `rawBase` allowlist check (dangerous; forks/mirrors) |
 
 ## Bash CLI (`scripts/rubber-duck.sh`)
@@ -107,7 +107,7 @@ Use Bash CLI for Linux/macOS and shell-based CI.
 | `--raw-base <url>` | value | Raw GitHub base URL for web source |
 | `--prune` | switch | With `sync`, uninstall managed targets not enabled in manifest |
 | `--dry-run` | switch | Print planned actions without writing |
-| `--extras` | switch | Also install extras skills (duck-adapt, duck-grill, duck-tape) |
+| `--extras` | switch | Also install extras skills (duck-adapt, duck-grill, duck-tape, duck-tidy) |
 | `--allow-untrusted-source` | switch | Skip `rawBase` allowlist check (dangerous; forks/custom mirrors) |
 | `-h`, `--help` | switch | Show help |
 
@@ -130,7 +130,7 @@ Use PowerShell CLI for Windows-native environments.
 | `-RawBase <url>` | value | Raw GitHub base URL for web source |
 | `-Prune` | switch | With `sync`, uninstall managed targets not enabled in manifest |
 | `-DryRun` | switch | Print planned actions without writing |
-| `-Extras` | switch | Also install extras skills (duck-adapt, duck-grill, duck-tape) |
+| `-Extras` | switch | Also install extras skills (duck-adapt, duck-grill, duck-tape, duck-tidy) |
 | `-AllowUntrustedSource` | switch | Skip `rawBase` allowlist check (dangerous; forks/custom mirrors) |
 
 ## Installation Behavior
@@ -175,11 +175,11 @@ Use PowerShell CLI for Windows-native environments.
 
 ### Skills Sets
 
-Default skills (12) match `.claude-plugin/plugin.json`: quack, duck-policy, duck-debt, duck-debug, duck-design, duck-patch, duck-refactor, duck-review, duck-risk, duck-simplify, duck-teach, duck-triage.
+Default skills (12) match `build/skill-assembly.rules.json`: quack, duck-policy, duck-debt, duck-debug, duck-design, duck-patch, duck-refactor, duck-review, duck-risk, duck-simplify, duck-teach, duck-triage.
 
-Extras skills (3): duck-adapt, duck-grill, duck-tape. Installed only with `--extras` (bash) / `-Extras` (PowerShell). Optional by default.
+Extras skills (4): duck-adapt, duck-grill, duck-tape, duck-tidy. Installed only with `--extras` (bash) / `-Extras` (PowerShell). Optional by default.
 
-`uninstall` removes all 15 skills (default + extras) regardless of flag so no orphan skills remain. `status` reports extras separately as optional (present/missing count).
+`uninstall` removes all 16 skills (default + extras) regardless of flag so no orphan skills remain. `status` reports extras separately as optional (present/missing count).
 
 Skills install scope: each install/uninstall run passes `-a <agent>` for every selected harness (`opencode`, `github-copilot`, `claude-code`), so skills only land in the harnesses you asked for. Multi-target invocations collapse to a single `npx skills` call.
 
