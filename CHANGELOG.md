@@ -11,10 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Reviewable-unit decomposition: multi-PR plans must decompose into reviewable units (independent merge, working state after each, explicit ordering + acceptance criteria). Methodology in `src/shared/skill-snippets/reviewable-units.md`; duck-design writes plans as PR sequences; duck-policy Checkpoint 1 gates on decomposition.
 - Validation fixture `validation/fixtures/context-loading/src/cache.ts` anchors deferred-debt marker tests to real code.
+- Plan decomposition verification spec: `docs/architecture/08-plan-decomposition-verification.md` defines the trigger predicate (explicit multi-PR OR agent-detected size/breadth), gate requirements, and verification acceptance criteria (positive, detection, negative, per-unit content).
 
 ### Changed
 
-- Validation suite: 54 tests (V01-V54). V54 covers the Checkpoint 1 plan-decomposition gate. V25/V26/V38/V54 signals calibrated to observed vocabulary.
+- Validation suite: 58 tests (V01-V58). V54 covers the Checkpoint 1 plan-decomposition gate; V55 positive trigger, V56 negative non-trigger, V57 per-unit acceptance content, V58 implicit detection trigger extend decomposition coverage via the `rollout` fixture. V25/V26/V38/V54 signals calibrated to observed vocabulary.
+- Validation runner now overlays built `skills/` onto `.agents/skills/` in test workspaces, so tests exercise current policy instead of the last installer-synced copy. Resolves false V58 failure caused by stale installed skills.
 - `docs/architecture/03-adaptive-socratic-policy.md` Checkpoint 1 documents plan decomposition requirement.
 
 ### Known regression

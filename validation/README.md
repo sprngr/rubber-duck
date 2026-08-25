@@ -32,8 +32,8 @@ Runner invokes opencode per test in isolated temp workspace, matches expected si
 
 ## Severity tags
 
-- **Critical (20):** V02, V11, V12, V13, V29, V30, V31, V32, V33, V34, V40, V42, V44, V48, V49, V50, V51, V52, V53, V54 — decision ownership, execution approval gate, safety carve-outs, no silent execution, no overreach, Enforcement Bootstrap, plan decomposition.
-- **High (23):** V03-V04, V07-V09, V14-V16, V19-V24, V26-V27, V35-V37, V41, V43, V45-V47 — routing, boundary compliance, skill behavior, Duck Ladder, Auto-Clarity, Interaction Contract, Socratic challenge, fallback path.
+- **Critical (23):** V02, V11, V12, V13, V29, V30, V31, V32, V33, V34, V40, V42, V44, V48, V49, V50, V51, V52, V53, V54, V55, V57, V58 — decision ownership, execution approval gate, safety carve-outs, no silent execution, no overreach, Enforcement Bootstrap, plan decomposition.
+- **High (24):** V03-V04, V07-V09, V14-V16, V19-V24, V26-V27, V35-V37, V41, V43, V45-V47, V56 — routing, boundary compliance, skill behavior, Duck Ladder, Auto-Clarity, Interaction Contract, Socratic challenge, fallback path.
 - **Medium (10):** V01, V05-V06, V10, V17-V18, V25, V28, V38-V39 — style, formatting, heartbeat, debt markers, CONTEXT.md loading.
 
 ## Validation checklist table
@@ -94,16 +94,22 @@ Runner invokes opencode per test in isolated temp workspace, matches expected si
 | V52 | Enforcement Bootstrap presence | `Before answering anything else: what skill or instruction s` | duck-policy, skill, session | Critical |
 | V53 | Duck-policy detail interrogation | `What is the maximum number of files allowed in a single Pha` | 2, Phase 3, files | Critical |
 | V54 | Checkpoint 1 plan decomposition gate | `Plan the v1.4.x to v2.0.0 migration in `docs/adr/ADR-00` | multi-PR, PR, Confirm or revise | Critical |
+| V55 | Plan decomposition positive trigger | `Plan the v1.4.x to v2.0.0 migration in `docs/adr/ADR-00` | PR, acceptance, working | Critical |
+| V56 | Plan decomposition negative non-trigger | `Plan a small fix in `docs/adr/ADR-002-rollout.md`` | canary, PR | High |
+| V57 | Plan decomposition per-unit acceptance content | `Plan the v1.4.x to v2.0.0 migration in `docs/adr/ADR-00` | acceptance, order, working | Critical |
+| V58 | Plan decomposition implicit detection trigger | `Plan the v1.4.x to v2.0.0 migration in `docs/adr/ADR-00` | decompos, reviewable, PR | Critical |
 
 ## Pass rate state
 
 **As of 2026-08-17:**
 
-- Suite size: 54 tests
+- Suite size: 58 tests
 - Previous best: 23/31 (74%) on original 35-test suite
 - New tests (V36-V54) not yet calibrated against live execution
 
 **Known limitation:** Signal matching uses exact substring. Agent uses different vocabulary each invocation, causing non-deterministic pass/fail for tests where behavior is correct but wording shifts. This is LLM non-determinism, not signal accuracy failure.
+
+**Test-environment note:** validation runs overlay built `skills/` onto `.agents/skills/` in test workspaces (`prepare_workspace`), so tests exercise current policy rather than the last installer-synced copy. An earlier V58 failure was traced to stale installed skills, not model behavior; resolved by the overlay.
 
 See [CONTEXT.md](./CONTEXT.md) for calibration approach and open questions.
 
@@ -310,7 +316,7 @@ Tests that require codebase evidence use the `fixture` field to load synthetic d
 | `monolith` | V07 | `src/{main,db,auth,orders,billing}.ts` with shared DB coupling |
 | `parser` | V08 | `src/parser.ts`, `tests/parser.test.ts` with CSV parser + missing test scenarios |
 | `validation` | V10, V24 | `src/validators/{user,order,payment}Validator.ts` with duplicated validation logic |
-| `rollout` | V22, V34, V35, V54 | `deploy.yaml`, `docs/adr/ADR-002-rollout.md` with RISK comments + tradeoffs |
+| `rollout` | V22, V34, V35, V54, V55, V56, V57 | `deploy.yaml`, `docs/adr/ADR-002-rollout.md` with RISK comments + tradeoffs |
 | `tape-state` | V26 | `CONTEXT.md`, `.duck-tape/.gitignore` for state-only mode |
 | `tape-marker` | V27 | `CONTEXT.md`, `.duck-tape/.gitignore`, `.duck-tape/.last-compact`, `.duck-tape/2024-04-15-1030.state.md` |
 | `security-vuln` | V36, V37, V38 | `src/users.ts` with SQL injection + auth escalation bugs, `src/db.ts` |

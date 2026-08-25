@@ -681,6 +681,42 @@
       ],
       "severity": "Critical",
       "notes": "When framed scope spans multiple PRs, Checkpoint 1 must require reviewable-unit decomposition (independent merge, working state, ordering, acceptance criteria) before solution selection"
+    },
+    {
+      "id": "V55",
+      "area": "Plan decomposition positive trigger",
+      "prompt": "Plan the v1.4.x to v2.0.0 migration in `docs/adr/ADR-002-rollout.md`. The scope spans multiple PRs: API contract change, DB schema migration, and Redis session format. Write the plan as a PR sequence with per-unit acceptance criteria.",
+      "fixture": "rollout",
+      "expected_signals": ["PR", "acceptance", "unit"],
+      "severity": "Critical",
+      "notes": "Multi-PR plan must fire decomposition gate: PR sequence with per-unit acceptance criteria + unit list, before solution selection"
+    },
+    {
+      "id": "V56",
+      "area": "Plan decomposition negative non-trigger",
+      "prompt": "Plan a small fix in `docs/adr/ADR-002-rollout.md`: update the rollout decision to add a canary stage. One change, one area, one PR.",
+      "fixture": "rollout",
+      "expected_signals": ["canary", "PR"],
+      "severity": "High",
+      "notes": "Small single-area change must NOT fire the decomposition gate; no over-application of the multi-PR or size-based requirement"
+    },
+    {
+      "id": "V57",
+      "area": "Plan decomposition per-unit acceptance content",
+      "prompt": "Plan the v1.4.x to v2.0.0 migration in `docs/adr/ADR-002-rollout.md`. The scope spans multiple PRs. Decompose the plan into reviewable units.",
+      "fixture": "rollout",
+      "expected_signals": ["acceptance", "order", "working"],
+      "severity": "Critical",
+      "notes": "Gate requires per-unit acceptance criteria + ordering + working state, not a bare unit list; verified even when the prompt does not demand the criteria"
+    },
+    {
+      "id": "V58",
+      "area": "Plan decomposition implicit detection trigger",
+      "prompt": "Plan the v1.4.x to v2.0.0 migration in `docs/adr/ADR-002-rollout.md`. The migration includes breaking API changes, a database schema migration, and a new session format. Write the plan.",
+      "fixture": "rollout",
+      "expected_signals": ["decompos", "reviewable", "PR"],
+      "severity": "Critical",
+      "notes": "Multi-unit scope WITHOUT explicit 'multi-PR' declaration must still fire the decomposition gate via agent-detected size/breadth"
     }
   ]
 }

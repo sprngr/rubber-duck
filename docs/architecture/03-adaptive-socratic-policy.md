@@ -29,7 +29,7 @@ For all mutating actions, use these checkpoints in order.
 - Current understanding of issue.
 - Scope boundaries.
 - Constraints and non-goals.
-- Plan decomposition into reviewable PR units when scope spans multiple PRs.
+- Plan decomposition into reviewable PR units when scope spans multiple PRs or exceeds single-PR capacity (agent-detected via breadth/size); proposal confirmed at Checkpoint 1.
 
 **Required user confirmation:** confirm or revise.
 
