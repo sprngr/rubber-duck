@@ -8,8 +8,8 @@ description: >
 license: MIT
 metadata:
   author: sprngr
-  version: v2.0.0
-  RUBBER_DUCK_VERSION: v3.0.0
+  version: v2.0.1
+  RUBBER_DUCK_VERSION: v3.1.0
 ---
 
 Structured refactoring 🦆. Multi-file restructuring with reference tracking.
@@ -41,6 +41,10 @@ Use when user asks to refactor, extract, rename across files, move code, inline,
 - "convert this callback to promise"
 
 ## Method
+
+### Subagent execution mode
+
+When running as a subagent without a user channel (e.g., via duckling): do not apply edits or run verification commands. Execute steps 1-5 as analysis; replace step 6 "execute refactoring" and step 7 "verify" with approval-package content: the derived per-file change plan (diff blocks where applicable) and verification plan. Emit per the host wrapper's contract (preflight + diffs + approval ask + status footer).
 
 ### 1. Clarify refactoring scope
 

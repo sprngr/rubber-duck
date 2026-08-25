@@ -5,6 +5,25 @@ All notable changes to Rubber Duck will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v3.1.0] - 2026-08-24
+
+### Changed
+
+- **Duckling silent-worker contract:** duckling subagent redesigned as single-turn silent worker across all three harnesses (Claude Code, Copilot, OpenCode). Interactive mutating-action-gate include replaced by explicit Silent Worker Contract:
+  - one invocation is one turn; no mid-run user dialog
+  - never self-approve mutating work
+  - `execute` mode produces terminal approval package (preflight + per-file diffs + `Approve this scope?`) instead of mutating the workspace
+  - mid-run ambiguity flattens to `## Unresolved questions` block instead of interactive Q&A
+  - one phase per invocation; parent orchestrates phase progression
+  - tool-unavailable degradation emits explicit `## Tool unavailable` note instead of silent skip
+- **Duckling non-delegation list:** duckling refuses `skill_name` of `quack` (routing skill), `duck-tape` (session-memory mutation), and `duck-policy` (session-scoped policy loader). Emits `blocked_recursive_routing` status; parent invokes target skill directly.
+- **`DUCKLING_CTX` footer status vocabulary expanded:** added `blocked_awaiting_approval`, `blocked_skill_unavailable`, `blocked_recursive_routing`, `blocked_missing_inputs`, `phase_complete_await_parent`, `degraded_tool_unavailable`. Prior `<ok|blocked>` binary replaced.
+- **Rubber-duck Subagent Return Handling:** new agent-body section defining shape-based and status-token-based recognition of subagent returns. Approval packages relayed verbatim as parent's Checkpoint 3 presentation; parent-always-executes rule (subagents propose; parent executes) preserves single-approval-gate invariant. Explicit handlers for phase-progression, blocked-input, and degraded returns.
+- **Quack subagent-runbook:** explicit disclaimer that `quack` has no return-side responsibility; parent (`rubber-duck`) owns return handling. Applies to any primary agent that dispatches to duckling.
+- **Duckling general contract snippet (`skill-snippets/duckling-general-contract.md`):** behavior rules 4-6 aligned with silent-worker posture. Interactive-dialog contracts (Socratic loops, batched interviews, multi-turn design dialogs) flatten questions to `## Unresolved questions`. Skill-unavailable path emits terminal error instead of interactive question.
+- **Duckling harness permission tightening:** silent-worker contract now enforced at harness level in all three harnesses. Duckling tool maps drop mutation tools: Claude `Read, Glob, Grep, Skill`; Copilot `read,search`; OpenCode `edit: deny`, `bash: deny`. Duckling body gains explicit never-call-Edit/Write/Bash rule and parent-always-executes wording. `duck-patch` and `duck-refactor` gain "Subagent execution mode" sections documenting approval-package output under subagent invocation. Permission-tightening spike resolved inline.
+- `duck-policy` skill unchanged: portable policy layer stays agent-shape-agnostic; no duckling/quack-specific knowledge added.
+
 ## [v3.0.0] - 2026-08-17
 
 ### Added
