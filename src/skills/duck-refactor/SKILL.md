@@ -1,8 +1,7 @@
 ---
 name: duck-refactor
 description: >
-  Multi-file code restructuring with reference tracking. Extract functions/classes,
-  rename across codebase, move code between files, inline, convert patterns.
+  Multi-file code restructuring with reference tracking.
   Use when: "refactor this", "extract this function", "rename this across codebase",
   "move this to another file", "inline this".
 license: MIT

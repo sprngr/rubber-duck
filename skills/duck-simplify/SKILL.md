@@ -1,9 +1,7 @@
 ---
 name: duck-simplify
 description: >
-  Complexity reduction and semantic duplication/divergence review. Identifies unnecessary
-  abstractions, oversized config/state surfaces, directness opportunities, safe extraction boundaries.
-  Modes: standard (complexity reduction), dry (DRY/divergence).
+  Complexity reduction and semantic duplication/divergence review.
   Use when: "simplify this", "is this overengineered", "DRY this",
   "divergence review".
 license: MIT

@@ -1,8 +1,7 @@
 ---
 name: duck-policy
 description: >
-  Meta-skill: apply the rubber-duck enforcement system to any agent session.
-  Approval gates, safety carve-outs, Duck Ladder, style, debt markers. 
+  Meta-skill: apply rubber-duck enforcement to any agent session. 
   Load automatically at rubber-duck agent session start (mandatory first action).
   Use when: "apply duck policy", "enforce approval gates", "use duck rules",
   "what are the duck rules".

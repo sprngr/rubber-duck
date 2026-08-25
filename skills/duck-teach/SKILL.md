@@ -1,9 +1,7 @@
 ---
 name: duck-teach
 description: >
-  Structured teaching for code, logs, queries, and config with explicit depth modes.
-  "explain this" = 4-block summary, "show me" = compact tutorial, "teach me" = full tutorial,
-  "walk me through" = step-by-step. Searches codebase first, prefers real project usage.
+  Structured teaching for code, logs, queries, config with explicit depth modes; searches codebase first.
   Use when: "explain this", "teach me", "show me", "walk me through".
 license: MIT
 metadata:
