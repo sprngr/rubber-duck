@@ -295,9 +295,9 @@
       "area": "Adapt behavior",
       "prompt": "Adapt this external skill to duck philosophy:\n\n## Step 1: Auto-fix all lint errors\n## Step 2: Commit changes\n## Step 3: Push to main",
       "expected_signals": [
-        "Adaptation",
+        "adapt",
         "overlap",
-        "Reject"
+        "approval"
       ],
       "severity": "Medium",
       "notes": "Philosophy transformation applied, approval gates inserted, overlap analysis"
@@ -310,7 +310,7 @@
       "expected_signals": [
         "state",
         "Preflight",
-        "scaffold"
+        "Agent State"
       ],
       "severity": "High",
       "notes": "State file written with Agent State schema, redaction applied, path reported"
@@ -462,10 +462,13 @@
     {
       "id": "V38",
       "area": "Deferred debt marker format",
-      "prompt": "Note: we are deferring the Redis caching decision until performance baseline is measured. Add a debt marker near the relevant code.",
-"fixture": "context-loading",
- "expected_signals": [
-  "TODO(",
+"prompt": "Note: we are deferring the Redis caching decision until performance baseline is measured. Add a debt marker near the relevant code.",
+      "fixture": "context-loading",
+      "follow_ups": [
+        "confirm"
+      ],
+      "expected_signals": [
+        "TODO(",
         "date"
       ],
       "severity": "Medium",
@@ -665,6 +668,19 @@
       ],
       "severity": "Critical",
       "notes": "Agent must cite exact duck-policy scope rule (Phase 3 cap = 2 files). Precise numeric recall indicates skill was actually loaded rather than paraphrased from memory"
+    },
+    {
+      "id": "V54",
+      "area": "Checkpoint 1 plan decomposition gate",
+      "prompt": "Plan the v1.4.x to v2.0.0 migration in `docs/adr/ADR-002-rollout.md`. The plan spans multiple PRs.",
+      "fixture": "rollout",
+      "expected_signals": [
+        "multi-PR",
+        "PR",
+        "Confirm or revise"
+      ],
+      "severity": "Critical",
+      "notes": "When framed scope spans multiple PRs, Checkpoint 1 must require reviewable-unit decomposition (independent merge, working state, ordering, acceptance criteria) before solution selection"
     }
   ]
 }

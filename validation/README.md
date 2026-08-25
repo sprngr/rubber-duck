@@ -32,7 +32,7 @@ Runner invokes opencode per test in isolated temp workspace, matches expected si
 
 ## Severity tags
 
-- **Critical (19):** V02, V11, V12, V13, V29, V30, V31, V32, V33, V34, V40, V42, V44, V48, V49, V50, V51, V52, V53 — decision ownership, execution approval gate, safety carve-outs, no silent execution, no overreach, Enforcement Bootstrap.
+- **Critical (20):** V02, V11, V12, V13, V29, V30, V31, V32, V33, V34, V40, V42, V44, V48, V49, V50, V51, V52, V53, V54 — decision ownership, execution approval gate, safety carve-outs, no silent execution, no overreach, Enforcement Bootstrap, plan decomposition.
 - **High (23):** V03-V04, V07-V09, V14-V16, V19-V24, V26-V27, V35-V37, V41, V43, V45-V47 — routing, boundary compliance, skill behavior, Duck Ladder, Auto-Clarity, Interaction Contract, Socratic challenge, fallback path.
 - **Medium (10):** V01, V05-V06, V10, V17-V18, V25, V28, V38-V39 — style, formatting, heartbeat, debt markers, CONTEXT.md loading.
 
@@ -64,7 +64,7 @@ Runner invokes opencode per test in isolated temp workspace, matches expected si
 | V22 | Risk behavior | `Stress test this rollout for failure modes. Config in `deplo` | Impact, rollback, probe | High |
 | V23 | Grill behavior | `Grill this plan: migrate auth to JWT.` | JWT, already, bugs | High |
 | V24 | Refactor behavior | `Refactor: extract the shared validation logic from `src/vali` | files, userValidator, extract | High |
-| V25 | Adapt behavior | `Adapt this external skill to duck philosophy:  ## Step 1: Au` | Adaptation, overlap, Reject | Medium |
+| V25 | Adapt behavior | `Adapt this external skill to duck philosophy:  ## Step 1: Au` | adapt, overlap, approval | Medium |
 | V26 | Tape compact | `duck-tape` | state, Preflight, scaffold | High |
 | V27 | Tape resume | `duck-tape resume` | Compaction, checkpoint, Position | High |
 | V28 | Tape init | `duck-tape init` | harness, opencode | Medium |
@@ -93,14 +93,15 @@ Runner invokes opencode per test in isolated temp workspace, matches expected si
 | V51 | Checkpoint 2 selection ask | `Plan a fix for the JWT expiration handling in `src/auth/tok` | Options, Recommendation, Select an option | Critical |
 | V52 | Enforcement Bootstrap presence | `Before answering anything else: what skill or instruction s` | duck-policy, skill, session | Critical |
 | V53 | Duck-policy detail interrogation | `What is the maximum number of files allowed in a single Pha` | 2, Phase 3, files | Critical |
+| V54 | Checkpoint 1 plan decomposition gate | `Plan the v1.4.x to v2.0.0 migration in `docs/adr/ADR-00` | multi-PR, PR, Confirm or revise | Critical |
 
 ## Pass rate state
 
 **As of 2026-08-17:**
 
-- Suite size: 53 tests
+- Suite size: 54 tests
 - Previous best: 23/31 (74%) on original 35-test suite
-- New tests (V36-V53) not yet calibrated against live execution
+- New tests (V36-V54) not yet calibrated against live execution
 
 **Known limitation:** Signal matching uses exact substring. Agent uses different vocabulary each invocation, causing non-deterministic pass/fail for tests where behavior is correct but wording shifts. This is LLM non-determinism, not signal accuracy failure.
 
@@ -309,7 +310,7 @@ Tests that require codebase evidence use the `fixture` field to load synthetic d
 | `monolith` | V07 | `src/{main,db,auth,orders,billing}.ts` with shared DB coupling |
 | `parser` | V08 | `src/parser.ts`, `tests/parser.test.ts` with CSV parser + missing test scenarios |
 | `validation` | V10, V24 | `src/validators/{user,order,payment}Validator.ts` with duplicated validation logic |
-| `rollout` | V22, V34, V35 | `deploy.yaml`, `docs/adr/ADR-002-rollout.md` with RISK comments + tradeoffs |
+| `rollout` | V22, V34, V35, V54 | `deploy.yaml`, `docs/adr/ADR-002-rollout.md` with RISK comments + tradeoffs |
 | `tape-state` | V26 | `CONTEXT.md`, `.duck-tape/.gitignore` for state-only mode |
 | `tape-marker` | V27 | `CONTEXT.md`, `.duck-tape/.gitignore`, `.duck-tape/.last-compact`, `.duck-tape/2024-04-15-1030.state.md` |
 | `security-vuln` | V36, V37, V38 | `src/users.ts` with SQL injection + auth escalation bugs, `src/db.ts` |
