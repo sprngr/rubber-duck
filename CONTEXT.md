@@ -41,7 +41,7 @@
 - **Installer template sources reorganized**: sync wrapper templates moved to `src/install/scripts/`, manifest template moved to `src/install/templates/`. Shared snippets (`src/shared/`) reserved for prompt/policy snippets only. Build outputs at `dist/scripts/` and `dist/templates/`. (date: 2026-08-16)
 - **Sync wrapper version check**: sync-latest scripts compare manifest `lastAppliedVersion` against remote/local `VERSION` file before syncing. Prompts user with version change and CHANGELOG link when newer version exists. Fallback templates removed; missing sync template is a hard error. Wrapper forwards the derived raw-base on remote sync; ps1 wrappers use `(Get-Process -Id $PID).Path` for host detection. (date: 2026-08-16)
 - **3.x install migration**: installer removes legacy managed block from `AGENTS.md`/`CLAUDE.md` on install. Aligns targets with v3.0.0 single-agent architecture (policy content now lives in agent body, not host policy files). (date: 2026-08-17)
-- **Enforcement Bootstrap mandate**: `rubber-duck` agent must invoke `skill(name: duck-policy)` as its first action every session before any tool call, skill call, or user reply. "Already loaded" only counts if personally invoked in the current session. Closes progressive-disclosure gap where the lean agent body could otherwise skip runtime policy load. (date: 2026-08-17)
+- **Enforcement Bootstrap mandate**: at session start, `rubber-duck` agent invokes `skill(name: duck-policy)` before any tool call, skill call, or user reply. "Already loaded" only counts if personally invoked in the current session. Closes progressive-disclosure gap where the lean agent body could otherwise skip runtime policy load. (date: 2026-08-17)
 
 ## Conventions
 

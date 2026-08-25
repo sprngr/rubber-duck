@@ -91,7 +91,7 @@ This repository contains source prompts, assembled skills, generated harness art
 ## Developer Style Guide
 
 - Keep changes minimal and evidence-backed.
-- Make harness and skills source edits under `src/`, never make direct edits to generated outputs.
+- Make harness and skills source edits under `src/`. If a generated artifact in `skills/` or `dist/` needs changing, change its source under `src/` and rebuild with `make build`; do not hand-edit the artifact.
 - Keep bash and PowerShell installers in parity for shared behavior.
 - Keep docs precise and copy-paste-safe for command examples.
 - Preserve safety carve-outs and trust-boundary protections.
@@ -110,9 +110,9 @@ This repository contains source prompts, assembled skills, generated harness art
 
 - Keep `scripts/rubber-duck.sh` and `scripts/rubber-duck.ps1` in feature parity.
 - Policy loads via the `duck-policy` skill at agent session start.
-- Managed block operations (legacy migration) must be idempotent.
-- Local source mode must work from repo checkout.
-- Web source mode must work for remote install flows.
+- If the installer runs a managed block operation (legacy migration), repeated runs must produce identical results (idempotent).
+- If the installer runs in local source mode, it must work from a repo checkout.
+- If the installer runs a remote install flow, it must work from a web source.
 
 ## Safety and Policy Ownership
 
