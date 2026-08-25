@@ -5,6 +5,22 @@ All notable changes to Rubber Duck will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Reviewable-unit decomposition: multi-PR plans must decompose into reviewable units (independent merge, working state after each, explicit ordering + acceptance criteria). Methodology in `src/shared/skill-snippets/reviewable-units.md`; duck-design writes plans as PR sequences; duck-policy Checkpoint 1 gates on decomposition.
+- Validation fixture `validation/fixtures/context-loading/src/cache.ts` anchors deferred-debt marker tests to real code.
+
+### Changed
+
+- Validation suite: 54 tests (V01-V54). V54 covers the Checkpoint 1 plan-decomposition gate. V25/V26/V38/V54 signals calibrated to observed vocabulary.
+- `docs/architecture/03-adaptive-socratic-policy.md` Checkpoint 1 documents plan decomposition requirement.
+
+### Known regression
+
+- V51 (Checkpoint 2 selection ask) fails under pinned model `opencode-go/deepseek-v4-flash`: agent skips option-selection, jumps framing to execution proposal. Genuine gate violation; needs behavior investigation, not signal calibration.
+
 ## [v3.0.0] - 2026-08-17
 
 ### Added

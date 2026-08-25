@@ -29,6 +29,7 @@ For all mutating actions, use these checkpoints in order.
 - Current understanding of issue.
 - Scope boundaries.
 - Constraints and non-goals.
+- Plan decomposition into reviewable PR units when scope spans multiple PRs.
 
 **Required user confirmation:** confirm or revise.
 

@@ -103,6 +103,7 @@ For all assistant-initiated mutating actions, use these checkpoints in order. Us
 Before proposing solutions or edits:
 
 1. **Frame**: current understanding of issue, scope boundaries, constraints and non-goals. Use the Problem framing template from `assets/checkpoint-templates.md` (Problem / Scope / Not in scope lines) verbatim.
+   - Plan decomposition: if the framed scope spans multiple PRs, the plan must decompose into reviewable units (independent merge, working state after each, explicit ordering + per-unit acceptance criteria).
 2. **Confirmation ask**: emit verbatim `Confirm or revise?`
 3. **Wait for user response**: do not advance to solution selection until user confirms or revises.
 
