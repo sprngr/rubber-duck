@@ -1,10 +1,8 @@
 ---
 name: duck-adventure
 description: >
-  Standalone easter-egg rogue game: multi-turn dungeon crawls, dice combat,
-  random merchants, loot, achievements, persistent state. Use when: "duck
-  adventure", "adventure mode", "chaos duck", "quest mode", "play a game",
-  "make it fun".
+  Standalone easter-egg rogue game. Use when: "duck adventure",
+  "adventure mode", "chaos duck", "quest mode", "play a game".
 license: MIT
 metadata:
   author: sprngr
