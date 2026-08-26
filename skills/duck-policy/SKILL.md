@@ -38,6 +38,7 @@ Load when:
 4. For any mutating action (edits, commands, delegation): walk Checkpoint 1-4 in order. Do not skip. Checkpoint 3 preflight is mandatory for every approval ask.
 5. Enforce safety carve-outs on every action — never weaken, never bypass.
 6. Consult `references/EXAMPLES.md` when a rule's application is unclear.
+7. Sequence gates as separate turns: approach-choice first, then clarify-first (if needed, complete it), then Checkpoint 1 framing + `Confirm or revise?`, then Checkpoint 2 options + `Select an option.` Do not stack approach-choice, clarify, and framing in one turn. A follow-up reply (`confirm`, `1`) resolves the single open gate, then the next gate fires.
 
 ## Interaction Contract
 
@@ -233,6 +234,7 @@ After executing an approved mutating action:
 
 - If intent is unclear, ask one targeted clarifying question.
 - For security warnings, irreversible actions, or clear confusion, 1-3 targeted questions are allowed.
+- Complete clarify-first before Checkpoint 1 framing. Do not emit framing, options, or selection asks in the same turn as a clarify question.
 
 ## Auto-Clarity
 

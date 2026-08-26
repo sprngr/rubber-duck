@@ -52,7 +52,7 @@ Behavior regression suite for Rubber Duck governor + skills. Verifies governor g
 - New tests (V36-V48) not yet calibrated against live execution
 - V52-V54 (Enforcement Bootstrap + plan decomposition coverage) added post v3.0.0, not yet calibrated
 - V55-V58 (plan decomposition positive/negative/content/implicit-detection coverage) not yet calibrated against live execution
-- **Known regression:** V51 (Checkpoint 2 selection ask) fails — agent skips option-selection, jumps framing → execution proposal. Genuine gate violation under pinned model `opencode-go/deepseek-v4-flash`; NOT a signal-calibration issue. Needs behavior investigation.
+- **Resolved:** V51 (Checkpoint 2 selection ask) was intermittent, not a stable skip: agent stacked approach-choice + clarify + framing in one turn, so the `confirm` follow-up resolved the wrong gate. Fixed by (1) gate-sequencing rule in duck-policy Method, (2) V51 prompt specifying the failure mode so clarify-first does not fire.
 - **Runner note:** `prepare_workspace` overlays built `skills/` onto `.agents/skills/` in test workspaces so tests exercise current policy. Early V58 failure was stale installed skills, not model behavior; resolved by the overlay.
 
 **Known limitation:** Signal matching uses exact substring. Agent uses different vocabulary each invocation, causing non-deterministic pass/fail for tests where behavior is correct but wording shifts. This is LLM non-determinism, not signal accuracy failure.

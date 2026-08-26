@@ -616,7 +616,7 @@
     {
       "id": "V50",
       "area": "Checkpoint 1 framing ask",
-      "prompt": "Plan a fix for the JWT expiration handling in `src/auth/token.ts`.",
+      "prompt": "Plan a fix for the JWT expiration handling in `src/auth/token.ts`. Observed failure: expired tokens surface as a generic 500 instead of 401, and tokens without an `exp` claim never expire. Target behavior: reject missing `exp` and `TokenExpiredError` both with HTTP 401.",
       "fixture": "auth",
       "follow_ups": [
         "1"
@@ -632,9 +632,10 @@
     {
       "id": "V51",
       "area": "Checkpoint 2 selection ask",
-      "prompt": "Plan a fix for the JWT expiration handling in `src/auth/token.ts`.",
+      "prompt": "Plan a fix for the JWT expiration handling in `src/auth/token.ts`. Observed failure: expired tokens surface as a generic 500 instead of 401, and tokens without an `exp` claim never expire. Target behavior: reject missing `exp` and `TokenExpiredError` both with HTTP 401.",
       "fixture": "auth",
       "follow_ups": [
+        "confirm",
         "confirm"
       ],
       "expected_signals": [
@@ -643,7 +644,7 @@
         "Select an option"
       ],
       "severity": "Critical",
-      "notes": "After framing confirmation, agent must emit Checkpoint 2 solution selection (options + tradeoffs + recommendation) ending with 'Select an option.' before awaiting user response"
+      "notes": "Prompt specifies the failure mode so clarify-first is unnecessary; 'confirm' confirms framing, then Checkpoint 2 (options + tradeoffs + recommendation) must end with 'Select an option.' before awaiting user response"
     },
     {
       "id": "V52",
