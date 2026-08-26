@@ -233,6 +233,10 @@ def load_state() -> dict | None:
 
 def save_state(state):
     os.makedirs(os.path.dirname(STATE_PATH), exist_ok=True)
+    gipath = os.path.join(os.path.dirname(STATE_PATH), ".gitignore")
+    if not os.path.exists(gipath):
+        with open(gipath, "w") as f:
+            f.write("*\n")
     with open(STATE_PATH, "w") as f:
         json.dump(state, f, indent=2)
 
