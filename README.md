@@ -223,7 +223,7 @@ The agent must already be installed for your target. Delegation runs through `du
  <details>
  <summary>Expand for full skill list + routing diagram</summary>
 
-  Rubber Duck packages 15 skills: 12 default + 3 extras.
+  Rubber Duck packages 15 skills (12 default + 3 extras), plus one manual-install easter egg.
 
 ### Default skills (installed automatically)
 
@@ -269,7 +269,6 @@ flowchart TD
 ```
 
  Full routing flow with state transitions: [docs/architecture/02-agent-skill-model.md](./docs/architecture/02-agent-skill-model.md).
-
  </details>
 
 ## Deep dive docs
