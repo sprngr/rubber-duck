@@ -20,9 +20,6 @@ Run a self-contained rogue RPG: multi-turn dungeon crawls with maps, dice
 combat, random merchants, loot, and achievements tracked across sessions. Fun
 for its own sake. No handoff to productivity flows.
 
-{{include: skill-snippets/philosophy-guardrails.md}}
-{{include: skill-snippets/clarify-first-preflight.md}}
-
 Skill-specific delta:
 
 - Opt-in only: game runs on explicit signal. Never auto-injected into normal flows.

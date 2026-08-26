@@ -20,12 +20,6 @@ Run a self-contained rogue RPG: multi-turn dungeon crawls with maps, dice
 combat, random merchants, loot, and achievements tracked across sessions. Fun
 for its own sake. No handoff to productivity flows.
 
-## Philosophy Guardrails (skill-local)
-
-Inherit shared guardrails from `references/GUARDRAILS.md`.
-- ask 1-3 targeted clarifying questions when context is incomplete
-- state assumptions explicitly when evidence is missing
-
 Skill-specific delta:
 
 - Opt-in only: game runs on explicit signal. Never auto-injected into normal flows.

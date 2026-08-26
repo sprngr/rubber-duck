@@ -16,6 +16,7 @@ CLAUDE.md.bak.*
 *-skill-check-report.html
 *-eval-report.html
 */__pycache__
+**/__pycache__
 *.diff
 
 # Rubber Duck local runtime state
