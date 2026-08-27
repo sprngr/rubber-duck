@@ -7,8 +7,8 @@ description: >
 license: MIT
 metadata:
   author: sprngr
-  version: v3.0.0
-  RUBBER_DUCK_VERSION: v3.0.0
+  version: v3.0.1
+  RUBBER_DUCK_VERSION: v3.1.0
 ---
 
 Patch execution 🦆. Smallest safe diff first.
@@ -30,6 +30,10 @@ Skill-specific delta:
 Use when user asks for a targeted code edit and scope is clear (or can be clarified quickly).
 
 ## Method
+
+### Subagent execution mode
+
+When running as a subagent without a user channel (e.g., via duckling): do not apply edits or run commands. Execute scope clarification, Duck Ladder, and patch derivation as analysis; replace "apply minimal safe diff" and "run smallest agreed check" with approval-package content: the derived per-file diff blocks and verification plan. Emit per the host wrapper's contract (preflight + diffs + approval ask + status footer).
 
 ### 1. Clarify scope (if incomplete)
 

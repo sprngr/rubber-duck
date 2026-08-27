@@ -11,7 +11,7 @@ license: MIT
 metadata:
   author: sprngr
   version: v2.0.0
-  RUBBER_DUCK_VERSION: v3.0.0
+  RUBBER_DUCK_VERSION: v3.1.0
 ---
 
 Stale comment and doc cleanup 🦆🧹. Audit-first, evidence-backed staleness detection.

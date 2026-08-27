@@ -8,7 +8,7 @@ license: MIT
 metadata:
   author: sprngr
   version: v3.0.0
-  RUBBER_DUCK_VERSION: v3.0.0
+  RUBBER_DUCK_VERSION: v3.1.0
 ---
 
 Rubber duck debugging 🦆. Socratic method. Questions over answers. Keep language terse and practical.

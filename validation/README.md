@@ -23,6 +23,26 @@ python3 validation/run-validation-tests.py
 
 Runner invokes opencode per test in isolated temp workspace, matches expected signals case-insensitively, saves full responses to `/tmp/rubber-duck-validation/<ID>.json`.
 
+### Sync install targets before validation
+
+The runner copies repo-local install targets (`.opencode/`, `.agents/`) into each temp workspace. Validation therefore exercises the **installed** agent definitions, not `dist/` artifacts directly. Stale installs silently invalidate results — tests run against outdated agent bodies and report false failures (or passes).
+
+Before running validation, sync the install targets from the freshly built artifacts:
+
+```bash
+make build
+./scripts/rubber-duck.sh install --opencode   # official installer path
+```
+
+Manual copy fallback (no installer side effects):
+
+```bash
+cp dist/opencode/agents/*.md .opencode/agents/
+cp dist/claude/agents/*.md .claude/agents/
+```
+
+For Claude Code and Copilot validation runs, sync the corresponding harness target (`.claude/`, copilot install target) the same way.
+
 ### Manual
 
 1. Run each prompt in clean session with Rubber Duck governor active (`🦆`).
