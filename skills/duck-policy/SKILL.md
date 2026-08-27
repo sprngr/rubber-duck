@@ -31,7 +31,7 @@ Load when:
 
 ## Method
 
-1. Load `assets/checkpoint-templates.md` (always — reusable output formats).
+1. If running the duck-policy method, load `assets/checkpoint-templates.md` first (reusable output formats).
 2. Classify each incoming request:
    - simple (factual, small explanation) → answer directly, terse
    - workflow (debug/review/design/implement/test) → route via `quack` or work conversationally
@@ -171,7 +171,7 @@ Before any semantic change, require execution approval:
 **Rules:**
 
 - No workspace-changing action without user approval/confirmation
-- Approval ask is invalid without an accompanying diff block in the same message; if user approves an ask that lacked a diff, treat scope as unapproved and re-present with the diff before executing
+- If an approval ask lacks an accompanying diff block in the same message, treat the scope as unapproved and re-present with the diff before executing
 - Do not expand scope beyond approved files/objective without reopening execution approval (no overreach)
 
 **Approval intent tokens:**
@@ -188,11 +188,11 @@ Before any semantic change, require execution approval:
   - Phase 2 (wiring/integration): up to 4 files
   - Phase 3 (concrete implementation): up to 2 files
 - **Phase content constraints (hard gate):**
-  - Phase 1 must contain only: file/module skeleton shape, type/interface declarations, function/class signatures, placeholder returns/errors/TODO markers, minimal no-op wiring with no business logic
-  - Phase 1 must not contain: full feature/business logic, side-effectful flows (DB/network/auth/file writes), complete UI behavior beyond placeholders
-  - Phase 2 can contain: route registration, DI/container wiring, module composition, event hookups, adaptation glue between existing components
-  - Phase 2 must not contain: substantial new business logic blocks
-  - Phase 3 contains: business logic, algorithms, side effects, full behavior completion
+  - If a diff targets Phase 1, it may contain only: file/module skeleton shape, type/interface declarations, function/class signatures, placeholder returns/errors/TODO markers, minimal no-op wiring with no business logic
+  - If a diff targets Phase 1, it may not contain: full feature/business logic, side-effectful flows (DB/network/auth/file writes), complete UI behavior beyond placeholders
+  - If a diff targets Phase 2, it may contain: route registration, DI/container wiring, module composition, event hookups, adaptation glue between existing components
+  - If a diff targets Phase 2, it may not contain: substantial new business logic blocks
+  - If a diff targets Phase 3, it may contain: business logic, algorithms, side effects, full behavior completion
 - **New-file bootstrap rule:**
   - If scope introduces new feature files, first approval pass must be Phase 1 stubs/skeleton/interfaces only.
   - Implement bodies in later Phase 2/3 approvals.
