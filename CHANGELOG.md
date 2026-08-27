@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Copilot support pending (deferred; see plan doc).
 - Reviewable-unit decomposition: multi-PR plans must decompose into reviewable units (independent merge, working state after each, explicit ordering + acceptance criteria). Methodology in `src/shared/skill-snippets/reviewable-units.md`; duck-design writes plans as PR sequences; duck-policy Checkpoint 1 gates on decomposition.
 - Validation fixture `validation/fixtures/context-loading/src/cache.ts` anchors deferred-debt marker tests to real code.
+- Plan decomposition verification spec: `docs/architecture/08-plan-decomposition-verification.md` defines the trigger predicate (explicit multi-PR OR agent-detected size/breadth), gate requirements, and verification acceptance criteria (positive, detection, negative, per-unit content).
 
 ### Changed
 
@@ -48,7 +49,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Sync replay fixes a latent off-by-one where extras were matched against the
   install-agents-md flag; extras and the new session-hook flag now map to the
   correct positional arguments.
-- Validation suite: 54 tests (V01-V54). V54 covers the Checkpoint 1 plan-decomposition gate. V25/V26/V38/V54 signals calibrated to observed vocabulary.
+- Validation suite: 58 tests (V01-V58). V54 covers the Checkpoint 1 plan-decomposition gate; V55 positive trigger, V56 negative non-trigger, V57 per-unit acceptance content, V58 implicit detection trigger extend decomposition coverage via the `rollout` fixture. V25/V26/V38/V54 signals calibrated to observed vocabulary.
+- Validation runner now overlays built `skills/` onto `.agents/skills/` in test workspaces, so tests exercise current policy instead of the last installer-synced copy. Resolves false V58 failure caused by stale installed skills.
+- duck-policy Method adds gate-sequencing rule: approach-choice, clarify-first, Checkpoint 1 framing, and Checkpoint 2 fire as separate turns; clarify completes before framing. V51 prompt specifies the JWT failure mode so the Checkpoint 2 selection ask is deterministic.
 - `docs/architecture/03-adaptive-socratic-policy.md` Checkpoint 1 documents plan decomposition requirement.
 
 ### Fixed
@@ -59,7 +62,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Known regression
 
-- V51 (Checkpoint 2 selection ask) fails under pinned model `opencode-go/deepseek-v4-flash`: agent skips option-selection, jumps framing to execution proposal. Genuine gate violation; needs behavior investigation, not signal calibration.
+- None active. V51 was intermittent (gate stacking), resolved via duck-policy gate-sequencing rule + deterministic test prompt.
 
 ## [v3.0.0] - 2026-08-17
 

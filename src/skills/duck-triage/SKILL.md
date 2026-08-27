@@ -1,8 +1,7 @@
 ---
 name: duck-triage
 description: >
-  Test coverage analysis and bug triage. Identifies missing tests, assesses test quality,
-  classifies bug severity, suggests test scenarios, discovers edge cases.
+  Test coverage analysis and bug triage.
   Use when: "test coverage gaps", "what should we test", "triage this bug", "bug severity".
 license: MIT
 metadata:

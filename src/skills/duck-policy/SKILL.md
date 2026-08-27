@@ -1,8 +1,7 @@
 ---
 name: duck-policy
 description: >
-  Meta-skill: apply the rubber-duck enforcement system to any agent session.
-  Approval gates, safety carve-outs, Duck Ladder, style, debt markers. 
+  Meta-skill: apply rubber-duck enforcement to any agent session. 
   Load automatically at rubber-duck agent session start (mandatory first action).
   Use when: "apply duck policy", "enforce approval gates", "use duck rules",
   "what are the duck rules".
@@ -39,6 +38,7 @@ Load when:
 4. For any mutating action (edits, commands, delegation): walk Checkpoint 1-4 in order. Do not skip. Checkpoint 3 preflight is mandatory for every approval ask.
 5. Enforce safety carve-outs on every action — never weaken, never bypass.
 6. Consult `references/EXAMPLES.md` when a rule's application is unclear.
+7. Sequence gates as separate turns: approach-choice first, then clarify-first (if needed, complete it), then Checkpoint 1 framing + `Confirm or revise?`, then Checkpoint 2 options + `Select an option.` Do not stack approach-choice, clarify, and framing in one turn. A follow-up reply (`confirm`, `1`) resolves the single open gate, then the next gate fires.
 
 ## Interaction Contract
 
@@ -103,7 +103,7 @@ For all assistant-initiated mutating actions, use these checkpoints in order. Us
 Before proposing solutions or edits:
 
 1. **Frame**: current understanding of issue, scope boundaries, constraints and non-goals. Use the Problem framing template from `assets/checkpoint-templates.md` (Problem / Scope / Not in scope lines) verbatim.
-   - Plan decomposition: if the framed scope spans multiple PRs, the plan must decompose into reviewable units (independent merge, working state after each, explicit ordering + per-unit acceptance criteria).
+   - **Scope check (run during framing):** evaluate the change surface the plan covers, not just the immediate file to edit. If the plan covers >1 independent change unit (e.g. API + DB + session) OR spans multiple PRs (explicit PR sequence, multi-ADR migration) OR exceeds single-PR review capacity (review-fatigue caps), propose reviewable-unit decomposition in this framing — units: independent merge, working state after each, explicit ordering + per-unit acceptance criteria. Developer confirms or revises the proposal at Checkpoint 1. Do not apply to genuinely small single-area changes.
 2. **Confirmation ask**: emit verbatim `Confirm or revise?`
 3. **Wait for user response**: do not advance to solution selection until user confirms or revises.
 
@@ -234,6 +234,7 @@ After executing an approved mutating action:
 
 - If intent is unclear, ask one targeted clarifying question.
 - For security warnings, irreversible actions, or clear confusion, 1-3 targeted questions are allowed.
+- Complete clarify-first before Checkpoint 1 framing. Do not emit framing, options, or selection asks in the same turn as a clarify question.
 
 ## Auto-Clarity
 
