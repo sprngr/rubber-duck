@@ -77,6 +77,8 @@ If active:
 - First response shape: 1 scoping question + 3-5 slices + priority question
 - Include explicit tradeoff line: "Main tradeoff: scope reduction now vs slower full-program change."
 - Defer deep per-slice analysis until user picks slice
+- When writing the rollout plan, express it as ordered reviewable PR units:
+  {{include: skill-snippets/reviewable-units.md}}
 
 Routing precedence:
 

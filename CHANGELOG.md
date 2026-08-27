@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - The rubber-duck agent body keeps its Enforcement Bootstrap mandate as a
     fallback when the hook is not installed.
   - Copilot support pending (deferred; see plan doc).
+- Reviewable-unit decomposition: multi-PR plans must decompose into reviewable units (independent merge, working state after each, explicit ordering + acceptance criteria). Methodology in `src/shared/skill-snippets/reviewable-units.md`; duck-design writes plans as PR sequences; duck-policy Checkpoint 1 gates on decomposition.
+- Validation fixture `validation/fixtures/context-loading/src/cache.ts` anchors deferred-debt marker tests to real code.
 
 ### Changed
 
@@ -46,12 +48,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Sync replay fixes a latent off-by-one where extras were matched against the
   install-agents-md flag; extras and the new session-hook flag now map to the
   correct positional arguments.
+- Validation suite: 54 tests (V01-V54). V54 covers the Checkpoint 1 plan-decomposition gate. V25/V26/V38/V54 signals calibrated to observed vocabulary.
+- `docs/architecture/03-adaptive-socratic-policy.md` Checkpoint 1 documents plan decomposition requirement.
 
 ### Fixed
 
 - Bash installer fails fast with a clear `requires bash 4+` message (and macOS
   `brew install bash` guidance) instead of dying with an obscure
   `declare: -A: invalid option` on bash < 4 (macOS default `/bin/bash` 3.2).
+
+### Known regression
+
+- V51 (Checkpoint 2 selection ask) fails under pinned model `opencode-go/deepseek-v4-flash`: agent skips option-selection, jumps framing to execution proposal. Genuine gate violation; needs behavior investigation, not signal calibration.
 
 ## [v3.0.0] - 2026-08-17
 
