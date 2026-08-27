@@ -116,7 +116,7 @@ This repository contains source prompts, assembled skills, generated harness art
 
 ## Safety and Policy Ownership
 
-- Canonical safety posture comes from managed policy block content.
+- Canonical safety posture comes from the `duck-policy` skill and agent body.
 - Shared policy snippets live in `src/shared/policy-snippets/*`.
 - Changes to policy text require matching regenerated artifacts and checks.
 - Never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements.
