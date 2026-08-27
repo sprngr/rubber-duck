@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Validation fixture `validation/fixtures/context-loading/src/cache.ts` anchors deferred-debt marker tests to real code.
 - Plan decomposition verification spec: `docs/architecture/08-plan-decomposition-verification.md` defines the trigger predicate (explicit multi-PR OR agent-detected size/breadth), gate requirements, and verification acceptance criteria (positive, detection, negative, per-unit content).
 - `duck-tidy` extras skill (stub): audit-first cleanup for stale/outdated comments and non-CONTEXT docs. Installed with `--extras` / `-Extras`. Evidence rules: contradicts current code, describes removed behavior, worktree-only add/remove never merged. Carve-outs: TODO markers (duck-debt), ADR/design notes flag-only, CONTEXT.md/.duck-tape (duck-tape). Method bodies pending.
+- `duck-adventure` easter-egg skill (manual install): standalone rogue game — multi-turn dungeon crawls with maps, dice combat, random merchants, loot, and achievements tracked across sessions. Fun for its own sake; no handoff to productivity flows.
 
 ### Changed
 
