@@ -87,6 +87,7 @@ Opt out of default install steps or adjust source to fit your workflow. All opti
 | `--source <auto\|local\|web>` | `-Source auto\|local\|web` | Pick artifact + skills source (`auto` default) |
 | `--branch <name>` | `-Branch <name>` | Install from non-`main` branch |
 | `--extras` | `-Extras` | Also install extras skills (duck-adapt, duck-grill, duck-tape, duck-tidy) |
+| `--session-hook` | `-SessionHook` | Also install the session-start hook (guarantees duck-policy loads at session start) |
 | `--allow-untrusted-source` | `-AllowUntrustedSource` | Skip `rawBase` allowlist check (dangerous; forks/mirrors) |
 
 ## Bash CLI (`scripts/rubber-duck.sh`)
@@ -108,6 +109,7 @@ Use Bash CLI for Linux/macOS and shell-based CI.
 | `--prune` | switch | With `sync`, uninstall managed targets not enabled in manifest |
 | `--dry-run` | switch | Print planned actions without writing |
 | `--extras` | switch | Also install extras skills (duck-adapt, duck-grill, duck-tape, duck-tidy) |
+| `--session-hook` | switch | Also install the session-start hook for the selected target |
 | `--allow-untrusted-source` | switch | Skip `rawBase` allowlist check (dangerous; forks/custom mirrors) |
 | `-h`, `--help` | switch | Show help |
 
@@ -131,6 +133,7 @@ Use PowerShell CLI for Windows-native environments.
 | `-Prune` | switch | With `sync`, uninstall managed targets not enabled in manifest |
 | `-DryRun` | switch | Print planned actions without writing |
 | `-Extras` | switch | Also install extras skills (duck-adapt, duck-grill, duck-tape, duck-tidy) |
+| `-SessionHook` | switch | Also install the session-start hook for the selected target |
 | `-AllowUntrustedSource` | switch | Skip `rawBase` allowlist check (dangerous; forks/custom mirrors) |
 
 ## Installation Behavior
@@ -147,6 +150,32 @@ Use PowerShell CLI for Windows-native environments.
 - Backup retention: before mutating a managed policy file (`AGENTS.md`, `CLAUDE.md`), the installer writes a `<file>.bak.<YYYYmmdd-HHMMSS>` copy alongside it. Only the most recent `<file>.bak.*` is kept per policy file; prior backups are pruned on install/uninstall to avoid accumulation. Applies to both bash and PowerShell installers.
 - Skills install default: project (`npx skills add <source> -y`).
 - `status` reports canonical version parsed from managed AGENTS artifact marker.
+
+### Session-start hook (--session-hook / -SessionHook)
+
+Opt-in feature that deterministically causes the `rubber-duck` agent to load the
+`duck-policy` skill at session start. Installs harness-specific session-start
+hooks:
+
+- OpenCode: copies the plugin to `.opencode/plugins/session-start.js` and the
+  directive to `.opencode/session-start.directive.md`. The plugin registers
+  rubber-duck sessions and injects the directive into the system prompt on every
+  model call (`experimental.chat.system.transform`).
+- Claude Code: copies scripts to `.claude/hooks/` and merges a `SessionStart`
+  hook into `.claude/settings.local.json` (idempotent). Runs only when launched
+  with the rubber-duck agent (`claude --agent <rubber-duck>`), which the script
+  detects via the hook input `agent_type`.
+
+The rubber-duck agent body keeps its own Enforcement Bootstrap mandate as a
+fallback when the hook is not installed.
+
+Example:
+```bash
+scripts/rubber-duck.sh install --opencode --project --session-hook
+scripts/rubber-duck.sh install --claude --project --session-hook
+```
+
+`sync` replays the hook per target (tracked in the manifest `sessionHook` field).
 - `sync` behavior:
   - reads manifest:
     - project: `.rubber-duck/manifest.json`

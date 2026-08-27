@@ -39,9 +39,12 @@ VERSION_VALUE=""
 CLAUDE_DIST_DIR="${REPO_ROOT}/dist/claude"
 CLAUDE_AGENT_DIR="${CLAUDE_DIST_DIR}/agents"
 CLAUDE_MD_OUT="${CLAUDE_DIST_DIR}/CLAUDE.md"
+CLAUDE_HOOKS_DIR="${CLAUDE_DIST_DIR}/hooks"
 
 OPENCODE_DIST_DIR="${REPO_ROOT}/dist/opencode"
 OPENCODE_AGENT_DIR="${OPENCODE_DIST_DIR}/agents"
+OPENCODE_HOOKS_DIR="${OPENCODE_DIST_DIR}/hooks"
+SESSION_START_HOOKS_SRC="${REPO_ROOT}/src/install/hooks/session-start"
 
 COPILOT_DIST_DIR="${REPO_ROOT}/dist/copilot"
 COPILOT_AGENT_DIR="${COPILOT_DIST_DIR}/agents"
@@ -279,7 +282,9 @@ if (( ${#CONFIG_AGENTS[@]} == 0 )); then
 fi
 
 mkdir -p "${CLAUDE_AGENT_DIR}"
+mkdir -p "${CLAUDE_HOOKS_DIR}"
 mkdir -p "${OPENCODE_AGENT_DIR}"
+mkdir -p "${OPENCODE_HOOKS_DIR}"
 mkdir -p "${COPILOT_AGENT_DIR}"
 mkdir -p "${DIST_SCRIPTS_DIR}"
 mkdir -p "${DIST_TEMPLATES_DIR}"
@@ -338,4 +343,19 @@ for name in "${CONFIG_AGENTS[@]}"; do
     cat "${rendered_body}" >> "${copilot_tmp}"
     render_or_check_file "${copilot_tmp}" "${COPILOT_AGENT_DIR}/${name}.md"
   fi
+done
+
+# Emit session-start hooks (opencode) to dist/opencode/hooks.
+for hf in session-start.opencode.plugin.js session-start.directive.md; do
+  htmp="${TMP_DIR}/hook-${hf}"
+  copy_template "${SESSION_START_HOOKS_SRC}/${hf}" "${htmp}"
+  render_or_check_file "${htmp}" "${OPENCODE_HOOKS_DIR}/${hf}"
+done
+
+# Emit session-start hooks (claude) to dist/claude/hooks.
+for hf in session-start.sh session-start.ps1 \
+  claude-code.session-start.hooks.json claude-code.session-start.hooks.windows.json; do
+  htmp="${TMP_DIR}/hook-claude-${hf}"
+  copy_template "${SESSION_START_HOOKS_SRC}/${hf}" "${htmp}"
+  render_or_check_file "${htmp}" "${CLAUDE_HOOKS_DIR}/${hf}"
 done

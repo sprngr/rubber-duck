@@ -249,6 +249,14 @@ The agent must already be installed for your target. Delegation runs through `du
 
  Install extras: `scripts/rubber-duck.sh install --<target> --extras`
 
+### Session-start hook (--session-hook / -SessionHook)
+
+Opt-in feature that guarantees the `duck-policy` skill loads at session start for
+the `rubber-duck` agent. Works on OpenCode (system-prompt injection via plugin)
+and Claude Code (`SessionStart` hook). Copilot pending.
+
+ Install: `scripts/rubber-duck.sh install --<target> --session-hook`
+
  Routing model (inline vs delegated vs governor-invoked), composition patterns, workflow examples: [docs/MANUAL.md](./docs/MANUAL.md). Best practices: [docs/best-practices.md](./docs/best-practices.md).
 
 ```mermaid

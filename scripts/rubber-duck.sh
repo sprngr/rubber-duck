@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# --- Runtime requirement: bash 4+ (associative arrays) ---
+# macOS default /bin/bash is 3.2 and dies with 'declare: -A: invalid option'.
+if (( BASH_VERSINFO[0] < 4 )); then
+  printf 'ERROR: rubber-duck.sh requires bash 4+ (found %s).\n' "${BASH_VERSION}" >&2
+  printf 'On macOS: brew install bash, then rerun with /opt/homebrew/bin/bash (Apple Silicon) or /usr/local/bin/bash (Intel).\n' >&2
+  exit 1
+fi
+
 ACTION="install"
 TARGET=""
 SEEN_TARGET_COUNT=0
@@ -18,6 +26,7 @@ RAW_BASE=""  # default computed after branch resolution unless set via --raw-bas
 SKILLS_SOURCE=""  # derived from --source after choose_source
 DRY_RUN=0
 EXTRAS=0
+SESSION_HOOK=0
 
 SCRIPT_PATH="${0:-}"
 if [[ -z "${SCRIPT_PATH}" || "${SCRIPT_PATH}" == "-" || "${SCRIPT_PATH}" == "bash" || "${SCRIPT_PATH}" == "sh" ]]; then
@@ -39,6 +48,8 @@ OPENCODE_AGENTS_DIR="${HOME}/.config/opencode/agents"
 OPENCODE_AGENTS_MD="${HOME}/.config/opencode/AGENTS.md"
 OPENCODE_PROJECT_AGENTS_DIR=".opencode/agents"
 OPENCODE_PROJECT_AGENTS_MD="AGENTS.md"
+OPENCODE_PLUGINS_DIR="${HOME}/.config/opencode/plugins"
+OPENCODE_PROJECT_PLUGINS_DIR=".opencode/plugins"
 COPILOT_AGENTS_DIR="${HOME}/.copilot/agents"
 COPILOT_AGENTS_MD="${HOME}/.copilot/AGENTS.md"
 COPILOT_PROJECT_AGENTS_DIR=".github/agents"
@@ -47,6 +58,10 @@ CLAUDE_AGENTS_DIR="${HOME}/.claude/agents"
 CLAUDE_POLICY_MD="${HOME}/.claude/CLAUDE.md"
 CLAUDE_PROJECT_AGENTS_DIR=".claude/agents"
 CLAUDE_PROJECT_POLICY_MD="CLAUDE.md"
+CLAUDE_SETTINGS="${HOME}/.claude/settings.local.json"
+CLAUDE_PROJECT_SETTINGS=".claude/settings.local.json"
+CLAUDE_HOOKS_DIR="${HOME}/.claude/hooks"
+CLAUDE_PROJECT_HOOKS_DIR=".claude/hooks"
 SYNC_WRAPPER_TEMPLATE_REMOTE="dist/scripts/sync-latest.sh"
 SYNC_WRAPPER_WRITTEN=0
 MANIFEST_TEMPLATE_PATH="dist/templates/manifest.template.json"
@@ -55,6 +70,24 @@ AGENT_FILES=(
   "rubber-duck.md"
   "duckling.md"
 )
+
+# Session-start hook artifacts (opencode), sourced from dist/opencode/hooks.
+SESSION_HOOK_FILES=(
+  "session-start.opencode.plugin.js"
+  "session-start.directive.md"
+)
+REMOTE_SESSION_HOOKS_PATH="dist/opencode/hooks"
+LOCAL_SESSION_HOOKS_DIR=""
+
+# Claude session-start hook artifacts, sourced from dist/claude/hooks.
+CLAUDE_HOOK_FILES=(
+  "session-start.sh"
+  "session-start.ps1"
+  "claude-code.session-start.hooks.json"
+  "claude-code.session-start.hooks.windows.json"
+)
+REMOTE_CLAUDE_HOOKS_PATH="dist/claude/hooks"
+LOCAL_CLAUDE_HOOKS_DIR=""
 
 agent_remote_pin_key() {
   local dest_file="$1"
@@ -103,7 +136,8 @@ Options:
   --raw-base <url>                  Raw GitHub base for web source
   --prune                           With sync: remove managed targets not in manifest
   --dry-run                         Print planned actions only
-  --extras                          Also install extras skills (duck-adapt, duck-grill, duck-tape, duck-tidy)
+--extras                          Also install extras skills (duck-adapt, duck-grill, duck-tape, duck-tidy)
+  --session-hook                    Also install session-start hook (opencode: plugin + directive)
   --allow-untrusted-source          Skip rawBase allowlist check (dangerous; forks/custom mirrors)
   -h, --help                        Show help
 
@@ -197,7 +231,8 @@ sync_replay_cmd() {
   if (( PROJECT_SCOPE == 1 )); then CMD+=(--project); else CMD+=(--global); fi
   if [[ "${action}" == "install" ]]; then
     [[ "${3:-}" == "false" ]] && CMD+=(--skip-skills)
-    [[ "${4:-}" == "true" ]] && CMD+=(--extras)
+    [[ "${5:-}" == "true" ]] && CMD+=(--extras)
+    [[ "${6:-}" == "true" ]] && CMD+=(--session-hook)
   else
     CMD+=(--skip-skills)
   fi
@@ -216,7 +251,7 @@ rawbase_check_mode() {
 
 # --- Manifest handling (pure bash, no python3) ---
 # Global state populated by manifest_load, consumed by manifest_save.
-declare -A MF_TARGET_ENABLED=() MF_TARGET_SCOPE=() MF_TARGET_INSTALL_AGENTS_MD=() MF_TARGET_INSTALL_SKILLS=() MF_TARGET_EXTRAS=()
+declare -A MF_TARGET_ENABLED=() MF_TARGET_SCOPE=() MF_TARGET_INSTALL_AGENTS_MD=() MF_TARGET_INSTALL_SKILLS=() MF_TARGET_EXTRAS=() MF_TARGET_SESSION_HOOK=()
 declare -a MF_TARGET_NAMES=()
 declare -A MF_PINS=()
 MF_SCHEMA_VERSION=1
@@ -227,7 +262,7 @@ MF_SOURCE_LAST_APPLIED_VERSION=""
 
 manifest_reset() {
   MF_TARGET_ENABLED=(); MF_TARGET_SCOPE=(); MF_TARGET_INSTALL_AGENTS_MD=()
-  MF_TARGET_INSTALL_SKILLS=(); MF_TARGET_EXTRAS=(); MF_TARGET_NAMES=(); MF_PINS=()
+  MF_TARGET_INSTALL_SKILLS=(); MF_TARGET_EXTRAS=(); MF_TARGET_SESSION_HOOK=(); MF_TARGET_NAMES=(); MF_PINS=()
   MF_SCHEMA_VERSION=1
   MF_SOURCE_MODE=""; MF_SOURCE_REF=""; MF_SOURCE_RAW_BASE=""; MF_SOURCE_LAST_APPLIED_VERSION=""
 }
@@ -271,6 +306,7 @@ manifest_load() {
         extras) MF_TARGET_EXTRAS["${current}"]="${BASH_REMATCH[2]}" ;;
         installAgentsMd) MF_TARGET_INSTALL_AGENTS_MD["${current}"]="${BASH_REMATCH[2]}" ;;
         installSkills) MF_TARGET_INSTALL_SKILLS["${current}"]="${BASH_REMATCH[2]}" ;;
+        sessionHook) MF_TARGET_SESSION_HOOK["${current}"]="${BASH_REMATCH[2]}" ;;
       esac
       continue
     fi
@@ -323,6 +359,7 @@ manifest_save() {
         printf '      "extras": %s,\n' "${MF_TARGET_EXTRAS[$t]:-false}"
         printf '      "installAgentsMd": %s,\n' "${MF_TARGET_INSTALL_AGENTS_MD[$t]:-true}"
         printf '      "installSkills": %s,\n' "${MF_TARGET_INSTALL_SKILLS[$t]:-true}"
+        printf '      "sessionHook": %s,\n' "${MF_TARGET_SESSION_HOOK[$t]:-false}"
         printf '      "scope": "%s"\n' "${MF_TARGET_SCOPE[$t]:-project}"
         printf '    }'
         (( i < last )) && printf ','
@@ -451,6 +488,10 @@ while [[ $# -gt 0 ]]; do
       EXTRAS=1
       shift
       ;;
+    --session-hook)
+      SESSION_HOOK=1
+      shift
+      ;;
     -h|--help)
       usage
       exit 0
@@ -570,7 +611,8 @@ if [[ "${ACTION}" == "sync" ]]; then
       t_install_skills="${MF_TARGET_INSTALL_SKILLS[$T]:-true}"
       t_install_agents_md="${MF_TARGET_INSTALL_AGENTS_MD[$T]:-true}"
       t_extras="${MF_TARGET_EXTRAS[$T]:-false}"
-      group_key="${t_install_skills}|${t_install_agents_md}|${t_extras}"
+      t_session_hook="${MF_TARGET_SESSION_HOOK[$T]:-false}"
+      group_key="${t_install_skills}|${t_install_agents_md}|${t_extras}|${t_session_hook}"
 
       if [[ -z "${SYNC_GROUP_TARGETS[$group_key]+x}" ]]; then
         SYNC_GROUP_KEYS+=("${group_key}")
@@ -581,10 +623,10 @@ if [[ "${ACTION}" == "sync" ]]; then
     done
 
     for group_key in "${SYNC_GROUP_KEYS[@]}"; do
-      IFS='|' read -r g_install_skills g_install_agents_md g_extras <<< "${group_key}"
+      IFS='|' read -r g_install_skills g_install_agents_md g_extras g_session_hook <<< "${group_key}"
       group_harness_csv="${SYNC_GROUP_TARGETS[$group_key]}"
 
-      sync_replay_cmd install "${group_harness_csv}" "${g_install_skills}" "${g_install_agents_md}" "${g_extras}"
+      sync_replay_cmd install "${group_harness_csv}" "${g_install_skills}" "${g_install_agents_md}" "${g_extras}" "${g_session_hook}"
       "${CMD[@]}"
     done
   fi
@@ -607,9 +649,11 @@ resolve_target() {
       if (( PROJECT_SCOPE == 1 )); then
         DEST_AGENTS_DIR="${OPENCODE_PROJECT_AGENTS_DIR}"
         DEST_POLICY_MD="${OPENCODE_PROJECT_AGENTS_MD}"
+        DEST_PLUGINS_DIR="${OPENCODE_PROJECT_PLUGINS_DIR}"
       else
         DEST_AGENTS_DIR="${OPENCODE_AGENTS_DIR}"
         DEST_POLICY_MD="${OPENCODE_AGENTS_MD}"
+        DEST_PLUGINS_DIR="${OPENCODE_PLUGINS_DIR}"
       fi
       POLICY_MODE="managed_block"
       if [[ -d "${REPO_ROOT}/dist/opencode/agents" ]]; then
@@ -618,6 +662,7 @@ resolve_target() {
         LOCAL_AGENTS_DIR="${REPO_ROOT}/agents"
       fi
       REMOTE_AGENTS_PATH="dist/opencode/agents"
+      LOCAL_SESSION_HOOKS_DIR="${REPO_ROOT}/dist/opencode/hooks"
       ;;
     copilot)
       if (( PROJECT_SCOPE == 1 )); then
@@ -639,14 +684,19 @@ resolve_target() {
       if (( PROJECT_SCOPE == 1 )); then
         DEST_AGENTS_DIR="${CLAUDE_PROJECT_AGENTS_DIR}"
         DEST_POLICY_MD="${CLAUDE_PROJECT_POLICY_MD}"
+        DEST_CLAUDE_SETTINGS="${CLAUDE_PROJECT_SETTINGS}"
+        DEST_CLAUDE_HOOKS_DIR="${CLAUDE_PROJECT_HOOKS_DIR}"
       else
         DEST_AGENTS_DIR="${CLAUDE_AGENTS_DIR}"
         DEST_POLICY_MD="${CLAUDE_POLICY_MD}"
+        DEST_CLAUDE_SETTINGS="${CLAUDE_SETTINGS}"
+        DEST_CLAUDE_HOOKS_DIR="${CLAUDE_HOOKS_DIR}"
       fi
       DEST_CLAUDE_AGENTS_MD="$(dirname -- "${DEST_POLICY_MD}")/AGENTS.md"
       POLICY_MODE="file"
       LOCAL_AGENTS_DIR="${REPO_ROOT}/dist/claude/agents"
       REMOTE_AGENTS_PATH="dist/claude/agents"
+      LOCAL_CLAUDE_HOOKS_DIR="${REPO_ROOT}/dist/claude/hooks"
       ;;
     *)
       err "invalid target: ${TARGET}"
@@ -703,6 +753,18 @@ prepare_sources() {
     for f in "${AGENT_FILES[@]}"; do
       cp -f "${LOCAL_AGENTS_DIR}/${f}" "${TMP_DIR}/${f}"
     done
+    if (( SESSION_HOOK == 1 )) && [[ "${TARGET}" == "opencode" ]]; then
+      mkdir -p "${TMP_DIR}/hooks"
+      for hf in "${SESSION_HOOK_FILES[@]}"; do
+        cp -f "${LOCAL_SESSION_HOOKS_DIR}/${hf}" "${TMP_DIR}/hooks/${hf}"
+      done
+    fi
+    if (( SESSION_HOOK == 1 )) && [[ "${TARGET}" == "claude" ]]; then
+      mkdir -p "${TMP_DIR}/claude-hooks"
+      for hf in "${CLAUDE_HOOK_FILES[@]}"; do
+        cp -f "${LOCAL_CLAUDE_HOOKS_DIR}/${hf}" "${TMP_DIR}/claude-hooks/${hf}"
+      done
+    fi
     return
   fi
 
@@ -713,6 +775,18 @@ prepare_sources() {
   for f in "${AGENT_FILES[@]}"; do
     curl -fsSL "${RAW_BASE}/${REMOTE_AGENTS_PATH}/${f}" -o "${TMP_DIR}/${f}"
   done
+  if (( SESSION_HOOK == 1 )) && [[ "${TARGET}" == "opencode" ]]; then
+    mkdir -p "${TMP_DIR}/hooks"
+    for hf in "${SESSION_HOOK_FILES[@]}"; do
+      curl -fsSL "${RAW_BASE}/${REMOTE_SESSION_HOOKS_PATH}/${hf}" -o "${TMP_DIR}/hooks/${hf}"
+    done
+  fi
+  if (( SESSION_HOOK == 1 )) && [[ "${TARGET}" == "claude" ]]; then
+    mkdir -p "${TMP_DIR}/claude-hooks"
+    for hf in "${CLAUDE_HOOK_FILES[@]}"; do
+      curl -fsSL "${RAW_BASE}/${REMOTE_CLAUDE_HOOKS_PATH}/${hf}" -o "${TMP_DIR}/claude-hooks/${hf}"
+    done
+  fi
 }
 
 strip_managed_block_to_file() {
@@ -898,6 +972,83 @@ uninstall_agents() {
   log "Removed ${removed} agents from ${DEST_AGENTS_DIR}"
 }
 
+# Install session-start hooks for opencode when opted in.
+install_session_hook_opencode() {
+  local dest_plugin="${DEST_PLUGINS_DIR}/session-start.js"
+  local dest_directive="${DEST_PLUGINS_DIR}/../session-start.directive.md"
+  if (( DRY_RUN == 1 )); then
+    log "[dry-run] session-hook: ${TMP_DIR}/hooks/session-start.opencode.plugin.js -> ${dest_plugin}"
+    log "[dry-run] session-hook: ${TMP_DIR}/hooks/session-start.directive.md -> ${dest_directive}"
+    return 0
+  fi
+  mkdir -p "${DEST_PLUGINS_DIR}" "$(dirname -- "${dest_directive}")"
+  cp -f "${TMP_DIR}/hooks/session-start.opencode.plugin.js" "${dest_plugin}"
+  cp -f "${TMP_DIR}/hooks/session-start.directive.md" "${dest_directive}"
+  log "Installed session-start hook -> ${DEST_PLUGINS_DIR}"
+}
+
+uninstall_session_hook_opencode() {
+  local dest_plugin="${DEST_PLUGINS_DIR}/session-start.js"
+  local dest_directive="${DEST_PLUGINS_DIR}/../session-start.directive.md"
+  if (( DRY_RUN == 1 )); then
+    log "[dry-run] session-hook rm ${dest_plugin} ${dest_directive}"
+    return 0
+  fi
+  [[ -f "${dest_plugin}" ]] && rm -f "${dest_plugin}"
+  [[ -f "${dest_directive}" ]] && rm -f "${dest_directive}"
+  log "Removed session-start hook from ${DEST_PLUGINS_DIR}"
+}
+
+# Merge SessionStart hook block into claude settings.local.json (idempotent).
+merge_claude_hook_settings() {
+  local src_hooks="${1}"
+  local settings="${DEST_CLAUDE_SETTINGS}"
+  local hook_block
+  hook_block="$(jq -c '.hooks.SessionStart' "${src_hooks}")"
+  if [[ -f "${settings}" ]]; then
+    jq --argjson hb "${hook_block}" \
+      '.hooks.SessionStart = $hb' "${settings}" > "${settings}.tmp.$$" \
+      && mv "${settings}.tmp.$$" "${settings}"
+  else
+    jq -n --argjson hb "${hook_block}" '{hooks: {SessionStart: $hb}}' > "${settings}"
+  fi
+}
+
+# Install session-start hooks for claude when opted in.
+install_session_hook_claude() {
+  local hooks_dir="${DEST_CLAUDE_HOOKS_DIR}"
+  if (( DRY_RUN == 1 )); then
+    for hf in "${CLAUDE_HOOK_FILES[@]}"; do
+      log "[dry-run] session-hook: ${TMP_DIR}/claude-hooks/${hf} -> ${hooks_dir}/${hf}"
+    done
+    log "[dry-run] session-hook: merge SessionStart -> ${DEST_CLAUDE_SETTINGS}"
+    return 0
+  fi
+  mkdir -p "${hooks_dir}"
+  for hf in "${CLAUDE_HOOK_FILES[@]}"; do
+    cp -f "${TMP_DIR}/claude-hooks/${hf}" "${hooks_dir}/${hf}"
+  done
+  merge_claude_hook_settings "${hooks_dir}/claude-code.session-start.hooks.json"
+  log "Installed session-start hook -> ${hooks_dir}"
+}
+
+uninstall_session_hook_claude() {
+  local hooks_dir="${DEST_CLAUDE_HOOKS_DIR}"
+  local settings="${DEST_CLAUDE_SETTINGS}"
+  if (( DRY_RUN == 1 )); then
+    log "[dry-run] session-hook rm ${hooks_dir}/* and remove SessionStart from ${settings}"
+    return 0
+  fi
+  for hf in "${CLAUDE_HOOK_FILES[@]}"; do
+    [[ -f "${hooks_dir}/${hf}" ]] && rm -f "${hooks_dir}/${hf}"
+  done
+  # Remove SessionStart key if present.
+  if [[ -f "${settings}" ]] && jq -e '.hooks.SessionStart' "${settings}" >/dev/null 2>&1; then
+    jq 'del(.hooks.SessionStart)' "${settings}" > "${settings}.tmp.$$" && mv "${settings}.tmp.$$" "${settings}"
+  fi
+  log "Removed session-start hook from ${hooks_dir}"
+}
+
 skills_install() {
   (( SKIP_SKILLS == 1 )) && return 0
   local scope=""
@@ -1048,12 +1199,15 @@ manifest_update_target() {
     else MF_TARGET_INSTALL_SKILLS["${target_name}"]="true"; fi
     if (( EXTRAS == 1 )); then MF_TARGET_EXTRAS["${target_name}"]="true"
     else MF_TARGET_EXTRAS["${target_name}"]="false"; fi
+    if (( SESSION_HOOK == 1 )); then MF_TARGET_SESSION_HOOK["${target_name}"]="true"
+    else MF_TARGET_SESSION_HOOK["${target_name}"]="false"; fi
   elif [[ "${op}" == "uninstall" ]]; then
     unset "MF_TARGET_ENABLED[${target_name}]"
     unset "MF_TARGET_SCOPE[${target_name}]"
     unset "MF_TARGET_INSTALL_AGENTS_MD[${target_name}]"
     unset "MF_TARGET_INSTALL_SKILLS[${target_name}]"
     unset "MF_TARGET_EXTRAS[${target_name}]"
+    unset "MF_TARGET_SESSION_HOOK[${target_name}]"
     local -a new_names=() t
     for t in "${MF_TARGET_NAMES[@]}"; do
       [[ "${t}" != "${target_name}" ]] && new_names+=("${t}")
@@ -1122,6 +1276,12 @@ for TARGET in "${TARGETS[@]}"; do
       doctor
       prepare_sources
       install_agents
+      if (( SESSION_HOOK == 1 )) && [[ "${TARGET}" == "opencode" ]]; then
+        install_session_hook_opencode
+      fi
+      if (( SESSION_HOOK == 1 )) && [[ "${TARGET}" == "claude" ]]; then
+        install_session_hook_claude
+      fi
       if (( SYNC_WRAPPER_WRITTEN == 0 )); then
         install_sync_wrapper
         SYNC_WRAPPER_WRITTEN=1
@@ -1133,12 +1293,28 @@ for TARGET in "${TARGETS[@]}"; do
       for pin_f in "${AGENT_FILES[@]}"; do
         pin_h=$(compute_sha256 "${TMP_DIR}/${pin_f}") && PIN_PAIRS+=("$(agent_remote_pin_key "${pin_f}")=${pin_h}")
       done
+      if (( SESSION_HOOK == 1 )) && [[ "${TARGET}" == "opencode" ]]; then
+        for hf in "${SESSION_HOOK_FILES[@]}"; do
+          pin_h=$(compute_sha256 "${TMP_DIR}/hooks/${hf}") && PIN_PAIRS+=("${REMOTE_SESSION_HOOKS_PATH}/${hf}=${pin_h}")
+        done
+      fi
+      if (( SESSION_HOOK == 1 )) && [[ "${TARGET}" == "claude" ]]; then
+        for hf in "${CLAUDE_HOOK_FILES[@]}"; do
+          pin_h=$(compute_sha256 "${TMP_DIR}/claude-hooks/${hf}") && PIN_PAIRS+=("${REMOTE_CLAUDE_HOOKS_PATH}/${hf}=${pin_h}")
+        done
+      fi
       write_pins "${MANIFEST_PATH}" "${PIN_PAIRS[@]}"
       ;;
     uninstall)
       doctor
       prepare_sources
       uninstall_agents
+      if [[ "${TARGET}" == "opencode" ]]; then
+        uninstall_session_hook_opencode
+      fi
+      if [[ "${TARGET}" == "claude" ]]; then
+        uninstall_session_hook_claude
+      fi
       strip_legacy_policy_blocks 0
       status
       manifest_update_target "uninstall" "${TARGET}"
