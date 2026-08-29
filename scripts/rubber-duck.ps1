@@ -592,33 +592,6 @@ function Strip-ManagedBlockText([string]$text) {
   return ($out -join "`n")
 }
 
-function Backup-Md([string]$Target) {
-  if ($DryRun) {
-    $stamp = Get-Date -Format "yyyyMMdd-HHmmss"
-    Log "[dry-run] backup $Target -> $Target.bak.$stamp"
-    return
-  }
-  $parent = Split-Path -Parent $Target
-  if (-not [string]::IsNullOrWhiteSpace($parent)) {
-    New-Item -ItemType Directory -Force -Path $parent | Out-Null
-  }
-  $stamp = Get-Date -Format "yyyyMMdd-HHmmss"
-  $backup = "$Target.bak.$stamp"
-  if (Test-Path $Target) {
-    Copy-Item -Force $Target $backup
-  } else {
-    New-Item -ItemType File -Force -Path $backup | Out-Null
-  }
-  $allBackups = Get-ChildItem -Path "$Target.bak.*" -ErrorAction SilentlyContinue | Sort-Object Name
-  if ($allBackups.Count -gt 1) {
-    $toDelete = $allBackups | Select-Object -First ($allBackups.Count - 1)
-    foreach ($b in $toDelete) {
-      Remove-Item -Force $b.FullName
-    }
-  }
-  Log "Backup created: $backup"
-}
-
 function Test-ManagedBlock([string]$Target) {
   if (-not (Test-Path $Target)) { return $false }
   $current = Get-Content -Raw $Target
@@ -638,7 +611,7 @@ function Remove-ManagedBlock([string]$Target) {
 
 # Handle legacy managed-block migration for the resolved target.
 # When -Notify (install), emit a prominent notice before touching files.
-# Only backs up + strips files that actually contain the legacy block.
+# Only strips files that actually contain the legacy block.
 function Strip-LegacyPolicyBlocks {
   param([switch]$Notify)
   $targets = @($DestPolicyMd)
@@ -654,11 +627,9 @@ function Strip-LegacyPolicyBlocks {
     Log ""
     Log "!! Legacy managed policy block detected (3.x migration)"
     Log "   Policy now loads via the duck-policy skill; the block will be removed."
-    Log "   A timestamped .bak file will be written next to each affected file."
   }
   foreach ($t in $targets) {
     if (Test-ManagedBlock $t) {
-      Backup-Md $t
       Remove-ManagedBlock $t
     }
   }

@@ -159,7 +159,6 @@ EOF
 log() { printf '%s\n' "$*"; }
 warn() { printf 'WARN: %s\n' "$*"; }
 err() { printf 'ERROR: %s\n' "$*" >&2; }
-timestamp() { date +%Y%m%d-%H%M%S; }
 
 print_banner() {
   cat <<'BANNER'
@@ -811,33 +810,6 @@ strip_managed_block() {
   mv "${tmp}" "${target}"
 }
 
-backup_md() {
-  local target="$1"
-  local backup
-  backup="${target}.bak.$(timestamp)"
-  if (( DRY_RUN == 1 )); then
-    log "[dry-run] backup ${target} -> ${backup}"
-    return
-  fi
-  mkdir -p "$(dirname -- "${target}")"
-  if [[ -f "${target}" ]]; then
-    cp -f "${target}" "${backup}"
-  else
-    : > "${backup}"
-  fi
-  local backups=()
-  local keep_index=0
-  backups=( "${target}".bak.* )
-  if [[ -e "${backups[0]:-}" ]]; then
-    keep_index=$((${#backups[@]} - 1))
-    for i in "${!backups[@]}"; do
-      (( i == keep_index )) && continue
-      rm -f "${backups[$i]}"
-    done
-  fi
-  log "Backup created: ${backup}"
-}
-
 remove_managed_block() {
   local target="${1:-${DEST_POLICY_MD}}"
   if (( DRY_RUN == 1 )); then
@@ -853,7 +825,7 @@ remove_managed_block() {
 
 # Handle legacy managed-block migration for the resolved target.
 # When notify=1 (install), emit a prominent notice before touching files.
-# Only backs up + strips files that actually contain the legacy block.
+# Only strips files that actually contain the legacy block.
 strip_legacy_policy_blocks() {
   local notify="${1:-0}"
   local targets=( "${DEST_POLICY_MD}" )
@@ -872,11 +844,9 @@ strip_legacy_policy_blocks() {
     log ""
     log "!! Legacy managed policy block detected (3.x migration)"
     log "   Policy now loads via the duck-policy skill; the block will be removed."
-    log "   A timestamped .bak file will be written next to each affected file."
   fi
   for t in "${targets[@]}"; do
     if has_managed_block "${t}"; then
-      backup_md "${t}"
       remove_managed_block "${t}"
     fi
   done
