@@ -237,7 +237,7 @@ Marker format: `<timestamp> | cwd: <path> | latest-state: <file> | transcript: <
 
 ## Security
 
-Redaction runs before every write. Secrets, API keys, tokens, passwords, and PII are detected and blocked. You must confirm masking (`<REDACTED>`) before any flagged content reaches persistent storage.
+Redaction runs before every write. Secrets, API keys, tokens, passwords, and PII are detected and blocked. If flagged content would reach persistent storage, confirm masking (`<REDACTED>`) with the user first.
 
 Redaction applies to both tiers (CONTEXT.md and state files).
 

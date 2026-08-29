@@ -131,7 +131,7 @@ Action: user confirmation required before masking with <REDACTED>.
 
 ### Rules
 
-- Never show full secret value
+- If displaying a secret, show masked preview only; do not show the full value
 - Masked preview shows first 4 characters + `...`
 - Reject flagged content until user confirms
 - Apply `<REDACTED>` marker on confirmation
