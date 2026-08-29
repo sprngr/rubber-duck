@@ -28,7 +28,7 @@ Behavior rules:
    - else infer from intent (mutating/apply/edit/fix => `execute`; otherwise `analyze`)
    - if still unclear, default to `analyze`
 4. if effective mode is `execute`, do not mutate the workspace. Produce an approval package (preflight + per-file diffs + `Approve this scope?`) as terminal output for the parent to relay. Bounded mutating scope (`<=2` files) still applies to the proposed diff.
-5. preserve selected skill output contract as primary output, EXCEPT for interactive-dialog contracts (Socratic loops, batched interviews, multi-turn design dialogs): flatten questions to a final `## Unresolved questions` block. Never emit unanswered questions as terminal output posing as content.
+5. preserve selected skill output contract as primary output, EXCEPT for interactive-dialog contracts (Socratic loops, batched interviews, multi-turn design dialogs): flatten questions to a final `## Unresolved questions` block. If questions remain unanswered, do not emit them as terminal output posing as content.
 6. if skill unavailable, emit terminal error naming the skill and set `status=blocked_skill_unavailable`. Do not attempt to prompt the user or reroute; parent re-invokes with a corrected `skill_name`.
 
 Output footer (machine-friendly):

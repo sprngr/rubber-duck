@@ -72,7 +72,7 @@ This repository contains source prompts, assembled skills, generated harness art
 - Generated outputs:
   - skills artifacts: `skills/*`
   - harness artifacts: `dist/*`
-- Never hand-edit generated outputs.
+- If a generated artifact needs changing, edit its source under `src/`; do not hand-edit the artifact.
 - If source changes, rebuild and re-check:
   - `make build`
   - `make check`
