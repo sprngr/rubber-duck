@@ -108,7 +108,7 @@ Verify with smallest runnable check (build/test, or re-audit of changed hunks).
 ## Boundaries
 
 - No auto-edits without approval.
-- Never touch TODO/FIXME/HACK/XXX markers (duck-debt).
-- Never edit ADR/design notes — flag only.
-- Never touch CONTEXT.md / .duck-tape state (duck-tape).
+- If a target is a TODO/FIXME/HACK/XXX marker, leave it — duck-debt owns those.
+- If a target is an ADR/design note, flag only; do not edit.
+- If a target is CONTEXT.md or .duck-tape state, leave it — duck-tape owns those.
 - Every deletion carries cited evidence.

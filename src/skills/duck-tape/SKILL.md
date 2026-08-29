@@ -212,6 +212,6 @@ Prune never touches fixed-schema sections.
 - Default mode is state-only. CONTEXT.md is written only on merge signals.
 - Write only `CONTEXT.md`, `.duck-tape/<id>.state.md`, `.duck-tape/<id>-recovered.state.md`, `.duck-tape/<id>-transcript.json`, `.duck-tape/.gitignore`, `.duck-tape/.last-compact` marker.
 - Respect existing CONTEXT.md structure. If file lacks schema sections, prompt user to migrate before first merge.
-- Never infer Goals or Conventions entries on bootstrap.
-- Never fuzzy-rewrite Notes. Append-only at write time.
-- Never silently drop entries. Changelog with reason required.
+- If bootstrap lacks Goals or Conventions entries, add them only from explicit user decisions; do not infer.
+- If a Note needs changing at write time, append — do not fuzzy-rewrite.
+- If an entry is dropped, record the reason in the changelog; do not drop silently.
