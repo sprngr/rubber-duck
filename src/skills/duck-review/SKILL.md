@@ -73,7 +73,7 @@ Keep comments paste-ready for PR threads.
 
 - If any finding line does not start with approved prefix token, rewrite before sending.
 - If any finding line is missing location or `Fix:`, rewrite before sending.
-- Never emit mixed formats (`- HIGH`, `- MED`, numbered bullets for findings).
+- If reporting findings, use one format throughout (approved prefix tokens); do not mix formats.
 
 **Prefixes:**
 

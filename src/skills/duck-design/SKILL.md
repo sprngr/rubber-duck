@@ -108,7 +108,7 @@ Compact first-response template (around 6-12 lines):
 6. State non-negotiable dimension for decision (1 sentence)
 7. Ask: "Which outcome matters most here, given your constraints?"
 
-Never prescribe. Always frame as tradeoff choice.
+If recommending an option, frame it as a tradeoff choice with alternatives; do not prescribe.
 
 ### 5. Build tradeoff matrix (multi-option decisions)
 
