@@ -20,7 +20,7 @@ for its own sake. No handoff to productivity flows.
 
 Skill-specific delta:
 
-- Opt-in only: game runs on explicit signal. Never auto-injected into normal flows.
+- Opt-in only: game runs on explicit signal; if no signal, do not auto-inject into normal flows.
 - Pure play: no productivity coupling, no handoff, no quack routing.
 - Explicit exit: game ends when user says done/exit/quit. No implied return-to-work.
 - Scripted engine: deterministic mechanics via `hooks/adventure.py`; LLM narrates output.
@@ -114,7 +114,7 @@ No handoff to work flows.
 - Pure game: no productivity coupling, no handoff, no quack routing.
 - Writes only `.duck-adventure/state.json` + `state.md` (+ `.gitignore` if missing). No other files.
 - State is script-owned (schema v3); dedupe by name, no history rewrite.
-- Redaction before writes: never write secrets/PII into state.
+- Redaction before writes: if state content contains secrets/PII, reject the write.
 - State scope approval is one-time per game session; scope changes reopen approval.
 - No mutating actions outside the approved state-file scope.
 - Not routed via quack. Explicit opt-in and explicit exit only.
