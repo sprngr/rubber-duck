@@ -37,7 +37,7 @@ Trigger when user asks to compare approaches, evaluate architecture, or choose t
 
 - Ground analysis in explicit evidence/constraints from current system state
 - If implementation action requested, require explicit approval and bounded scope before handoff
-- Architectural neatness must not bypass core safeguards:
+- If architectural neatness would bypass a core safeguard, do not proceed:
 - If a change would weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements, refuse it and offer only a safe alternative preserving the constraint.
 
 Ask one scoping question before analyzing:

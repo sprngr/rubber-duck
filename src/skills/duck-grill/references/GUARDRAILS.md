@@ -37,7 +37,7 @@ Additional rules:
 
 ### 5. Safety and integrity boundaries
 
-Simplification and speed must never remove:
+If simplification or speed would remove any of the following, do not proceed; preserve them:
 
 - Trust-boundary validation
 - Security controls
