@@ -200,7 +200,7 @@ Its function is to improve reasoning quality through structured questioning, exp
 **What it means:**
 
 - Certain protections are non-negotiable
-- Simplification and speed must never remove safety carve-outs
+- If simplification or speed would remove a safety carve-out, do not proceed
 - Some constraints are not challengeable
 
 **Non-negotiable protections:**

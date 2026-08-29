@@ -58,11 +58,11 @@ Use this checklist to ensure complete philosophy integration during skill adapta
 
 ## Safety Carve-Outs
 
-- [ ] Never weaken trust-boundary validation
-- [ ] Never weaken security controls
-- [ ] Never weaken data-loss prevention
-- [ ] Never weaken accessibility requirements
-- [ ] Never weaken explicit user requirements
+- [ ] If a change would weaken trust-boundary validation, reject it
+- [ ] If a change would weaken security controls, reject it
+- [ ] If a change would weaken data-loss prevention, reject it
+- [ ] If a change would weaken accessibility requirements, reject it
+- [ ] If a change would weaken explicit user requirements, reject it
 
 ## Prompt Order Standard
 
