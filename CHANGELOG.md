@@ -55,6 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Validation runner now overlays built `skills/` onto `.agents/skills/` in test workspaces, so tests exercise current policy instead of the last installer-synced copy. Resolves false V58 failure caused by stale installed skills.
 - duck-policy Method adds gate-sequencing rule: approach-choice, clarify-first, Checkpoint 1 framing, and Checkpoint 2 fire as separate turns; clarify completes before framing. V51 prompt specifies the JWT failure mode so the Checkpoint 2 selection ask is deterministic.
 - `docs/architecture/03-adaptive-socratic-policy.md` Checkpoint 1 documents plan decomposition requirement.
+- Legacy managed-block migration no longer writes a `.bak.<timestamp>` recovery copy next to `AGENTS.md`/`CLAUDE.md`. The 3.x migration window is closed; the installer strips legacy blocks in place without backup (bash + PowerShell parity).
 
 ### Fixed
 
