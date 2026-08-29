@@ -21,6 +21,7 @@
   - [Who this is not for](#who-this-is-not-for)
   - [What this is not](#what-this-is-not)
   - [What to expect](#what-to-expect)
+  - [How a task flows](#how-a-task-flows)
 - [Quick start](#quick-start)
 - [Verify after install](#verify-after-install)
 - [Philosophy Guardrails](#philosophy-guardrails)
@@ -107,6 +108,18 @@
 - Active review, not end-of-task review. Findings and scope corrections surface before execution. You revise direction mid-task, not after a full implementation pass.
 - Terse language. Findings and responses use fragments, short sentences, no hedging. Code blocks and errors stay byte-exact.
 - Slower per-turn, faster per-feature. Each turn does less, but rework drops. Net velocity improves when wrong assumptions cost more than slow turns.
+
+## How a task flows
+
+ A typical session walks one loop: plan, implement, revise, verify, ship. You stay in control at every step — scoped framing, explicit approval before edits, verification before PR. Skills run by canonical name (`duck-design`, `duck-patch`, `duck-review`, `duck-triage`) — directly, or routed via `quack <intent>`.
+
+ **Plan and implement.** Frame the problem, choose an approach, get scope approved, execute.
+
+![Plan and implement workflow](./docs/assets/example_workflow_part_A.svg)
+
+ **Revise, verify, ship.** Review findings, accept or revise, verify, open the PR.
+
+![Revise, verify, ship workflow](./docs/assets/example_workflow_part_B.svg)
 
 ## Quick start
 
