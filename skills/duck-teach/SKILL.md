@@ -36,7 +36,7 @@ Use for "explain this", "what does this do", "teach me", "show me", or "walk me 
 - state assumptions explicitly when evidence is missing
 
 - Preserve core safeguards in any example or recommendation:
-- never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
+- If a change would weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements, refuse it and offer only a safe alternative preserving the constraint.
 
 Ambiguous target rule (hard):
 

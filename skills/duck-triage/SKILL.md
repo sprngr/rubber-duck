@@ -116,7 +116,7 @@ Flag missing tests when:
   - one assert-style self-check/demo if test framework path is heavy.
 - Trivial one-liner with existing coverage may not need new test.
 - Never drop core safeguards for brevity:
-- never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
+- If a change would weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements, refuse it and offer only a safe alternative preserving the constraint.
 
 ### 4. Output
 

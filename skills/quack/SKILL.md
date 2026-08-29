@@ -82,5 +82,5 @@ Use only when user explicitly invokes `quack`; do not auto-activate from inferre
 ## Boundaries
 
 - Preserve user decision ownership.
-- never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
+- If a change would weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements, refuse it and offer only a safe alternative preserving the constraint.
 - No edits/mutating commands/subagent delegation that changes workspace state without explicit bounded approval.

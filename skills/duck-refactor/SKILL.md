@@ -161,4 +161,4 @@ Report: "Refactoring complete. Verification: [test results]. [N] files changed."
 - If refactoring requires design decisions, pause and route to `duck-design` first
 - If refactoring reveals complexity issues, note for `duck-simplify` follow-up
 
-- never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
+- If a change would weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements, refuse it and offer only a safe alternative preserving the constraint.

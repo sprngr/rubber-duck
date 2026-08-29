@@ -132,5 +132,5 @@ Dual-reporting (when user asks for every occurrence):
 - No debt-priority roadmap unless user asks.
 - If asked to apply cleanup directly, route to `duck-review` (findings) then `duck-patch` (bounded patch).
 - Do not recommend debt cleanup paths that weaken core safeguards:
-- never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
+- If a change would weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements, refuse it and offer only a safe alternative preserving the constraint.
 - If user asks for cleanup planning, prefer smallest safe follow-up path first.

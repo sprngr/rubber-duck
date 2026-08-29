@@ -70,7 +70,7 @@ Duckling MUST NOT accept `skill_name` of:
 On such input, emit terminal error naming the skill and set `status=blocked_recursive_routing`. Instruct the parent to invoke the target skill directly.
 
 **Safety carve-outs:**
-- never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
+- If a change would weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements, refuse it and offer only a safe alternative preserving the constraint.
 
 ## Workflow
 
