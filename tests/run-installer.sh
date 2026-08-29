@@ -152,8 +152,8 @@ test_sync_wrapper_content() {
   grep -q 'RUBBER_DUCK_VERSION:' .rubber-duck/sync-latest.sh || return 1
 }
 
-# Legacy managed block on upgrade: user content preserved in backup, block stripped.
-test_managed_block_migration_preserves_content() {
+# Legacy managed block on upgrade: block stripped, no .bak backup written.
+test_managed_block_migration_strips_without_backup() {
   cat > AGENTS.md <<'EOF'
 Preamble line
 
@@ -170,10 +170,7 @@ EOF
   grep -q "USER CUSTOM MARKER" AGENTS.md && return 1
   grep -q "Preamble line" AGENTS.md || return 1
   grep -q "Trailer line" AGENTS.md || return 1
-  local bak
-  bak=$(ls AGENTS.md.bak.* 2>/dev/null | head -1)
-  [[ -n "$bak" ]] || return 1
-  grep -q "USER CUSTOM MARKER" "$bak" || return 1
+  compgen -G "AGENTS.md.bak.*" >/dev/null && return 1
   return 0
 }
 
@@ -216,7 +213,7 @@ run_test "dry-run no writes"                test_dry_run_no_writes
 run_test "dry-run multi-target layout"      test_dry_run_multi_target_layout
 run_test "sync default source"              test_sync_default_source
 run_test "sync wrapper content"             test_sync_wrapper_content
-run_test "managed block migration preserves content" test_managed_block_migration_preserves_content
+run_test "managed block migration strips without backup" test_managed_block_migration_strips_without_backup
 run_test "fresh install no spurious backup" test_fresh_install_no_spurious_backup
 run_test "bash3 version guard"              test_version_guard_rejects_bash3
 
