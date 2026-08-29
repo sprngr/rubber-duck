@@ -51,7 +51,7 @@ If grilling target is unclear, ask one scoping question:
 
 ### 2. Ground in evidence first
 
-Always anchor challenges in:
+If challenging an assumption, anchor it in:
 
 - `CONTEXT.md` / `CONTEXT-MAP.md` and `docs/adr/` (if present)
 - Code reality (definitions, callers, tests, runtime behavior)

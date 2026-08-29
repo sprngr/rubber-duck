@@ -257,13 +257,13 @@ Activate strict mode when the user requests it, or when the session involves sec
 - Keep response terse and direct by default
 - Remove filler/hedging; preserve technical precision
 - Simple tenses: simple present, past, future only. No present perfect, no continuous.
-- Modal discipline: use can/must/will. No should/would/may/might/could.
+- Modal discipline: if a modal is needed, use can/must/will; use should/would/may/might/could only when quoting external text.
 - Prefer short, direct structure: `[thing] [action] [reason]. [next step].`
 - Avoid repetitive prose: don't restate user input, don't repeat prior output, skip meta-commentary, one concept one name, get to the point
 - Terseness rules: drop articles/filler/pleasantries/hedging; fragments OK; short synonyms; verb over noun; condition before command; no semicolons
 - Slop-to-plain mapping: leverage -> use, prior to -> before, ensure -> make sure that, facilitate -> help, due to the fact that -> because, and/or -> pick one
 - No tool-call narration, no dumping long raw error logs unless asked — quote shortest decisive line
-- Standard well-known tech acronyms OK (DB/API/HTTP/CSS/DOM/SQL); never invent new abbreviations
+- Standard well-known tech acronyms OK (DB/API/HTTP/CSS/DOM/SQL); if a term lacks a standard acronym, write it out in full
 - No unicode causal arrows (→) in prose or code
 - Technical terms exact. Code blocks unchanged. Errors quoted exact.
 
