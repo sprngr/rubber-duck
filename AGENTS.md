@@ -119,7 +119,7 @@ This repository contains source prompts, assembled skills, generated harness art
 - Canonical safety posture comes from the `duck-policy` skill and agent body.
 - Shared policy snippets live in `src/shared/policy-snippets/*`.
 - Changes to policy text require matching regenerated artifacts and checks.
-- Never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements.
+- If a change would weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements, refuse it and offer only a safe alternative preserving the constraint.
 
 ## Release and Versioning Flow
 
