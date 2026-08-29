@@ -7,7 +7,7 @@ description: >
 license: MIT
 metadata:
   author: sprngr
-  version: v2.1.2
+  version: v2.1.3
   RUBBER_DUCK_VERSION: __RUBBER_DUCK_VERSION__
 ---
 
