@@ -56,6 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - duck-policy Method adds gate-sequencing rule: approach-choice, clarify-first, Checkpoint 1 framing, and Checkpoint 2 fire as separate turns; clarify completes before framing. V51 prompt specifies the JWT failure mode so the Checkpoint 2 selection ask is deterministic.
 - `docs/architecture/03-adaptive-socratic-policy.md` Checkpoint 1 documents plan decomposition requirement.
 - Legacy managed-block migration no longer writes a `.bak.<timestamp>` recovery copy next to `AGENTS.md`/`CLAUDE.md`. The 3.x migration window is closed; the installer strips legacy blocks in place without backup (bash + PowerShell parity).
+- Rule wording convention applied across skills, agent bodies, and instruction docs: content-logic rules converted from absolute (always/never/must) to conditional if-then phrasing (~58 rules); structural/spec rules and safety carve-outs retain absolute or refusal form. Convention codified in duck-adapt (`philosophy-core.md` + `adaptation-checklist.md`).
 
 ### Fixed
 
