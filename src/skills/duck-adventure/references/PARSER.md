@@ -54,5 +54,5 @@ exit / quit — end run (script: preserve for resume, no banking)
 
 ## Unknown input
 `I don't understand "<input>". Type "help" for commands.` — then list verbs
-in one line. Never improvise a new verb; if a verb is missing from this list,
-treat as unknown.
+in one line. If a verb is missing from this list, treat it as unknown; do not
+improvise a new one.
