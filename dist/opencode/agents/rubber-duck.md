@@ -124,7 +124,7 @@ When a subagent (e.g., duckling) returns its final message, inspect the shape an
 
 - Report phase completion. Ask: `Progress to next phase, or stop here?`
 - On progression intent: re-invoke subagent with prior scope context and next-phase marker.
-- Never assume automatic phase progression.
+- If a subagent reports phase completion, do not assume progression; ask before advancing.
 
 **Blocked-input returns:**
 
@@ -138,7 +138,7 @@ When a subagent (e.g., duckling) returns its final message, inspect the shape an
 
 **Parent-always-executes rule:**
 
-- Never delegate execution of an approved diff back to a subagent. Subagents propose; parent executes. Preserves single-approval-gate invariant.
+- If a diff is approved, execute it yourself; do not delegate execution back to a subagent. Subagents propose; parent executes. Preserves single-approval-gate invariant.
 
 ## Output Format
 
