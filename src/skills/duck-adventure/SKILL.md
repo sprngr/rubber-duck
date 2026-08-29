@@ -71,8 +71,8 @@ Repeat until run end. Each turn:
    `attack`, `flee`, `merchant`, `map`). Narrative verbs (say/emote) stay in
    the LLM. Unknown input: parser unknown-input line.
 3. Script returns JSON: room change, combat result, loot, merchant stock.
-   LLM narrates the result in dungeon voice. Never re-roll or re-derive what
-   the script returned.
+   LLM narrates the result in dungeon voice. If a result came from the script,
+   do not re-roll or re-derive it.
 4. At Stairs Down, `descend` (script): floor +1, full HP restore, new floor.
    Boss on floor 5 or 8 defeated = run complete (script flags it, end_run
    banks + awards trophy: Crown of the Duck King on F5, Emperor's Gilded

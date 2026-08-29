@@ -43,8 +43,8 @@ from its output and renders `.duck-adventure/state.md` summary at run end.
 ```
 
 ## Rules
-- Script owns state.json. LLM never writes it directly — all mutations via
-  script subcommands.
+- Script owns state.json. If a state mutation is needed, route it through
+  script subcommands; the LLM does not write state.json directly.
 - Permanent survives death. Run resets on death.
 - Run gold banks to hoard at run end (exit, death, or complete).
 - Quest log records every run end with outcome.
