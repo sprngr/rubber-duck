@@ -6,7 +6,7 @@ Strict output specifications for duck-tape artifacts.
 
 ### Section headers
 
-- Always `## <Section>` (two hash marks, space, section name)
+- If emitting a section header, use exactly `## <Section>` (two hash marks, space, section name)
 - Section names are case-sensitive: `Goals`, `Decisions`, `Conventions`, `Glossary`, `Deferred-Debt`, `Open-Questions`, `Notes`
 - No markdown formatting in headers (no bold, no links)
 

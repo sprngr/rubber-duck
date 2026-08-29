@@ -41,7 +41,7 @@ Alias for `/duck-tape merge`. Same behavior.
 
 ### `/duck-tape prune` — Cull Notes entries
 
-Lists timestamped Notes entries in CONTEXT.md. You pick which to remove. Fixed-schema sections are never touched.
+Lists timestamped Notes entries in CONTEXT.md. You pick which to remove. If a target is a fixed-schema section, leave it untouched.
 
 **Use when:** CONTEXT.md Notes section grows too large. Old observations that no longer matter.
 
@@ -98,7 +98,7 @@ Five scenarios covering the session lifecycle.
 
 ### Periodic maintenance
 
-1. Check CONTEXT.md Notes section size. If it grew large, run `/duck-tape prune`. Pick stale entries to remove. Fixed-schema sections are never touched.
+1. Check CONTEXT.md Notes section size. If it grew large, run `/duck-tape prune`. Pick stale entries to remove. If an entry is in a fixed-schema section, leave it; prune Notes only.
 2. Review Deferred-Debt entries. Update status markers as decisions get made.
 3. If CONTEXT.md drifted from schema (freeform content outside the 7 sections), run `/duck-tape migrate`. Skill classifies content and proposes restructure.
 4. Check `.duck-tape/` for old state files. Rotation handles this automatically (max 10), but verify if disk space matters.
@@ -132,7 +132,7 @@ Prune Notes entries when:
 - The detail is available elsewhere (code, docs, tickets)
 - The entry is pure scratch-work (derivation steps you don't need to revisit)
 
-Never prune fixed-schema sections via prune. Those merge only.
+If pruning, keep fixed-schema sections; those merge only.
 
 ### CONTEXT.md schema overview
 
