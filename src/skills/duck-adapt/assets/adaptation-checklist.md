@@ -56,6 +56,12 @@ Use this checklist to ensure complete philosophy integration during skill adapta
 - [ ] Constraint challenges (questioning given constraints)
 - [ ] Tradeoff exploration before recommendations
 
+## Rule Wording Convention
+
+- [ ] Content-logic rules use conditional phrasing: "If X, do Y" (trigger condition stated)
+- [ ] Structural/format/spec rules stay absolute (exact output forms, loading semantics, phase caps, required phrases)
+- [ ] Positive framing: state what to do; prohibition form reserved for safety carve-outs and refusal actions
+
 ## Safety Carve-Outs
 
 - [ ] If a change would weaken trust-boundary validation, reject it
