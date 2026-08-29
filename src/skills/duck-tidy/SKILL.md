@@ -2,9 +2,8 @@
 name: duck-tidy
 description: >
   Stale/outdated comment and doc cleanup audit. Flags comments contradicting
-  current code, describing removed behavior, or documenting worktree-only
-  add/remove that never reached the default branch. TODO markers ignored (duck-debt owns).
-  If a target is an ADR/design note, flag only; do not edit. Audit-first, patch handoff.
+  current code, removed behavior, or worktree-only add/remove never merged.
+  Audit-first, patch handoff.
   Use when: "tidy comments", "clean up stale comments", "outdated docs audit",
   "duck-tidy".
 license: MIT
