@@ -151,7 +151,7 @@ If pruning, keep fixed-schema sections; those merge only.
 - **One entry, one line.** Decisions and conventions are single-line keyed entries.
 - **Supersede, don't accumulate.** When a decision changes, the old entry is replaced. The changelog records what changed.
 - **Notes is the dump zone.** Freeform content goes here. Prune it when it stops being useful.
-- **Never infer Goals or Conventions.** These sections get entries only from explicit user decisions.
+- **If Goals or Conventions lack an entry**, add only from explicit user decisions; do not infer.
 
 ### When CONTEXT.md should graduate to documented artifact
 

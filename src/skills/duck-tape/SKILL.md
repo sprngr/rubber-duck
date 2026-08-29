@@ -64,7 +64,7 @@ Report state file path: `.duck-tape/<session_id>.state.md` — user can use this
 
 Run only on merge signals. Skip for state-only mode.
 
-**Bootstrap** (CONTEXT.md missing): create CONTEXT.md with translated content from state file using rigid map in `references/STATE_SCHEMA.md`. Empty sections get scaffold from `examples/bootstrap-CONTEXT.md`. Generate TOC under title from the 8 section headers. Output format in `references/OUTPUT_SCHEMA.md`. Sample in `examples/CONTEXT.md`. Never infer Goals or Conventions entries.
+**Bootstrap** (CONTEXT.md missing): create CONTEXT.md with translated content from state file using rigid map in `references/STATE_SCHEMA.md`. Empty sections get scaffold from `examples/bootstrap-CONTEXT.md`. Generate TOC under title from the 8 section headers. Output format in `references/OUTPUT_SCHEMA.md`. Sample in `examples/CONTEXT.md`. If Goals or Conventions entries are missing, leave them empty; do not infer.
 
 **Merge** (CONTEXT.md exists): translate from session state file using rigid map. Summarize translated content to persistent-context granularity (decision-level, not commit-level) before applying per-section merge rules. Refresh TOC only if the set of `##` section headings changes. Per-section merge rules in `references/SCHEMA.md`. Summary:
 
@@ -180,7 +180,7 @@ If no state file exists and no transcript path in marker, report "compaction occ
 - Expected: remove user-selected Notes entries, fixed-schema sections untouched
 - Verification: re-read CONTEXT.md, confirm only Notes changed, confirm selected entries removed
 
-Prune never touches fixed-schema sections.
+If pruning, do not touch fixed-schema sections.
 
 ## Migrate
 
