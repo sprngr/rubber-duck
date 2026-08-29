@@ -147,7 +147,7 @@ Merge input is translated from session state file (`.duck-tape/<id>.state.md`), 
 0. **Redact incoming state content** before translation + merge:
    - Scan for secrets/PII: API keys, passwords, tokens, connection strings, env var values, personally identifiable information.
    - On detection: reject flagged content. Report findings. Ask user to redact source or confirm mask-in-place (`<REDACTED>`).
-   - Never merge raw secrets into CONTEXT.md. Masked content only after user confirmation.
+   - If a merge would place raw secrets into CONTEXT.md, reject it; merge masked content only after user confirmation.
    - Applies to all sections including Notes freeform.
 1. Parse existing CONTEXT.md into sections by `##` headers.
 2. Translate redacted state file into CONTEXT.md sections using rigid map in `references/STATE_SCHEMA.md`. Parse subsections within each top-level section by `###` headers.
