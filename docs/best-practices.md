@@ -79,7 +79,7 @@ Key signals to watch for in normal use:
 - **Delegated-default skills** (patch, refactor, review, risk, simplify, triage): run via duckling subagent by default. Override to inline with explicit user request.
 - **Governor-invoked skills** (adapt, grill): main session only. Not quack-routed.
 
-User override always wins. Explicit delegation request forces duckling delegation regardless of default policy.
+If the user explicitly overrides default policy, follow the override. If the user explicitly requests delegation, force duckling delegation regardless of default policy.
 
 ## Install status
 
