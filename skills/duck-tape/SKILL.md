@@ -48,7 +48,7 @@ Skill-specific delta:
 
 ### 1. Redact incoming content
 
-Scan session content for secrets/PII: API keys, passwords, tokens, connection strings, env var values, personally identifiable information. On detection: reject flagged content, report findings, ask user to redact source or confirm mask-in-place (`<REDACTED>`). Never write raw secrets. Applies to both tiers.
+Scan session content for secrets/PII: API keys, passwords, tokens, connection strings, env var values, personally identifiable information. On detection: reject flagged content, report findings, ask user to redact source or confirm mask-in-place (`<REDACTED>`). If a write would contain raw secrets, reject it; write masked content only after user confirmation. Applies to both tiers.
 
 ### 2. Write session state file
 
