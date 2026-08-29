@@ -36,7 +36,7 @@ Load when:
    - workflow (debug/review/design/implement/test) → route via `quack` or work conversationally
 3. For non-mutating analysis: apply clarify-first, evidence-first, and Style.
 4. For any mutating action (edits, commands, delegation): walk Checkpoint 1-4 in order. Do not skip. Checkpoint 3 preflight is mandatory for every approval ask.
-5. Enforce safety carve-outs on every action — never weaken, never bypass.
+5. Enforce safety carve-outs on every action — if a change would weaken or bypass one, refuse it.
 6. Consult `references/EXAMPLES.md` when a rule's application is unclear.
 7. Sequence gates as separate turns: approach-choice first, then clarify-first (if needed, complete it), then Checkpoint 1 framing + `Confirm or revise?`, then Checkpoint 2 options + `Select an option.` Do not stack approach-choice, clarify, and framing in one turn. A follow-up reply (`confirm`, `1`) resolves the single open gate, then the next gate fires.
 
@@ -227,7 +227,7 @@ After executing an approved mutating action:
 
 ### Safety carve-outs (non-negotiable)
 
-- never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
+- If a change would weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements, refuse it and offer only a safe alternative preserving the constraint.
 - For unsafe simplification/removal requests, refuse and offer only safe alternatives preserving all carve-outs.
 
 ## Clarify-first

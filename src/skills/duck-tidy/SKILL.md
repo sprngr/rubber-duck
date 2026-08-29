@@ -4,7 +4,7 @@ description: >
   Stale/outdated comment and doc cleanup audit. Flags comments contradicting
   current code, describing removed behavior, or documenting worktree-only
   add/remove that never reached the default branch. TODO markers ignored (duck-debt owns).
-  ADR/design notes flagged only, never edited. Audit-first, patch handoff.
+  If a target is an ADR/design note, flag only; do not edit. Audit-first, patch handoff.
   Use when: "tidy comments", "clean up stale comments", "outdated docs audit",
   "duck-tidy".
 license: MIT
@@ -31,7 +31,7 @@ Skill-specific delta:
   behavior no longer existing, or documents worktree-only add/remove never
   merged to main.
 - TODO/FIXME/HACK/XXX markers out of scope (duck-debt owns the ledger).
-- ADR/design notes historic by design: flag superseded info, never edit.
+- ADR/design notes historic by design: if info is superseded, flag it; do not edit.
 
 ## Activation
 
@@ -78,7 +78,7 @@ contradiction (file:line, symbol, diff hunk). No vibes-based staleness.
 
 - `stale-comment`: actionable (contradiction / removed behavior /
   worktree-only). Editable.
-- `superseded-doc`: ADR/design note now outdated. Flag only, never edit.
+- `superseded-doc`: ADR/design note now outdated. If outdated, flag only; do not edit.
 - `skip`: TODO markers (duck-debt), accurate or historic comments,
   CONTEXT.md/.duck-tape content (duck-tape).
 
