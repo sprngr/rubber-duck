@@ -123,7 +123,7 @@ npx skills add https://github.com/sprngr/rubber-duck
 ### Full assistant operating system (agents + skills)
 
 > [!IMPORTANT]
-> Full install uses self-contained `rubber-duck` agent with all policy rules built in.
+> Full install provides `rubber-duck` agent that invokes `duck-policy` skill by default + `duckling` subagent to work with `quack` skill orchestator detailed below.
 
 **Bash (macOS/Linux):**
 
@@ -253,7 +253,7 @@ Rubber Duck packages 16 skills: 12 default + 4 extras, plus one manual-install e
 
 Opt-in feature that guarantees the `duck-policy` skill loads at session start for
 the `rubber-duck` agent. Works on OpenCode (system-prompt injection via plugin)
-and Claude Code (`SessionStart` hook). Copilot pending.
+and Claude Code (`SessionStart` hook).
 
  Install: `scripts/rubber-duck.sh install --<target> --session-hook`
 
