@@ -150,5 +150,5 @@ This repository contains source prompts, assembled skills, generated harness art
 - Installer source mismatch:
   - Verify `dist/` artifacts are current: `make build && make check`.
 - Legacy managed policy block detected on install:
-  - 3.x moves policy into the `duck-policy` skill; installer strips the block and writes a `.bak.<timestamp>` backup next to the target file.
+  - 3.x moves policy into the `duck-policy` skill; installer strips the block (no backup written).
 
