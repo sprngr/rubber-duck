@@ -113,7 +113,7 @@
 
  A typical session walks one loop: plan, implement, revise, verify, ship. You stay in control at every step — scoped framing, explicit approval before edits, verification before PR. Skills run by canonical name (`duck-design`, `duck-patch`, `duck-review`, `duck-triage`) — directly, or routed via `quack <intent>`.
 
- **Plan and implement.** Frame the problem, choose an approach, get scope approved, execute.
+ **Plan and implement.** Frame the problem, choose an approach, get scope approved, execute. Start with the provided `rubber-duck` agent or use the `duck-policy` skill for checkpoints with your own agent.
 
 ![Plan and implement workflow](./docs/assets/example_workflow_part_A.svg)
 
