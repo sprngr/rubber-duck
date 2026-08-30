@@ -265,7 +265,7 @@ def prepare_workspace(repo_root: Path, fixture_name: str | None = None) -> Path:
     if built_skills.is_dir():
         shutil.copytree(built_skills, ws_skills, symlinks=False, dirs_exist_ok=True)
     agents_md = repo_root / "AGENTS.md"
-    if agents_md.is_file():
+    if agents_md.is_file() and not fixture_name:
         shutil.copy2(agents_md, ws / "AGENTS.md")
     return ws
 
