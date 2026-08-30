@@ -8,7 +8,7 @@ description: >
 license: MIT
 metadata:
   author: sprngr
-  version: v2.1.2
+  version: v2.1.3
   RUBBER_DUCK_VERSION: __RUBBER_DUCK_VERSION__
 ---
 
@@ -122,8 +122,8 @@ Trigger falls back to marker-only on failure: jq missing (bash), transcript miss
 `/duck-tape resume` — detect compaction and reload checkpoint.
 
 1. Check `.duck-tape/.last-compact`. If missing, no compaction occurred. Report "no compaction marker found" and stop.
-2. Compare marker timestamp to session start time. If marker older than session start, no compaction in this session. Report "no recent compaction" and stop.
-3. If marker newer than session start, compaction occurred. Read marker fields: `cwd`, `latest-state`, `transcript` (transcript path or opencode snapshot path; absent in older markers).
+2. Compare marker timestamp to session start time. If marker older than session start, note "no compaction in this session — marker from a previous session"; the checkpoint is the cross-session handoff point, so continue to step 3 and reload it.
+3. Read marker fields: `cwd`, `latest-state`, `transcript` (transcript path or opencode snapshot path; absent in older markers).
 4. Select state file by precedence: **manual > recovered > auto**.
    a. If a manual checkpoint (no suffix) exists and is newer than the newest auto-checkpoint, use manual. Report position from it. Skip to step 6.
    b. If only an auto-checkpoint (`-auto` suffix) exists or no state file exists at all, invoke LLM-assisted recovery (step 5).

@@ -124,6 +124,7 @@ This repository contains source prompts, assembled skills, generated harness art
 ## Release and Versioning Flow
 
 - Use Semantic Versioning for releases.
+- Skills carry independent semver: bump `metadata.version` in `src/skills/<name>/SKILL.md` on behavior or interface changes, separate from the rubber-duck release version (`RUBBER_DUCK_VERSION`). Skill updates track independently with their own semver, even mid-release.
 - Keep `CHANGELOG.md` updated for behavior or interface changes.
 - Before tag/release:
   - `make check`
