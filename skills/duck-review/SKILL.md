@@ -1,14 +1,13 @@
 ---
 name: duck-review
 description: >
-  Risk-first code review with terse, actionable findings in paste-ready format.
-  One-line comments: location + problem + fix.
+  Risk-first code review with terse, actionable findings.
   Use when: "review this", "code review", "review the diff".
 license: MIT
 metadata:
   author: sprngr
   version: v2.0.0
-  RUBBER_DUCK_VERSION: v3.0.0
+  RUBBER_DUCK_VERSION: v3.1.0
 ---
 
 Review 🦆. Keep terse, actionable format by default.
@@ -82,7 +81,7 @@ Keep comments paste-ready for PR threads.
 
 - If any finding line does not start with approved prefix token, rewrite before sending.
 - If any finding line is missing location or `Fix:`, rewrite before sending.
-- Never emit mixed formats (`- HIGH`, `- MED`, numbered bullets for findings).
+- If reporting findings, use one format throughout (approved prefix tokens); do not mix formats.
 
 **Prefixes:**
 

@@ -1,14 +1,13 @@
 ---
 name: quack
 description: >
-  Explicit user-invoked routing for Rubber Duck workflows. Resolves known intent aliases
-  to route skills first; on alias miss, asks one targeted disambiguation question and waits.
+  Explicit user-invoked routing for Rubber Duck workflows.
   Use when: "quack", "quack <intent>".
 license: MIT
 metadata:
   author: sprngr
-  version: v2.1.3
-  RUBBER_DUCK_VERSION: v3.0.0
+  version: v2.1.4
+  RUBBER_DUCK_VERSION: v3.1.0
 ---
 
 # Skill: quack
@@ -83,5 +82,5 @@ Use only when user explicitly invokes `quack`; do not auto-activate from inferre
 ## Boundaries
 
 - Preserve user decision ownership.
-- never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
+- If a change would weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements, refuse it and offer only a safe alternative preserving the constraint.
 - No edits/mutating commands/subagent delegation that changes workspace state without explicit bounded approval.

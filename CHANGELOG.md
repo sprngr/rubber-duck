@@ -5,6 +5,74 @@ All notable changes to Rubber Duck will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v3.1.0] - 2026-08-27
+
+### Added
+
+- Session-start hook (opt-in `--session-hook` / `-SessionHook`): deterministically
+  causes the `rubber-duck` agent to load the `duck-policy` skill at session start.
+  - OpenCode: plugin installed to `.opencode/plugins/session-start.js` registers
+    rubber-duck sessions and injects the startup directive into the system prompt
+    on every model call (`experimental.chat.system.transform`).
+  - Claude Code: scripts installed to `.claude/hooks/` and a `SessionStart` hook
+    merged into `.claude/settings.local.json` (idempotent). Fires only when the
+    rubber-duck agent is active, detected via hook input `agent_type`.
+  - Build emits hook artifacts to `dist/opencode/hooks/` and `dist/claude/hooks/`.
+  - Installer (bash + PowerShell parity): install/uninstall of hook artifacts,
+    manifest pins, and per-target `sessionHook` tracking replayed on `sync`.
+  - The rubber-duck agent body keeps its Enforcement Bootstrap mandate as a
+    fallback when the hook is not installed.
+  - Copilot support pending (deferred; see plan doc).
+- Reviewable-unit decomposition: multi-PR plans must decompose into reviewable units (independent merge, working state after each, explicit ordering + acceptance criteria). Methodology in `src/shared/skill-snippets/reviewable-units.md`; duck-design writes plans as PR sequences; duck-policy Checkpoint 1 gates on decomposition.
+- Validation fixture `validation/fixtures/context-loading/src/cache.ts` anchors deferred-debt marker tests to real code.
+- Plan decomposition verification spec: `docs/architecture/08-plan-decomposition-verification.md` defines the trigger predicate (explicit multi-PR OR agent-detected size/breadth), gate requirements, and verification acceptance criteria (positive, detection, negative, per-unit content).
+- `duck-tidy` extras skill (stub): audit-first cleanup for stale/outdated comments and non-CONTEXT docs. Installed with `--extras` / `-Extras`. Evidence rules: contradicts current code, describes removed behavior, worktree-only add/remove never merged. Carve-outs: TODO markers (duck-debt), ADR/design notes flag-only, CONTEXT.md/.duck-tape (duck-tape). Method bodies pending.
+- `duck-adventure` easter-egg skill (manual install): standalone rogue game — multi-turn dungeon crawls with maps, dice combat, random merchants, loot, and achievements tracked across sessions. Fun for its own sake; no handoff to productivity flows.
+
+### Changed
+
+- **Duckling silent-worker contract:** duckling subagent redesigned as single-turn silent worker across all three harnesses (Claude Code, Copilot, OpenCode). Interactive mutating-action-gate include replaced by explicit Silent Worker Contract:
+  - one invocation is one turn; no mid-run user dialog
+  - never self-approve mutating work
+  - `execute` mode produces terminal approval package (preflight + per-file diffs + `Approve this scope?`) instead of mutating the workspace
+  - mid-run ambiguity flattens to `## Unresolved questions` block instead of interactive Q&A
+  - one phase per invocation; parent orchestrates phase progression
+  - tool-unavailable degradation emits explicit `## Tool unavailable` note instead of silent skip
+- **Duckling non-delegation list:** duckling refuses `skill_name` of `quack` (routing skill), `duck-tape` (session-memory mutation), and `duck-policy` (session-scoped policy loader). Emits `blocked_recursive_routing` status; parent invokes target skill directly.
+- **`DUCKLING_CTX` footer status vocabulary expanded:** added `blocked_awaiting_approval`, `blocked_skill_unavailable`, `blocked_recursive_routing`, `blocked_missing_inputs`, `phase_complete_await_parent`, `degraded_tool_unavailable`. Prior `<ok|blocked>` binary replaced.
+- **Rubber-duck Subagent Return Handling:** new agent-body section defining shape-based and status-token-based recognition of subagent returns. Approval packages relayed verbatim as parent's Checkpoint 3 presentation; parent-always-executes rule (subagents propose; parent executes) preserves single-approval-gate invariant. Explicit handlers for phase-progression, blocked-input, and degraded returns.
+- **Quack subagent-runbook:** explicit disclaimer that `quack` has no return-side responsibility; parent (`rubber-duck`) owns return handling. Applies to any primary agent that dispatches to duckling.
+- **Duckling general contract snippet (`skill-snippets/duckling-general-contract.md`):** behavior rules 4-6 aligned with silent-worker posture. Interactive-dialog contracts (Socratic loops, batched interviews, multi-turn design dialogs) flatten questions to `## Unresolved questions`. Skill-unavailable path emits terminal error instead of interactive question.
+- **Duckling harness permission tightening:** silent-worker contract now enforced at harness level in all three harnesses. Duckling tool maps drop mutation tools: Claude `Read, Glob, Grep, Skill`; Copilot `read,search`; OpenCode `edit: deny`, `bash: deny`. Duckling body gains explicit never-call-Edit/Write/Bash rule and parent-always-executes wording. `duck-patch` and `duck-refactor` gain "Subagent execution mode" sections documenting approval-package output under subagent invocation. Permission-tightening spike resolved inline.
+- `duck-policy` skill unchanged: portable policy layer stays agent-shape-agnostic; no duckling/quack-specific knowledge added.
+- OpenCode plugin uses system-level directive injection (system prompt) instead of
+  user-message injection, so the model treats the directive as an instruction
+  rather than a suggestion.
+- Sync replay fixes a latent off-by-one where extras were matched against the
+  install-agents-md flag; extras and the new session-hook flag now map to the
+  correct positional arguments.
+- Validation suite: 58 tests (V01-V58). V54 covers the Checkpoint 1 plan-decomposition gate; V55 positive trigger, V56 negative non-trigger, V57 per-unit acceptance content, V58 implicit detection trigger extend decomposition coverage via the `rollout` fixture. V25/V26/V38/V54 signals calibrated to observed vocabulary.
+- Validation runner now overlays built `skills/` onto `.agents/skills/` in test workspaces, so tests exercise current policy instead of the last installer-synced copy. Resolves false V58 failure caused by stale installed skills.
+- duck-policy Method adds gate-sequencing rule: approach-choice, clarify-first, Checkpoint 1 framing, and Checkpoint 2 fire as separate turns; clarify completes before framing. V51 prompt specifies the JWT failure mode so the Checkpoint 2 selection ask is deterministic.
+- `docs/architecture/03-adaptive-socratic-policy.md` Checkpoint 1 documents plan decomposition requirement.
+- Legacy managed-block migration no longer writes a `.bak.<timestamp>` recovery copy next to `AGENTS.md`/`CLAUDE.md`. The 3.x migration window is closed; the installer strips legacy blocks in place without backup (bash + PowerShell parity).
+- Rule wording convention applied across skills, agent bodies, and instruction docs: content-logic rules converted from absolute (always/never/must) to conditional if-then phrasing (~58 rules); structural/spec rules and safety carve-outs retain absolute or refusal form. Convention codified in duck-adapt (`philosophy-core.md` + `adaptation-checklist.md`).
+- duck-policy Style: gate ask strings are contract exceptions to terse style — `Confirm or revise?`, `Select an option.`, `Approve this scope?`, `Accept, revise, or rollback?` emitted verbatim at their checkpoints even when otherwise terse. Mitigates intermittent gate compression (V50/V51). Version bump v3.0.1 -> v3.0.2.
+- duck-tape Resume: a marker from a previous session is a resumable handoff checkpoint, not a stop condition; stale markers now continue to checkpoint reload and position report. Version bump v2.1.2 -> v2.1.3.
+
+### Fixed
+
+- Validation runner: verdict matching evaluates the full multi-turn transcript instead of the final turn only; gate content from earlier turns (V50 Checkpoint 1 framing) no longer yields false negatives.
+- Validation runner: fixture workspaces no longer copy the rubber-duck `AGENTS.md`, removing workspace-identity confusion that intermittently made models ignore fixture code (V02/V07 class).
+- Validation tests calibrated to gate sequencing: V08/V25 gained `follow_ups` to advance past approach-choice/clarify-first; V45 steps through approach-choice -> clarify -> evidence -> Checkpoint 1 frame, signals reduced to problem+assumption (options coverage stays with V51).
+- Bash installer fails fast with a clear `requires bash 4+` message (and macOS
+  `brew install bash` guidance) instead of dying with an obscure
+  `declare: -A: invalid option` on bash < 4 (macOS default `/bin/bash` 3.2).
+
+### Known regression
+
+- None active. Intermittent failures under flash-class models remain (LLM non-determinism, documented suite limitation): V51 (selection ask occasionally omitted), V02/V07 (workspace identity confusion — mitigated by the fixture-workspace AGENTS.md exclusion), V19 (bug-signal calibration on a bug-free diff), V33/V55 (judge variance), V45 (follow-up brittleness vs question phrasing). Mitigations: union matcher, gate-sequence test calibration, fixture-workspace AGENTS.md exclusion. Suite nominal 52/58 under opencode-go/deepseek-v4-flash; no Critical behavioral regression observed.
+
 ## [v3.0.0] - 2026-08-17
 
 ### Added

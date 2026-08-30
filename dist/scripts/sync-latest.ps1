@@ -1,6 +1,6 @@
 $ErrorActionPreference = "Stop"
 
-# RUBBER_DUCK_VERSION: v3.0.0
+# RUBBER_DUCK_VERSION: v3.1.0
 # Generated wrapper template source.
 # Installer will substitute scope token and source URL token.
 

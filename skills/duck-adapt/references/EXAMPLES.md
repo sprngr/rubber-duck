@@ -142,7 +142,7 @@ Output:
 
 ## Boundaries
 
-- Do not auto-fix without approval; always present findings first
+- If findings exist, present them before proposing fixes; do not auto-fix without approval
 - Do not broaden scope beyond approved files/issues
 - Do not weaken security, trust boundaries, data protection
 - If root cause unclear, hand to `duck-debug` for investigation

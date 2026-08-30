@@ -130,13 +130,13 @@ Applies to all state content before write. Same rules as CONTEXT.md redaction:
 
 - Scan for secrets/PII: API keys, passwords, tokens, connection strings, env var values, personally identifiable information.
 - On detection: reject flagged content. Report findings. Ask user to redact source or confirm mask-in-place (`<REDACTED>`).
-- Never write raw secrets to state files. Masked content only after user confirmation.
+- If a state-file write would contain raw secrets, reject it; write masked content only after user confirmation.
 - Redaction applies to all sections including Re-derivation and Suggested Skills.
 
 ## Boundaries
 
 - State file uses Agent State schema only. No CONTEXT.md sections in state file.
 - Translation is rigid. No interpretation of content to pick target section.
-- Re-derivation is verbatim in state file. Never rewrite or summarize. Not translated to CONTEXT.md.
+- Re-derivation is verbatim in state file. If content is re-derivation, keep it verbatim; do not rewrite or summarize. Not translated to CONTEXT.md.
 - Suggested Skills does not translate. Next agent reads state file directly.
 - State files are working memory, not persistent. Rotation cap enforced.

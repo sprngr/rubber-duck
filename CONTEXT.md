@@ -41,7 +41,10 @@
 - **Installer template sources reorganized**: sync wrapper templates moved to `src/install/scripts/`, manifest template moved to `src/install/templates/`. Shared snippets (`src/shared/`) reserved for prompt/policy snippets only. Build outputs at `dist/scripts/` and `dist/templates/`. (date: 2026-08-16)
 - **Sync wrapper version check**: sync-latest scripts compare manifest `lastAppliedVersion` against remote/local `VERSION` file before syncing. Prompts user with version change and CHANGELOG link when newer version exists. Fallback templates removed; missing sync template is a hard error. Wrapper forwards the derived raw-base on remote sync; ps1 wrappers use `(Get-Process -Id $PID).Path` for host detection. (date: 2026-08-16)
 - **3.x install migration**: installer removes legacy managed block from `AGENTS.md`/`CLAUDE.md` on install. Aligns targets with v3.0.0 single-agent architecture (policy content now lives in agent body, not host policy files). (date: 2026-08-17)
-- **Enforcement Bootstrap mandate**: `rubber-duck` agent must invoke `skill(name: duck-policy)` as its first action every session before any tool call, skill call, or user reply. "Already loaded" only counts if personally invoked in the current session. Closes progressive-disclosure gap where the lean agent body could otherwise skip runtime policy load. (date: 2026-08-17)
+- **Enforcement Bootstrap mandate**: at session start, `rubber-duck` agent invokes `skill(name: duck-policy)` before any tool call, skill call, or user reply. "Already loaded" only counts if personally invoked in the current session. Closes progressive-disclosure gap where the lean agent body could otherwise skip runtime policy load. (date: 2026-08-17)
+- **Reviewable unit decomposition**: multi-PR plans must decompose into reviewable units (independent merge, working state after each, explicit ordering + acceptance criteria). Methodology lives in `src/shared/skill-snippets/reviewable-units.md`; duck-design writes plans as PR sequences; duck-policy Checkpoint 1 gates on decomposition. (date: 2026-08-24)
+- **duck-tidy extras skill**: audit-first skill for stale/outdated comments and non-CONTEXT docs. Evidence rules: contradicts current code, describes removed behavior, worktree-only add/remove never merged. Carve-outs: TODOs (duck-debt), ADR/design notes flag-only, CONTEXT.md/.duck-tape (duck-tape). Extras placement, inline-default routing, audit -> patch handoff. (date: 2026-08-22)
+- **Per-skill documentation model**: extended docs for individual skills live under `src/skills/<name>/references/` per skill-asset-convention (07), not in `docs/architecture/`. Architecture docs stay cross-cutting (models, contracts, conventions). duck-tape sets the reference-pattern precedent (STATE_SCHEMA.md, HOOKS_GUIDE.md under its own `references/`). (date: 2026-08-22)
 
 ## Conventions
 
@@ -61,13 +64,14 @@
 - **Policy block fences**: `<!-- RUBBER_DUCK_MANAGED_BLOCK START -->` and `<!-- RUBBER_DUCK_MANAGED_BLOCK END -->` delimit installer-managed sections in target files.
 - **Diff format selection rule**: file existence determines diff format (unified diff for existing files, full-content block for new files).
 - **Default skills set**: 12 skills from `.claude-plugin/plugin.json`.
-- **Extras skills set**: `duck-adapt`, `duck-grill`, `duck-tape`, installed only with extras flags.
+- **Extras skills set**: `duck-adapt`, `duck-grill`, `duck-tape`, `duck-tidy`, installed only with extras flags.
 - **Validation fixtures**: scenario clusters live under `validation/fixtures/` for prompt-eval coverage.
 - **Guardrails drift check**: `scripts/check-guardrails-drift.sh` verifies vendored guardrails alignment.
 
 ## Deferred-Debt
 
 - TODO(architecture,#22): 2026-08-13 Define localized CONTEXT.md merge model for duck-tape
+- TODO(validation): 2026-08-22 duck-tidy lacks prompt-eval fixture; revisit on next validation expansion
 
 ## Open-Questions
 

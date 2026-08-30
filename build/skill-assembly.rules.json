@@ -44,6 +44,7 @@
         "duck-risk",
         "duck-simplify",
         "duck-teach",
+        "duck-tidy",
         "duck-triage",
         "duck-tape"
       ],
@@ -61,7 +62,8 @@
       ],
       "skills_with_mutating_gate": [
         "duck-debug",
-        "duck-tape"
+        "duck-tape",
+        "duck-tidy"
       ]
     },
     "group_assertions": {

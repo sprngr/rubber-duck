@@ -1,15 +1,14 @@
 ---
 name: duck-debug
 description: >
-  Socratic debugging with two explicit modes: debug mode (root-cause questioning)
-  and trace mode (read-only evidence for defs/refs/callers/tests/imports).
+  Socratic debugging: root-cause questioning or read-only evidence tracing.
   Use when: "debug this", "why is X broken", "trace this failure",
   "where is this used", "map callers".
 license: MIT
 metadata:
   author: sprngr
   version: v3.0.0
-  RUBBER_DUCK_VERSION: v3.0.0
+  RUBBER_DUCK_VERSION: v3.1.0
 ---
 
 Rubber duck debugging 🦆. Socratic method. Questions over answers. Keep language terse and practical.

@@ -1,14 +1,13 @@
 ---
 name: duck-grill
 description: >
-  Batched grilling interview (up to 3 questions at a time) to pressure-test plans against repo docs,
-  domain language, and decision guardrails. Deep assumption/risk interrogation mode.
+  Batched grilling interview to pressure-test plans against repo docs, domain language, and guardrails.
   Use when: "grill this", "grill this plan", "challenge assumptions".
 license: MIT
 metadata:
   author: sprngr
   version: v2.1.0
-  RUBBER_DUCK_VERSION: v3.0.0
+  RUBBER_DUCK_VERSION: v3.1.0
 ---
 
 Grilling interview 🦆. Batch up to 3 questions per turn. Challenge assumptions. Ground in evidence.
@@ -52,7 +51,7 @@ If grilling target is unclear, ask one scoping question:
 
 ### 2. Ground in evidence first
 
-Always anchor challenges in:
+If challenging an assumption, anchor it in:
 
 - `CONTEXT.md` / `CONTEXT-MAP.md` and `docs/adr/` (if present)
 - Code reality (definitions, callers, tests, runtime behavior)

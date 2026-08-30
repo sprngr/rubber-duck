@@ -1,14 +1,13 @@
 ---
 name: duck-design
 description: >
-  Socratic design discussion to evaluate approaches, identify tradeoffs,
-  suggest alternatives, and challenge assumptions. Design matrix for option comparison.
+  Socratic design discussion: approaches, tradeoffs, alternatives, assumption challenge.
   Use when: "choose between approaches", "architecture tradeoffs", "help me choose".
 license: MIT
 metadata:
   author: sprngr
-  version: v2.0.0
-  RUBBER_DUCK_VERSION: v3.0.0
+  version: v2.0.1
+  RUBBER_DUCK_VERSION: v3.1.0
 ---
 
 Design discussion 🦆. Ask before suggesting. Challenge assumptions. Keep language terse and practical.
@@ -38,8 +37,8 @@ Trigger when user asks to compare approaches, evaluate architecture, or choose t
 
 - Ground analysis in explicit evidence/constraints from current system state
 - If implementation action requested, require explicit approval and bounded scope before handoff
-- Architectural neatness must not bypass core safeguards:
-- never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
+- If architectural neatness would bypass a core safeguard, do not proceed:
+- If a change would weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements, refuse it and offer only a safe alternative preserving the constraint.
 
 Ask one scoping question before analyzing:
 
@@ -80,6 +79,31 @@ If active:
 - First response shape: 1 scoping question + 3-5 slices + priority question
 - Include explicit tradeoff line: "Main tradeoff: scope reduction now vs slower full-program change."
 - Defer deep per-slice analysis until user picks slice
+- When writing the rollout plan, express it as ordered reviewable PR units:
+## Reviewable Unit Decomposition
+
+Decompose plans that span multiple PRs into reviewable units before writing the plan. A reviewable unit is a PR-sized change set that:
+
+- merges independently (no cross-PR coupling)
+- leaves the system in working state after merge
+- carries explicit acceptance criteria
+- fits within existing review-fatigue caps
+
+Propose decomposition when the scope spans multiple PRs OR when the agent detects the scope exceeds single-PR capacity:
+
+- scope touches multiple independent units/subsystems (e.g. API + DB + session)
+- estimated change exceeds single-PR review capacity (review-fatigue caps)
+
+The proposal is confirmed or revised by the developer at Checkpoint 1. Do not decompose genuinely small single-area changes.
+
+When decomposition applies, the plan document must include a PR-sequence section listing each unit:
+
+- unit scope (files + behavior)
+- dependency ordering (which units must land first)
+- per-unit acceptance criteria
+- post-merge verification
+
+Purpose: prevent review-churn (oversized plans) and rubber-stamping (unreviewable bulk).
 
 Routing precedence:
 
@@ -110,7 +134,7 @@ Compact first-response template (around 6-12 lines):
 6. State non-negotiable dimension for decision (1 sentence)
 7. Ask: "Which outcome matters most here, given your constraints?"
 
-Never prescribe. Always frame as tradeoff choice.
+If recommending an option, frame it as a tradeoff choice with alternatives; do not prescribe.
 
 ### 5. Build tradeoff matrix (multi-option decisions)
 

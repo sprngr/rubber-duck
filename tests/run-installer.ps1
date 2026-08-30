@@ -168,8 +168,8 @@ function Test-SyncWrapperContent {
   if (-not $content.Contains("RUBBER_DUCK_VERSION:")) { throw "version marker missing" }
 }
 
-# Legacy managed block on upgrade: user content preserved in backup, block stripped.
-function Test-ManagedBlockMigrationPreservesContent {
+# Legacy managed block on upgrade: block stripped, no .bak backup written.
+function Test-ManagedBlockMigrationStripsWithoutBackup {
   $agents = @(
     "Preamble line",
     "",
@@ -188,10 +188,7 @@ function Test-ManagedBlockMigrationPreservesContent {
   if ($now -match "USER CUSTOM MARKER") { throw "user content not stripped from AGENTS.md" }
   if ($now -notmatch "Preamble line") { throw "preamble lost" }
   if ($now -notmatch "Trailer line") { throw "trailer lost" }
-  $bak = Get-ChildItem -Path "AGENTS.md.bak.*" -ErrorAction SilentlyContinue | Select-Object -First 1
-  if (-not $bak) { throw "backup file missing" }
-  $bakContent = Get-Content -Raw $bak.FullName
-  if ($bakContent -notmatch "USER CUSTOM MARKER") { throw "backup does not preserve user content" }
+  if (Get-ChildItem -Path "AGENTS.md.bak.*" -ErrorAction SilentlyContinue) { throw "backup written despite removal" }
 }
 
 # Fresh install (no prior AGENTS.md): no spurious backup files.
@@ -215,7 +212,7 @@ Run-Test "dry-run multi-target layout"      { Test-DryRunMultiTargetLayout}
 Run-Test "sync default source"              { Test-SyncDefaultSource      }
 Run-Test "winps manifest structure"         { Test-WinPsManifestStructure }
 Run-Test "sync wrapper content"             { Test-SyncWrapperContent     }
-Run-Test "managed block migration preserves content" { Test-ManagedBlockMigrationPreservesContent }
+Run-Test "managed block migration strips without backup" { Test-ManagedBlockMigrationStripsWithoutBackup }
 Run-Test "fresh install no spurious backup" { Test-FreshInstallNoSpuriousBackup }
 
 function Test-SyncWrapperPsHostDetection {

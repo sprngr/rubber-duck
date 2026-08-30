@@ -10,6 +10,7 @@ param(
   [string]$Branch = "main",
   [switch]$SkipSkills,
   [switch]$Extras,
+  [switch]$SessionHook,
   [switch]$DryRun,
   [switch]$Prune,
   [switch]$AllowUntrustedSource,
@@ -84,13 +85,15 @@ function Get-SyncReplayArgs {
     [string]$Action,
     [string]$HarnessCsv,
     [switch]$SkipSkills,
-    [switch]$Extras
+    [switch]$Extras,
+    [switch]$SessionHook
   )
   $syncArgs = @("-File", (Get-SyncScriptPath), "-Action", $Action, "-Harness", $HarnessCsv, "-Source", $Source, "-Branch", $Branch, "-RawBase", $RawBase)
   if ($Project) { $syncArgs += "-Project" } else { $syncArgs += "-Global" }
   if ($Action -eq "install") {
     if ($SkipSkills) { $syncArgs += "-SkipSkills" }
     if ($Extras) { $syncArgs += "-Extras" }
+    if ($SessionHook) { $syncArgs += "-SessionHook" }
   } else {
     $syncArgs += "-SkipSkills"
   }
@@ -273,7 +276,8 @@ function rubber-duck {
       $tInstallSkills = if ($cfg.ContainsKey("installSkills")) { [bool]$cfg["installSkills"] } else { $true }
       $tInstallAgentsMd = if ($cfg.ContainsKey("installAgentsMd")) { [bool]$cfg["installAgentsMd"] } else { $true }
       $tExtras = if ($cfg.ContainsKey("extras")) { [bool]$cfg["extras"] } else { $false }
-      $groupKey = "$tInstallSkills|$tInstallAgentsMd|$tExtras"
+      $tSessionHook = if ($cfg.ContainsKey("sessionHook")) { [bool]$cfg["sessionHook"] } else { $false }
+      $groupKey = "$tInstallSkills|$tInstallAgentsMd|$tExtras|$tSessionHook"
       if (-not $syncGroups.ContainsKey($groupKey)) {
         $syncGroups[$groupKey] = [System.Collections.Generic.List[string]]::new()
         $syncGroupOrder += $groupKey
@@ -292,13 +296,14 @@ function rubber-duck {
     }
 
     foreach ($groupKey in $syncGroupOrder) {
-      $parts = $groupKey -split '\|', 3
+      $parts = $groupKey -split '\|', 4
       $gInstallSkills = [bool]::Parse($parts[0])
       $gInstallAgentsMd = [bool]::Parse($parts[1])
       $gExtras = [bool]::Parse($parts[2])
+      $gSessionHook = [bool]::Parse($parts[3])
       $groupHarness = ($syncGroups[$groupKey] -join ",")
 
-      $syncArgs = Get-SyncReplayArgs "install" $groupHarness -SkipSkills:(-not $gInstallSkills) -Extras:$gExtras
+      $syncArgs = Get-SyncReplayArgs "install" $groupHarness -SkipSkills:(-not $gInstallSkills) -Extras:$gExtras -SessionHook:$gSessionHook
       & $psExe @syncArgs
       if ($LASTEXITCODE -ne 0) { throw "sync install failed for harness group: $groupHarness" }
     }
@@ -370,6 +375,24 @@ $AgentFiles = @(
   "duckling.md"
 )
 
+# Session-start hook artifacts (opencode), sourced from dist/opencode/hooks.
+$SessionHookFiles = @(
+  "session-start.opencode.plugin.js",
+  "session-start.directive.md"
+)
+$script:RemoteSessionHooksPath = "dist/opencode/hooks"
+$script:LocalSessionHooksDir = $null
+
+# Claude session-start hook artifacts, sourced from dist/claude/hooks.
+$ClaudeHookFiles = @(
+  "session-start.sh",
+  "session-start.ps1",
+  "claude-code.session-start.hooks.json",
+  "claude-code.session-start.hooks.windows.json"
+)
+$script:RemoteClaudeHooksPath = "dist/claude/hooks"
+$script:LocalClaudeHooksDir = $null
+
 function Get-AgentRemotePinKey([string]$DestFile) {
   return "$($script:RemoteAgentsPath)/$DestFile"
 }
@@ -393,7 +416,8 @@ $DefaultSkills = @(
 $ExtrasSkills = @(
   "duck-adapt",
   "duck-grill",
-  "duck-tape"
+  "duck-tape",
+  "duck-tidy"
 )
 
 # Ensure directory exists; in dry-run mode warn without creating.
@@ -420,9 +444,11 @@ function Resolve-Target {
     if ($Project) {
       $script:DestAgentsDir = ".opencode/agents"
       $script:DestPolicyMd = "AGENTS.md"
+      $script:DestPluginsDir = ".opencode/plugins"
     } else {
       $script:DestAgentsDir = Join-Path $HOME ".config/opencode/agents"
       $script:DestPolicyMd = Join-Path $HOME ".config/opencode/AGENTS.md"
+      $script:DestPluginsDir = Join-Path $HOME ".config/opencode/plugins"
     }
     $script:PolicyMode = "managed_block"
     if (Test-Path (Join-Path $RepoRoot "dist/opencode/agents")) {
@@ -431,6 +457,7 @@ function Resolve-Target {
       $script:LocalAgentsDir = Join-Path $RepoRoot "agents"
     }
     $script:RemoteAgentsPath = "dist/opencode/agents"
+    $script:LocalSessionHooksDir = Join-Path $RepoRoot "dist/opencode/hooks"
     return
   }
 
@@ -439,9 +466,13 @@ function Resolve-Target {
     if ($Project) {
       $script:DestAgentsDir = ".claude/agents"
       $script:DestPolicyMd = "CLAUDE.md"
+      $script:DestClaudeSettings = ".claude/settings.local.json"
+      $script:DestClaudeHooksDir = ".claude/hooks"
     } else {
       $script:DestAgentsDir = Join-Path $HOME ".claude/agents"
       $script:DestPolicyMd = Join-Path $HOME ".claude/CLAUDE.md"
+      $script:DestClaudeSettings = Join-Path $HOME ".claude/settings.local.json"
+      $script:DestClaudeHooksDir = Join-Path $HOME ".claude/hooks"
     }
     $policyParent = Split-Path -Parent $script:DestPolicyMd
     if ([string]::IsNullOrWhiteSpace($policyParent)) { $policyParent = "." }
@@ -449,6 +480,7 @@ function Resolve-Target {
     $script:PolicyMode = "file"
     $script:LocalAgentsDir = Join-Path $RepoRoot "dist/claude/agents"
     $script:RemoteAgentsPath = "dist/claude/agents"
+    $script:LocalClaudeHooksDir = Join-Path $RepoRoot "dist/claude/hooks"
     return
   }
 
@@ -510,11 +542,35 @@ function Download-Sources {
     foreach ($f in $AgentFiles) {
       Copy-Item -Force (Join-Path $script:LocalAgentsDir $f) (Join-Path $script:TmpDir $f)
     }
+    if ($SessionHook -and $script:Target -eq "opencode") {
+      New-Item -ItemType Directory -Force -Path (Join-Path $script:TmpDir "hooks") | Out-Null
+      foreach ($hf in $SessionHookFiles) {
+        Copy-Item -Force (Join-Path $script:LocalSessionHooksDir $hf) (Join-Path $script:TmpDir "hooks" $hf)
+      }
+    }
+    if ($SessionHook -and $script:Target -eq "claude") {
+      New-Item -ItemType Directory -Force -Path (Join-Path $script:TmpDir "claude-hooks") | Out-Null
+      foreach ($hf in $ClaudeHookFiles) {
+        Copy-Item -Force (Join-Path $script:LocalClaudeHooksDir $hf) (Join-Path $script:TmpDir "claude-hooks" $hf)
+      }
+    }
     return
   }
 
   foreach ($f in $AgentFiles) {
     Invoke-WebRequest -UseBasicParsing -Uri "$RawBase/$($script:RemoteAgentsPath)/$f" -OutFile (Join-Path $script:TmpDir $f)
+  }
+  if ($SessionHook -and $script:Target -eq "opencode") {
+    New-Item -ItemType Directory -Force -Path (Join-Path $script:TmpDir "hooks") | Out-Null
+    foreach ($hf in $SessionHookFiles) {
+      Invoke-WebRequest -UseBasicParsing -Uri "$RawBase/$($script:RemoteSessionHooksPath)/$hf" -OutFile (Join-Path $script:TmpDir "hooks" $hf)
+    }
+  }
+  if ($SessionHook -and $script:Target -eq "claude") {
+    New-Item -ItemType Directory -Force -Path (Join-Path $script:TmpDir "claude-hooks") | Out-Null
+    foreach ($hf in $ClaudeHookFiles) {
+      Invoke-WebRequest -UseBasicParsing -Uri "$RawBase/$($script:RemoteClaudeHooksPath)/$hf" -OutFile (Join-Path $script:TmpDir "claude-hooks" $hf)
+    }
   }
 }
 
@@ -536,33 +592,6 @@ function Strip-ManagedBlockText([string]$text) {
   return ($out -join "`n")
 }
 
-function Backup-Md([string]$Target) {
-  if ($DryRun) {
-    $stamp = Get-Date -Format "yyyyMMdd-HHmmss"
-    Log "[dry-run] backup $Target -> $Target.bak.$stamp"
-    return
-  }
-  $parent = Split-Path -Parent $Target
-  if (-not [string]::IsNullOrWhiteSpace($parent)) {
-    New-Item -ItemType Directory -Force -Path $parent | Out-Null
-  }
-  $stamp = Get-Date -Format "yyyyMMdd-HHmmss"
-  $backup = "$Target.bak.$stamp"
-  if (Test-Path $Target) {
-    Copy-Item -Force $Target $backup
-  } else {
-    New-Item -ItemType File -Force -Path $backup | Out-Null
-  }
-  $allBackups = Get-ChildItem -Path "$Target.bak.*" -ErrorAction SilentlyContinue | Sort-Object Name
-  if ($allBackups.Count -gt 1) {
-    $toDelete = $allBackups | Select-Object -First ($allBackups.Count - 1)
-    foreach ($b in $toDelete) {
-      Remove-Item -Force $b.FullName
-    }
-  }
-  Log "Backup created: $backup"
-}
-
 function Test-ManagedBlock([string]$Target) {
   if (-not (Test-Path $Target)) { return $false }
   $current = Get-Content -Raw $Target
@@ -582,7 +611,7 @@ function Remove-ManagedBlock([string]$Target) {
 
 # Handle legacy managed-block migration for the resolved target.
 # When -Notify (install), emit a prominent notice before touching files.
-# Only backs up + strips files that actually contain the legacy block.
+# Only strips files that actually contain the legacy block.
 function Strip-LegacyPolicyBlocks {
   param([switch]$Notify)
   $targets = @($DestPolicyMd)
@@ -598,11 +627,9 @@ function Strip-LegacyPolicyBlocks {
     Log ""
     Log "!! Legacy managed policy block detected (3.x migration)"
     Log "   Policy now loads via the duck-policy skill; the block will be removed."
-    Log "   A timestamped .bak file will be written next to each affected file."
   }
   foreach ($t in $targets) {
     if (Test-ManagedBlock $t) {
-      Backup-Md $t
       Remove-ManagedBlock $t
     }
   }
@@ -694,6 +721,83 @@ function Uninstall-Agents {
     }
   }
   Log "Removed $removed agents from $DestAgentsDir"
+}
+
+function Install-SessionHookOpenCode {
+  $destPlugin = Join-Path $script:DestPluginsDir "session-start.js"
+  $destDirective = Join-Path (Split-Path -Parent $script:DestPluginsDir) "session-start.directive.md"
+  if ($DryRun) {
+    Log "[dry-run] session-hook: $(Join-Path $script:TmpDir 'hooks' 'session-start.opencode.plugin.js') -> $destPlugin"
+    Log "[dry-run] session-hook: $(Join-Path $script:TmpDir 'hooks' 'session-start.directive.md') -> $destDirective"
+    return
+  }
+  New-Item -ItemType Directory -Force -Path $script:DestPluginsDir, (Split-Path -Parent $destDirective) | Out-Null
+  Copy-Item -Force (Join-Path $script:TmpDir "hooks" "session-start.opencode.plugin.js") $destPlugin
+  Copy-Item -Force (Join-Path $script:TmpDir "hooks" "session-start.directive.md") $destDirective
+  Log "Installed session-start hook -> $($script:DestPluginsDir)"
+}
+
+function Uninstall-SessionHookOpenCode {
+  $destPlugin = Join-Path $script:DestPluginsDir "session-start.js"
+  $destDirective = Join-Path (Split-Path -Parent $script:DestPluginsDir) "session-start.directive.md"
+  if ($DryRun) {
+    Log "[dry-run] session-hook rm $destPlugin $destDirective"
+    return
+  }
+  if (Test-Path $destPlugin) { Remove-Item -Force $destPlugin }
+  if (Test-Path $destDirective) { Remove-Item -Force $destDirective }
+  Log "Removed session-start hook from $($script:DestPluginsDir)"
+}
+
+function Merge-ClaudeHookSettings([string]$SourceHooks) {
+  $settings = $script:DestClaudeSettings
+  $hookBlock = (Get-Content -Raw $SourceHooks | ConvertFrom-Json).hooks.SessionStart
+  $data = @{}
+  if (Test-Path $settings) {
+    $existing = Get-Content -Raw $settings | ConvertFrom-Json
+    $data = Convert-ToHashtableCompat $existing
+  }
+  if ($null -eq $data["hooks"]) { $data["hooks"] = @{} }
+  $data["hooks"]["SessionStart"] = $hookBlock
+  $data | ConvertTo-Json -Depth 10 | Set-Content -NoNewline -Path $settings
+}
+
+function Install-SessionHookClaude {
+  $hooksDir = $script:DestClaudeHooksDir
+  if ($DryRun) {
+    foreach ($hf in $ClaudeHookFiles) {
+      Log "[dry-run] session-hook: $(Join-Path $script:TmpDir 'claude-hooks' $hf) -> $(Join-Path $hooksDir $hf)"
+    }
+    Log "[dry-run] session-hook: merge SessionStart -> $($script:DestClaudeSettings)"
+    return
+  }
+  New-Item -ItemType Directory -Force -Path $hooksDir | Out-Null
+  foreach ($hf in $ClaudeHookFiles) {
+    Copy-Item -Force (Join-Path $script:TmpDir "claude-hooks" $hf) (Join-Path $hooksDir $hf)
+  }
+  Merge-ClaudeHookSettings (Join-Path $hooksDir "claude-code.session-start.hooks.json")
+  Log "Installed session-start hook -> $hooksDir"
+}
+
+function Uninstall-SessionHookClaude {
+  $hooksDir = $script:DestClaudeHooksDir
+  $settings = $script:DestClaudeSettings
+  if ($DryRun) {
+    Log "[dry-run] session-hook rm $hooksDir/* and remove SessionStart from $settings"
+    return
+  }
+  foreach ($hf in $ClaudeHookFiles) {
+    $dest = Join-Path $hooksDir $hf
+    if (Test-Path $dest) { Remove-Item -Force $dest }
+  }
+  if (Test-Path $settings) {
+    $data = Get-Content -Raw $settings | ConvertFrom-Json
+    if ($data.hooks.PSObject.Properties.Name -contains "SessionStart") {
+      $data.hooks.PSObject.Properties.Remove("SessionStart")
+      $data | ConvertTo-Json -Depth 10 | Set-Content -NoNewline -Path $settings
+    }
+  }
+  Log "Removed session-start hook from $hooksDir"
 }
 
 function Skills-Install([string[]]$Agents = @()) {
@@ -855,6 +959,7 @@ function Update-ManifestTarget([string]$Operation, [string]$TargetName) {
       installAgentsMd = $true
       installSkills = (-not $SkipSkills)
       extras = [bool]$Extras
+      sessionHook = [bool]$SessionHook
     }
   } elseif ($Operation -eq "uninstall") {
     [void]$manifest["targets"].Remove($TargetName)
@@ -926,6 +1031,12 @@ try {
         Doctor
         Download-Sources
         Install-Agents
+        if ($SessionHook -and $script:Target -eq "opencode") {
+          Install-SessionHookOpenCode
+        }
+        if ($SessionHook -and $script:Target -eq "claude") {
+          Install-SessionHookClaude
+        }
         if (-not $script:SyncWrapperWritten) {
           Install-SyncWrapper
           $script:SyncWrapperWritten = $true
@@ -939,12 +1050,30 @@ try {
           $h = Get-Sha256 (Join-Path $script:TmpDir $pinF)
           if ($h) { $pinPairs[(Get-AgentRemotePinKey $pinF)] = $h }
         }
+        if ($SessionHook -and $script:Target -eq "opencode") {
+          foreach ($hf in $SessionHookFiles) {
+            $h = Get-Sha256 (Join-Path $script:TmpDir "hooks" $hf)
+            if ($h) { $pinPairs["$($script:RemoteSessionHooksPath)/$hf"] = $h }
+          }
+        }
+        if ($SessionHook -and $script:Target -eq "claude") {
+          foreach ($hf in $ClaudeHookFiles) {
+            $h = Get-Sha256 (Join-Path $script:TmpDir "claude-hooks" $hf)
+            if ($h) { $pinPairs["$($script:RemoteClaudeHooksPath)/$hf"] = $h }
+          }
+        }
         Write-Pins $pinManifestPath $pinPairs
       }
       "uninstall" {
         Doctor
         Download-Sources
         Uninstall-Agents
+        if ($script:Target -eq "opencode") {
+          Uninstall-SessionHookOpenCode
+        }
+        if ($script:Target -eq "claude") {
+          Uninstall-SessionHookClaude
+        }
         Strip-LegacyPolicyBlocks
         Status
         Update-ManifestTarget "uninstall" $script:Target

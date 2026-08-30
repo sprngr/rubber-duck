@@ -8,7 +8,7 @@ Patterns for detecting semantic overlap between skill concepts and existing duck
 
 **Intent:** Root-cause investigation, evidence mapping
 **Modes:** trace (defs/refs/callers/tests), root-cause (Socratic questioning)
-**Signals:** "debug this", "why is X broken", "trace failure", "where used"
+**Signals:** "debug this", "why is X broken", "trace this failure", "where is this used", "map callers"
 **Mutating:** No (analysis only)
 
 **Overlap indicators:**
@@ -30,7 +30,7 @@ Patterns for detecting semantic overlap between skill concepts and existing duck
 
 **Intent:** Design option evaluation, tradeoff analysis
 **Modes:** option comparison, constraint challenge, tradeoff matrix
-**Signals:** "choose between approaches", "architecture tradeoffs", "evaluate options"
+**Signals:** "choose between approaches", "architecture tradeoffs", "help me choose"
 **Mutating:** No (decision support only)
 
 **Overlap indicators:**
@@ -41,7 +41,7 @@ Patterns for detecting semantic overlap between skill concepts and existing duck
 
 **Intent:** Deep interrogation, assumption/risk pressure testing
 **Flow:** One-question-at-a-time, batched (up to 3), pressure calibration
-**Signals:** "grill me", "grill this plan", "stress-test decision", "challenge assumptions"
+**Signals:** "grill this", "grill this plan", "challenge assumptions"
 **Mutating:** No (questioning only)
 
 **Overlap indicators:**
@@ -52,7 +52,7 @@ Patterns for detecting semantic overlap between skill concepts and existing duck
 
 **Intent:** Bounded implementation (phase-gated scope)
 **Scope:** Surgical code edits, minimal safe diff
-**Signals:** "apply fix", "make targeted edit", "patch this", "implement agreed change"
+**Signals:** "apply this fix", "make a targeted edit", "patch this", "implement the agreed change"
 **Mutating:** Yes (requires execution approval)
 
 **Overlap indicators:**
@@ -63,7 +63,7 @@ Patterns for detecting semantic overlap between skill concepts and existing duck
 
 **Intent:** Multi-file restructuring (phase-gated scope)
 **Scope:** Extract/rename/move/inline/pattern-convert
-**Signals:** "refactor this", "extract function", "rename across codebase", "move code"
+**Signals:** "refactor this", "extract this function", "rename this across codebase", "move this to another file", "inline this"
 **Mutating:** Yes (requires execution approval)
 
 **Overlap indicators:**
@@ -74,7 +74,7 @@ Patterns for detecting semantic overlap between skill concepts and existing duck
 
 **Intent:** Risk-first code review
 **Output:** One-line paste-ready comments (prefix + location + problem + fix)
-**Signals:** "review this", "code review", "review diff"
+**Signals:** "review this", "code review", "review the diff"
 **Mutating:** No (analysis only)
 
 **Overlap indicators:**
@@ -85,7 +85,7 @@ Patterns for detecting semantic overlap between skill concepts and existing duck
 
 **Intent:** Adversarial failure mode analysis
 **Scope:** Rollback safety, compatibility, trust-boundary misuse
-**Signals:** "what could break", "rollback risk", "compat risk", "stress test"
+**Signals:** "stress test this", "what could break", "rollback risk", "compatibility risk"
 **Mutating:** No (risk assessment only)
 
 **Overlap indicators:**
@@ -96,7 +96,7 @@ Patterns for detecting semantic overlap between skill concepts and existing duck
 
 **Intent:** Complexity reduction, duplication review
 **Modes:** dry mode (read-only), semantic divergence detection
-**Signals:** "simplify this", "overengineered", "reduce complexity", "DRY this", "dedupe"
+**Signals:** "simplify this", "is this overengineered", "DRY this", "divergence review"
 **Mutating:** Conditional (requires approval if edits suggested)
 
 **Overlap indicators:**
@@ -125,11 +125,44 @@ Patterns for detecting semantic overlap between skill concepts and existing duck
 
 - "what to test", "test gaps", "missing tests", "bug priority", "test quality"
 
+### duck-adapt
+
+**Intent:** Adapt external skills to rubber-duck philosophy; audit compliance
+**Scope:** External skill adaptation, philosophy compliance audit, overlap detection
+**Signals:** "adapt this skill", "make this duck-compatible", "audit skill", "should we add this skill"
+**Mutating:** Conditional (audit read-only; adaptation edits skill files)
+
+**Overlap indicators:**
+
+- "make this duck-compatible", "port this skill", "is this skill compliant", "overlap between skills"
+
+### duck-policy
+
+**Intent:** Apply rubber-duck enforcement to agent sessions
+**Scope:** Approval gates, safety carve-outs, Duck Ladder, style, debt markers
+**Signals:** "apply duck policy", "enforce approval gates", "use duck rules", "what are the duck rules"
+**Mutating:** No (governance meta-skill, no task output)
+
+**Overlap indicators:**
+
+- "enforce policy", "duck discipline", "approval gate", "safety carve-out"
+
+### duck-tape
+
+**Intent:** Two-tier session memory: CONTEXT.md (persistent) + .duck-tape working state
+**Scope:** Merge/dedupe fixed-schema sections; subcommands merge, resume, init, prune, migrate
+**Signals:** "duck-tape", "compact session", "update CONTEXT.md", "resume session"
+**Mutating:** Yes (writes state files, merges CONTEXT.md; approval required)
+
+**Overlap indicators:**
+
+- "compact session", "persist memory", "session checkpoint", "resume from compaction"
+
 ### quack
 
 **Intent:** Explicit routing, intent resolution
 **Scope:** Keyword-based precedence, alias matching, disambiguation
-**Signals:** "quack", explicit route control
+**Signals:** "quack", "quack <intent>"
 **Mutating:** No (routing only)
 
 **Overlap indicators:**

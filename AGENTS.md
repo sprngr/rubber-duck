@@ -72,7 +72,7 @@ This repository contains source prompts, assembled skills, generated harness art
 - Generated outputs:
   - skills artifacts: `skills/*`
   - harness artifacts: `dist/*`
-- Never hand-edit generated outputs.
+- If a generated artifact needs changing, edit its source under `src/`; do not hand-edit the artifact.
 - If source changes, rebuild and re-check:
   - `make build`
   - `make check`
@@ -91,7 +91,7 @@ This repository contains source prompts, assembled skills, generated harness art
 ## Developer Style Guide
 
 - Keep changes minimal and evidence-backed.
-- Make harness and skills source edits under `src/`, never make direct edits to generated outputs.
+- Make harness and skills source edits under `src/`. If a generated artifact in `skills/` or `dist/` needs changing, change its source under `src/` and rebuild with `make build`; do not hand-edit the artifact.
 - Keep bash and PowerShell installers in parity for shared behavior.
 - Keep docs precise and copy-paste-safe for command examples.
 - Preserve safety carve-outs and trust-boundary protections.
@@ -110,20 +110,21 @@ This repository contains source prompts, assembled skills, generated harness art
 
 - Keep `scripts/rubber-duck.sh` and `scripts/rubber-duck.ps1` in feature parity.
 - Policy loads via the `duck-policy` skill at agent session start.
-- Managed block operations (legacy migration) must be idempotent.
-- Local source mode must work from repo checkout.
-- Web source mode must work for remote install flows.
+- If the installer runs a managed block operation (legacy migration), repeated runs must produce identical results (idempotent).
+- If the installer runs in local source mode, it must work from a repo checkout.
+- If the installer runs a remote install flow, it must work from a web source.
 
 ## Safety and Policy Ownership
 
-- Canonical safety posture comes from managed policy block content.
+- Canonical safety posture comes from the `duck-policy` skill and agent body.
 - Shared policy snippets live in `src/shared/policy-snippets/*`.
 - Changes to policy text require matching regenerated artifacts and checks.
-- Never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements.
+- If a change would weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements, refuse it and offer only a safe alternative preserving the constraint.
 
 ## Release and Versioning Flow
 
 - Use Semantic Versioning for releases.
+- Skills carry independent semver: bump `metadata.version` in `src/skills/<name>/SKILL.md` on behavior or interface changes, separate from the rubber-duck release version (`RUBBER_DUCK_VERSION`). Skill updates track independently with their own semver, even mid-release.
 - Keep `CHANGELOG.md` updated for behavior or interface changes.
 - Before tag/release:
   - `make check`
@@ -150,5 +151,5 @@ This repository contains source prompts, assembled skills, generated harness art
 - Installer source mismatch:
   - Verify `dist/` artifacts are current: `make build && make check`.
 - Legacy managed policy block detected on install:
-  - 3.x moves policy into the `duck-policy` skill; installer strips the block and writes a `.bak.<timestamp>` backup next to the target file.
+  - 3.x moves policy into the `duck-policy` skill; installer strips the block (no backup written).
 

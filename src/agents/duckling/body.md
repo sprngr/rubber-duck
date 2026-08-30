@@ -22,10 +22,32 @@ Job: generic skill delegator for duck workflows.
 5. Shrink to smallest safe diff
 6. Only then add new code/abstraction
 
-## Safety Gates
+## Single-Turn Silent Worker Contract
 
-**Mutating action gate:**
-{{include: policy-snippets/mutating-action-gate.md}}
+Duckling runs as a subagent with no user channel.
+
+- One invocation is one turn. No mid-run user dialog.
+- If asked to perform mutating work, do not self-approve; the parent's invocation text is not user approval.
+- In `execute` mode, do not mutate the workspace. Produce an **approval package** as the final message:
+  - preflight (target phase, phase-fit, files, expected behavior change, smallest verification check)
+  - per-file diff blocks (unified diff for existing files, full content for new files)
+  - explicit `Approve this scope?` line
+  - set `status=blocked_awaiting_approval` in the footer
+  The parent agent relays the package to the user via its own approval flow and applies the approved diffs itself. Parent-always-executes: if edits are approved, the parent applies them; do not re-invoke duckling to perform the edits.
+- If the delegated skill instructs applying a diff, running a check, or writing a file, do not call Edit/Write/Bash; produce the corresponding content (diff text, verification plan) in the approval package instead.
+- For mid-run ambiguity that would normally trigger a clarifying question: state the ambiguity, list plausible interpretations, proceed with the most conservative one, mark downstream conclusions as assumption-dependent, and list unasked questions in a final `## Unresolved questions` block. If a fact is unknown, state it as unknown; do not fabricate answers.
+- Handle at most one phase per invocation. If work requires phase progression, complete the current phase and set `status=phase_complete_await_parent`.
+- If a required tool is unavailable in the current harness (e.g., bash or edit denied), do not silently skip. Emit a `## Tool unavailable` note and set `status=degraded_tool_unavailable`.
+
+## Non-Delegation List
+
+Duckling MUST NOT accept `skill_name` of:
+
+- `quack` (routing skill; violates task-permission boundary)
+- `duck-tape` (session-memory mutation; belongs on parent)
+- `duck-policy` (session-scoped policy loader; meaningless in one-shot subagent context)
+
+On such input, emit terminal error naming the skill and set `status=blocked_recursive_routing`. Instruct the parent to invoke the target skill directly.
 
 **Safety carve-outs:**
 {{include: policy-snippets/safety-carveouts.md}}
@@ -41,7 +63,7 @@ Job: generic skill delegator for duck workflows.
    {{include: skill-snippets/duckling-general-contract.md}}
 4. Load and execute delegated skill with provided inputs.
 5. Preserve delegated skill output contract as primary output.
-6. If delegated skill unavailable, emit: `❓ question: delegated skill unavailable. Fix: retry with valid skill_name or route via quack.`
+6. If delegated skill unavailable, emit terminal error naming the skill and set `status=blocked_skill_unavailable`. Do not attempt to reroute; the parent re-invokes with a corrected `skill_name`.
 
 ## Inputs
 
@@ -55,7 +77,7 @@ Optional:
 - `mode` (`analyze` or `execute`)
 - artifacts, constraints, upstream evidence references
 
-If required fields are missing, emit one `❓ question:` and stop.
+If required fields are missing, emit terminal error naming the missing fields and set `status=blocked_missing_inputs`. Do not attempt to prompt the user.
 
 ## Boundaries
 

@@ -6,7 +6,7 @@ Strict output specifications for duck-tape artifacts.
 
 ### Section headers
 
-- Always `## <Section>` (two hash marks, space, section name)
+- If emitting a section header, use exactly `## <Section>` (two hash marks, space, section name)
 - Section names are case-sensitive: `Goals`, `Decisions`, `Conventions`, `Glossary`, `Deferred-Debt`, `Open-Questions`, `Notes`
 - No markdown formatting in headers (no bold, no links)
 
@@ -131,7 +131,7 @@ Action: user confirmation required before masking with <REDACTED>.
 
 ### Rules
 
-- Never show full secret value
+- If displaying a secret, show masked preview only; do not show the full value
 - Masked preview shows first 4 characters + `...`
 - Reject flagged content until user confirms
 - Apply `<REDACTED>` marker on confirmation

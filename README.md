@@ -21,6 +21,7 @@
   - [Who this is not for](#who-this-is-not-for)
   - [What this is not](#what-this-is-not)
   - [What to expect](#what-to-expect)
+  - [How a task flows](#how-a-task-flows)
 - [Quick start](#quick-start)
 - [Verify after install](#verify-after-install)
 - [Philosophy Guardrails](#philosophy-guardrails)
@@ -108,6 +109,18 @@
 - Terse language. Findings and responses use fragments, short sentences, no hedging. Code blocks and errors stay byte-exact.
 - Slower per-turn, faster per-feature. Each turn does less, but rework drops. Net velocity improves when wrong assumptions cost more than slow turns.
 
+## How a task flows
+
+ A typical session walks one loop: plan, implement, revise, verify, ship. You stay in control at every step — scoped framing, explicit approval before edits, verification before PR. Skills run by canonical name (`duck-design`, `duck-patch`, `duck-review`, `duck-triage`) — directly, or routed via `quack <intent>`.
+
+ **Plan and implement.** Frame the problem, choose an approach, get scope approved, execute. Start with the provided `rubber-duck` agent or use the `duck-policy` skill for checkpoints with your own agent.
+
+![Plan and implement workflow](./docs/assets/example_workflow_part_A.svg)
+
+ **Revise, verify, ship.** Review findings, accept or revise, verify, open the PR.
+
+![Revise, verify, ship workflow](./docs/assets/example_workflow_part_B.svg)
+
 ## Quick start
 
 Upgrading from v1.x? See [migration guide](./docs/migration-v2.md).
@@ -123,7 +136,7 @@ npx skills add https://github.com/sprngr/rubber-duck
 ### Full assistant operating system (agents + skills)
 
 > [!IMPORTANT]
-> Full install uses self-contained `rubber-duck` agent with all policy rules built in.
+> Full install provides `rubber-duck` agent that invokes `duck-policy` skill by default + `duckling` subagent to work with `quack` skill orchestator detailed below.
 
 **Bash (macOS/Linux):**
 
@@ -223,7 +236,7 @@ The agent must already be installed for your target. Delegation runs through `du
  <details>
  <summary>Expand for full skill list + routing diagram</summary>
 
-  Rubber Duck packages 15 skills: 12 default + 3 extras.
+Rubber Duck packages 16 skills: 12 default + 4 extras, plus one manual-install easter egg.
 
 ### Default skills (installed automatically)
 
@@ -245,8 +258,17 @@ The agent must already be installed for your target. Delegation runs through `du
 - duck-adapt — external skill adaptation + philosophy audit
 - duck-grill — batched grilling interview
 - duck-tape — two-tier session memory (CONTEXT.md + state files). Run `/duck-tape init` to install hook.
+- duck-tidy — stale comment/doc cleanup audit (audit-first, patch handoff)
 
  Install extras: `scripts/rubber-duck.sh install --<target> --extras`
+
+### Session-start hook (--session-hook / -SessionHook)
+
+Opt-in feature that guarantees the `duck-policy` skill loads at session start for
+the `rubber-duck` agent. Works on OpenCode (system-prompt injection via plugin)
+and Claude Code (`SessionStart` hook).
+
+ Install: `scripts/rubber-duck.sh install --<target> --session-hook`
 
  Routing model (inline vs delegated vs governor-invoked), composition patterns, workflow examples: [docs/MANUAL.md](./docs/MANUAL.md). Best practices: [docs/best-practices.md](./docs/best-practices.md).
 
@@ -269,7 +291,6 @@ flowchart TD
 ```
 
  Full routing flow with state transitions: [docs/architecture/02-agent-skill-model.md](./docs/architecture/02-agent-skill-model.md).
-
  </details>
 
 ## Deep dive docs

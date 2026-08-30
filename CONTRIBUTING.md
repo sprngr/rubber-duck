@@ -7,7 +7,7 @@ We welcome contributions. Read this guide before opening an issue or pull reques
 Rubber Duck is a Socratic assistant, not an autonomous code generator. All contributions must align with the core philosophy:
 
 - **Decision ownership:** Keep the developer in control.
-- **Ask-before-act:** Agents must clarify scope before proposing changes.
+- **Ask-before-act:** If scope is unclear, clarify before proposing changes.
 - **Bounded execution:** No silent edits. Every mutating action requires explicit approval.
 
 Read the full [Philosophy](./docs/architecture/01-philosophy.md) before designing a new feature or skill.

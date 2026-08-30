@@ -53,11 +53,11 @@ Common architectural symptoms and corresponding decision prompts.
 
 ## Anti-Patterns to Avoid
 
-Never suggest:
+If these patterns seem to fit, lead with the bounded alternative; do not suggest:
 
 - Microservices for monolith pain (suggest bounded contexts first)
 - New database for query complexity (suggest read models / caching first)
 - Event sourcing for audit log needs (suggest append-only table first)
 - CQRS for read/write split (suggest indexed views first)
 
-Always compare lightweight option to heavyweight option. Let developer choose tradeoff.
+If presenting options, compare lightweight vs heavyweight and let the developer choose the tradeoff.

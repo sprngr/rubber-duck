@@ -1,15 +1,13 @@
 ---
 name: duck-adapt
 description: >
-  Meta-skill that adapts external skills to rubber-duck philosophy: Socratic method,
-  evidence-first discipline, Duck Ladder, execution approval gates, and prompt order standard.
-  Also audits existing skills for philosophy compliance and detects overlaps.
+  Adapts external skills to rubber-duck philosophy; audits skills for compliance and overlap.
   Use when: "adapt this skill", "make this duck-compatible", "audit skill",
   "should we add this skill".
 license: MIT
 metadata:
   author: sprngr
-  version: v2.1.2
+  version: v2.1.3
   RUBBER_DUCK_VERSION: __RUBBER_DUCK_VERSION__
 ---
 

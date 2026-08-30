@@ -200,7 +200,7 @@ Its function is to improve reasoning quality through structured questioning, exp
 **What it means:**
 
 - Certain protections are non-negotiable
-- Simplification and speed must never remove safety carve-outs
+- If simplification or speed would remove a safety carve-out, do not proceed
 - Some constraints are not challengeable
 
 **Non-negotiable protections:**
@@ -256,6 +256,28 @@ Its function is to improve reasoning quality through structured questioning, exp
 - Reject skills that weaken security/trust boundaries
 - Flag proposals that remove protections
 - Preserve safety even when adding complexity
+
+---
+
+### 6) Rule Wording Convention
+
+**What it means:**
+
+- Content-logic rules use conditional phrasing: "If X, do Y" — the trigger condition states when the rule applies
+- Structural/format/spec rules stay absolute: exact output forms, loading semantics, phase caps, required phrases
+- Positive framing preferred: state what to do; prohibition form reserved for safety carve-outs and refusal actions that must block
+
+**In practice:**
+
+- "If a write would contain secrets, reject it" over "Never write raw secrets"
+- "If recommending, present options with tradeoffs" over "Never prescribe"
+- Keep absolute: "loading: always", "Phase 1 must contain only stubs", safety-carve-out refusal
+
+**Skill adaptation implications:**
+
+- Convert absolute behavior rules to if-then during adaptation
+- Keep structural/spec language absolute
+- Do not weaken safety carve-outs; refusal form stays
 
 ---
 

@@ -1,0 +1,49 @@
+{
+  "skill_name": "duck-adventure",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "duck adventure",
+      "expected_output": "Starts a run via python3 hooks/adventure.py init. Room description from look output, diagram, status from state. MUD verbs map to script subcommands; say/emote stay LLM. Dice combat via attack <monster>. No handoff to productivity flow.",
+      "assertions": [
+        "Calls hooks/adventure.py for mechanical verbs (init/look/move/attack)",
+        "Narrates script JSON output instead of re-deriving mechanics",
+        "No handoff or routing to work flows",
+        "Combat resolved by script, narrated by LLM",
+        "No exit offer until user says done/exit/quit"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "which framework should I pick?",
+      "expected_output": "No game. Normal rubber-duck flow only (no opt-in signal).",
+      "assertions": [
+        "No quest announcement without explicit opt-in signal",
+        "Proceeds directly with evidence-first decision flow"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "duck adventure\ndone",
+      "expected_output": "Run starts, then exits on explicit 'done'. Run state preserved for resume (no banking), closing beat emitted, no return-to-work offer.",
+      "assertions": [
+        "Starts run on opt-in signal",
+        "Exits on 'done' with one-line closing beat",
+        "Exit preserves run state (floor/room/HP/gold) without banking",
+        "State includes run + permanent sections (schema v3) with quest log",
+        "No return-to-work offer after exit"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "duck adventure\nnorth\nattack goblin",
+      "expected_output": "Run starts; moving north enters a room; attacking resolves dice combat via script. If player HP hits 0, script banks gold and logs quest outcome death. If floor 5 boss defeated, outcome complete + Crown of the Duck King.",
+      "assertions": [
+        "Combat resolved by hooks/adventure.py attack",
+        "Death triggers scripted bank + quest log (outcome death)",
+        "Floor 5 boss defeat triggers outcome complete + Crown of the Duck King",
+        "Run resets after death or completion (permanent kept)"
+      ]
+    }
+  ]
+}

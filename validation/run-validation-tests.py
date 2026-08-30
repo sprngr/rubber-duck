@@ -244,7 +244,10 @@ def run_follow_up(
 
 
 def prepare_workspace(repo_root: Path, fixture_name: str | None = None) -> Path:
-    """Copy fixture (if any) + .opencode + .agents + AGENTS.md into temp workspace."""
+    """Copy fixture (if any) + .opencode + .agents + AGENTS.md into temp workspace.
+
+    Overlay built skills/ onto .agents/skills/ so tests always exercise current
+    policy, not the last installer-synced copy."""
     ws = Path(tempfile.mkdtemp(prefix="rdval-"))
     if fixture_name:
         fixture_src = FIXTURES_DIR / fixture_name
@@ -256,8 +259,13 @@ def prepare_workspace(repo_root: Path, fixture_name: str | None = None) -> Path:
         src = repo_root / name
         if src.is_dir():
             shutil.copytree(src, ws / name, symlinks=False, dirs_exist_ok=True)
+    # Overlay built skills so validation tests current policy, not stale installs
+    built_skills = repo_root / "skills"
+    ws_skills = ws / ".agents" / "skills"
+    if built_skills.is_dir():
+        shutil.copytree(built_skills, ws_skills, symlinks=False, dirs_exist_ok=True)
     agents_md = repo_root / "AGENTS.md"
-    if agents_md.is_file():
+    if agents_md.is_file() and not fixture_name:
         shutil.copy2(agents_md, ws / "AGENTS.md")
     return ws
 
@@ -336,7 +344,7 @@ def run_one(
             })
             if fu_result["error"]:
                 break
-            last_text = fu_result["last_text"]
+            last_text = f"{last_text}\n--- turn {i} ---\n{fu_result['last_text']}"
 
     return {
         "returncode": completed.returncode,

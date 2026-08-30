@@ -1,13 +1,12 @@
 ---
 name: duck-design
 description: >
-  Socratic design discussion to evaluate approaches, identify tradeoffs,
-  suggest alternatives, and challenge assumptions. Design matrix for option comparison.
+  Socratic design discussion: approaches, tradeoffs, alternatives, assumption challenge.
   Use when: "choose between approaches", "architecture tradeoffs", "help me choose".
 license: MIT
 metadata:
   author: sprngr
-  version: v2.0.0
+  version: v2.0.1
   RUBBER_DUCK_VERSION: __RUBBER_DUCK_VERSION__
 ---
 
@@ -35,7 +34,7 @@ Trigger when user asks to compare approaches, evaluate architecture, or choose t
 
 - Ground analysis in explicit evidence/constraints from current system state
 - If implementation action requested, require explicit approval and bounded scope before handoff
-- Architectural neatness must not bypass core safeguards:
+- If architectural neatness would bypass a core safeguard, do not proceed:
   {{include: policy-snippets/safety-carveouts.md}}
 
 Ask one scoping question before analyzing:
@@ -77,6 +76,8 @@ If active:
 - First response shape: 1 scoping question + 3-5 slices + priority question
 - Include explicit tradeoff line: "Main tradeoff: scope reduction now vs slower full-program change."
 - Defer deep per-slice analysis until user picks slice
+- When writing the rollout plan, express it as ordered reviewable PR units:
+  {{include: skill-snippets/reviewable-units.md}}
 
 Routing precedence:
 
@@ -107,7 +108,7 @@ Compact first-response template (around 6-12 lines):
 6. State non-negotiable dimension for decision (1 sentence)
 7. Ask: "Which outcome matters most here, given your constraints?"
 
-Never prescribe. Always frame as tradeoff choice.
+If recommending an option, frame it as a tradeoff choice with alternatives; do not prescribe.
 
 ### 5. Build tradeoff matrix (multi-option decisions)
 

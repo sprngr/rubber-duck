@@ -1,16 +1,14 @@
 ---
 name: duck-tape
 description: >
-  Two-tier session memory: compact into CONTEXT.md (persistent) and
-  .duck-tape/<id>.state.md (working). Merge/dedupe fixed-schema sections,
-  append-only Notes, bootstrap from session content. Subcommands: merge,
-  resume, init, prune, migrate.
+  Two-tier session memory: CONTEXT.md (persistent) + .duck-tape working state, with merge/dedupe.
+  Subcommands: merge, resume, init, prune, migrate.
   Use when: "duck-tape", "compact session", "update CONTEXT.md",
   "resume session".
 license: MIT
 metadata:
   author: sprngr
-  version: v2.1.2
+  version: v2.1.3
   RUBBER_DUCK_VERSION: __RUBBER_DUCK_VERSION__
 ---
 
@@ -47,7 +45,7 @@ Skill-specific delta:
 
 ### 1. Redact incoming content
 
-Scan session content for secrets/PII: API keys, passwords, tokens, connection strings, env var values, personally identifiable information. On detection: reject flagged content, report findings, ask user to redact source or confirm mask-in-place (`<REDACTED>`). Never write raw secrets. Applies to both tiers.
+Scan session content for secrets/PII: API keys, passwords, tokens, connection strings, env var values, personally identifiable information. On detection: reject flagged content, report findings, ask user to redact source or confirm mask-in-place (`<REDACTED>`). If a write would contain raw secrets, reject it; write masked content only after user confirmation. Applies to both tiers.
 
 ### 2. Write session state file
 
@@ -66,7 +64,7 @@ Report state file path: `.duck-tape/<session_id>.state.md` — user can use this
 
 Run only on merge signals. Skip for state-only mode.
 
-**Bootstrap** (CONTEXT.md missing): create CONTEXT.md with translated content from state file using rigid map in `references/STATE_SCHEMA.md`. Empty sections get scaffold from `examples/bootstrap-CONTEXT.md`. Generate TOC under title from the 8 section headers. Output format in `references/OUTPUT_SCHEMA.md`. Sample in `examples/CONTEXT.md`. Never infer Goals or Conventions entries.
+**Bootstrap** (CONTEXT.md missing): create CONTEXT.md with translated content from state file using rigid map in `references/STATE_SCHEMA.md`. Empty sections get scaffold from `examples/bootstrap-CONTEXT.md`. Generate TOC under title from the 8 section headers. Output format in `references/OUTPUT_SCHEMA.md`. Sample in `examples/CONTEXT.md`. If Goals or Conventions entries are missing, leave them empty; do not infer.
 
 **Merge** (CONTEXT.md exists): translate from session state file using rigid map. Summarize translated content to persistent-context granularity (decision-level, not commit-level) before applying per-section merge rules. Refresh TOC only if the set of `##` section headings changes. Per-section merge rules in `references/SCHEMA.md`. Summary:
 
@@ -124,8 +122,8 @@ Trigger falls back to marker-only on failure: jq missing (bash), transcript miss
 `/duck-tape resume` — detect compaction and reload checkpoint.
 
 1. Check `.duck-tape/.last-compact`. If missing, no compaction occurred. Report "no compaction marker found" and stop.
-2. Compare marker timestamp to session start time. If marker older than session start, no compaction in this session. Report "no recent compaction" and stop.
-3. If marker newer than session start, compaction occurred. Read marker fields: `cwd`, `latest-state`, `transcript` (transcript path or opencode snapshot path; absent in older markers).
+2. Compare marker timestamp to session start time. If marker older than session start, note "no compaction in this session — marker from a previous session"; the checkpoint is the cross-session handoff point, so continue to step 3 and reload it.
+3. Read marker fields: `cwd`, `latest-state`, `transcript` (transcript path or opencode snapshot path; absent in older markers).
 4. Select state file by precedence: **manual > recovered > auto**.
    a. If a manual checkpoint (no suffix) exists and is newer than the newest auto-checkpoint, use manual. Report position from it. Skip to step 6.
    b. If only an auto-checkpoint (`-auto` suffix) exists or no state file exists at all, invoke LLM-assisted recovery (step 5).
@@ -182,7 +180,7 @@ If no state file exists and no transcript path in marker, report "compaction occ
 - Expected: remove user-selected Notes entries, fixed-schema sections untouched
 - Verification: re-read CONTEXT.md, confirm only Notes changed, confirm selected entries removed
 
-Prune never touches fixed-schema sections.
+If pruning, do not touch fixed-schema sections.
 
 ## Migrate
 
@@ -214,6 +212,6 @@ Prune never touches fixed-schema sections.
 - Default mode is state-only. CONTEXT.md is written only on merge signals.
 - Write only `CONTEXT.md`, `.duck-tape/<id>.state.md`, `.duck-tape/<id>-recovered.state.md`, `.duck-tape/<id>-transcript.json`, `.duck-tape/.gitignore`, `.duck-tape/.last-compact` marker.
 - Respect existing CONTEXT.md structure. If file lacks schema sections, prompt user to migrate before first merge.
-- Never infer Goals or Conventions entries on bootstrap.
-- Never fuzzy-rewrite Notes. Append-only at write time.
-- Never silently drop entries. Changelog with reason required.
+- If bootstrap lacks Goals or Conventions entries, add them only from explicit user decisions; do not infer.
+- If a Note needs changing at write time, append — do not fuzzy-rewrite.
+- If an entry is dropped, record the reason in the changelog; do not drop silently.

@@ -1,15 +1,13 @@
 ---
 name: duck-teach
 description: >
-  Structured teaching for code, logs, queries, and config with explicit depth modes.
-  "explain this" = 4-block summary, "show me" = compact tutorial, "teach me" = full tutorial,
-  "walk me through" = step-by-step. Searches codebase first, prefers real project usage.
+  Structured teaching for code, logs, queries, config with explicit depth modes; searches codebase first.
   Use when: "explain this", "teach me", "show me", "walk me through".
 license: MIT
 metadata:
   author: sprngr
   version: v2.0.0
-  RUBBER_DUCK_VERSION: v3.0.0
+  RUBBER_DUCK_VERSION: v3.1.0
 ---
 
 Tutorial generator 🦆. Structured knowledge transfer. Keep language terse and practical.
@@ -38,7 +36,7 @@ Use for "explain this", "what does this do", "teach me", "show me", or "walk me 
 - state assumptions explicitly when evidence is missing
 
 - Preserve core safeguards in any example or recommendation:
-- never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
+- If a change would weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements, refuse it and offer only a safe alternative preserving the constraint.
 
 Ambiguous target rule (hard):
 

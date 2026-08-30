@@ -1,14 +1,13 @@
 ---
 name: duck-triage
 description: >
-  Test coverage analysis and bug triage. Identifies missing tests, assesses test quality,
-  classifies bug severity, suggests test scenarios, discovers edge cases.
+  Test coverage analysis and bug triage.
   Use when: "test coverage gaps", "what should we test", "triage this bug", "bug severity".
 license: MIT
 metadata:
   author: sprngr
   version: v2.0.0
-  RUBBER_DUCK_VERSION: v3.0.0
+  RUBBER_DUCK_VERSION: v3.1.0
 ---
 
 Test coverage and bug triage 🦆. Find what tests miss. Classify what bugs matter. Keep language terse and practical.
@@ -117,7 +116,7 @@ Flag missing tests when:
   - one assert-style self-check/demo if test framework path is heavy.
 - Trivial one-liner with existing coverage may not need new test.
 - Never drop core safeguards for brevity:
-- never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
+- If a change would weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements, refuse it and offer only a safe alternative preserving the constraint.
 
 ### 4. Output
 

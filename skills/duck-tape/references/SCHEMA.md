@@ -105,7 +105,7 @@ Deferred work and decisions. Append-only with status markers.
 
 Merge:
 
-- Append new. Never modify existing entries except status update on resolution.
+- Append new. If an entry needs modification, apply a status update only — keep the original line.
 - Status update: append resolution marker, keep original line.
 
 ### 6. Open-Questions
@@ -136,7 +136,7 @@ User-defined freeform content. Timestamped append-only.
 Merge:
 
 - Append new timestamped block at end.
-- Never rewrite existing blocks.
+- If a block exists, append a new timestamped block; do not rewrite existing ones.
 - Prune via `/duck-tape prune` only.
 - Status detail (blockers, in-progress detail, next-up) belongs in Notes subsection `### Status`. Uses Notes append-only semantics.
 
@@ -147,7 +147,7 @@ Merge input is translated from session state file (`.duck-tape/<id>.state.md`), 
 0. **Redact incoming state content** before translation + merge:
    - Scan for secrets/PII: API keys, passwords, tokens, connection strings, env var values, personally identifiable information.
    - On detection: reject flagged content. Report findings. Ask user to redact source or confirm mask-in-place (`<REDACTED>`).
-   - Never merge raw secrets into CONTEXT.md. Masked content only after user confirmation.
+   - If a merge would place raw secrets into CONTEXT.md, reject it; merge masked content only after user confirmation.
    - Applies to all sections including Notes freeform.
 1. Parse existing CONTEXT.md into sections by `##` headers.
 2. Translate redacted state file into CONTEXT.md sections using rigid map in `references/STATE_SCHEMA.md`. Parse subsections within each top-level section by `###` headers.
@@ -177,7 +177,7 @@ Top-level sections may contain `###` subsections for visual grouping. Subsection
 - Keys dedupe across all subsections within a top-level section. Same key in different subsections is a conflict. Supersede per section rules.
 - Entries merge into existing subsections by key. If key exists in `### Routing`, incoming supersedes in place.
 - New subsections (not present in existing file) appended at end of top-level section with their entries.
-- Subsection headers preserved as-is. Never rename or reorder existing subsections.
+- Subsection headers preserved as-is. If a subsection exists, keep its name and position; do not rename or reorder.
 - Subsection position of new entries follows: existing key -> merge in place within its subsection. New key with no existing subsection match -> append to the subsection that contains it in incoming. If incoming subsection is new -> append entire subsection to end of top-level section.
 
 ## Missing Sections

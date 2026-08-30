@@ -3,19 +3,19 @@
   "description": "General-purpose duckling delegator that routes to a specified skill with explicit mode/constraints.",
   "harnesses": {
     "claude": {
-      "tools": "Read, Glob, Grep, Edit, Write, Bash, Skill"
+      "tools": "Read, Glob, Grep, Skill"
     },
     "copilot": {
-      "tools": "read,search,edit,execute"
+      "tools": "read,search"
     },
     "opencode": {
       "mode": "subagent",
       "permission": {
         "read": "allow",
-        "edit": "allow",
+        "edit": "deny",
         "grep": "allow",
         "glob": "allow",
-        "bash": "ask",
+        "bash": "deny",
         "task": "deny",
         "skill": "allow",
         "lsp": "allow",

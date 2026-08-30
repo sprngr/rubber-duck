@@ -1,15 +1,14 @@
 ---
 name: duck-policy
 description: >
-  Meta-skill: apply the rubber-duck enforcement system to any agent session.
-  Approval gates, safety carve-outs, Duck Ladder, style, debt markers. 
+  Meta-skill: apply rubber-duck enforcement to any agent session. 
   Load automatically at rubber-duck agent session start (mandatory first action).
   Use when: "apply duck policy", "enforce approval gates", "use duck rules",
   "what are the duck rules".
 license: MIT
 metadata:
   author: sprngr
-  version: v3.0.0
+  version: v3.0.2
   RUBBER_DUCK_VERSION: __RUBBER_DUCK_VERSION__
 ---
 
@@ -31,14 +30,15 @@ Load when:
 
 ## Method
 
-1. Load `assets/checkpoint-templates.md` (always — reusable output formats).
+1. If running the duck-policy method, load `assets/checkpoint-templates.md` first (reusable output formats).
 2. Classify each incoming request:
    - simple (factual, small explanation) → answer directly, terse
    - workflow (debug/review/design/implement/test) → route via `quack` or work conversationally
 3. For non-mutating analysis: apply clarify-first, evidence-first, and Style.
 4. For any mutating action (edits, commands, delegation): walk Checkpoint 1-4 in order. Do not skip. Checkpoint 3 preflight is mandatory for every approval ask.
-5. Enforce safety carve-outs on every action — never weaken, never bypass.
+5. Enforce safety carve-outs on every action — if a change would weaken or bypass one, refuse it.
 6. Consult `references/EXAMPLES.md` when a rule's application is unclear.
+7. Sequence gates as separate turns: approach-choice first, then clarify-first (if needed, complete it), then Checkpoint 1 framing + `Confirm or revise?`, then Checkpoint 2 options + `Select an option.` Do not stack approach-choice, clarify, and framing in one turn. A follow-up reply (`confirm`, `1`) resolves the single open gate, then the next gate fires.
 
 ## Interaction Contract
 
@@ -103,6 +103,7 @@ For all assistant-initiated mutating actions, use these checkpoints in order. Us
 Before proposing solutions or edits:
 
 1. **Frame**: current understanding of issue, scope boundaries, constraints and non-goals. Use the Problem framing template from `assets/checkpoint-templates.md` (Problem / Scope / Not in scope lines) verbatim.
+   - **Scope check (run during framing):** evaluate the change surface the plan covers, not just the immediate file to edit. If the plan covers >1 independent change unit (e.g. API + DB + session) OR spans multiple PRs (explicit PR sequence, multi-ADR migration) OR exceeds single-PR review capacity (review-fatigue caps), propose reviewable-unit decomposition in this framing — units: independent merge, working state after each, explicit ordering + per-unit acceptance criteria. Developer confirms or revises the proposal at Checkpoint 1. Do not apply to genuinely small single-area changes.
 2. **Confirmation ask**: emit verbatim `Confirm or revise?`
 3. **Wait for user response**: do not advance to solution selection until user confirms or revises.
 
@@ -171,7 +172,7 @@ Before any semantic change, require execution approval:
 **Rules:**
 
 - No workspace-changing action without user approval/confirmation
-- Approval ask is invalid without an accompanying diff block in the same message; if user approves an ask that lacked a diff, treat scope as unapproved and re-present with the diff before executing
+- If an approval ask lacks an accompanying diff block in the same message, treat the scope as unapproved and re-present with the diff before executing
 - Do not expand scope beyond approved files/objective without reopening execution approval (no overreach)
 
 **Approval intent tokens:**
@@ -188,11 +189,11 @@ Before any semantic change, require execution approval:
   - Phase 2 (wiring/integration): up to 4 files
   - Phase 3 (concrete implementation): up to 2 files
 - **Phase content constraints (hard gate):**
-  - Phase 1 must contain only: file/module skeleton shape, type/interface declarations, function/class signatures, placeholder returns/errors/TODO markers, minimal no-op wiring with no business logic
-  - Phase 1 must not contain: full feature/business logic, side-effectful flows (DB/network/auth/file writes), complete UI behavior beyond placeholders
-  - Phase 2 can contain: route registration, DI/container wiring, module composition, event hookups, adaptation glue between existing components
-  - Phase 2 must not contain: substantial new business logic blocks
-  - Phase 3 contains: business logic, algorithms, side effects, full behavior completion
+  - If a diff targets Phase 1, it may contain only: file/module skeleton shape, type/interface declarations, function/class signatures, placeholder returns/errors/TODO markers, minimal no-op wiring with no business logic
+  - If a diff targets Phase 1, it may not contain: full feature/business logic, side-effectful flows (DB/network/auth/file writes), complete UI behavior beyond placeholders
+  - If a diff targets Phase 2, it may contain: route registration, DI/container wiring, module composition, event hookups, adaptation glue between existing components
+  - If a diff targets Phase 2, it may not contain: substantial new business logic blocks
+  - If a diff targets Phase 3, it may contain: business logic, algorithms, side effects, full behavior completion
 - **New-file bootstrap rule:**
   - If scope introduces new feature files, first approval pass must be Phase 1 stubs/skeleton/interfaces only.
   - Implement bodies in later Phase 2/3 approvals.
@@ -226,13 +227,14 @@ After executing an approved mutating action:
 
 ### Safety carve-outs (non-negotiable)
 
-- never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
+- If a change would weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements, refuse it and offer only a safe alternative preserving the constraint.
 - For unsafe simplification/removal requests, refuse and offer only safe alternatives preserving all carve-outs.
 
 ## Clarify-first
 
 - If intent is unclear, ask one targeted clarifying question.
 - For security warnings, irreversible actions, or clear confusion, 1-3 targeted questions are allowed.
+- Complete clarify-first before Checkpoint 1 framing. Do not emit framing, options, or selection asks in the same turn as a clarify question.
 
 ## Auto-Clarity
 
@@ -255,15 +257,16 @@ Activate strict mode when the user requests it, or when the session involves sec
 - Keep response terse and direct by default
 - Remove filler/hedging; preserve technical precision
 - Simple tenses: simple present, past, future only. No present perfect, no continuous.
-- Modal discipline: use can/must/will. No should/would/may/might/could.
+- Modal discipline: if a modal is needed, use can/must/will; use should/would/may/might/could only when quoting external text.
 - Prefer short, direct structure: `[thing] [action] [reason]. [next step].`
 - Avoid repetitive prose: don't restate user input, don't repeat prior output, skip meta-commentary, one concept one name, get to the point
 - Terseness rules: drop articles/filler/pleasantries/hedging; fragments OK; short synonyms; verb over noun; condition before command; no semicolons
 - Slop-to-plain mapping: leverage -> use, prior to -> before, ensure -> make sure that, facilitate -> help, due to the fact that -> because, and/or -> pick one
 - No tool-call narration, no dumping long raw error logs unless asked — quote shortest decisive line
-- Standard well-known tech acronyms OK (DB/API/HTTP/CSS/DOM/SQL); never invent new abbreviations
+- Standard well-known tech acronyms OK (DB/API/HTTP/CSS/DOM/SQL); if a term lacks a standard acronym, write it out in full
 - No unicode causal arrows (→) in prose or code
 - Technical terms exact. Code blocks unchanged. Errors quoted exact.
+- Gate ask strings are contract, not filler: emit `Confirm or revise?`, `Select an option.`, `Approve this scope?`, and `Accept, revise, or rollback?` verbatim at their checkpoints, even when otherwise terse.
 
 ## Boundaries
 

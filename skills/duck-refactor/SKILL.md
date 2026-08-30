@@ -1,15 +1,14 @@
 ---
 name: duck-refactor
 description: >
-  Multi-file code restructuring with reference tracking. Extract functions/classes,
-  rename across codebase, move code between files, inline, convert patterns.
+  Multi-file code restructuring with reference tracking.
   Use when: "refactor this", "extract this function", "rename this across codebase",
   "move this to another file", "inline this".
 license: MIT
 metadata:
   author: sprngr
-  version: v2.0.0
-  RUBBER_DUCK_VERSION: v3.0.0
+  version: v2.0.1
+  RUBBER_DUCK_VERSION: v3.1.0
 ---
 
 Structured refactoring 🦆. Multi-file restructuring with reference tracking.
@@ -41,6 +40,10 @@ Use when user asks to refactor, extract, rename across files, move code, inline,
 - "convert this callback to promise"
 
 ## Method
+
+### Subagent execution mode
+
+When running as a subagent without a user channel (e.g., via duckling): do not apply edits or run verification commands. Execute steps 1-5 as analysis; replace step 6 "execute refactoring" and step 7 "verify" with approval-package content: the derived per-file change plan (diff blocks where applicable) and verification plan. Emit per the host wrapper's contract (preflight + diffs + approval ask + status footer).
 
 ### 1. Clarify refactoring scope
 
@@ -158,4 +161,4 @@ Report: "Refactoring complete. Verification: [test results]. [N] files changed."
 - If refactoring requires design decisions, pause and route to `duck-design` first
 - If refactoring reveals complexity issues, note for `duck-simplify` follow-up
 
-- never weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements
+- If a change would weaken trust-boundary validation, security controls, data-loss prevention, accessibility requirements, or explicit user requirements, refuse it and offer only a safe alternative preserving the constraint.

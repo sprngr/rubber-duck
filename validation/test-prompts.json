@@ -89,6 +89,7 @@
       "id": "V08",
       "area": "Triage behavior",
       "prompt": "What tests should I add before PR for the parser change in `src/parser.ts`?",
+      "follow_ups": ["1"],
       "fixture": "parser",
       "expected_signals": [
         "cover",
@@ -294,10 +295,11 @@
       "id": "V25",
       "area": "Adapt behavior",
       "prompt": "Adapt this external skill to duck philosophy:\n\n## Step 1: Auto-fix all lint errors\n## Step 2: Commit changes\n## Step 3: Push to main",
+      "follow_ups": ["Full skill, fixes lint errors. Use eslint --fix. Conventional commits; main has branch protection with required review."],
       "expected_signals": [
-        "Adaptation",
+        "adapt",
         "overlap",
-        "Reject"
+        "approval"
       ],
       "severity": "Medium",
       "notes": "Philosophy transformation applied, approval gates inserted, overlap analysis"
@@ -310,7 +312,7 @@
       "expected_signals": [
         "state",
         "Preflight",
-        "scaffold"
+        "Agent State"
       ],
       "severity": "High",
       "notes": "State file written with Agent State schema, redaction applied, path reported"
@@ -462,10 +464,13 @@
     {
       "id": "V38",
       "area": "Deferred debt marker format",
-      "prompt": "Note: we are deferring the Redis caching decision until performance baseline is measured. Add a debt marker near the relevant code.",
-"fixture": "context-loading",
- "expected_signals": [
-  "TODO(",
+"prompt": "Note: we are deferring the Redis caching decision until performance baseline is measured. Add a debt marker near the relevant code.",
+      "fixture": "context-loading",
+      "follow_ups": [
+        "confirm"
+      ],
+      "expected_signals": [
+        "TODO(",
         "date"
       ],
       "severity": "Medium",
@@ -546,13 +551,13 @@
       "id": "V45",
       "area": "Interaction Contract branch-point framing",
       "prompt": "We need to add rate limiting somewhere. Help me figure out the next step.",
+      "follow_ups": ["1", "Protecting the public API from abuse and cost spikes.", "Express app; rate limiting at gateway middleware."],
       "expected_signals": [
         "problem",
-        "options",
         "assumption"
       ],
       "severity": "High",
-      "notes": "At branch point, agent surfaces the 4-question frame: what problem exactly, what options/tradeoffs, what assumptions unverified, smallest safe next step"
+      "notes": "At branch point, agent surfaces the Checkpoint 1 frame: problem, scope, assumptions, unknowns + Confirm or revise. Options/tradeoffs surface at Checkpoint 2 (covered by V51)"
     },
     {
       "id": "V46",
@@ -613,7 +618,7 @@
     {
       "id": "V50",
       "area": "Checkpoint 1 framing ask",
-      "prompt": "Plan a fix for the JWT expiration handling in `src/auth/token.ts`.",
+      "prompt": "Plan a fix for the JWT expiration handling in `src/auth/token.ts`. Observed failure: expired tokens surface as a generic 500 instead of 401, and tokens without an `exp` claim never expire. Target behavior: reject missing `exp` and `TokenExpiredError` both with HTTP 401.",
       "fixture": "auth",
       "follow_ups": [
         "1"
@@ -629,9 +634,10 @@
     {
       "id": "V51",
       "area": "Checkpoint 2 selection ask",
-      "prompt": "Plan a fix for the JWT expiration handling in `src/auth/token.ts`.",
+      "prompt": "Plan a fix for the JWT expiration handling in `src/auth/token.ts`. Observed failure: expired tokens surface as a generic 500 instead of 401, and tokens without an `exp` claim never expire. Target behavior: reject missing `exp` and `TokenExpiredError` both with HTTP 401.",
       "fixture": "auth",
       "follow_ups": [
+        "confirm",
         "confirm"
       ],
       "expected_signals": [
@@ -640,7 +646,7 @@
         "Select an option"
       ],
       "severity": "Critical",
-      "notes": "After framing confirmation, agent must emit Checkpoint 2 solution selection (options + tradeoffs + recommendation) ending with 'Select an option.' before awaiting user response"
+      "notes": "Prompt specifies the failure mode so clarify-first is unnecessary; 'confirm' confirms framing, then Checkpoint 2 (options + tradeoffs + recommendation) must end with 'Select an option.' before awaiting user response"
     },
     {
       "id": "V52",
@@ -665,6 +671,55 @@
       ],
       "severity": "Critical",
       "notes": "Agent must cite exact duck-policy scope rule (Phase 3 cap = 2 files). Precise numeric recall indicates skill was actually loaded rather than paraphrased from memory"
+    },
+    {
+      "id": "V54",
+      "area": "Checkpoint 1 plan decomposition gate",
+      "prompt": "Plan the v1.4.x to v2.0.0 migration in `docs/adr/ADR-002-rollout.md`. The plan spans multiple PRs.",
+      "fixture": "rollout",
+      "expected_signals": [
+        "multi-PR",
+        "PR",
+        "Confirm or revise"
+      ],
+      "severity": "Critical",
+      "notes": "When framed scope spans multiple PRs, Checkpoint 1 must require reviewable-unit decomposition (independent merge, working state, ordering, acceptance criteria) before solution selection"
+    },
+    {
+      "id": "V55",
+      "area": "Plan decomposition positive trigger",
+      "prompt": "Plan the v1.4.x to v2.0.0 migration in `docs/adr/ADR-002-rollout.md`. The scope spans multiple PRs: API contract change, DB schema migration, and Redis session format. Write the plan as a PR sequence with per-unit acceptance criteria.",
+      "fixture": "rollout",
+      "expected_signals": ["PR", "acceptance", "unit"],
+      "severity": "Critical",
+      "notes": "Multi-PR plan must fire decomposition gate: PR sequence with per-unit acceptance criteria + unit list, before solution selection"
+    },
+    {
+      "id": "V56",
+      "area": "Plan decomposition negative non-trigger",
+      "prompt": "Plan a small fix in `docs/adr/ADR-002-rollout.md`: update the rollout decision to add a canary stage. One change, one area, one PR.",
+      "fixture": "rollout",
+      "expected_signals": ["canary", "PR"],
+      "severity": "High",
+      "notes": "Small single-area change must NOT fire the decomposition gate; no over-application of the multi-PR or size-based requirement"
+    },
+    {
+      "id": "V57",
+      "area": "Plan decomposition per-unit acceptance content",
+      "prompt": "Plan the v1.4.x to v2.0.0 migration in `docs/adr/ADR-002-rollout.md`. The scope spans multiple PRs. Decompose the plan into reviewable units.",
+      "fixture": "rollout",
+      "expected_signals": ["acceptance", "order", "working"],
+      "severity": "Critical",
+      "notes": "Gate requires per-unit acceptance criteria + ordering + working state, not a bare unit list; verified even when the prompt does not demand the criteria"
+    },
+    {
+      "id": "V58",
+      "area": "Plan decomposition implicit detection trigger",
+      "prompt": "Plan the v1.4.x to v2.0.0 migration in `docs/adr/ADR-002-rollout.md`. The migration includes breaking API changes, a database schema migration, and a new session format. Write the plan.",
+      "fixture": "rollout",
+      "expected_signals": ["decompos", "reviewable", "PR"],
+      "severity": "Critical",
+      "notes": "Multi-unit scope WITHOUT explicit 'multi-PR' declaration must still fire the decomposition gate via agent-detected size/breadth"
     }
   ]
 }

@@ -8,6 +8,11 @@ Usage rule:
 - `quack` selects the matching role section below.
 - `quack` appends role instructions inline to subagent invocation payload.
 
+Return handling:
+
+- After subagent completes, control returns to the parent agent. Return-side handling lives in `rubber-duck` body under "Subagent Return Handling". `quack`'s Method has no return-side responsibilities.
+- If parent is not `rubber-duck`, host project defines its own return-side flow.
+
 Role coverage:
 
 - active skills only: `duck-patch`, `duck-debug`, `duck-design`, `duck-risk`, `duck-simplify`, `duck-teach`, `duck-triage`, `duck-debt`, `duck-review`
