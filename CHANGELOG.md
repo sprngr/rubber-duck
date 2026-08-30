@@ -57,16 +57,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `docs/architecture/03-adaptive-socratic-policy.md` Checkpoint 1 documents plan decomposition requirement.
 - Legacy managed-block migration no longer writes a `.bak.<timestamp>` recovery copy next to `AGENTS.md`/`CLAUDE.md`. The 3.x migration window is closed; the installer strips legacy blocks in place without backup (bash + PowerShell parity).
 - Rule wording convention applied across skills, agent bodies, and instruction docs: content-logic rules converted from absolute (always/never/must) to conditional if-then phrasing (~58 rules); structural/spec rules and safety carve-outs retain absolute or refusal form. Convention codified in duck-adapt (`philosophy-core.md` + `adaptation-checklist.md`).
+- duck-policy Style: gate ask strings are contract exceptions to terse style — `Confirm or revise?`, `Select an option.`, `Approve this scope?`, `Accept, revise, or rollback?` emitted verbatim at their checkpoints even when otherwise terse. Mitigates intermittent gate compression (V50/V51). Version bump v3.0.1 -> v3.0.2.
 
 ### Fixed
 
+- Validation runner: verdict matching evaluates the full multi-turn transcript instead of the final turn only; gate content from earlier turns (V50 Checkpoint 1 framing) no longer yields false negatives.
+- Validation tests calibrated to gate sequencing: V08/V25 gained `follow_ups` to advance past approach-choice/clarify-first; V45 steps through approach-choice -> clarify -> evidence -> Checkpoint 1 frame, signals reduced to problem+assumption (options coverage stays with V51).
 - Bash installer fails fast with a clear `requires bash 4+` message (and macOS
   `brew install bash` guidance) instead of dying with an obscure
   `declare: -A: invalid option` on bash < 4 (macOS default `/bin/bash` 3.2).
 
 ### Known regression
 
-- None active. V51 was intermittent (gate stacking), resolved via duck-policy gate-sequencing rule + deterministic test prompt.
+- None active. V51 (Checkpoint 2 selection ask) remains intermittent under flash-class models: the model occasionally ends options mid-list without the verbatim `Select an option.` ask. Mitigations: duck-policy gate-sequencing rule, contract-ask wording in duck-policy Style (v3.0.2), union matcher in the validation runner. V50 (Checkpoint 1 framing) resolved: union matcher surfaces turn-1 framing; contract wording reinforces the ask.
 
 ## [v3.0.0] - 2026-08-17
 

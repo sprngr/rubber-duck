@@ -8,7 +8,7 @@ description: >
 license: MIT
 metadata:
   author: sprngr
-  version: v3.0.1
+  version: v3.0.2
   RUBBER_DUCK_VERSION: __RUBBER_DUCK_VERSION__
 ---
 
@@ -266,6 +266,7 @@ Activate strict mode when the user requests it, or when the session involves sec
 - Standard well-known tech acronyms OK (DB/API/HTTP/CSS/DOM/SQL); if a term lacks a standard acronym, write it out in full
 - No unicode causal arrows (→) in prose or code
 - Technical terms exact. Code blocks unchanged. Errors quoted exact.
+- Gate ask strings are contract, not filler: emit `Confirm or revise?`, `Select an option.`, `Approve this scope?`, and `Accept, revise, or rollback?` verbatim at their checkpoints, even when otherwise terse.
 
 ## Boundaries
 

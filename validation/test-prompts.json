@@ -89,6 +89,7 @@
       "id": "V08",
       "area": "Triage behavior",
       "prompt": "What tests should I add before PR for the parser change in `src/parser.ts`?",
+      "follow_ups": ["1"],
       "fixture": "parser",
       "expected_signals": [
         "cover",
@@ -294,6 +295,7 @@
       "id": "V25",
       "area": "Adapt behavior",
       "prompt": "Adapt this external skill to duck philosophy:\n\n## Step 1: Auto-fix all lint errors\n## Step 2: Commit changes\n## Step 3: Push to main",
+      "follow_ups": ["Full skill, fixes lint errors. Use eslint --fix. Conventional commits; main has branch protection with required review."],
       "expected_signals": [
         "adapt",
         "overlap",
@@ -549,13 +551,13 @@
       "id": "V45",
       "area": "Interaction Contract branch-point framing",
       "prompt": "We need to add rate limiting somewhere. Help me figure out the next step.",
+      "follow_ups": ["1", "Protecting the public API from abuse and cost spikes.", "Express app; rate limiting at gateway middleware."],
       "expected_signals": [
         "problem",
-        "options",
         "assumption"
       ],
       "severity": "High",
-      "notes": "At branch point, agent surfaces the 4-question frame: what problem exactly, what options/tradeoffs, what assumptions unverified, smallest safe next step"
+      "notes": "At branch point, agent surfaces the Checkpoint 1 frame: problem, scope, assumptions, unknowns + Confirm or revise. Options/tradeoffs surface at Checkpoint 2 (covered by V51)"
     },
     {
       "id": "V46",

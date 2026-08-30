@@ -344,7 +344,7 @@ def run_one(
             })
             if fu_result["error"]:
                 break
-            last_text = fu_result["last_text"]
+            last_text = f"{last_text}\n--- turn {i} ---\n{fu_result['last_text']}"
 
     return {
         "returncode": completed.returncode,
