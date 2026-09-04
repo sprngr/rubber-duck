@@ -1,0 +1,71 @@
+name: Validation stable tier
+
+on:
+  pull_request:
+    paths:
+      - "validation/**"
+      - ".agents/**"
+      - ".opencode/**"
+      - "skills/**"
+      - "src/**"
+      - "dist/**"
+      - ".github/workflows/validation-stable-tier.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  stable-tier:
+    name: Stable tier gate
+    runs-on: ubuntu-latest
+    if: ${{ secrets.OPENROUTER_API_KEY != '' || secrets.OPENCODE_API_KEY != '' }}
+    env:
+      RUBBER_DUCK_MODEL: opencode/big-pickle
+      RESULTS_DIR: /tmp/rubber-duck-validation
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install opencode CLI
+        run: curl -fsSL https://opencode.ai/install | bash
+
+      - name: Ensure opencode is on PATH
+        shell: bash
+        run: |
+          if command -v opencode >/dev/null 2>&1; then
+            opencode --version
+            exit 0
+          fi
+          if [[ -x "$HOME/.local/bin/opencode" ]]; then
+            echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+            "$HOME/.local/bin/opencode" --version
+            exit 0
+          fi
+          if [[ -x "$HOME/.opencode/bin/opencode" ]]; then
+            echo "$HOME/.opencode/bin" >> "$GITHUB_PATH"
+            "$HOME/.opencode/bin/opencode" --version
+            exit 0
+          fi
+          echo "opencode CLI not found after install." >&2
+          exit 1
+
+      - name: Run validation stable tier
+        run: python3 validation/run-validation-tests.py --tier=stable
+
+  stable-tier-missing-secret:
+    name: Stable tier skipped (no API key)
+    runs-on: ubuntu-latest
+    if: ${{ !(secrets.OPENROUTER_API_KEY != '' || secrets.OPENCODE_API_KEY != '') }}
+    steps:
+      - name: Explain skip
+        run: |
+          echo "Skipping validation stable tier: no OPENROUTER_API_KEY or OPENCODE_API_KEY secret configured."
+          echo "Add one of these secrets to enable CI validation gate."

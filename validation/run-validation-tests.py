@@ -43,6 +43,9 @@ DEFAULT_MODEL = os.environ.get("RUBBER_DUCK_MODEL", "")
 RUN_TIMEOUT_SECONDS = 300
 FIXTURES_DIR = REPO_ROOT / "validation" / "fixtures"
 
+import structural  # validation lib: deterministic gate-test matcher (Phase 1 stub)
+import stability  # validation lib: pass-history + tier classification (Phase 1 stub)
+
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(
@@ -92,6 +95,18 @@ def parse_args() -> argparse.Namespace:
         choices=("hybrid", "substring", "judge"),
         default="hybrid",
         help="Signal matcher: hybrid (substring + judge fallback, default), substring (fast), judge (LLM all signals)",
+    )
+    p.add_argument(
+        "--tier",
+        choices=("all", "stable", "flaky"),
+        default="all",
+        help="Run only tests classified to this tier (default: all)",
+    )
+    p.add_argument(
+        "--history-file",
+        type=Path,
+        default=None,
+        help="Pass-history JSON path (default: <results-dir>/history.json)",
     )
     return p.parse_args()
 
@@ -230,6 +245,7 @@ def run_follow_up(
             "last_text": "",
             "session_id": session_id,
             "error": "timeout",
+            "events": [],
         }
     events = parse_jsonl_events(completed.stdout)
     last_text = extract_last_text(events)
@@ -240,6 +256,7 @@ def run_follow_up(
         "last_text": last_text,
         "session_id": session_id,
         "error": None if completed.returncode == 0 else f"opencode exit {completed.returncode}",
+        "events": events,
     }
 
 
@@ -314,9 +331,11 @@ def run_one(
             "last_text": "",
             "session_id": None,
             "turns": [],
+            "events": [],
             "error": "timeout",
         }
     events = parse_jsonl_events(completed.stdout)
+    all_events = list(events)
     last_text = extract_last_text(events)
     session_id = extract_session_id(events)
 
@@ -336,6 +355,7 @@ def run_one(
                 sandbox_mode=sandbox_mode,
                 bwrap_bin=bwrap_bin,
             )
+            all_events.extend(fu_result.get("events", []))
             turns_log.append({
                 "turn": i,
                 "returncode": fu_result["returncode"],
@@ -353,6 +373,7 @@ def run_one(
         "last_text": last_text,
         "session_id": session_id,
         "turns": turns_log,
+        "events": all_events,
         "error": None if completed.returncode == 0 else f"opencode exit {completed.returncode}",
     }
 
@@ -436,20 +457,22 @@ def match_signals_hybrid(
     notes: str,
     model: str,
 ) -> tuple[bool, list[str], dict[str, str]]:
+    """Substring decides pass/fail; judge annotates missing signals only.
+
+    Judge verdicts are recorded for diagnostics but never flip a FAIL to
+    PASS. Deterministic decision: a signal passes iff its substring appears
+    in the response. Demotes the LLM judge from decider to annotator.
+    """
     verdicts: dict[str, str] = {}
     haystack = response_text.lower()
-    to_judge: list[str] = []
+    missing: list[str] = []
     for signal in expected:
         if signal.lower() in haystack:
             verdicts[signal] = "PASS: substring"
         else:
-            to_judge.append(signal)
-    missing: list[str] = []
-    for signal in to_judge:
-        passed, reason = judge_one_signal(response_text, signal, notes, model)
-        verdicts[signal] = ("PASS: " if passed else "FAIL: ") + reason
-        if not passed:
             missing.append(signal)
+            reason = judge_one_signal(response_text, signal, notes, model)[1]
+            verdicts[signal] = f"NOTE: substring absent — judge: {reason}"
     return (not missing, missing, verdicts)
 
 
@@ -471,6 +494,8 @@ def main() -> int:
         args.sandbox = "none"
 
     args.results_dir.mkdir(parents=True, exist_ok=True)
+    history_file = args.history_file or (args.results_dir / "history.json")
+    history = stability.load_history(history_file)
 
     tests = json.loads(args.test_file.read_text())["tests"]
     filter_ids = {x.strip() for x in args.filter.split(",") if x.strip()}
@@ -485,6 +510,7 @@ def main() -> int:
         print(f"Filter: {','.join(sorted(filter_ids))}")
     if severity_filter:
         print(f"Severity filter: {severity_filter}")
+    print(f"History: {history_file}")
     print(f"Matcher: {args.matcher}")
     print()
 
@@ -504,6 +530,9 @@ def main() -> int:
             skipped += 1
             continue
         if severity_filter and severity != severity_filter:
+            skipped += 1
+            continue
+        if args.tier != "all" and stability.classify_tier(history, tid) != args.tier:
             skipped += 1
             continue
 
@@ -530,30 +559,38 @@ def main() -> int:
 
         response_file = args.results_dir / f"{tid}.json"
         verdicts: dict[str, str] = {}
+        ok = False
+        missing: list[str] = []
+        matcher = test.get("matcher", args.matcher)
         if result["error"]:
             errored += 1
             print(f"  ❌ ERROR: {result['error']}")
         else:
             notes = test.get("notes", "")
-            if args.matcher == "substring":
+            if matcher == "structural":
+                ok, missing, verdicts = structural.match_signals_structural(
+                    result.get("events", []), expected, notes
+                )
+            elif matcher == "substring":
                 ok, missing = match_signals_substring(result["last_text"], expected)
-            elif args.matcher == "judge":
+            elif matcher == "judge":
                 ok, missing, verdicts = match_signals_judge(result["last_text"], expected, notes, args.model)
             else:  # hybrid
                 ok, missing, verdicts = match_signals_hybrid(result["last_text"], expected, notes, args.model)
-            snippet = result["last_text"].strip().split("\n")[0][:120]
-            if ok:
-                passed += 1
-                print("  ✅ PASS")
-                print(f"  Snippet: {snippet}")
-            else:
-                failed += 1
-                print(f"  ❌ FAIL — missing: {', '.join(missing)}")
-                print(f"  Snippet: {snippet}")
-                for sig in missing:
-                    v = verdicts.get(sig)
-                    if v:
-                        print(f"    {sig}: {v}")
+        stability.record_result(history, tid, ok)
+        snippet = result["last_text"].strip().split("\n")[0][:120]
+        if ok:
+            passed += 1
+            print("  ✅ PASS")
+            print(f"  Snippet: {snippet}")
+        else:
+            failed += 1
+            print(f"  ❌ FAIL — missing: {', '.join(missing)}")
+            print(f"  Snippet: {snippet}")
+            for sig in missing:
+                v = verdicts.get(sig)
+                if v:
+                    print(f"    {sig}: {v}")
         response_file.write_text(
             json.dumps(
                 {
@@ -562,7 +599,7 @@ def main() -> int:
                     "prompt": prompt,
                     "expected_signals": expected,
                     "severity": severity,
-                    "matcher": args.matcher,
+                    "matcher": matcher,
                     "verdicts": verdicts,
                     "result": result,
                 },
@@ -580,6 +617,8 @@ def main() -> int:
                 return 2
 
         print()
+
+    stability.save_history(history_file, history)
 
     print("Results")
     print("=======")

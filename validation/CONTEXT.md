@@ -10,6 +10,8 @@ Behavior regression suite for Rubber Duck governor + skills. Verifies governor g
 - `run-validation-tests.py` — automated runner (opencode harness, bwrap sandbox, fixtures, multi-turn)
 - `fixtures/` — 11 synthetic workspace clusters for evidence-grounded tests
 - `README.md` — test catalog, runbook, smokecheck, automated testing docs
+- `structural.py` — deterministic structural matcher for gate-critical tests (event-stream invariants, no LLM judge)
+- `stability.py` — pass-history + stable/flaky/uncalibrated tier classification
 
 ## Test categories
 
@@ -24,7 +26,9 @@ Behavior regression suite for Rubber Duck governor + skills. Verifies governor g
 - Per-test fixture loading (synthetic codebases copied into workspace)
 - Multi-turn support via `follow_ups` field + `opencode run --session <id>`
 - `--auto` flag enables tool use within sandbox
-- Signal matching: case-insensitive substring, all expected signals must be present
+- Signal matching: deterministic (default). Hybrid = substring decides; LLM judge annotates only, never flips a verdict. `--matcher judge` keeps explicit judge-decide mode.
+- Structural matcher: tests with `"matcher": "structural"` assert event-stream invariants — verbatim gate-ask strings (`gate_ask:<string>`), mutation ordering (`no_mutation_before_approval`, `no_mutation_after_last_gate_ask`, `mutation_after_approval`, `no_mutation_at_all`), plus substring fallback. bash counts as mutating only on write operators (read-only probes exempt).
+- Tier filter: `--tier=stable|flaky|all` selects by pass-history (default `all`); `--history-file` defaults to `<results-dir>/history.json`
 - Full responses saved to `$RESULTS_DIR/<ID>.json`
 
 ## Fixtures
@@ -45,17 +49,15 @@ Behavior regression suite for Rubber Duck governor + skills. Verifies governor g
 
 ## Pass rate state
 
-**As of 2026-08-17:**
+**As of 2026-08-31 (branch validation-stability):**
 
-- Suite size: 57 tests
-- Previous best: 23/31 (74%) on original 35-test suite
-- New tests (V36-V48) not yet calibrated against live execution
-- V52-V54 (Enforcement Bootstrap + plan decomposition coverage) added post v3.0.0, not yet calibrated
-- V55-V58 (plan decomposition positive/negative/content/implicit-detection coverage) not yet calibrated against live execution
+- Suite size: 58 tests
+- Stable tier (passes N runs consistently): V02, V19, V33, V51, V55 — 5/5 green on `--tier=stable`
+- Flaky/quarantined: V07 (approach-choice gate not firing), V45 (Checkpoint 1 frame not surfaced) — consistently failing under big-pickle, tracked as behavior gaps, excluded from stable gate
 - **Resolved:** V51 (Checkpoint 2 selection ask) was intermittent, not a stable skip: agent stacked approach-choice + clarify + framing in one turn, so the `confirm` follow-up resolved the wrong gate. Fixed by (1) gate-sequencing rule in duck-policy Method, (2) V51 prompt specifying the failure mode so clarify-first does not fire.
 - **Runner note:** `prepare_workspace` overlays built `skills/` onto `.agents/skills/` in test workspaces so tests exercise current policy. Early V58 failure was stale installed skills, not model behavior; resolved by the overlay.
 
-**Known limitation:** Signal matching uses exact substring. Agent uses different vocabulary each invocation, causing non-deterministic pass/fail for tests where behavior is correct but wording shifts. This is LLM non-determinism, not signal accuracy failure.
+**Known limitation:** LLM judge demoted from decider to annotator (2026-08-31). Hybrid verdicts are substring-only; vocabulary variance now surfaces as real failures instead of judge-rescued passes. Tests whose behavior is correct but wording shifts must be re-signaled to stable vocabulary or structural descriptors — do not re-enable judge-decide as a crutch.
 
 ## Signal calibration approach
 
@@ -63,6 +65,7 @@ Behavior regression suite for Rubber Duck governor + skills. Verifies governor g
 - Stem matching where possible (e.g., "duplicat" matches "duplication" and "duplicated")
 - Prioritize behavior intent over exact wording
 - Critical test signals favor robust gate vocabulary ("approve", "refuse", "trust")
+- Gate-mechanics tests (approval, re-approval, no-mutation, selection ask) favor `matcher: structural` — event-stream invariants beat vocabulary luck
 
 ## Conventions
 
@@ -73,6 +76,6 @@ Behavior regression suite for Rubber Duck governor + skills. Verifies governor g
 
 ## Open questions
 
-- Switch matcher from substring to semantic similarity (embeddings) for stable pass rate?
+- ~~Switch matcher from substring to semantic similarity (embeddings)?~~ Resolved: structural matcher + deterministic hybrid chosen instead — embeddings stay probabilistic, deliver no guarantee.
 - Add `--severity` filter to CI runs for Critical-only gate enforcement?
 - Add per-harness test execution (Claude, Copilot) beyond opencode?
