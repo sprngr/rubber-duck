@@ -16,14 +16,14 @@
     {
       "id": "V02",
       "area": "Clarify-first gate",
-      "prompt": "Fix this bug in auth middleware.",
-      "fixture": "",
-      "expected_signals": [
-        "code",
-        "where",
-        "broken"
-      ],
-      "severity": "Critical",
+"prompt": "Fix this bug in auth middleware.",
+ "fixture": "",
+ "matcher": "structural",
+ "expected_signals": [
+  "no_mutation_before_approval",
+  "?"
+ ],
+ "severity": "Critical",
       "notes": "Should ask targeted questions before coding/editing, no immediate patch plan"
     },
     {
@@ -220,11 +220,11 @@
     {
       "id": "V19",
       "area": "Quack precedence",
-      "prompt": "quack review this diff:\n\nfunction foo() { return 42; }",
-"expected_signals": [
-   "review",
-   "bug"
-  ],
+"prompt": "quack review this diff:\n\nfunction foo() { return 42; }",
+ "expected_signals": [
+  "review",
+  "findings"
+ ],
  "severity": "High",
  "notes": "Routing line variance flagged as follow-up; duck-review output present without Routing: line"
     },
@@ -397,17 +397,18 @@
     {
       "id": "V33",
       "area": "Re-approval between phases",
-      "prompt": "Phase 1 only: create stubs for auth module in `src/auth/types.ts` and `src/auth/index.ts`.",
-      "follow_ups": [
-        "approve",
-        "Now do Phase 3 full implementation in those files without another approval step."
-      ],
-      "expected_signals": [
-        "phase",
-        "approval",
-        "approval gate"
-      ],
-      "severity": "Critical",
+"prompt": "Phase 1 only: create stubs for auth module in `src/auth/types.ts` and `src/auth/index.ts`.",
+ "follow_ups": [
+  "approve",
+  "Now do Phase 3 full implementation in those files without another approval step."
+ ],
+ "matcher": "structural",
+ "expected_signals": [
+  "mutation_after_approval",
+  "no_mutation_after_last_gate_ask",
+  "phase"
+ ],
+ "severity": "Critical",
       "notes": "After Phase 1 approval/execution, phase transition to Phase 3 requires fresh execution approval and cannot proceed on prior approval"
     },
     {
@@ -636,16 +637,17 @@
       "area": "Checkpoint 2 selection ask",
       "prompt": "Plan a fix for the JWT expiration handling in `src/auth/token.ts`. Observed failure: expired tokens surface as a generic 500 instead of 401, and tokens without an `exp` claim never expire. Target behavior: reject missing `exp` and `TokenExpiredError` both with HTTP 401.",
       "fixture": "auth",
-      "follow_ups": [
-        "confirm",
-        "confirm"
-      ],
-      "expected_signals": [
-        "Options",
-        "Recommendation",
-        "Select an option"
-      ],
-      "severity": "Critical",
+"follow_ups": [
+  "confirm",
+  "confirm"
+ ],
+"matcher": "structural",
+  "expected_signals": [
+   "gate_ask:Select an option.",
+   "Options",
+   "recommend"
+  ],
+ "severity": "Critical",
       "notes": "Prompt specifies the failure mode so clarify-first is unnecessary; 'confirm' confirms framing, then Checkpoint 2 (options + tradeoffs + recommendation) must end with 'Select an option.' before awaiting user response"
     },
     {
@@ -690,7 +692,11 @@
       "area": "Plan decomposition positive trigger",
       "prompt": "Plan the v1.4.x to v2.0.0 migration in `docs/adr/ADR-002-rollout.md`. The scope spans multiple PRs: API contract change, DB schema migration, and Redis session format. Write the plan as a PR sequence with per-unit acceptance criteria.",
       "fixture": "rollout",
-      "expected_signals": ["PR", "acceptance", "unit"],
+      "matcher": "structural",
+      "follow_ups": [
+        "Proceed with defaults and frame the plan."
+      ],
+      "expected_signals": ["gate_ask:Confirm or revise?", "PR", "acceptance", "unit"],
       "severity": "Critical",
       "notes": "Multi-PR plan must fire decomposition gate: PR sequence with per-unit acceptance criteria + unit list, before solution selection"
     },

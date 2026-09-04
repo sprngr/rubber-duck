@@ -72,6 +72,8 @@
 
 - TODO(architecture,#22): 2026-08-13 Define localized CONTEXT.md merge model for duck-tape
 - TODO(validation): 2026-08-22 duck-tidy lacks prompt-eval fixture; revisit on next validation expansion
+- TODO(validation): 2026-08-31 V07 approach-choice gate not firing under big-pickle; recalibrate agent body/prompt or accept quarantine
+- TODO(validation): 2026-08-31 V45 Checkpoint 1 frame not surfaced within turn budget; recalibrate agent body/prompt or accept quarantine
 
 ## Open-Questions
 
