@@ -39,8 +39,8 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_TEST_FILE = REPO_ROOT / "validation" / "test-prompts.json"
 DEFAULT_RESULTS_DIR = Path(os.environ.get("RESULTS_DIR", "/tmp/rubber-duck-validation"))
 DEFAULT_AGENT = os.environ.get("RUBBER_DUCK_AGENT", "🦆")
-DEFAULT_MODEL = os.environ.get("RUBBER_DUCK_MODEL", "")
-RUN_TIMEOUT_SECONDS = 300
+DEFAULT_MODEL = os.environ.get("RUBBER_DUCK_MODEL", "opencode/big-pickle")
+DEFAULT_TIMEOUT_SECONDS = 300
 FIXTURES_DIR = REPO_ROOT / "validation" / "fixtures"
 
 
@@ -86,6 +86,18 @@ def parse_args() -> argparse.Namespace:
         "--sandbox-bwrap-bin",
         default="bwrap",
         help="Bubblewrap executable path (default: bwrap)",
+    )
+    p.add_argument(
+        "--timeout",
+        type=int,
+        default=DEFAULT_TIMEOUT_SECONDS,
+        help=f"Per-test timeout in seconds (default: {DEFAULT_TIMEOUT_SECONDS})",
+    )
+    p.add_argument(
+        "--auto",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Enable tool use in validation runs (default: --auto)",
     )
     p.add_argument(
         "--matcher",
@@ -134,6 +146,33 @@ def extract_session_id(events: list[dict[str, Any]]) -> str | None:
             part_value = part.get("sessionID")
             if isinstance(part_value, str) and part_value:
                 return part_value
+    return None
+
+
+def first_policy_load_error(events: list[dict[str, Any]]) -> str | None:
+    """Return a bootstrap violation when the first tool event is not duck-policy."""
+    first_tool = next(
+        (
+            event
+            for event in events
+            if event.get("type") == "tool_use"
+            and isinstance(event.get("part"), dict)
+            and event["part"].get("type") == "tool"
+        ),
+        None,
+    )
+    if first_tool is None:
+        return "no tool_use event found"
+
+    part = first_tool["part"]
+    if part.get("tool") != "skill":
+        return f"first tool was {part.get('tool')!r}, expected skill"
+
+    state = part.get("state")
+    input_data = state.get("input") if isinstance(state, dict) else None
+    if not isinstance(input_data, dict) or input_data.get("name") != "duck-policy":
+        return "first skill call did not load duck-policy"
+
     return None
 
 
@@ -191,8 +230,10 @@ def run_follow_up(
     workspace: Path,
     agent: str,
     model: str,
+    timeout_seconds: int = DEFAULT_TIMEOUT_SECONDS,
     sandbox_mode: str = "none",
     bwrap_bin: str = "bwrap",
+    auto: bool = True,
 ) -> dict[str, Any]:
     command = [
         "opencode",
@@ -203,7 +244,7 @@ def run_follow_up(
         agent,
         "--format",
         "json",
-        "--auto",
+        *( ["--auto"] if auto else [] ),
         "--session",
         session_id,
         message,
@@ -220,13 +261,13 @@ def run_follow_up(
             errors="replace",
             capture_output=True,
             check=False,
-            timeout=RUN_TIMEOUT_SECONDS,
+            timeout=timeout_seconds,
         )
     except subprocess.TimeoutExpired:
         return {
             "returncode": 124,
             "stdout": "",
-            "stderr": f"timeout after {RUN_TIMEOUT_SECONDS}s",
+            "stderr": f"timeout after {timeout_seconds}s",
             "last_text": "",
             "session_id": session_id,
             "error": "timeout",
@@ -279,6 +320,8 @@ def run_one(
     max_follow_up_turns: int = 5,
     sandbox_mode: str = "none",
     bwrap_bin: str = "bwrap",
+    timeout_seconds: int = DEFAULT_TIMEOUT_SECONDS,
+    auto: bool = True,
 ) -> dict[str, Any]:
     first_command = [
         "opencode",
@@ -289,7 +332,7 @@ def run_one(
         agent,
         "--format",
         "json",
-        "--auto",
+        *( ["--auto"] if auto else [] ),
         prompt,
     ]
     if model:
@@ -304,13 +347,13 @@ def run_one(
             errors="replace",
             capture_output=True,
             check=False,
-            timeout=RUN_TIMEOUT_SECONDS,
+            timeout=timeout_seconds,
         )
     except subprocess.TimeoutExpired:
         return {
             "returncode": 124,
             "stdout": "",
-            "stderr": f"timeout after {RUN_TIMEOUT_SECONDS}s",
+            "stderr": f"timeout after {timeout_seconds}s",
             "last_text": "",
             "session_id": None,
             "turns": [],
@@ -335,6 +378,8 @@ def run_one(
                 session_id, msg, workspace, agent, model,
                 sandbox_mode=sandbox_mode,
                 bwrap_bin=bwrap_bin,
+                timeout_seconds=timeout_seconds,
+                auto=auto,
             )
             turns_log.append({
                 "turn": i,
@@ -396,7 +441,7 @@ def judge_one_signal(
                 errors="replace",
                 capture_output=True,
                 check=False,
-                timeout=RUN_TIMEOUT_SECONDS,
+                timeout=DEFAULT_TIMEOUT_SECONDS,
             )
         except subprocess.TimeoutExpired:
             return (False, "judge timeout")
@@ -523,6 +568,8 @@ def main() -> int:
                 max_follow_up_turns=args.max_follow_up_turns,
                 sandbox_mode=args.sandbox,
                 bwrap_bin=args.sandbox_bwrap_bin,
+                timeout_seconds=args.timeout,
+                auto=args.auto,
             )
         finally:
             if not args.keep_workspaces:
@@ -530,6 +577,12 @@ def main() -> int:
 
         response_file = args.results_dir / f"{tid}.json"
         verdicts: dict[str, str] = {}
+        structural_errors: list[str] = []
+        if not result["error"] and tid == "V52":
+            events = parse_jsonl_events(result["stdout"])
+            bootstrap_error = first_policy_load_error(events)
+            if bootstrap_error:
+                structural_errors.append(f"Enforcement Bootstrap: {bootstrap_error}")
         if result["error"]:
             errored += 1
             print(f"  ❌ ERROR: {result['error']}")
@@ -542,6 +595,9 @@ def main() -> int:
             else:  # hybrid
                 ok, missing, verdicts = match_signals_hybrid(result["last_text"], expected, notes, args.model)
             snippet = result["last_text"].strip().split("\n")[0][:120]
+            if structural_errors:
+                ok = False
+                missing.extend(structural_errors)
             if ok:
                 passed += 1
                 print("  ✅ PASS")
@@ -554,6 +610,8 @@ def main() -> int:
                     v = verdicts.get(sig)
                     if v:
                         print(f"    {sig}: {v}")
+                for error in structural_errors:
+                    print(f"    structural: FAIL: {error}")
         response_file.write_text(
             json.dumps(
                 {

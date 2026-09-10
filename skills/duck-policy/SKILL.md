@@ -262,6 +262,13 @@ Activate strict mode when the user requests it, or when the session involves sec
 - Avoid repetitive prose: don't restate user input, don't repeat prior output, skip meta-commentary, one concept one name, get to the point
 - Terseness rules: drop articles/filler/pleasantries/hedging; fragments OK; short synonyms; verb over noun; condition before command; no semicolons
 - Slop-to-plain mapping: leverage -> use, prior to -> before, ensure -> make sure that, facilitate -> help, due to the fact that -> because, and/or -> pick one
+- Concrete-specificity: for evaluative claims, name the mechanism, artifact, behavior, number, or user-visible effect. If none exists, remove the claim.
+- Common output tells to remove: generic openings or closings, unsupported attributions, "not just X, but Y", "serves as", "stands as", and "features" when "is" or "has" works.
+- Structure: use the natural number of points. Do not force rule-of-three lists. Do not cycle synonyms for one technical concept. Do not repeat a heading in the sentence below it.
+- Readability: keep one main claim per sentence. Split sentences with nested conditions or multiple qualifications. Prefer active voice when the actor matters. Keep passive voice when the actor is unknown or the state matters more.
+- Recommendation voice: state a recommendation when evidence supports one. Label it as a recommendation. Do not simulate personality or add informality for its own sake.
+- Final prose self-audit: before sending, remove generic framing, unsupported evaluation, repeated conclusions, abstract claims, and chatbot closings. Replace each with a concrete fact, mechanism, decision, or next action.
+- Self-audit scope: apply these rules to assistant-authored prose only. Do not rewrite code, diffs, exact errors, quoted source text, mandated gate strings, or skill-defined schemas and templates.
 - No tool-call narration, no dumping long raw error logs unless asked — quote shortest decisive line
 - Standard well-known tech acronyms OK (DB/API/HTTP/CSS/DOM/SQL); if a term lacks a standard acronym, write it out in full
 - No unicode causal arrows (→) in prose or code

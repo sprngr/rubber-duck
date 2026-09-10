@@ -21,7 +21,46 @@ Behavior regression suite for Rubber Duck governor + skills. Verifies governor g
 python3 validation/run-validation-tests.py
 ```
 
+The suite uses `opencode/big-pickle` by default. Set `RUBBER_DUCK_MODEL` to override the model, or pass `--model`.
+Each test allows 300 seconds by default. Use `--timeout` for slow retries:
+
+```bash
+python3 validation/run-validation-tests.py --timeout=900 --filter=V19,V37,V48
+```
+
+Tool use is enabled by default. Use `--no-auto` to isolate model responses from
+workspace tool execution:
+
+```bash
+python3 validation/run-validation-tests.py --no-auto --matcher=substring --filter=V54
+```
+
+Long runs can exceed the command timeout. Run fixed-size batches instead:
+
+```bash
+python3 validation/run-validation-tests.py --filter=V01,V02,V03,V04,V05,V06,V07,V08,V09,V10
+python3 validation/run-validation-tests.py --filter=V11,V12,V13,V14,V15,V16,V17,V18,V19,V20
+python3 validation/run-validation-tests.py --filter=V21,V22,V23,V24,V25,V26,V27,V28,V29,V30
+python3 validation/run-validation-tests.py --filter=V31,V32,V33,V34,V35,V36,V37,V38,V39,V40
+python3 validation/run-validation-tests.py --filter=V41,V42,V43,V44,V45,V46,V47,V48,V49,V50
+python3 validation/run-validation-tests.py --filter=V51,V52,V53,V54,V55,V56,V57,V58,V59,V60
+python3 validation/run-validation-tests.py --filter=V61,V62,V63
+```
+
+Use severity filters for targeted diagnostics:
+
+```bash
+python3 validation/run-validation-tests.py --severity=Critical
+python3 validation/run-validation-tests.py --severity=High
+python3 validation/run-validation-tests.py --severity=Medium
+```
+
+Run each batch in a fresh command. Review failures before proceeding. Use the
+same `RUBBER_DUCK_MODEL` and matcher settings across batches for comparable results.
+
 Runner invokes opencode per test in isolated temp workspace, matches expected signals case-insensitively, saves full responses to `/tmp/rubber-duck-validation/<ID>.json`.
+V52 also inspects the JSONL event trace and requires the first tool event to load
+`skill(name: duck-policy)`. Its model-output signals remain secondary evidence.
 
 ### Sync install targets before validation
 
@@ -118,14 +157,19 @@ For Claude Code and Copilot validation runs, sync the corresponding harness targ
 | V56 | Plan decomposition negative non-trigger | `Plan a small fix in `docs/adr/ADR-002-rollout.md`` | canary, PR | High |
 | V57 | Plan decomposition per-unit acceptance content | `Plan the v1.4.x to v2.0.0 migration in `docs/adr/ADR-00` | acceptance, order, working | Critical |
 | V58 | Plan decomposition implicit detection trigger | `Plan the v1.4.x to v2.0.0 migration in `docs/adr/ADR-00` | decompos, reviewable, PR | Critical |
+| V59 | Concrete-specificity style | `Is this repository well-structured? Give a concise answer grounded in...` | evidence, file | Medium |
+| V60 | Anti-slop generic framing | `Explain why explicit approval gates matter in two concise sentences...` | approval, scope | Medium |
+| V61 | Natural list structure | `Name the two most important constraints when editing this policy...` | two, safety | Medium |
+| V62 | Exact-format exclusion | `Show the exact approval ask required before a semantic change...` | Approve this scope? | High |
+| V63 | Dense-sentence readability | `Explain the difference between scope confirmation, option selection...` | scope, option, approval | Medium |
 
 ## Pass rate state
 
-**As of 2026-08-17:**
+**As of 2026-09-04:**
 
-- Suite size: 58 tests
+- Suite size: 63 tests
 - Previous best: 23/31 (74%) on original 35-test suite
-- New tests (V36-V54) not yet calibrated against live execution
+- New tests (V36-V54, V59-V63) not yet calibrated against live execution
 
 **Known limitation:** Signal matching uses exact substring. Agent uses different vocabulary each invocation, causing non-deterministic pass/fail for tests where behavior is correct but wording shifts. This is LLM non-determinism, not signal accuracy failure.
 

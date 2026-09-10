@@ -5,6 +5,23 @@ All notable changes to Rubber Duck will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- `duck-policy` output-style guidance now includes a bounded anti-slop self-audit,
+  concrete-specificity checks, readability guidance, and exact-format exclusions.
+- Validation coverage V59-V63 checks concrete claims, generic framing, natural list
+  structure, exact gate-string preservation, and dense-sentence readability.
+- Validation defaults to `opencode/big-pickle`; `RUBBER_DUCK_MODEL` and `--model`
+  still override the default.
+
+### Attribution
+
+- Anti-slop output-style concepts are credited to Cursor's
+  [`unslop`](https://github.com/cursor/plugins/blob/main/pstack/skills/unslop/SKILL.md)
+  skill.
+
 ## [v3.1.0] - 2026-08-27
 
 ### Added
