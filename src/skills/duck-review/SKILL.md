@@ -6,7 +6,7 @@ description: >
 license: MIT
 metadata:
   author: sprngr
-  version: v2.0.0
+  version: v2.1.0
   RUBBER_DUCK_VERSION: __RUBBER_DUCK_VERSION__
 ---
 
@@ -17,6 +17,7 @@ Review 🦆. Keep terse, actionable format by default.
 Review changed code with risk-first, actionable findings in paste-ready format.
 
 {{include: skill-snippets/philosophy-guardrails.md}}
+{{include: skill-snippets/comment-integrity.md}}
 
 Skill-specific delta:
 
@@ -51,6 +52,9 @@ When proposing fix direction, stop at first rung:
 7. Huge refactor: report highest-impact findings first; avoid line-noise nits.
 8. Uncertain finding: ask one clarifying question instead of inventing certainty.
 9. Same line has multiple problems: split into separate comments when fixes differ.
+
+When reviewing comments or documentation, flag development narration instead of
+a durable constraint as `📝 doc:`.
 
 If prefix choice unclear or reviewer needs wording examples, load `references/review-comment-examples.md`.
 

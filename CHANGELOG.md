@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Global comment-integrity guidance now requires durable constraints, invariants,
+  contracts, and behavior instead of development narration. `duck-patch`,
+  `duck-refactor`, `duck-review`, and `duck-tidy` apply the guidance.
+- Validation coverage V64 checks that `duck-review` flags review-history and
+  rejected-approach comments as documentation findings.
 - `duck-policy` output-style guidance now includes a bounded anti-slop self-audit,
   concrete-specificity checks, readability guidance, and exact-format exclusions.
 - Validation coverage V59-V63 checks concrete claims, generic framing, natural list

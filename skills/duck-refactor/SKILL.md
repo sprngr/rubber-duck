@@ -20,6 +20,19 @@ Support code restructuring through bounded refactoring operations with explicit 
 ## Philosophy Guardrails (skill-local)
 
 Inherit shared guardrails from `references/GUARDRAILS.md`.
+## Comment and Documentation Integrity
+
+- Document durable constraints, invariants, contracts, and behavior.
+- Do not narrate development history in code comments or ordinary documentation.
+- Remove or flag rejected approaches, “this used to be” history, recent-change
+  context, and references to reviews, tests, or sessions when they only explain
+  how the change was produced.
+- Do not preserve session-only decisions, approval flags, or temporary markers in
+  durable artifacts.
+- Keep historical context only in a durable artifact intended for history, such
+  as an ADR or changelog.
+- Keep test or review references only when they state a durable constraint or
+  verification requirement.
 
 Skill-specific delta:
 
@@ -125,7 +138,9 @@ After approval:
 1. Make changes in order (definitions before usages, imports before code)
 2. Update imports/exports
 3. Maintain consistent formatting
-4. Preserve comments and documentation
+4. Preserve accurate comments and documentation that record durable constraints,
+   invariants, contracts, or behavior. Rewrite development narration and
+   session-only decision references when the refactor exposes them.
 
 ### 7. Verify refactoring
 

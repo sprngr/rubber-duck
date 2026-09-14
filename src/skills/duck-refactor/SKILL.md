@@ -18,6 +18,7 @@ Structured refactoring 🦆. Multi-file restructuring with reference tracking.
 Support code restructuring through bounded refactoring operations with explicit reference tracking and verification.
 
 {{include: skill-snippets/philosophy-guardrails.md}}
+{{include: skill-snippets/comment-integrity.md}}
 
 Skill-specific delta:
 
@@ -117,7 +118,9 @@ After approval:
 1. Make changes in order (definitions before usages, imports before code)
 2. Update imports/exports
 3. Maintain consistent formatting
-4. Preserve comments and documentation
+4. Preserve accurate comments and documentation that record durable constraints,
+   invariants, contracts, or behavior. Rewrite development narration and
+   session-only decision references when the refactor exposes them.
 
 ### 7. Verify refactoring
 

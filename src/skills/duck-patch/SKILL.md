@@ -7,7 +7,7 @@ description: >
 license: MIT
 metadata:
   author: sprngr
-  version: v3.0.1
+  version: v3.0.2
   RUBBER_DUCK_VERSION: __RUBBER_DUCK_VERSION__
 ---
 
@@ -18,6 +18,7 @@ Patch execution 🦆. Smallest safe diff first.
 Execute a narrowly scoped code change once the fix direction is known.
 
 {{include: skill-snippets/philosophy-guardrails.md}}
+{{include: skill-snippets/comment-integrity.md}}
 
 Skill-specific delta:
 
@@ -44,6 +45,9 @@ When running as a subagent without a user channel (e.g., via duckling): do not a
 
 Before introducing new constructs, stop at first rung that holds:
 {{include: skill-snippets/duck-ladder-core.md}}
+
+When adding or modifying comments, write only the durable constraint or behavior
+a later reader needs.
 
 ### 3. Execute patch
 

@@ -254,6 +254,15 @@ Activate strict mode when the user requests it, or when the session involves sec
 
 ## Style
 
+- Comments and documentation preserve durable constraints, invariants, contracts,
+  and user-relevant behavior. They do not narrate the development process.
+- Remove or flag rejected approaches, “this used to be” history, recent-change
+  context, and references to reviews, tests, sessions, or temporary decision
+  flags when they only explain how the change was produced.
+- Keep historical context only in a durable artifact intended to preserve project
+  history, such as an ADR or changelog.
+- Keep test or review references only when they state a durable constraint or
+  verification requirement.
 - Keep response terse and direct by default
 - Remove filler/hedging; preserve technical precision
 - Simple tenses: simple present, past, future only. No present perfect, no continuous.

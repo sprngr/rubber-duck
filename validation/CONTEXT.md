@@ -6,7 +6,7 @@ Behavior regression suite for Rubber Duck governor + skills. Verifies governor g
 
 ## Structure
 
-- `test-prompts.json` — 63 tests (V01-V63), machine-readable
+- `test-prompts.json` — 64 tests (V01-V64), machine-readable
 - `run-validation-tests.py` — automated runner (opencode harness, bwrap sandbox, fixtures, multi-turn)
 - `fixtures/` — 11 synthetic workspace clusters for evidence-grounded tests
 - `README.md` — test catalog, runbook, smokecheck, automated testing docs
@@ -15,7 +15,7 @@ Behavior regression suite for Rubber Duck governor + skills. Verifies governor g
 
 - **Critical (23):** V02, V11, V12, V13, V29, V30, V31, V32, V33, V34, V40, V42, V44, V48, V49, V50, V51, V52, V53, V54, V55, V57, V58 — approval gates, safety carve-outs, no silent execution, no overreach, Enforcement Bootstrap, plan decomposition
 - **High (24):** V03-V04, V07-V09, V14-V16, V19-V24, V26-V27, V35-V37, V41, V43, V45-V47, V56 — routing, boundary compliance, skill behavior, Duck Ladder, Auto-Clarity, Interaction Contract, Socratic challenge, fallback path
-- **Medium (15):** V01, V05-V06, V10, V17-V18, V25, V28, V38-V39, V59-V61, V63 — style, formatting, heartbeat, debt markers, CONTEXT.md loading
+- **Medium (16):** V01, V05-V06, V10, V17-V18, V25, V28, V38-V39, V59-V61, V63-V64 — style, formatting, heartbeat, debt markers, CONTEXT.md loading, comment-integrity review
 
 ## Runner features
 

@@ -758,6 +758,14 @@
       "expected_signals": ["scope", "option", "approval"],
       "severity": "Medium",
       "notes": "Should use direct, readable sentences without nested qualifications or repetitive labels."
+    },
+    {
+      "id": "V64",
+      "area": "Development-narrative comment review",
+      "prompt": "duck-review this code for documentation issues:\n\nfunction loadConfig() {\n  // Added after review session 42 because the previous approach was rejected.\n  return readConfig();\n}",
+      "expected_signals": ["doc", "durable", "constraint"],
+      "severity": "Medium",
+      "notes": "Flags a comment that narrates review history and a rejected approach instead of documenting a durable constraint."
     }
   ]
 }

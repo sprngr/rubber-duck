@@ -162,6 +162,7 @@ For Claude Code and Copilot validation runs, sync the corresponding harness targ
 | V61 | Natural list structure | `Name the two most important constraints when editing this policy...` | two, safety | Medium |
 | V62 | Exact-format exclusion | `Show the exact approval ask required before a semantic change...` | Approve this scope? | High |
 | V63 | Dense-sentence readability | `Explain the difference between scope confirmation, option selection...` | scope, option, approval | Medium |
+| V64 | Development-narrative comment review | `duck-review this code for documentation issues: ...` | doc, durable, constraint | Medium |
 
 ## Pass rate state
 
@@ -169,7 +170,7 @@ For Claude Code and Copilot validation runs, sync the corresponding harness targ
 
 - Suite size: 63 tests
 - Previous best: 23/31 (74%) on original 35-test suite
-- New tests (V36-V54, V59-V63) not yet calibrated against live execution
+- New tests (V36-V54, V59-V64) not yet calibrated against live execution
 
 **Known limitation:** Signal matching uses exact substring. Agent uses different vocabulary each invocation, causing non-deterministic pass/fail for tests where behavior is correct but wording shifts. This is LLM non-determinism, not signal accuracy failure.
 

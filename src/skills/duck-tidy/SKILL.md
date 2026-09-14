@@ -22,6 +22,7 @@ future sessions and confusing agents and developers. Audit-first; edits hand
 off to duck-patch.
 
 {{include: skill-snippets/philosophy-guardrails.md}}
+{{include: skill-snippets/comment-integrity.md}}
 {{include: skill-snippets/clarify-first-preflight.md}}
 
 Skill-specific delta:
@@ -29,6 +30,8 @@ Skill-specific delta:
 - Staleness evidence-backed: comment contradicts current code, describes
   behavior no longer existing, or documents worktree-only add/remove never
   merged to main.
+- Development narration evidence-backed: comment records how a change was
+  produced rather than a durable constraint, invariant, contract, or behavior.
 - TODO/FIXME/HACK/XXX markers out of scope (duck-debt owns the ledger).
 - ADR/design notes historic by design: if info is superseded, flag it; do not edit.
 
@@ -77,6 +80,8 @@ contradiction (file:line, symbol, diff hunk). No vibes-based staleness.
 
 - `stale-comment`: actionable (contradiction / removed behavior /
   worktree-only). Editable.
+- `development-narrative`: actionable comment or ordinary documentation that
+  records development history instead of a durable constraint. Editable.
 - `superseded-doc`: ADR/design note now outdated. If outdated, flag only; do not edit.
 - `skip`: TODO markers (duck-debt), accurate or historic comments,
   CONTEXT.md/.duck-tape content (duck-tape).
