@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# RUBBER_DUCK_VERSION: v3.1.0
+# RUBBER_DUCK_VERSION: v3.1.1
 # Generated wrapper template source.
 # Installer will substitute scope token and source URL token.
 

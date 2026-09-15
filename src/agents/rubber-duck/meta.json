@@ -3,7 +3,7 @@
   "description": "Rubber duck recommendation and rules governor. Enforces policy/safety gates with explicit routing via quack.",
   "harnesses": {
     "claude": {
-      "tools": "Read, Glob, Grep, Edit, Write, Bash, Agent, Skill, AskUserQuestion",
+      "tools": "Read, Glob, Grep, Edit, Write, Bash, Agent, Skill, AskUserQuestion, Artifact, ArtifactComments, ArtifactData, ArtifactCheck",
       "initialPrompt": true,
       "color": "yellow"
     },

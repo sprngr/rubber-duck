@@ -8,7 +8,7 @@ license: MIT
 metadata:
   author: sprngr
   version: v2.0.1
-  RUBBER_DUCK_VERSION: v3.1.0
+  RUBBER_DUCK_VERSION: v3.1.1
 ---
 
 Structured refactoring 🦆. Multi-file restructuring with reference tracking.

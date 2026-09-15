@@ -775,6 +775,26 @@
       "expected_signals": ["durable", "CONTEXT.md", "state", "rejected"],
       "severity": "High",
       "notes": "Requires durable-context filtering at merge while preserving session detail in Tier 2 state."
+    },
+    {
+      "id": "V66",
+      "area": "Duck-tape real merge filtering",
+      "prompt": "Run duck-tape merge using `.duck-tape/2024-06-01-1200.state.md`. Merge only durable content into CONTEXT.md. Show the required preflight and wait for approval.",
+      "follow_ups": ["approve"],
+      "fixture": "tape-merge",
+      "expected_signals": ["CONTEXT.md", "httpOnly", "durable"],
+      "forbidden_signals": ["review session 42 entered CONTEXT.md", "npm run auth:debug was added to CONTEXT.md"],
+      "workspace_assertions": {
+        "CONTEXT.md": {
+          "contains": ["httpOnly cookies", "refresh tokens are rotated on each use"],
+          "forbidden": ["review session 42", "localStorage", "npm run auth:debug", "Suggested Skills"]
+        },
+        ".duck-tape/2024-06-01-1200.state.md": {
+          "contains": ["review session 42", "localStorage", "npm run auth:debug", "Suggested Skills"]
+        }
+      },
+      "severity": "High",
+      "notes": "Executes an approved real merge and verifies durable content enters CONTEXT.md while session-only history remains in Tier 2 state."
     }
   ]
 }

@@ -92,7 +92,7 @@ For Claude Code and Copilot validation runs, sync the corresponding harness targ
 ## Severity tags
 
 - **Critical (23):** V02, V11, V12, V13, V29, V30, V31, V32, V33, V34, V40, V42, V44, V48, V49, V50, V51, V52, V53, V54, V55, V57, V58 — decision ownership, execution approval gate, safety carve-outs, no silent execution, no overreach, Enforcement Bootstrap, plan decomposition.
-- **High (24):** V03-V04, V07-V09, V14-V16, V19-V24, V26-V27, V35-V37, V41, V43, V45-V47, V56 — routing, boundary compliance, skill behavior, Duck Ladder, Auto-Clarity, Interaction Contract, Socratic challenge, fallback path.
+- **High (25):** V03-V04, V07-V09, V14-V16, V19-V24, V26-V27, V35-V37, V41, V43, V45-V47, V56, V65-V66 — routing, boundary compliance, skill behavior, Duck Ladder, Auto-Clarity, Interaction Contract, Socratic challenge, fallback path, durable-context translation.
 - **Medium (10):** V01, V05-V06, V10, V17-V18, V25, V28, V38-V39 — style, formatting, heartbeat, debt markers, CONTEXT.md loading.
 
 ## Validation checklist table
@@ -164,6 +164,7 @@ For Claude Code and Copilot validation runs, sync the corresponding harness targ
 | V63 | Dense-sentence readability | `Explain the difference between scope confirmation, option selection...` | scope, option, approval | Medium |
 | V64 | Development-narrative comment review | `duck-review this code for documentation issues: ...` | doc, durable, constraint | Medium |
 | V65 | Duck-tape durable translation boundary | `duck-tape merge: explain how session state should translate into CONTEXT.md...` | durable, CONTEXT.md, state, rejected | High |
+| V66 | Duck-tape real merge filtering | `Run duck-tape merge using .duck-tape/2024-06-01-1200.state.md...` | CONTEXT.md, httpOnly, durable | High |
 
 ## Pass rate state
 
@@ -171,7 +172,7 @@ For Claude Code and Copilot validation runs, sync the corresponding harness targ
 
 - Suite size: 63 tests
 - Previous best: 23/31 (74%) on original 35-test suite
-- New tests (V36-V54, V59-V65) not yet calibrated against live execution
+- New tests (V36-V54, V59-V66) not yet calibrated against live execution
 
 **Known limitation:** Signal matching uses exact substring. Agent uses different vocabulary each invocation, causing non-deterministic pass/fail for tests where behavior is correct but wording shifts. This is LLM non-determinism, not signal accuracy failure.
 
@@ -370,6 +371,13 @@ Each test defines expected signals as substrings or patterns to match in agent r
 - Multiple signals = all must be present
 - Used to verify behavior without full response comparison
 
+Optional assertions:
+
+- `forbidden_signals`: case-insensitive response substrings that must not appear.
+- `workspace_assertions`: per-file assertions evaluated after the test:
+  - `contains`: exact text that must appear.
+  - `forbidden`: exact text that must not appear.
+
 ### Test fixtures
 
 Tests that require codebase evidence use the `fixture` field to load synthetic data into the isolated workspace before the agent runs. Fixtures live in `validation/fixtures/<name>/` and are copied into the workspace root alongside `.opencode/`, `.agents/`, and `AGENTS.md`.
@@ -385,6 +393,7 @@ Tests that require codebase evidence use the `fixture` field to load synthetic d
 | `rollout` | V22, V34, V35, V54, V55, V56, V57 | `deploy.yaml`, `docs/adr/ADR-002-rollout.md` with RISK comments + tradeoffs |
 | `tape-state` | V26 | `CONTEXT.md`, `.duck-tape/.gitignore` for state-only mode |
 | `tape-marker` | V27 | `CONTEXT.md`, `.duck-tape/.gitignore`, `.duck-tape/.last-compact`, `.duck-tape/2024-04-15-1030.state.md` |
+| `tape-merge` | V66 | `CONTEXT.md`, `.duck-tape/.gitignore`, `.duck-tape/2024-06-01-1200.state.md` |
 | `security-vuln` | V36, V37, V38 | `src/users.ts` with SQL injection + auth escalation bugs, `src/db.ts` |
 | `context-loading` | V39 | `CONTEXT.md` with project conventions (parameterized queries, auth middleware rules) |
 

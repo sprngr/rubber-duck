@@ -408,6 +408,34 @@ def match_signals_substring(response_text: str, expected: list[str]) -> tuple[bo
     return (not missing, missing)
 
 
+def match_forbidden_signals_substring(
+    response_text: str, forbidden: list[str]
+) -> tuple[bool, list[str]]:
+    haystack = response_text.lower()
+    found = [s for s in forbidden if s.lower() in haystack]
+    return (not found, found)
+
+
+def check_workspace_assertions(
+    workspace: Path, assertions: dict[str, Any]
+) -> tuple[bool, list[str]]:
+    failures: list[str] = []
+    for relative_path, rules in assertions.items():
+        target = workspace / relative_path
+        try:
+            content = target.read_text(encoding="utf-8")
+        except OSError as exc:
+            failures.append(f"{relative_path}: unable to read file ({exc})")
+            continue
+        for expected in rules.get("contains", []):
+            if expected not in content:
+                failures.append(f"{relative_path}: missing required text {expected!r}")
+        for forbidden in rules.get("forbidden", []):
+            if forbidden in content:
+                failures.append(f"{relative_path}: contains forbidden text {forbidden!r}")
+    return (not failures, failures)
+
+
 def judge_one_signal(
     response_text: str,
     signal: str,
@@ -543,6 +571,8 @@ def main() -> int:
         area = test["area"]
         prompt = test["prompt"]
         expected = test["expected_signals"]
+        forbidden = test.get("forbidden_signals", [])
+        workspace_assertions = test.get("workspace_assertions", {})
         severity = test["severity"]
 
         if filter_ids and tid not in filter_ids:
@@ -571,73 +601,94 @@ def main() -> int:
                 timeout_seconds=args.timeout,
                 auto=args.auto,
             )
-        finally:
-            if not args.keep_workspaces:
-                shutil.rmtree(workspace, ignore_errors=True)
 
-        response_file = args.results_dir / f"{tid}.json"
-        verdicts: dict[str, str] = {}
-        structural_errors: list[str] = []
-        if not result["error"] and tid == "V52":
-            events = parse_jsonl_events(result["stdout"])
-            bootstrap_error = first_policy_load_error(events)
-            if bootstrap_error:
-                structural_errors.append(f"Enforcement Bootstrap: {bootstrap_error}")
-        if result["error"]:
-            errored += 1
-            print(f"  ❌ ERROR: {result['error']}")
-        else:
-            notes = test.get("notes", "")
-            if args.matcher == "substring":
-                ok, missing = match_signals_substring(result["last_text"], expected)
-            elif args.matcher == "judge":
-                ok, missing, verdicts = match_signals_judge(result["last_text"], expected, notes, args.model)
-            else:  # hybrid
-                ok, missing, verdicts = match_signals_hybrid(result["last_text"], expected, notes, args.model)
-            snippet = result["last_text"].strip().split("\n")[0][:120]
-            if structural_errors:
-                ok = False
-                missing.extend(structural_errors)
-            if ok:
-                passed += 1
-                print("  ✅ PASS")
-                print(f"  Snippet: {snippet}")
+            response_file = args.results_dir / f"{tid}.json"
+            verdicts: dict[str, str] = {}
+            structural_errors: list[str] = []
+            assertion_errors: list[str] = []
+            if not result["error"] and tid == "V52":
+                events = parse_jsonl_events(result["stdout"])
+                bootstrap_error = first_policy_load_error(events)
+                if bootstrap_error:
+                    structural_errors.append(f"Enforcement Bootstrap: {bootstrap_error}")
+            if result["error"]:
+                errored += 1
+                print(f"  ❌ ERROR: {result['error']}")
             else:
-                failed += 1
-                print(f"  ❌ FAIL — missing: {', '.join(missing)}")
-                print(f"  Snippet: {snippet}")
-                for sig in missing:
-                    v = verdicts.get(sig)
-                    if v:
-                        print(f"    {sig}: {v}")
-                for error in structural_errors:
-                    print(f"    structural: FAIL: {error}")
-        response_file.write_text(
-            json.dumps(
+                notes = test.get("notes", "")
+                if args.matcher == "substring":
+                    ok, missing = match_signals_substring(result["last_text"], expected)
+                elif args.matcher == "judge":
+                    ok, missing, verdicts = match_signals_judge(result["last_text"], expected, notes, args.model)
+                else:  # hybrid
+                    ok, missing, verdicts = match_signals_hybrid(result["last_text"], expected, notes, args.model)
+                forbidden_ok, found_forbidden = match_forbidden_signals_substring(
+                    result["last_text"], forbidden
+                )
+                if not forbidden_ok:
+                    assertion_errors.extend(
+                        f"response contains forbidden signal {signal!r}"
+                        for signal in found_forbidden
+                    )
+                workspace_ok, workspace_failures = check_workspace_assertions(
+                    workspace, workspace_assertions
+                )
+                if not workspace_ok:
+                    assertion_errors.extend(workspace_failures)
+                snippet = result["last_text"].strip().split("\n")[0][:120]
+                if structural_errors:
+                    ok = False
+                    missing.extend(structural_errors)
+                if assertion_errors:
+                    ok = False
+                if ok:
+                    passed += 1
+                    print("  ✅ PASS")
+                    print(f"  Snippet: {snippet}")
+                else:
+                    failed += 1
+                    print(f"  ❌ FAIL — missing: {', '.join(missing)}")
+                    print(f"  Snippet: {snippet}")
+                    for sig in missing:
+                        v = verdicts.get(sig)
+                        if v:
+                            print(f"    {sig}: {v}")
+                    for error in structural_errors:
+                        print(f"    structural: FAIL: {error}")
+                    for error in assertion_errors:
+                        print(f"    assertion: FAIL: {error}")
+            response_file.write_text(
+                json.dumps(
                 {
                     "test_id": tid,
                     "area": area,
                     "prompt": prompt,
                     "expected_signals": expected,
+                    "forbidden_signals": forbidden,
+                    "workspace_assertions": workspace_assertions,
                     "severity": severity,
                     "matcher": args.matcher,
                     "verdicts": verdicts,
+                    "assertion_errors": assertion_errors,
                     "result": result,
                 },
                 indent=2,
                 ensure_ascii=False,
+                )
             )
-        )
-        print(f"  Response: {response_file}")
+            print(f"  Response: {response_file}")
 
-        if args.interactive:
-            try:
-                input("Press enter to continue...")
-            except KeyboardInterrupt:
-                print("\nAborted.", file=sys.stderr)
-                return 2
+            if args.interactive:
+                try:
+                    input("Press enter to continue...")
+                except KeyboardInterrupt:
+                    print("\nAborted.", file=sys.stderr)
+                    return 2
 
-        print()
+            print()
+        finally:
+            if not args.keep_workspaces:
+                shutil.rmtree(workspace, ignore_errors=True)
 
     print("Results")
     print("=======")

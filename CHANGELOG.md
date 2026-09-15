@@ -7,8 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v3.1.1] - 2026-09-15
+
 ### Added
 
+- Validation runner now supports `forbidden_signals` for response-level
+  exclusions and `workspace_assertions` for required or forbidden file content.
+- Validation coverage V66 executes an approved `duck-tape merge` and verifies
+  durable content enters `CONTEXT.md` while session-only detail remains in
+  Tier 2 state.
 - `duck-tape` v2.2.0 now filters state-to-`CONTEXT.md` translation to durable
   decisions, constraints, conventions, facts, debt, and open questions while
   preserving session detail in Tier 2 state files.
