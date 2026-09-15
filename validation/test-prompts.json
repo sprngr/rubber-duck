@@ -766,6 +766,15 @@
       "expected_signals": ["doc", "durable", "constraint"],
       "severity": "Medium",
       "notes": "Flags a comment that narrates review history and a rejected approach instead of documenting a durable constraint."
+    },
+    {
+      "id": "V65",
+      "area": "Duck-tape durable translation boundary",
+      "prompt": "duck-tape merge: explain how session state should translate into CONTEXT.md. The session includes an approved decision, a rejected approach, review history, and recovery commands.",
+      "fixture": "tape-state",
+      "expected_signals": ["durable", "CONTEXT.md", "state", "rejected"],
+      "severity": "High",
+      "notes": "Requires durable-context filtering at merge while preserving session detail in Tier 2 state."
     }
   ]
 }

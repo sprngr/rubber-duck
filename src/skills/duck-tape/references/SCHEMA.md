@@ -151,14 +151,20 @@ Merge input is translated from session state file (`.duck-tape/<id>.state.md`), 
    - Applies to all sections including Notes freeform.
 1. Parse existing CONTEXT.md into sections by `##` headers.
 2. Translate redacted state file into CONTEXT.md sections using rigid map in `references/STATE_SCHEMA.md`. Parse subsections within each top-level section by `###` headers.
-3. Summarize translated content to persistent-context granularity. State file detail (commands, hashes, raw output) stays in state file. CONTEXT.md receives decision-level summary. This is granularity reduction, not rewrite or interpretation. Facts preserved. Detail dropped.
-4. Per section, apply merge rules above.
-5. Generate changelog:
+3. Apply the durable-context filter before translation:
+   - Keep durable decisions, constraints, conventions, glossary facts, deferred debt, and open questions.
+   - Drop development narration, rejected approaches, recent-change context, session-only approval flags, and review/test/session references that only describe how work was produced.
+   - Keep test or review references only when they state a durable verification requirement.
+   - Keep historical rationale in ADRs or changelogs, not ordinary CONTEXT.md entries.
+   - If filtered content contains a durable decision or constraint, preserve that underlying content without the session history.
+4. Summarize translated content to persistent-context granularity. State file detail (commands, hashes, raw output) stays in state file. CONTEXT.md receives decision-level summary. This is granularity reduction, not rewrite or interpretation. Facts preserved. Detail dropped.
+5. Per section, apply merge rules above.
+6. Generate changelog:
    - `Added: <section> <key>`
    - `Superseded: <section> <key> (<old> -> <new>)`
    - `Dropped: <section> <key> (<reason>)`
-6. Write merged CONTEXT.md.
-7. Emit changelog to user.
+7. Write merged CONTEXT.md.
+8. Emit changelog to user.
 
 ## Conflict Resolution
 

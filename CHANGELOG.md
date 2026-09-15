@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `duck-tape` v2.2.0 now filters state-to-`CONTEXT.md` translation to durable
+  decisions, constraints, conventions, facts, debt, and open questions while
+  preserving session detail in Tier 2 state files.
+- Validation coverage V65 checks the durable state-to-`CONTEXT.md` translation
+  boundary.
 - Global comment-integrity guidance now requires durable constraints, invariants,
   contracts, and behavior instead of development narration. `duck-patch`,
   `duck-refactor`, `duck-review`, and `duck-tidy` apply the guidance.
