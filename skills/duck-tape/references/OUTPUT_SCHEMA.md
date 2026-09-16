@@ -69,6 +69,29 @@ Strict output specifications for duck-tape artifacts.
 - No trailing blank lines at end of file
 - Entries within a section are contiguous (no blank lines between entries)
 
+### Durable-context translation
+
+- State-file output preserves session detail for recovery.
+- CONTEXT.md output contains durable decisions, constraints, conventions, facts,
+  debt, and open questions.
+- Do not copy rejected approaches, recent-change context, session-only approval
+  flags, or review/test/session references that only describe development.
+- Preserve the underlying durable meaning when filtered content contains one.
+- Keep historical rationale in ADRs or changelogs.
+
+Accepted:
+
+```text
+State: APPROVED: use shared comment guidance - review rejected duplicated wording
+CONTEXT.md: - **Comment guidance**: use shared comment guidance.
+```
+
+Rejected:
+
+```text
+CONTEXT.md: - **Comment guidance**: approved after review session 42 rejected duplicated wording.
+```
+
 ## State File Output Rules
 
 ### Header format
@@ -111,6 +134,8 @@ Changelog:
 - Supersede shows old and new values
 - Drop shows explicit reason
 - No changelog if no changes (emit "No changes to CONTEXT.md")
+- If session-only content is filtered without a durable replacement, report it as
+  `Dropped: <section> <key> (session-only development history)`.
 
 ## Rotation Rules
 

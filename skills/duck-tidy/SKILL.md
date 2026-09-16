@@ -10,7 +10,7 @@ license: MIT
 metadata:
   author: sprngr
   version: v2.0.0
-  RUBBER_DUCK_VERSION: v3.1.0
+  RUBBER_DUCK_VERSION: v3.1.1
 ---
 
 Stale comment and doc cleanup 🦆🧹. Audit-first, evidence-backed staleness detection.
@@ -24,6 +24,19 @@ off to duck-patch.
 ## Philosophy Guardrails (skill-local)
 
 Inherit shared guardrails from `references/GUARDRAILS.md`.
+## Comment and Documentation Integrity
+
+- Document durable constraints, invariants, contracts, and behavior.
+- Do not narrate development history in code comments or ordinary documentation.
+- Remove or flag rejected approaches, “this used to be” history, recent-change
+  context, and references to reviews, tests, or sessions when they only explain
+  how the change was produced.
+- Do not preserve session-only decisions, approval flags, or temporary markers in
+  durable artifacts.
+- Keep historical context only in a durable artifact intended for history, such
+  as an ADR or changelog.
+- Keep test or review references only when they state a durable constraint or
+  verification requirement.
 - ask 1-3 targeted clarifying questions when context is incomplete
 - state assumptions explicitly when evidence is missing
 
@@ -32,6 +45,8 @@ Skill-specific delta:
 - Staleness evidence-backed: comment contradicts current code, describes
   behavior no longer existing, or documents worktree-only add/remove never
   merged to main.
+- Development narration evidence-backed: comment records how a change was
+  produced rather than a durable constraint, invariant, contract, or behavior.
 - TODO/FIXME/HACK/XXX markers out of scope (duck-debt owns the ledger).
 - ADR/design notes historic by design: if info is superseded, flag it; do not edit.
 
@@ -80,6 +95,8 @@ contradiction (file:line, symbol, diff hunk). No vibes-based staleness.
 
 - `stale-comment`: actionable (contradiction / removed behavior /
   worktree-only). Editable.
+- `development-narrative`: actionable comment or ordinary documentation that
+  records development history instead of a durable constraint. Editable.
 - `superseded-doc`: ADR/design note now outdated. If outdated, flag only; do not edit.
 - `skip`: TODO markers (duck-debt), accurate or historic comments,
   CONTEXT.md/.duck-tape content (duck-tape).

@@ -44,6 +44,27 @@ This preserves the trust boundary between user input and database.
 | "Could you please approve this change?" | "Approve this scope?" |
 | "The implementation would be to use a cache here" | "Use cache here. Reuse lib/cache.ts." |
 
+## Anti-slop self-audit
+
+Apply this audit to assistant-authored prose. Preserve code, diffs, exact errors,
+quoted source text, mandated gate strings, and skill-defined schemas.
+
+| Weak | Strong |
+|---|---|
+| "This improves reliability." | "The installer rejects untrusted raw URLs before downloading artifacts." |
+| "This creates a cleaner workflow." | "The approval flow separates scope confirmation from execution approval." |
+| "This is not just a style change, but a quality improvement." | "This changes response wording without changing approval behavior." |
+| "Additionally, it is important to note that..." | "The generated artifact must match the source." |
+| "Let me know if you need anything else." | Omit the closing. |
+| "There are three key considerations." | "Two constraints matter: preserve gate strings and exclude exact-format blocks." |
+
+Before sending, ask:
+
+1. Does each evaluative claim name a fact, mechanism, artifact, behavior, number,
+   or user-visible effect?
+2. Does each sentence add information?
+3. Did any generic framing, repeated conclusion, or chatbot closing remain?
+
 ## Phase examples (file/line thresholds)
 
 | Phase | Files | Lines | Action |

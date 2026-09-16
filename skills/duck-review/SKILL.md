@@ -6,8 +6,8 @@ description: >
 license: MIT
 metadata:
   author: sprngr
-  version: v2.0.0
-  RUBBER_DUCK_VERSION: v3.1.0
+  version: v2.1.0
+  RUBBER_DUCK_VERSION: v3.1.1
 ---
 
 Review 🦆. Keep terse, actionable format by default.
@@ -19,6 +19,19 @@ Review changed code with risk-first, actionable findings in paste-ready format.
 ## Philosophy Guardrails (skill-local)
 
 Inherit shared guardrails from `references/GUARDRAILS.md`.
+## Comment and Documentation Integrity
+
+- Document durable constraints, invariants, contracts, and behavior.
+- Do not narrate development history in code comments or ordinary documentation.
+- Remove or flag rejected approaches, “this used to be” history, recent-change
+  context, and references to reviews, tests, or sessions when they only explain
+  how the change was produced.
+- Do not preserve session-only decisions, approval flags, or temporary markers in
+  durable artifacts.
+- Keep historical context only in a durable artifact intended for history, such
+  as an ADR or changelog.
+- Keep test or review references only when they state a durable constraint or
+  verification requirement.
 
 Skill-specific delta:
 
@@ -59,6 +72,9 @@ When proposing fix direction, stop at first rung:
 7. Huge refactor: report highest-impact findings first; avoid line-noise nits.
 8. Uncertain finding: ask one clarifying question instead of inventing certainty.
 9. Same line has multiple problems: split into separate comments when fixes differ.
+
+When reviewing comments or documentation, flag development narration instead of
+a durable constraint as `📝 doc:`.
 
 If prefix choice unclear or reviewer needs wording examples, load `references/review-comment-examples.md`.
 

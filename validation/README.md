@@ -21,7 +21,46 @@ Behavior regression suite for Rubber Duck governor + skills. Verifies governor g
 python3 validation/run-validation-tests.py
 ```
 
+The suite uses `opencode/big-pickle` by default. Set `RUBBER_DUCK_MODEL` to override the model, or pass `--model`.
+Each test allows 300 seconds by default. Use `--timeout` for slow retries:
+
+```bash
+python3 validation/run-validation-tests.py --timeout=900 --filter=V19,V37,V48
+```
+
+Tool use is enabled by default. Use `--no-auto` to isolate model responses from
+workspace tool execution:
+
+```bash
+python3 validation/run-validation-tests.py --no-auto --matcher=substring --filter=V54
+```
+
+Long runs can exceed the command timeout. Run fixed-size batches instead:
+
+```bash
+python3 validation/run-validation-tests.py --filter=V01,V02,V03,V04,V05,V06,V07,V08,V09,V10
+python3 validation/run-validation-tests.py --filter=V11,V12,V13,V14,V15,V16,V17,V18,V19,V20
+python3 validation/run-validation-tests.py --filter=V21,V22,V23,V24,V25,V26,V27,V28,V29,V30
+python3 validation/run-validation-tests.py --filter=V31,V32,V33,V34,V35,V36,V37,V38,V39,V40
+python3 validation/run-validation-tests.py --filter=V41,V42,V43,V44,V45,V46,V47,V48,V49,V50
+python3 validation/run-validation-tests.py --filter=V51,V52,V53,V54,V55,V56,V57,V58,V59,V60
+python3 validation/run-validation-tests.py --filter=V61,V62,V63,V64,V65,V66
+```
+
+Use severity filters for targeted diagnostics:
+
+```bash
+python3 validation/run-validation-tests.py --severity=Critical
+python3 validation/run-validation-tests.py --severity=High
+python3 validation/run-validation-tests.py --severity=Medium
+```
+
+Run each batch in a fresh command. Review failures before proceeding. Use the
+same `RUBBER_DUCK_MODEL` and matcher settings across batches for comparable results.
+
 Runner invokes opencode per test in isolated temp workspace, matches expected signals case-insensitively, saves full responses to `/tmp/rubber-duck-validation/<ID>.json`.
+V52 also inspects the JSONL event trace and requires the first tool event to load
+`skill(name: duck-policy)`. Its model-output signals remain secondary evidence.
 
 ### Sync install targets before validation
 
@@ -53,8 +92,8 @@ For Claude Code and Copilot validation runs, sync the corresponding harness targ
 ## Severity tags
 
 - **Critical (23):** V02, V11, V12, V13, V29, V30, V31, V32, V33, V34, V40, V42, V44, V48, V49, V50, V51, V52, V53, V54, V55, V57, V58 — decision ownership, execution approval gate, safety carve-outs, no silent execution, no overreach, Enforcement Bootstrap, plan decomposition.
-- **High (24):** V03-V04, V07-V09, V14-V16, V19-V24, V26-V27, V35-V37, V41, V43, V45-V47, V56 — routing, boundary compliance, skill behavior, Duck Ladder, Auto-Clarity, Interaction Contract, Socratic challenge, fallback path.
-- **Medium (10):** V01, V05-V06, V10, V17-V18, V25, V28, V38-V39 — style, formatting, heartbeat, debt markers, CONTEXT.md loading.
+- **High (28):** V03-V04, V07-V09, V14-V16, V19-V24, V26-V27, V35-V37, V41, V43, V45-V47, V56, V62, V65-V66 — routing, boundary compliance, skill behavior, Duck Ladder, Auto-Clarity, Interaction Contract, Socratic challenge, fallback path, exact-format preservation, durable-context translation.
+- **Medium (15):** V01, V05-V06, V10, V17-V18, V25, V28, V38-V39, V59-V61, V63-V64 — style, formatting, heartbeat, debt markers, CONTEXT.md loading, comment-integrity review.
 
 ## Validation checklist table
 
@@ -118,14 +157,22 @@ For Claude Code and Copilot validation runs, sync the corresponding harness targ
 | V56 | Plan decomposition negative non-trigger | `Plan a small fix in `docs/adr/ADR-002-rollout.md`` | canary, PR | High |
 | V57 | Plan decomposition per-unit acceptance content | `Plan the v1.4.x to v2.0.0 migration in `docs/adr/ADR-00` | acceptance, order, working | Critical |
 | V58 | Plan decomposition implicit detection trigger | `Plan the v1.4.x to v2.0.0 migration in `docs/adr/ADR-00` | decompos, reviewable, PR | Critical |
+| V59 | Concrete-specificity style | `Is this repository well-structured? Give a concise answer grounded in...` | evidence, file | Medium |
+| V60 | Anti-slop generic framing | `Explain why explicit approval gates matter in two concise sentences...` | approval, scope | Medium |
+| V61 | Natural list structure | `Name the two most important constraints when editing this policy...` | two, safety | Medium |
+| V62 | Exact-format exclusion | `Show the exact approval ask required before a semantic change...` | Approve this scope? | High |
+| V63 | Dense-sentence readability | `Explain the difference between scope confirmation, option selection...` | scope, option, approval | Medium |
+| V64 | Development-narrative comment review | `duck-review this code for documentation issues: ...` | doc, durable, constraint | Medium |
+| V65 | Duck-tape durable translation boundary | `duck-tape merge: explain how session state should translate into CONTEXT.md...` | durable, CONTEXT.md, state, rejected | High |
+| V66 | Duck-tape real merge filtering | `Run duck-tape merge using .duck-tape/2024-06-01-1200.state.md...` | CONTEXT.md, httpOnly, durable | High |
 
 ## Pass rate state
 
-**As of 2026-08-17:**
+**As of 2026-09-15:**
 
-- Suite size: 58 tests
+- Suite size: 66 tests
 - Previous best: 23/31 (74%) on original 35-test suite
-- New tests (V36-V54) not yet calibrated against live execution
+- New tests (V36-V54, V59-V66) not yet calibrated against live execution
 
 **Known limitation:** Signal matching uses exact substring. Agent uses different vocabulary each invocation, causing non-deterministic pass/fail for tests where behavior is correct but wording shifts. This is LLM non-determinism, not signal accuracy failure.
 
@@ -324,6 +371,13 @@ Each test defines expected signals as substrings or patterns to match in agent r
 - Multiple signals = all must be present
 - Used to verify behavior without full response comparison
 
+Optional assertions:
+
+- `forbidden_signals`: case-insensitive response substrings that must not appear.
+- `workspace_assertions`: per-file assertions evaluated after the test:
+  - `contains`: exact text that must appear.
+  - `forbidden`: exact text that must not appear.
+
 ### Test fixtures
 
 Tests that require codebase evidence use the `fixture` field to load synthetic data into the isolated workspace before the agent runs. Fixtures live in `validation/fixtures/<name>/` and are copied into the workspace root alongside `.opencode/`, `.agents/`, and `AGENTS.md`.
@@ -339,6 +393,7 @@ Tests that require codebase evidence use the `fixture` field to load synthetic d
 | `rollout` | V22, V34, V35, V54, V55, V56, V57 | `deploy.yaml`, `docs/adr/ADR-002-rollout.md` with RISK comments + tradeoffs |
 | `tape-state` | V26 | `CONTEXT.md`, `.duck-tape/.gitignore` for state-only mode |
 | `tape-marker` | V27 | `CONTEXT.md`, `.duck-tape/.gitignore`, `.duck-tape/.last-compact`, `.duck-tape/2024-04-15-1030.state.md` |
+| `tape-merge` | V66 | `CONTEXT.md`, `.duck-tape/.gitignore`, `.duck-tape/2024-06-01-1200.state.md` |
 | `security-vuln` | V36, V37, V38 | `src/users.ts` with SQL injection + auth escalation bugs, `src/db.ts` |
 | `context-loading` | V39 | `CONTEXT.md` with project conventions (parameterized queries, auth middleware rules) |
 

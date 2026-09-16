@@ -6,7 +6,7 @@ Behavior regression suite for Rubber Duck governor + skills. Verifies governor g
 
 ## Structure
 
-- `test-prompts.json` — 58 tests (V01-V58), machine-readable
+- `test-prompts.json` — 66 tests (V01-V66), machine-readable
 - `run-validation-tests.py` — automated runner (opencode harness, bwrap sandbox, fixtures, multi-turn)
 - `fixtures/` — 11 synthetic workspace clusters for evidence-grounded tests
 - `README.md` — test catalog, runbook, smokecheck, automated testing docs
@@ -14,18 +14,22 @@ Behavior regression suite for Rubber Duck governor + skills. Verifies governor g
 ## Test categories
 
 - **Critical (23):** V02, V11, V12, V13, V29, V30, V31, V32, V33, V34, V40, V42, V44, V48, V49, V50, V51, V52, V53, V54, V55, V57, V58 — approval gates, safety carve-outs, no silent execution, no overreach, Enforcement Bootstrap, plan decomposition
-- **High (24):** V03-V04, V07-V09, V14-V16, V19-V24, V26-V27, V35-V37, V41, V43, V45-V47, V56 — routing, boundary compliance, skill behavior, Duck Ladder, Auto-Clarity, Interaction Contract, Socratic challenge, fallback path
-- **Medium (10):** V01, V05-V06, V10, V17-V18, V25, V28, V38-V39 — style, formatting, heartbeat, debt markers, CONTEXT.md loading
+- **High (28):** V03-V04, V07-V09, V14-V16, V19-V24, V26-V27, V35-V37, V41, V43, V45-V47, V56, V62, V65-V66 — routing, boundary compliance, skill behavior, Duck Ladder, Auto-Clarity, Interaction Contract, Socratic challenge, fallback path, exact-format preservation, durable-context translation
+- **Medium (15):** V01, V05-V06, V10, V17-V18, V25, V28, V38-V39, V59-V61, V63-V64 — style, formatting, heartbeat, debt markers, CONTEXT.md loading, comment-integrity review
 
 ## Runner features
 
-- **Dependencies**: opencode CLI (>= 1.18), bubblewrap (optional, sandbox), Python 3.9+ (stdlib only)
+ - **Dependencies**: opencode CLI (>= 1.18), `opencode/big-pickle` model by default, bubblewrap (optional, sandbox), Python 3.9+ (stdlib only)
 - Isolated temp workspace per test (bwrap sandbox by default, `--sandbox none` fallback)
 - Per-test fixture loading (synthetic codebases copied into workspace)
 - Multi-turn support via `follow_ups` field + `opencode run --session <id>`
 - `--auto` flag enables tool use within sandbox
 - Signal matching: case-insensitive substring, all expected signals must be present
 - Full responses saved to `$RESULTS_DIR/<ID>.json`
+- V52 structurally verifies that the first runtime tool event loads `duck-policy`; model-output signals remain secondary.
+- Long runs: use fixed ID batches of about 10 tests; use `--severity` for targeted diagnostics.
+- Per-test timeout: 300 seconds by default; use `--timeout N` for slow retries.
+- Tool use: enabled by default; use `--no-auto` for model-only diagnostics.
 
 ## Fixtures
 
@@ -40,6 +44,7 @@ Behavior regression suite for Rubber Duck governor + skills. Verifies governor g
 | `rollout` | V22, V34, V35, V54, V55, V56, V57 | `deploy.yaml`, `docs/adr/ADR-002-rollout.md` with RISK comments + tradeoffs |
 | `tape-state` | V26 | `CONTEXT.md`, `.duck-tape/.gitignore` for state-only mode |
 | `tape-marker` | V27 | `CONTEXT.md`, `.duck-tape/.gitignore`, `.duck-tape/.last-compact`, `.duck-tape/2024-04-15-1030.state.md` |
+| `tape-merge` | V66 | `CONTEXT.md`, `.duck-tape/.gitignore`, `.duck-tape/2024-06-01-1200.state.md` |
 | `security-vuln` | V36, V37, V38 | `src/users.ts` with SQL injection + auth escalation bugs, `src/db.ts` |
 | `context-loading` | V39 | `CONTEXT.md` with project conventions (parameterized queries, auth middleware rules) |
 
@@ -47,9 +52,9 @@ Behavior regression suite for Rubber Duck governor + skills. Verifies governor g
 
 **As of 2026-08-17:**
 
-- Suite size: 57 tests
+- Suite size: 66 tests
 - Previous best: 23/31 (74%) on original 35-test suite
-- New tests (V36-V48) not yet calibrated against live execution
+- New tests (V36-V54, V59-V66) not yet calibrated against live execution
 - V52-V54 (Enforcement Bootstrap + plan decomposition coverage) added post v3.0.0, not yet calibrated
 - V55-V58 (plan decomposition positive/negative/content/implicit-detection coverage) not yet calibrated against live execution
 - **Resolved:** V51 (Checkpoint 2 selection ask) was intermittent, not a stable skip: agent stacked approach-choice + clarify + framing in one turn, so the `confirm` follow-up resolved the wrong gate. Fixed by (1) gate-sequencing rule in duck-policy Method, (2) V51 prompt specifying the failure mode so clarify-first does not fire.

@@ -107,6 +107,32 @@ Translation: none. Consumed by next agent directly from state file. Does not lan
 
 No interpretation. Each state section maps to exactly one CONTEXT.md target. Re-derivation and Suggested Skills are state-file-local: not translated. Deterministic.
 
+## Translation boundary
+
+State files retain session detail needed for recovery, including rejected
+approaches, review or test references, temporary approval flags, commands, and
+position history. Do not remove that detail from Tier 2.
+
+Before writing CONTEXT.md, remove session narration and temporary markers that
+only explain how work was produced. Preserve the underlying durable decision,
+constraint, convention, fact, debt, or open question when one exists. Keep a
+test or review reference only when it states a durable verification requirement.
+Keep historical rationale in an ADR or changelog, not ordinary CONTEXT.md.
+
+Example:
+
+State entry:
+
+```text
+APPROVED: use shared comment guidance - review rejected duplicated wording
+```
+
+Durable CONTEXT.md entry:
+
+```text
+- **Comment guidance**: use shared comment guidance.
+```
+
 ## Lifecycle
 
 ### Write

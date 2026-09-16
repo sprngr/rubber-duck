@@ -5,6 +5,40 @@ All notable changes to Rubber Duck will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [v3.1.1] - 2026-09-15
+
+### Added
+
+- Validation runner now supports `forbidden_signals` for response-level
+  exclusions and `workspace_assertions` for required or forbidden file content.
+- Validation coverage V66 executes an approved `duck-tape merge` and verifies
+  durable content enters `CONTEXT.md` while session-only detail remains in
+  Tier 2 state.
+- `duck-tape` v2.2.0 now filters state-to-`CONTEXT.md` translation to durable
+  decisions, constraints, conventions, facts, debt, and open questions while
+  preserving session detail in Tier 2 state files.
+- Validation coverage V65 checks the durable state-to-`CONTEXT.md` translation
+  boundary.
+- Global comment-integrity guidance now requires durable constraints, invariants,
+  contracts, and behavior instead of development narration. `duck-patch`,
+  `duck-refactor`, `duck-review`, and `duck-tidy` apply the guidance.
+- Validation coverage V64 checks that `duck-review` flags review-history and
+  rejected-approach comments as documentation findings.
+- `duck-policy` output-style guidance now includes a bounded anti-slop self-audit,
+  concrete-specificity checks, readability guidance, and exact-format exclusions.
+- Validation coverage V59-V63 checks concrete claims, generic framing, natural list
+  structure, exact gate-string preservation, and dense-sentence readability.
+- Validation defaults to `opencode/big-pickle`; `RUBBER_DUCK_MODEL` and `--model`
+  still override the default.
+
+### Attribution
+
+- Anti-slop output-style concepts are credited to Cursor's
+  [`unslop`](https://github.com/cursor/plugins/blob/main/pstack/skills/unslop/SKILL.md)
+  skill.
+
 ## [v3.1.0] - 2026-08-27
 
 ### Added

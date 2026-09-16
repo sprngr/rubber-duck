@@ -8,8 +8,8 @@ description: >
 license: MIT
 metadata:
   author: sprngr
-  version: v2.1.3
-  RUBBER_DUCK_VERSION: v3.1.0
+  version: v2.2.0
+  RUBBER_DUCK_VERSION: v3.1.1
 ---
 
 Session memory management 🦆📼. Context hygiene, persistent memory, session state handoff.
@@ -33,6 +33,9 @@ Skill-specific delta:
 
 - Persistent artifact safety: CONTEXT.md is long-lived and likely committed. Redaction is non-negotiable before any write.
 - Session state safety: `.duck-tape/<id>.state.md` is workspace-local but may be read by next agent. Redaction applies.
+- Translation boundary: state files preserve session detail for recovery. Before writing CONTEXT.md, retain only durable decisions, constraints, conventions, facts, debt, and open questions.
+- Do not translate development narration, rejected approaches, recent-change context, session-only approval flags, or review/test/session references that only describe how work was produced.
+- Preserve a test or review reference in CONTEXT.md only when it states a durable verification requirement. Preserve historical rationale in an ADR or changelog, not ordinary CONTEXT.md entries.
 - Rotation cap: max 10 state files in `.duck-tape/`. Eviction precedence: auto dropped first, then recovered, then manual.
 - Pre-compact marker (`.duck-tape/.last-compact`) is harness-written, non-semantic. No approval required for marker write.
 
@@ -69,7 +72,7 @@ Run only on merge signals. Skip for state-only mode.
 
 **Bootstrap** (CONTEXT.md missing): create CONTEXT.md with translated content from state file using rigid map in `references/STATE_SCHEMA.md`. Empty sections get scaffold from `examples/bootstrap-CONTEXT.md`. Generate TOC under title from the 8 section headers. Output format in `references/OUTPUT_SCHEMA.md`. Sample in `examples/CONTEXT.md`. If Goals or Conventions entries are missing, leave them empty; do not infer.
 
-**Merge** (CONTEXT.md exists): translate from session state file using rigid map. Summarize translated content to persistent-context granularity (decision-level, not commit-level) before applying per-section merge rules. Refresh TOC only if the set of `##` section headings changes. Per-section merge rules in `references/SCHEMA.md`. Summary:
+**Merge** (CONTEXT.md exists): translate from session state file using rigid map. Apply the durable-context filter before summarizing to persistent-context granularity (decision-level, not commit-level) before applying per-section merge rules. Refresh TOC only if the set of `##` section headings changes. Per-section merge rules in `references/SCHEMA.md`. Summary:
 
 - Goals/Decisions/Conventions/Glossary: dedupe by key, supersede on conflict, append new
 - Deferred-Debt: append-only with status markers
@@ -77,6 +80,7 @@ Run only on merge signals. Skip for state-only mode.
 - Notes: timestamped append-only, no rewrite.
 - Re-derivation + Suggested Skills: state-file-local, not translated to CONTEXT.md
 - Position.Current + Position.Done: state-file-local, not translated. Next agent reads state file on resume.
+- Development narration, rejected approaches, recent-change context, session-only flags, and production-history references do not enter CONTEXT.md. Preserve the underlying durable decision or constraint when one exists.
 
 Emit changelog per `references/OUTPUT_SCHEMA.md`. Sample in `examples/CHANGELOG.md`:
 

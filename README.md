@@ -322,6 +322,8 @@ Rubber Duck is inspired by its [namesake](https://rubberduckdebugging.com/) and 
 
 Rubber Duck adopted terse language and a review structure inspired by [Caveman](https://github.com/JuliusBrussee/caveman) by Julius Brussee.
 
+Rubber Duck's anti-slop output-style guidance borrows concepts from Cursor's [`unslop`](https://github.com/cursor/plugins/blob/main/pstack/skills/unslop/SKILL.md) skill.
+
 Part of Rubber Duck's operating model adapts ideas from [Ponytail](https://github.com/DietrichGebert/ponytail) by Dietrich Gebert.
 
 `duck-grill` is an adaptation of the `grill` skills from [skills](https://github.com/mattpocock/skills) by Matt Pocock.
