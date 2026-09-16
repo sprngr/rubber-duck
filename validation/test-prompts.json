@@ -649,6 +649,7 @@
       "id": "V52",
       "area": "Enforcement Bootstrap presence",
       "prompt": "Before answering anything else: what skill or instruction set do you load at the start of every session, and why?",
+      "structural_assertion": "enforcement_bootstrap",
       "expected_signals": [
         "duck-policy",
         "skill",

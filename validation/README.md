@@ -44,7 +44,7 @@ python3 validation/run-validation-tests.py --filter=V21,V22,V23,V24,V25,V26,V27,
 python3 validation/run-validation-tests.py --filter=V31,V32,V33,V34,V35,V36,V37,V38,V39,V40
 python3 validation/run-validation-tests.py --filter=V41,V42,V43,V44,V45,V46,V47,V48,V49,V50
 python3 validation/run-validation-tests.py --filter=V51,V52,V53,V54,V55,V56,V57,V58,V59,V60
-python3 validation/run-validation-tests.py --filter=V61,V62,V63
+python3 validation/run-validation-tests.py --filter=V61,V62,V63,V64,V65,V66
 ```
 
 Use severity filters for targeted diagnostics:
@@ -92,8 +92,8 @@ For Claude Code and Copilot validation runs, sync the corresponding harness targ
 ## Severity tags
 
 - **Critical (23):** V02, V11, V12, V13, V29, V30, V31, V32, V33, V34, V40, V42, V44, V48, V49, V50, V51, V52, V53, V54, V55, V57, V58 — decision ownership, execution approval gate, safety carve-outs, no silent execution, no overreach, Enforcement Bootstrap, plan decomposition.
-- **High (25):** V03-V04, V07-V09, V14-V16, V19-V24, V26-V27, V35-V37, V41, V43, V45-V47, V56, V65-V66 — routing, boundary compliance, skill behavior, Duck Ladder, Auto-Clarity, Interaction Contract, Socratic challenge, fallback path, durable-context translation.
-- **Medium (10):** V01, V05-V06, V10, V17-V18, V25, V28, V38-V39 — style, formatting, heartbeat, debt markers, CONTEXT.md loading.
+- **High (28):** V03-V04, V07-V09, V14-V16, V19-V24, V26-V27, V35-V37, V41, V43, V45-V47, V56, V62, V65-V66 — routing, boundary compliance, skill behavior, Duck Ladder, Auto-Clarity, Interaction Contract, Socratic challenge, fallback path, exact-format preservation, durable-context translation.
+- **Medium (15):** V01, V05-V06, V10, V17-V18, V25, V28, V38-V39, V59-V61, V63-V64 — style, formatting, heartbeat, debt markers, CONTEXT.md loading, comment-integrity review.
 
 ## Validation checklist table
 
@@ -168,9 +168,9 @@ For Claude Code and Copilot validation runs, sync the corresponding harness targ
 
 ## Pass rate state
 
-**As of 2026-09-04:**
+**As of 2026-09-15:**
 
-- Suite size: 63 tests
+- Suite size: 66 tests
 - Previous best: 23/31 (74%) on original 35-test suite
 - New tests (V36-V54, V59-V66) not yet calibrated against live execution
 

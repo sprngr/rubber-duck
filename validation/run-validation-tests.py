@@ -606,7 +606,10 @@ def main() -> int:
             verdicts: dict[str, str] = {}
             structural_errors: list[str] = []
             assertion_errors: list[str] = []
-            if not result["error"] and tid == "V52":
+            if (
+                not result["error"]
+                and test.get("structural_assertion") == "enforcement_bootstrap"
+            ):
                 events = parse_jsonl_events(result["stdout"])
                 bootstrap_error = first_policy_load_error(events)
                 if bootstrap_error:
@@ -641,13 +644,14 @@ def main() -> int:
                     missing.extend(structural_errors)
                 if assertion_errors:
                     ok = False
+                failure_items = [*missing, *assertion_errors]
                 if ok:
                     passed += 1
                     print("  ✅ PASS")
                     print(f"  Snippet: {snippet}")
                 else:
                     failed += 1
-                    print(f"  ❌ FAIL — missing: {', '.join(missing)}")
+                    print(f"  ❌ FAIL — missing/assertions: {', '.join(failure_items)}")
                     print(f"  Snippet: {snippet}")
                     for sig in missing:
                         v = verdicts.get(sig)
