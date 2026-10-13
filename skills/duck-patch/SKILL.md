@@ -8,7 +8,7 @@ license: MIT
 metadata:
   author: sprngr
   version: v3.0.2
-  RUBBER_DUCK_VERSION: v3.1.1
+  RUBBER_DUCK_VERSION: v3.2.0
 ---
 
 Patch execution 🦆. Smallest safe diff first.

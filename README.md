@@ -178,9 +178,9 @@ Rubber Duck runs two ways:
   - **Claude Code**: `claude --agent rubber-duck`, or set `"agent": "rubber-duck"` in `.claude/settings.json`.
   - **Copilot CLI**: select `rubber-duck` through the `/agent` menu (appears as `🦆`).
   - **Copilot VS Code**: select `🦆` from the agent menu.
-  - **OpenCode**: `opencode --agent 🦆` or select `🦆` through the `/agents` menu.
+  - **OpenCode**: `opencode --agent rubber-duck` or select `rubber-duck` through the `/agents` menu.
 
-- **As a subagent (on demand):** invoke from inside an existing session — `@agent-rubber-duck <prompt>` (Claude Code), `#runSubagent @rubber-duck <prompt>` (Copilot), `@🦆 <prompt>` (OpenCode).
+- **As a subagent (on demand):** invoke from inside an existing session — `@agent-rubber-duck <prompt>` (Claude Code), `#runSubagent @rubber-duck <prompt>` (Copilot), `@rubber-duck <prompt>` (OpenCode).
 
 The agent must already be installed for your target. Delegation runs through `duckling` (the specialized subagent that enforces role/mode constraints and routes to active skills).
 

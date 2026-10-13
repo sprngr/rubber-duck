@@ -84,7 +84,7 @@ For Claude Code and Copilot validation runs, sync the corresponding harness targ
 
 ### Manual
 
-1. Run each prompt in clean session with Rubber Duck governor active (`🦆`).
+1. Run each prompt in clean session with Rubber Duck governor active (`rubber-duck`).
 2. Record observed response snippets.
 3. Mark each expected signal as pass/fail.
 4. Treat any missing critical signal as regression.

@@ -13,7 +13,7 @@ Usage:
     python3 validation/run-validation-tests.py --keep-workspaces
 
 Environment:
-    RUBBER_DUCK_AGENT       opencode agent name (default: 🦆)
+    RUBBER_DUCK_AGENT       opencode agent name (default: rubber-duck)
     RUBBER_DUCK_MODEL       opencode model id (default: empty = agent default)
     RESULTS_DIR             output directory (default: /tmp/rubber-duck-validation)
 
@@ -38,7 +38,7 @@ from typing import Any
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_TEST_FILE = REPO_ROOT / "validation" / "test-prompts.json"
 DEFAULT_RESULTS_DIR = Path(os.environ.get("RESULTS_DIR", "/tmp/rubber-duck-validation"))
-DEFAULT_AGENT = os.environ.get("RUBBER_DUCK_AGENT", "🦆")
+DEFAULT_AGENT = os.environ.get("RUBBER_DUCK_AGENT", "rubber-duck")
 DEFAULT_MODEL = os.environ.get("RUBBER_DUCK_MODEL", "opencode/big-pickle")
 DEFAULT_TIMEOUT_SECONDS = 300
 FIXTURES_DIR = REPO_ROOT / "validation" / "fixtures"

@@ -13,17 +13,14 @@
       "tools": "read,search,edit,execute,agent"
     },
     "opencode": {
-      "name": "🦆",
       "mode": "all",
-      "permission": {
-        "read": "allow",
-        "edit": "allow",
-        "task": "allow",
-        "skill": "allow",
-        "lsp": "allow",
-        "question": "allow",
-        "doom_loop": "allow"
-      },
+      "permissions": [
+        { "action": "read", "resource": "*", "effect": "allow" },
+        { "action": "edit", "resource": "*", "effect": "allow" },
+        { "action": "subagent", "resource": "*", "effect": "allow" },
+        { "action": "skill", "resource": "*", "effect": "allow" },
+        { "action": "question", "resource": "*", "effect": "allow" }
+      ],
       "color": "#FFD801"
     }
   }

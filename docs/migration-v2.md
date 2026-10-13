@@ -107,3 +107,16 @@ curl -fsSL https://raw.githubusercontent.com/sprngr/rubber-duck/main/scripts/rub
 
 - Remove any stale agent files from `.opencode/agents/`, `.claude/agents/`, `.github/agents/`
 - Remove any custom AGENTS.md content that referenced the old policy mode flags
+
+## OpenCode agent id
+
+OpenCode derives an agent id from its filename. The primary agent installs as
+`agents/rubber-duck.md`, so its id is `rubber-duck` — not the emoji `🦆` used in
+earlier docs. Select or invoke it by that id:
+
+```text
+opencode --agent rubber-duck
+@rubber-duck <prompt>
+```
+
+The `duckling` subagent id is `duckling`. Copilot keeps `🦆` as its display name.

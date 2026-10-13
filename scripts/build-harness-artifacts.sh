@@ -224,17 +224,15 @@ render_claude_fm() {
 }
 
 # Render OpenCode frontmatter from a meta.json into out. Field order:
-# name, description, optional argument-hint, mode, permission block, optional
-# color (quoted). name falls back to the shared top-level name.
+# description, mode, permissions block, optional color (quoted).
 render_opencode_fm() {
   local meta="$1" out="$2" v
   {
     printf -- '---\n'
-    printf 'name: %s\n' "$(jq -r '.harnesses.opencode.name // .name' "${meta}")"
     printf 'description: %s\n' "$(jq -r '.description' "${meta}")"
     printf 'mode: %s\n' "$(jq -r '.harnesses.opencode.mode' "${meta}")"
-    printf 'permission:\n'
-    jq -r '.harnesses.opencode.permission | to_entries[] | "  \(.key): \(.value)"' "${meta}"
+    printf 'permissions:\n'
+    jq -r '.harnesses.opencode.permissions[] | "  - action: \(.action)\n    resource: \"\(.resource)\"\n    effect: \(.effect)"' "${meta}"
     v="$(jq -r '.harnesses.opencode.color // empty' "${meta}")"
     [[ -n "${v}" ]] && printf 'color: "%s"\n' "${v}"
     printf -- '---\n\n'

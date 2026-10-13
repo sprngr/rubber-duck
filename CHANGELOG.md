@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v3.2.0] - 2026-10-13
+
+### Changed
+
+- The `session-start` OpenCode plugin now supports OpenCode V2 through a dual
+  V1+V2 export (`Plugin.define` + `server()`), and registers sessions under the
+  `rubber-duck` agent id.
+- Shipped OpenCode agents now use native V2 frontmatter: the emoji `name` field
+  is removed and `permission` maps become ordered `permissions` arrays.
+
 ## [v3.1.1] - 2026-09-15
 
 ### Added

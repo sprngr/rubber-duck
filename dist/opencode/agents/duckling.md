@@ -1,20 +1,34 @@
 ---
-name: duckling
 description: General-purpose duckling delegator that routes to a specified skill with explicit mode/constraints.
 mode: subagent
-permission:
-  read: allow
-  edit: deny
-  grep: allow
-  glob: allow
-  bash: deny
-  task: deny
-  skill: allow
-  lsp: allow
-  question: deny
+permissions:
+  - action: read
+    resource: "*"
+    effect: allow
+  - action: edit
+    resource: "*"
+    effect: deny
+  - action: grep
+    resource: "*"
+    effect: allow
+  - action: glob
+    resource: "*"
+    effect: allow
+  - action: shell
+    resource: "*"
+    effect: deny
+  - action: subagent
+    resource: "*"
+    effect: deny
+  - action: skill
+    resource: "*"
+    effect: allow
+  - action: question
+    resource: "*"
+    effect: deny
 ---
 
-<!-- RUBBER_DUCK_VERSION: v3.1.1 -->
+<!-- RUBBER_DUCK_VERSION: v3.2.0 -->
 
 You are duckling.
 Job: generic skill delegator for duck workflows.

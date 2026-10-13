@@ -1,14 +1,16 @@
-// session-start hook for opencode
+// session-start hook for opencode (dual V1 + V2 plugin API)
 // Install: copy to .opencode/plugins/session-start.js
 // Registers rubber-duck sessions at session.created, then injects the shared
-// startup directive into the system prompt on every model call via
-// experimental.chat.system.transform. System-level instructions are treated as
-// directives by the model, unlike user-message injection.
+// startup directive into the model system prompt on every model call. V2 uses
+// ctx.event.subscribe + ctx.session.hook("context"); V1 uses the hook map
+// returned by server(). System-level instructions are treated as directives by
+// the model, unlike user-message injection.
 // Cross-platform: Bun/node:fs, no shell dependency (mirrors duck-tape plugin).
+import { Plugin } from "@opencode/plugin"
 import { promises as fs } from "node:fs"
 import path from "node:path"
 
-const RUBBER_DUCK_AGENT = "🦆"
+const RUBBER_DUCK_AGENT = "rubber-duck"
 
 // Locate and read the shared directive text (session-start.directive.md).
 // Tries plugin-adjacent candidates, then falls back to cwd. Returns null on miss.
@@ -28,9 +30,9 @@ async function loadDirective(directory) {
   return null
 }
 
-// Plugin factory. Registers rubber-duck sessions; system.transform injects the
-// directive into the system prompt for those sessions.
-export const SessionStartHook = async ({ client, directory }) => {
+// OpenCode V1 factory. Registers rubber-duck sessions; system.transform injects
+// the directive into the system prompt for those sessions.
+export const SessionStartHook = async ({ client, directory } = {}) => {
   const rubberDuckSessions = new Set()
 
   return {
@@ -117,4 +119,39 @@ export const SessionStartHook = async ({ client, directory }) => {
       }
     },
   }
+}
+
+// OpenCode V2 plugin (dual export). setup uses ctx.event.subscribe and the
+// session "context" hook; the shared V1 factory is exposed as server().
+export default {
+  ...Plugin.define({
+    id: "session-start",
+    async setup(ctx) {
+      const rubberDuckSessions = new Set()
+      const controller = new AbortController()
+
+      void (async () => {
+        for await (const event of ctx.event.subscribe({ signal: controller.signal })) {
+          if (!event || event.type !== "session.created") continue
+          const { sessionID, info } = event.properties || {}
+          if (sessionID && info && info.agent === RUBBER_DUCK_AGENT) {
+            rubberDuckSessions.add(sessionID)
+          }
+        }
+      })()
+
+      await ctx.session.hook("context", async (event) => {
+        if (!rubberDuckSessions.has(event.sessionID)) return
+        const directive = await loadDirective(ctx.location.directory)
+        if (!directive) return
+        const present = event.system.some(
+          (part) => part && part.type === "text" && part.text === directive,
+        )
+        if (!present) event.system.push({ type: "text", text: directive })
+      })
+
+      return () => controller.abort()
+    },
+  }),
+  server: SessionStartHook,
 }
