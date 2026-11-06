@@ -236,7 +236,7 @@ The agent must already be installed for your target. Delegation runs through `du
  <details>
  <summary>Expand for full skill list + routing diagram</summary>
 
-Rubber Duck packages 16 skills: 12 default + 4 extras, plus one manual-install easter egg.
+Rubber Duck packages 17 skills: 12 default + 5 extras, plus one manual-install easter egg.
 
 ### Default skills (installed automatically)
 
@@ -257,6 +257,7 @@ Rubber Duck packages 16 skills: 12 default + 4 extras, plus one manual-install e
 
 - duck-adapt — external skill adaptation + philosophy audit
 - duck-grill — batched grilling interview
+- duck-synth — non-coding research synthesis (source grading + citation discipline)
 - duck-tape — two-tier session memory (CONTEXT.md + state files). Run `/duck-tape init` to install hook.
 - duck-tidy — stale comment/doc cleanup audit (audit-first, patch handoff)
 

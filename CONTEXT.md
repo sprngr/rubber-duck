@@ -45,6 +45,7 @@
 - **Reviewable unit decomposition**: multi-PR plans must decompose into reviewable units (independent merge, working state after each, explicit ordering + acceptance criteria). Methodology lives in `src/shared/skill-snippets/reviewable-units.md`; duck-design writes plans as PR sequences; duck-policy Checkpoint 1 gates on decomposition. (date: 2026-08-24)
 - **duck-tidy extras skill**: audit-first skill for stale/outdated comments and non-CONTEXT docs. Evidence rules: contradicts current code, describes removed behavior, worktree-only add/remove never merged. Carve-outs: TODOs (duck-debt), ADR/design notes flag-only, CONTEXT.md/.duck-tape (duck-tape). Extras placement, inline-default routing, audit -> patch handoff. (date: 2026-08-22)
 - **Per-skill documentation model**: extended docs for individual skills live under `src/skills/<name>/references/` per skill-asset-convention (07), not in `docs/architecture/`. Architecture docs stay cross-cutting (models, contracts, conventions). duck-tape sets the reference-pattern precedent (STATE_SCHEMA.md, HOOKS_GUIDE.md under its own `references/`). (date: 2026-08-22)
+- **duck-synth extras skill**: non-coding research synthesis. Grades sources on four axes (tier, independence, recency, directness) with source grade capping claim confidence. Claims move through an evidence ledger (claim / source / locator / grade / confidence) before synthesis. Citation discipline: locator per claim, verbatim vs paraphrase marked, shared origin flagged. Governor-invoked (main session, not quack-routed). Extras set now 5, total 17. (date: 2026-11-06)
 
 ## Conventions
 
@@ -64,7 +65,7 @@
 - **Policy block fences**: `<!-- RUBBER_DUCK_MANAGED_BLOCK START -->` and `<!-- RUBBER_DUCK_MANAGED_BLOCK END -->` delimit installer-managed sections in target files.
 - **Diff format selection rule**: file existence determines diff format (unified diff for existing files, full-content block for new files).
 - **Default skills set**: 12 skills from `.claude-plugin/plugin.json`.
-- **Extras skills set**: `duck-adapt`, `duck-grill`, `duck-tape`, `duck-tidy`, installed only with extras flags.
+- **Extras skills set**: `duck-adapt`, `duck-grill`, `duck-synth`, `duck-tape`, `duck-tidy`, installed only with extras flags.
 - **Validation fixtures**: scenario clusters live under `validation/fixtures/` for prompt-eval coverage.
 - **Guardrails drift check**: `scripts/check-guardrails-drift.sh` verifies vendored guardrails alignment.
 

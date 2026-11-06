@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `duck-synth` extras skill: non-coding research synthesis. Source grading on
+  four axes (tier, independence, recency, directness), evidence ledger row per
+  claim (claim / source / locator / grade / confidence), and citation discipline
+  (locator per claim, verbatim vs paraphrase, shared-origin flagging). Installed
+  with `--extras` / `-Extras`.
+
+### Fixed
+
+- Installer docs, README, and `docs/best-practices.md` list the full extras set
+  (5) and total skill count (17). `docs/MANUAL.md` restores its missing
+  `duck-tidy` index row.
+
 ## [v3.2.0] - 2026-10-13
 
 ### Changed
