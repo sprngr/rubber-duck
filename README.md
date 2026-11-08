@@ -257,7 +257,7 @@ Rubber Duck packages 17 skills: 12 default + 5 extras, plus one manual-install e
 
 - duck-adapt — external skill adaptation + philosophy audit
 - duck-grill — batched grilling interview
-- duck-synth — non-coding research synthesis (source grading + citation discipline)
+- duck-research — non-coding research synthesis (source grading + citation discipline)
 - duck-tape — two-tier session memory (CONTEXT.md + state files). Run `/duck-tape init` to install hook.
 - duck-tidy — stale comment/doc cleanup audit (audit-first, patch handoff)
 

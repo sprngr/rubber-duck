@@ -114,7 +114,7 @@ DEFAULT_SKILLS=(
 EXTRAS_SKILLS=(
   "duck-adapt"
   "duck-grill"
-  "duck-synth"
+  "duck-research"
   "duck-tape"
   "duck-tidy"
 )
@@ -137,7 +137,7 @@ Options:
   --raw-base <url>                  Raw GitHub base for web source
   --prune                           With sync: remove managed targets not in manifest
   --dry-run                         Print planned actions only
---extras                          Also install extras skills (duck-adapt, duck-grill, duck-synth, duck-tape, duck-tidy)
+--extras                          Also install extras skills (duck-adapt, duck-grill, duck-research, duck-tape, duck-tidy)
   --session-hook                    Also install session-start hook (opencode: plugin + directive)
   --allow-untrusted-source          Skip rawBase allowlist check (dangerous; forks/custom mirrors)
   -h, --help                        Show help

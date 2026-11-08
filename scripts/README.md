@@ -86,7 +86,7 @@ Opt out of default install steps or adjust source to fit your workflow. All opti
 | `--prune` | `-Prune` | With `sync`: remove managed targets not enabled in manifest |
 | `--source <auto\|local\|web>` | `-Source auto\|local\|web` | Pick artifact + skills source (`auto` default) |
 | `--branch <name>` | `-Branch <name>` | Install from non-`main` branch |
-| `--extras` | `-Extras` | Also install extras skills (duck-adapt, duck-grill, duck-synth, duck-tape, duck-tidy) |
+| `--extras` | `-Extras` | Also install extras skills (duck-adapt, duck-grill, duck-research, duck-tape, duck-tidy) |
 | `--session-hook` | `-SessionHook` | Also install the session-start hook (guarantees duck-policy loads at session start) |
 | `--allow-untrusted-source` | `-AllowUntrustedSource` | Skip `rawBase` allowlist check (dangerous; forks/mirrors) |
 
@@ -108,7 +108,7 @@ Use Bash CLI for Linux/macOS and shell-based CI.
 | `--raw-base <url>` | value | Raw GitHub base URL for web source |
 | `--prune` | switch | With `sync`, uninstall managed targets not enabled in manifest |
 | `--dry-run` | switch | Print planned actions without writing |
-| `--extras` | switch | Also install extras skills (duck-adapt, duck-grill, duck-synth, duck-tape, duck-tidy) |
+| `--extras` | switch | Also install extras skills (duck-adapt, duck-grill, duck-research, duck-tape, duck-tidy) |
 | `--session-hook` | switch | Also install the session-start hook for the selected target |
 | `--allow-untrusted-source` | switch | Skip `rawBase` allowlist check (dangerous; forks/custom mirrors) |
 | `-h`, `--help` | switch | Show help |
@@ -132,7 +132,7 @@ Use PowerShell CLI for Windows-native environments.
 | `-RawBase <url>` | value | Raw GitHub base URL for web source |
 | `-Prune` | switch | With `sync`, uninstall managed targets not enabled in manifest |
 | `-DryRun` | switch | Print planned actions without writing |
-| `-Extras` | switch | Also install extras skills (duck-adapt, duck-grill, duck-synth, duck-tape, duck-tidy) |
+| `-Extras` | switch | Also install extras skills (duck-adapt, duck-grill, duck-research, duck-tape, duck-tidy) |
 | `-SessionHook` | switch | Also install the session-start hook for the selected target |
 | `-AllowUntrustedSource` | switch | Skip `rawBase` allowlist check (dangerous; forks/custom mirrors) |
 
@@ -205,7 +205,7 @@ scripts/rubber-duck.sh install --claude --project --session-hook
 
 Default skills (12) match `build/skill-assembly.rules.json`: quack, duck-policy, duck-debt, duck-debug, duck-design, duck-patch, duck-refactor, duck-review, duck-risk, duck-simplify, duck-teach, duck-triage.
 
-Extras skills (5): duck-adapt, duck-grill, duck-synth, duck-tape, duck-tidy. Installed only with `--extras` (bash) / `-Extras` (PowerShell). Optional by default.
+Extras skills (5): duck-adapt, duck-grill, duck-research, duck-tape, duck-tidy. Installed only with `--extras` (bash) / `-Extras` (PowerShell). Optional by default.
 
 `uninstall` removes all 17 skills (default + extras) regardless of flag so no orphan skills remain. `status` reports extras separately as optional (present/missing count).
 

@@ -416,7 +416,7 @@ $DefaultSkills = @(
 $ExtrasSkills = @(
   "duck-adapt",
   "duck-grill",
-  "duck-synth",
+  "duck-research",
   "duck-tape",
   "duck-tidy"
 )

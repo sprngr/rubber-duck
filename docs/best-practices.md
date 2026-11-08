@@ -84,7 +84,7 @@ If the user explicitly overrides default policy, follow the override. If the use
 ## Install status
 
 - **Default (12):** quack, duck-policy, duck-debt, duck-debug, duck-design, duck-patch, duck-refactor, duck-review, duck-risk, duck-simplify, duck-teach, duck-triage. Installed automatically.
-- **Extras (5, --extras flag):** duck-adapt, duck-grill, duck-synth, duck-tape, duck-tidy. Optional.
+- **Extras (5, --extras flag):** duck-adapt, duck-grill, duck-research, duck-tape, duck-tidy. Optional.
 
 If a skill is unavailable, check install with `scripts/rubber-duck.sh status`. Extras require the `--extras` flag at install time.
 

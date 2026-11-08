@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `duck-synth` extras skill: non-coding research synthesis. Source grading on
+- `duck-research` extras skill: non-coding research synthesis. Source grading on
   four axes (tier, independence, recency, directness), evidence ledger row per
   claim (claim / source / locator / grade / confidence), and citation discipline
   (locator per claim, verbatim vs paraphrase, shared-origin flagging). Installed

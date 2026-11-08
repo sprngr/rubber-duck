@@ -1,5 +1,5 @@
 ---
-name: duck-synth
+name: duck-research
 description: >
   Non-coding research synthesis: frame a question, grade sources, cite claims,
   surface conflicts and gaps, verify conclusions. Use when: "synthesize this
@@ -7,8 +7,8 @@ description: >
 license: MIT
 metadata:
   author: sprngr
-  version: v0.1.0
-  RUBBER_DUCK_VERSION: __RUBBER_DUCK_VERSION__
+  version: v0.2.0
+  RUBBER_DUCK_VERSION: v3.2.0
 ---
 
 Research synthesis 🦆. Grade evidence before trusting it. Cite every claim.
@@ -18,8 +18,11 @@ Research synthesis 🦆. Grade evidence before trusting it. Cite every claim.
 Turn a question and scattered sources into a structured answer with graded
 evidence, traceable citations, and explicit gaps.
 
-{{include: skill-snippets/philosophy-guardrails.md}}
-{{include: skill-snippets/clarify-first-preflight.md}}
+## Philosophy Guardrails (skill-local)
+
+Inherit shared guardrails from `references/GUARDRAILS.md`.
+- ask 1-3 targeted clarifying questions when context is incomplete
+- state assumptions explicitly when evidence is missing
 
 Skill-specific delta:
 
