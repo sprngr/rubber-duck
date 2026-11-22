@@ -45,7 +45,7 @@
 - **Reviewable unit decomposition**: multi-PR plans must decompose into reviewable units (independent merge, working state after each, explicit ordering + acceptance criteria). Methodology lives in `src/shared/skill-snippets/reviewable-units.md`; duck-design writes plans as PR sequences; duck-policy Checkpoint 1 gates on decomposition. (date: 2026-08-24)
 - **duck-tidy extras skill**: audit-first skill for stale/outdated comments and non-CONTEXT docs. Evidence rules: contradicts current code, describes removed behavior, worktree-only add/remove never merged. Carve-outs: TODOs (duck-debt), ADR/design notes flag-only, CONTEXT.md/.duck-tape (duck-tape). Extras placement, inline-default routing, audit -> patch handoff. (date: 2026-08-22)
 - **Per-skill documentation model**: extended docs for individual skills live under `src/skills/<name>/references/` per skill-asset-convention (07), not in `docs/architecture/`. Architecture docs stay cross-cutting (models, contracts, conventions). duck-tape sets the reference-pattern precedent (STATE_SCHEMA.md, HOOKS_GUIDE.md under its own `references/`). (date: 2026-08-22)
-- **duck-research extras skill**: non-coding research synthesis. Grades sources on four axes (tier, independence, recency, directness) with source grade capping claim confidence. Claims move through an evidence ledger (claim / source / locator / grade / confidence) before synthesis. Citation discipline: locator per claim, verbatim vs paraphrase marked, shared origin flagged. Governor-invoked (main session, not quack-routed). Extras set now 5, total 17. (date: 2026-11-06; renamed 2026-11-08)
+- **duck-research extras skill** (v1.0.0): non-coding research synthesis. Four graded axes with three-level anchors; source grade is the lowest axis score; claim confidence scores per ledger row and aggregates into one overall confidence, capped by a corroboration-based conflict rule. Rows fold to origins; ledger appears at three or more origins, appendix past six. Citation rules define waiver and missing-locator labels. One question per answer; a user-specified shape overrides presentation while keeping grades. Governor-invoked (main session, not quack-routed). Extras set 5, total 17. (date: 2026-11-06; renamed 2026-11-08; refined to v1.0.0 2026-11-20)
 
 ## Conventions
 
@@ -73,6 +73,7 @@
 
 - TODO(architecture,#22): 2026-08-13 Define localized CONTEXT.md merge model for duck-tape
 - TODO(validation): 2026-08-22 duck-tidy lacks prompt-eval fixture; revisit on next validation expansion
+- TODO(tooling): 2026-11-20 skill index rebuilds from the local database only at app restart, so a restart that precedes build+install serves the previous body. Order is build, install, restart. Observed with duck-research: served v0.6.0 while disk held v0.8.0 after an out-of-order cycle.
 
 ## Open-Questions
 

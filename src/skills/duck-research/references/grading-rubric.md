@@ -22,11 +22,13 @@ Four axes, scored high / medium / low. Source grade is the lowest axis score.
 | Primary | Evidence from the actor or instrument | Filings, datasets, standards, logs |
 | Reviewed | Peer-reviewed or method-disclosed | Journals, preprints with data |
 | Expert | Named practitioner, no disclosed method | Practitioner essays, regulator guidance |
-| Secondary | Reports someone else's evidence | News summaries, vendor pages |
+| Secondary | Reports someone else's evidence | News summaries, vendor product pages |
 | Unattributed | No author, date, or method | Aggregator posts, anonymous threads |
 
 Tier caps confidence; it does not set it. A primary source that misreads its own
 data stays wrong.
+
+A vendor's own survey is primary on tier. Commercial interest caps confidence.
 
 ## Confidence scale
 
@@ -41,6 +43,10 @@ two levels for high-stakes questions.
 ## Citation format
 
 - `<source> | <locator> | <verbatim|paraphrase>`, one citation per ledger row.
-- Locator: file and section, URL and heading, document and page.
+- Locator is a pointer a reader can re-find: file and section, URL and heading,
+  document and page.
+- Non-document sources use their native address: thread and message id,
+  transcript and timestamp, recording and timecode.
 - Several sources for one claim become several rows.
-- Missing locator means unverifiable: record a gap.
+- Missing locator means unverifiable: record a gap, or label the claim unverified
+  when the user waived locators.

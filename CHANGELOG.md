@@ -15,6 +15,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (locator per claim, verbatim vs paraphrase, shared-origin flagging). Installed
   with `--extras` / `-Extras`.
 
+### Changed
+
+- `duck-research` v1.0.0: grading and output rules reworked across eleven blind
+  probe runs against adversarial source sets.
+  - Each axis has three defined levels; recency defaults to five years; material
+    with an undisclosed author, publisher, or method scores low on independence.
+  - Source grade is the lowest axis score. Claim confidence is scored per ledger
+    row, overall confidence aggregates from rows, and the conflict rule caps it.
+  - Conflict is resolved only when the better-graded side holds two or more
+    independent sources at medium or above.
+  - Ledger appears at three or more independent origins; three to six show it,
+    past six move it to an appendix at one row per origin.
+  - Citation waivers and missing locators get explicit labels instead of silent
+    stripping.
+  - One question per answer; a user-specified output shape overrides presentation
+    rules while keeping grades and overall confidence.
+
 ### Fixed
 
 - Installer docs, README, and `docs/best-practices.md` list the full extras set
