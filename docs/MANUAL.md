@@ -58,7 +58,9 @@ For full architecture and policy details, use the canonical docs linked below.
 
 - [duck-adapt](../src/skills/duck-adapt/SKILL.md) — external skill adaptation + audit
 - [duck-grill](../src/skills/duck-grill/SKILL.md) — grilling interview
+- [duck-research](../src/skills/duck-research/SKILL.md) — non-coding research synthesis
 - [duck-tape](../src/skills/duck-tape/SKILL.md) — two-tier session memory
+- [duck-tidy](../src/skills/duck-tidy/SKILL.md) — stale comment/doc cleanup audit
 
 ## Routing cheat sheet
 
@@ -79,6 +81,7 @@ Use `quack <intent>` for explicit routing with keyword-based precedence (risk/co
 | "what did we defer/duck debt" | `duck-debt` | read-only deferred-work ledger (TODO/FIXME/HACK) |
 | "adapt this skill/audit skill" | `duck-adapt` | meta-skill: external skill adaptation, philosophy compliance audit, overlap detection; stays in main session (not quack-routed) |
 | "grill me/grill this plan" | `duck-grill` | one-question-at-a-time assumption/risk interrogation; stays in main session (not quack-routed) |
+| "synthesize this research/what do the sources say" | `duck-research` | non-coding research synthesis: graded evidence ledger, citation per claim, conflicts and gaps surfaced; stays in main session (not quack-routed) |
 
 ## Operator playbooks (copy/paste)
 

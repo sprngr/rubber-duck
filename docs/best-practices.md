@@ -77,14 +77,14 @@ Key signals to watch for in normal use:
 
 - **Inline-default skills** (debug, debt, design, teach): run in main session for simple cases. Override to delegation with explicit `quack` request.
 - **Delegated-default skills** (patch, refactor, review, risk, simplify, triage): run via duckling subagent by default. Override to inline with explicit user request.
-- **Governor-invoked skills** (adapt, grill): main session only. Not quack-routed.
+- **Governor-invoked skills** (adapt, grill, synth): main session only. Not quack-routed.
 
 If the user explicitly overrides default policy, follow the override. If the user explicitly requests delegation, force duckling delegation regardless of default policy.
 
 ## Install status
 
 - **Default (12):** quack, duck-policy, duck-debt, duck-debug, duck-design, duck-patch, duck-refactor, duck-review, duck-risk, duck-simplify, duck-teach, duck-triage. Installed automatically.
-- **Extras (3, --extras flag):** duck-adapt, duck-grill, duck-tape. Optional.
+- **Extras (5, --extras flag):** duck-adapt, duck-grill, duck-research, duck-tape, duck-tidy. Optional.
 
 If a skill is unavailable, check install with `scripts/rubber-duck.sh status`. Extras require the `--extras` flag at install time.
 

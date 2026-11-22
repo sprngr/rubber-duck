@@ -82,9 +82,6 @@ This repository contains source prompts, assembled skills, generated harness art
 - Build flow:
   - skills: `src/skills/*` -> `skills/*`
   - harness artifacts: `src/agents/*` -> `dist/*`
-- Managed policy block fences:
-  - `<!-- RUBBER_DUCK_MANAGED_BLOCK START -->`
-  - `<!-- RUBBER_DUCK_MANAGED_BLOCK END -->`
 - Before commit, run `make check`.
 - Keep terminology aligned with `CONTEXT.md`.
 
